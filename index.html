@@ -1,186 +1,223 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HanafubukiDoll</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-pink: #FFB6C1; /* Soft pink background */
-            --card-green: #E0F7FA; /* Light green for card */
-            --text-main: #4A5568; /* Dark gray for text */
-            --accent-green: #48BB78; /* Green for buttons */
-            --sparkle: #FFD700; /* Gold for sparkles */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HanafubukiDoll — Dreamy Doll Creations</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-base:     #fef5f8;           /* very soft pink-white */
+      --bg-card:     rgba(255, 245, 247, 0.75);
+      --accent-pink: #ff9ec1;
+      --accent-mint: #a7e9d0;
+      --accent-gold: #f9d66d;
+      --text-dark:   #4a5568;
+      --text-muted:  #718096;
+      --border-soft: rgba(255, 182, 193, 0.4);
+    }
 
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-pink);
-            color: var(--text-main);
-            overflow-x: hidden;
-            position: relative;
-        }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-base:     #1a0f14;
+        --bg-card:     rgba(40, 25, 35, 0.75);
+        --accent-pink: #ff8ab9;
+        --accent-mint: #8fe3c8;
+        --accent-gold: #ffe082;
+        --text-dark:   #f7e9ef;
+        --text-muted:  #d6c2ce;
+        --border-soft: rgba(255, 182, 193, 0.25);
+      }
+    }
 
-        /* Cherry Blossom Background - Using CSS pseudo-elements for floating petals */
-        .cherry-blossom {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: -1;
-        }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-dark);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
 
-        .petal {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            animation: fall 10s linear infinite;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
+    /* Floating cherry blossom petals */
+    .petals-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -10;
+      overflow: hidden;
+    }
 
-        @keyframes fall {
-            0% { transform: translateY(-10vh) rotate(0deg); }
-            100% { transform: translateY(110vh) rotate(360deg); }
-        }
+    .petal {
+      position: absolute;
+      background: linear-gradient(135deg, #fff1f5, #ffe4e9);
+      border-radius: 40% 60% 70% 30% / 60% 40% 70% 30%;
+      opacity: 0.7;
+      box-shadow: 0 4px 12px rgba(255,105,180,0.15);
+      animation: drift 18s linear infinite;
+    }
 
-        /* Generate multiple petals with variations */
-        .petal:nth-child(1) { width: 20px; height: 20px; left: 10%; animation-duration: 15s; animation-delay: 0s; }
-        .petal:nth-child(2) { width: 15px; height: 15px; left: 20%; animation-duration: 12s; animation-delay: 2s; }
-        .petal:nth-child(3) { width: 25px; height: 25px; left: 30%; animation-duration: 18s; animation-delay: 4s; }
-        .petal:nth-child(4) { width: 18px; height: 18px; left: 40%; animation-duration: 14s; animation-delay: 1s; }
-        .petal:nth-child(5) { width: 22px; height: 22px; left: 50%; animation-duration: 16s; animation-delay: 3s; }
-        .petal:nth-child(6) { width: 16px; height: 16px; left: 60%; animation-duration: 13s; animation-delay: 5s; }
-        .petal:nth-child(7) { width: 24px; height: 24px; left: 70%; animation-duration: 17s; animation-delay: 0s; }
-        .petal:nth-child(8) { width: 19px; height: 19px; left: 80%; animation-duration: 15s; animation-delay: 2s; }
-        .petal:nth-child(9) { width: 21px; height: 21px; left: 90%; animation-duration: 19s; animation-delay: 4s; }
-        .petal:nth-child(10) { width: 17px; height: 17px; left: 95%; animation-duration: 11s; animation-delay: 6s; }
+    @keyframes drift {
+      0%   { transform: translateY(-120vh) rotate(0deg) scale(0.8); }
+      100% { transform: translateY(120vh) rotate(720deg) scale(1.1); }
+    }
 
-        /* Nav buttons */
-        .nav-btn {
-            background-color: var(--accent-green);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 9999px; /* Pill shape */
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+    /* Glass card style from your performance portal inspiration */
+    .glass {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-soft);
+      border-radius: 2.5rem;
+      box-shadow: 0 8px 32px rgba(255, 105, 180, 0.08);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
 
-        .nav-btn:hover {
-            background-color: #38A169; /* Darker green */
-            transform: translateY(-2px);
-        }
+    .glass:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 24px 48px rgba(255, 105, 180, 0.15);
+    }
 
-        /* Card styling inspired by provided files: clean, bright, popping */
-        .intro-card {
-            background: linear-gradient(135deg, var(--card-green), #FFFFFF);
-            border-radius: 2rem;
-            padding: 3rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: 0 auto;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
+    /* Cute rounded pill buttons */
+    .pill-btn {
+      background: linear-gradient(135deg, var(--accent-pink), #ff7eb3);
+      color: white;
+      font-weight: 700;
+      padding: 0.9rem 2rem;
+      border-radius: 9999px;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(255, 105, 180, 0.25);
+    }
 
-        /* Sparkle effect */
-        .sparkle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: var(--sparkle);
-            border-radius: 50%;
-            animation: sparkle 1.5s infinite;
-        }
+    .pill-btn:hover {
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 12px 30px rgba(255, 105, 180, 0.4);
+    }
 
-        @keyframes sparkle {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
-        }
+    .mint-pill {
+      background: linear-gradient(135deg, var(--accent-mint), #7dd3bb);
+    }
 
-        .sparkle:nth-child(1) { top: 10%; left: 15%; animation-delay: 0s; }
-        .sparkle:nth-child(2) { top: 20%; right: 10%; animation-delay: 0.5s; }
-        .sparkle:nth-child(3) { bottom: 15%; left: 25%; animation-delay: 1s; }
-
-        /* Logo placeholder - Replace with actual image URL */
-        .logo {
-            background-color: #FBB6CE; /* Pink circle */
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem; /* Bunny emoji as placeholder */
-        }
-    </style>
+    /* Logo placeholder style */
+    .logo-circle {
+      width: 110px;
+      height: 110px;
+      background: linear-gradient(135deg, #fff1f5, #ffe4f0);
+      border-radius: 50%;
+      border: 4px solid var(--accent-pink);
+      box-shadow: 0 0 0 8px rgba(255, 182, 193, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      margin: 0 auto 1.5rem;
+    }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center relative">
+<body>
 
-    <!-- Cherry Blossom Background -->
-    <div class="cherry-blossom">
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
+  <!-- Floating petals -->
+  <div class="petals-bg">
+    <div class="petal" style="left:10%; width:28px; height:24px; animation-duration:22s; animation-delay:-4s;"></div>
+    <div class="petal" style="left:25%; width:34px; height:28px; animation-duration:26s; animation-delay:-8s;"></div>
+    <div class="petal" style="left:42%; width:22px; height:26px; animation-duration:19s; animation-delay:-2s;"></div>
+    <div class="petal" style="left:58%; width:30px; height:22px; animation-duration:24s; animation-delay:-12s;"></div>
+    <div class="petal" style="left:75%; width:26px; height:30px; animation-duration:21s; animation-delay:-6s;"></div>
+    <div class="petal" style="left:88%; width:20px; height:18px; animation-duration:17s; animation-delay:-10s;"></div>
+  </div>
+
+  <!-- Header / Hero -->
+  <header class="pt-16 pb-24 px-6 text-center">
+    <div class="logo-circle">🌸</div>
+    
+    <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
+      HanafubukiDoll
+    </h1>
+    
+    <p class="text-xl md:text-2xl text-[var(--text-muted)] max-w-2xl mx-auto mb-10 leading-relaxed">
+      Handcrafted dreamy dolls • born from nostalgia & creativity • by Dani & Jas
+    </p>
+
+    <div class="flex flex-wrap justify-center gap-5">
+      <a href="#gallery" class="pill-btn">View Gallery</a>
+      <a href="#services" class="pill-btn mint-pill">Our Services</a>
+      <a href="#contact" class="pill-btn bg-gradient-to-r from-[var(--accent-gold)] to-[#f6c453] text-gray-900">Contact Us</a>
     </div>
+  </header>
 
-    <!-- Navigation -->
-    <nav class="w-full max-w-4xl mx-auto flex justify-center gap-4 mt-8 mb-12">
-        <a href="#home" class="nav-btn">🐰 Home</a>
-        <a href="#services" class="nav-btn">🐰 Services</a>
-        <a href="#contact" class="nav-btn">🐰 Contact Us</a>
-        <a href="#gallery" class="nav-btn">🐰 Gallery</a>
-    </nav>
+  <!-- Main content wrapper -->
+  <main class="max-w-6xl mx-auto px-6 pb-32 space-y-32">
 
-    <!-- Intro Card -->
-    <div class="intro-card">
-        <div class="sparkle"></div>
-        <div class="sparkle"></div>
-        <div class="sparkle"></div>
-        <div class="logo">🌙</div> <!-- Placeholder for moon/bunny logo -->
-        <h1 class="text-4xl font-bold mb-6">HanafubukiDoll</h1>
-        <p class="text-lg mb-4">
-            Hi! We are Dani and Jas, the people behind HanafubukiDoll.
+    <!-- About / Story section -->
+    <section class="glass p-10 md:p-16 text-center">
+      <h2 class="text-4xl font-bold mb-8">Our Story</h2>
+      
+      <div class="max-w-3xl mx-auto space-y-6 text-lg leading-relaxed">
+        <p>
+          Hi! We're Dani and Jas — the hearts behind HanafubukiDoll.
         </p>
-        <p class="text-lg mb-4">
-            Our story started with a Boy&Girl Natalia and an Angel of Dream Chi all the way back in 2008. Dolls have come and gone over the years, friends all over the world have been made and a passion for creativity has been reignited. ✧
+        <p>
+          It all began back in 2008 with Boy&Girl Natalia and our precious Angel of Dream Chi. 
+          Over the years dolls came and went, but the connections we made with collectors worldwide 
+          never faded. That spark of creativity has now been beautifully reignited.
         </p>
-        <p class="text-lg">
-            These days our mission is to create a safe and positive experience for doll collectors where they...
+        <p class="font-medium">
+          Today our mission is simple: to craft a safe, joyful, and magical space 
+          where doll lovers can find dream companions made with love and care. ♡
         </p>
-    </div>
-
-    <!-- Additional Sections (Placeholders) -->
-    <section id="services" class="w-full max-w-4xl mx-auto py-16">
-        <h2 class="text-3xl font-bold text-center mb-8">Services</h2>
-        <!-- Add service content here -->
+      </div>
     </section>
 
-    <section id="contact" class="w-full max-w-4xl mx-auto py-16">
-        <h2 class="text-3xl font-bold text-center mb-8">Contact Us</h2>
-        <!-- Add contact form here -->
+    <!-- Gallery teaser -->
+    <section id="gallery">
+      <h2 class="text-4xl font-bold text-center mb-12">Gallery</h2>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- You can replace these with real images later -->
+        <div class="glass aspect-square rounded-3xl overflow-hidden shadow-xl hover:scale-[1.03] transition-transform">
+          <div class="w-full h-full bg-gradient-to-br from-pink-200 to-mint-200 flex items-center justify-center text-6xl">🌙</div>
+        </div>
+        <div class="glass aspect-square rounded-3xl overflow-hidden shadow-xl hover:scale-[1.03] transition-transform">
+          <div class="w-full h-full bg-gradient-to-br from-purple-200 to-pink-200 flex items-center justify-center text-6xl">🐰</div>
+        </div>
+        <div class="glass aspect-square rounded-3xl overflow-hidden shadow-xl hover:scale-[1.03] transition-transform">
+          <div class="w-full h-full bg-gradient-to-br from-cyan-200 to-pink-200 flex items-center justify-center text-6xl">✧</div>
+        </div>
+      </div>
     </section>
 
-    <section id="gallery" class="w-full max-w-4xl mx-auto py-16">
-        <h2 class="text-3xl font-bold text-center mb-8">Gallery</h2>
-        <!-- Add gallery images here -->
+    <!-- Services placeholder -->
+    <section id="services" class="glass p-10 md:p-16">
+      <h2 class="text-4xl font-bold text-center mb-12">Services</h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Add your actual service cards here -->
+        <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-pink-200/50">
+          <h3 class="text-2xl font-bold mb-4">Custom Dolls</h3>
+          <p class="text-[var(--text-muted)]">Made-to-order dream companions tailored to your vision.</p>
+        </div>
+        <!-- more cards... -->
+      </div>
     </section>
+
+    <!-- Contact -->
+    <section id="contact" class="glass p-10 md:p-16 text-center">
+      <h2 class="text-4xl font-bold mb-8">Get in Touch ♡</h2>
+      <p class="text-lg mb-10 max-w-xl mx-auto">
+        We'd love to hear from you! Whether it's a custom request, question, or just saying hi~
+      </p>
+      <a href="mailto:hello@hanafubukidoll.com" class="pill-btn text-xl px-12 py-6">
+        Say Hello → hello@hanafubukidoll.com
+      </a>
+    </section>
+
+  </main>
+
+  <footer class="text-center py-12 text-[var(--text-muted)] text-sm">
+    © 2026 HanafubukiDoll • Made with love & cherry blossoms
+  </footer>
 
 </body>
 </html>
