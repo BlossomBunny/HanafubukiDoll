@@ -4,47 +4,183 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HanafubukiDoll</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-pink: #FFB6C1; /* Soft pink background */
+            --card-green: #E0F7FA; /* Light green for card */
+            --text-main: #4A5568; /* Dark gray for text */
+            --accent-green: #48BB78; /* Green for buttons */
+            --sparkle: #FFD700; /* Gold for sparkles */
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-pink);
+            color: var(--text-main);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Cherry Blossom Background - Using CSS pseudo-elements for floating petals */
+        .cherry-blossom {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .petal {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: fall 10s linear infinite;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); }
+            100% { transform: translateY(110vh) rotate(360deg); }
+        }
+
+        /* Generate multiple petals with variations */
+        .petal:nth-child(1) { width: 20px; height: 20px; left: 10%; animation-duration: 15s; animation-delay: 0s; }
+        .petal:nth-child(2) { width: 15px; height: 15px; left: 20%; animation-duration: 12s; animation-delay: 2s; }
+        .petal:nth-child(3) { width: 25px; height: 25px; left: 30%; animation-duration: 18s; animation-delay: 4s; }
+        .petal:nth-child(4) { width: 18px; height: 18px; left: 40%; animation-duration: 14s; animation-delay: 1s; }
+        .petal:nth-child(5) { width: 22px; height: 22px; left: 50%; animation-duration: 16s; animation-delay: 3s; }
+        .petal:nth-child(6) { width: 16px; height: 16px; left: 60%; animation-duration: 13s; animation-delay: 5s; }
+        .petal:nth-child(7) { width: 24px; height: 24px; left: 70%; animation-duration: 17s; animation-delay: 0s; }
+        .petal:nth-child(8) { width: 19px; height: 19px; left: 80%; animation-duration: 15s; animation-delay: 2s; }
+        .petal:nth-child(9) { width: 21px; height: 21px; left: 90%; animation-duration: 19s; animation-delay: 4s; }
+        .petal:nth-child(10) { width: 17px; height: 17px; left: 95%; animation-duration: 11s; animation-delay: 6s; }
+
+        /* Nav buttons */
+        .nav-btn {
+            background-color: var(--accent-green);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px; /* Pill shape */
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn:hover {
+            background-color: #38A169; /* Darker green */
+            transform: translateY(-2px);
+        }
+
+        /* Card styling inspired by provided files: clean, bright, popping */
+        .intro-card {
+            background: linear-gradient(135deg, var(--card-green), #FFFFFF);
+            border-radius: 2rem;
+            padding: 3rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Sparkle effect */
+        .sparkle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--sparkle);
+            border-radius: 50%;
+            animation: sparkle 1.5s infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        .sparkle:nth-child(1) { top: 10%; left: 15%; animation-delay: 0s; }
+        .sparkle:nth-child(2) { top: 20%; right: 10%; animation-delay: 0.5s; }
+        .sparkle:nth-child(3) { bottom: 15%; left: 25%; animation-delay: 1s; }
+
+        /* Logo placeholder - Replace with actual image URL */
+        .logo {
+            background-color: #FBB6CE; /* Pink circle */
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem; /* Bunny emoji as placeholder */
+        }
+    </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col items-center justify-center relative">
 
-    <div class="site-wrapper">
-        <nav class="navigation">
-            <a href="index.html" class="nav-pill">Home</a>
-            <a href="#services" class="nav-pill">Services</a>
-            <a href="#contact" class="nav-pill">Contact Us</a>
-            <a href="#gallery" class="nav-pill">Gallery</a>
-        </nav>
-
-        <div class="content-box">
-            <div class="avatar-wrapper">
-                <img src="logo.png" alt="Hanafubuki Logo" class="avatar">
-            </div>
-            
-            <h1 class="brand-title">HanafubukiDoll</h1>
-            
-            <p class="main-text">Hi! We are Dani and Jas, the people behind HanafubukiDoll.</p>
-            
-            <p class="sub-text">Our story started with a Boy&Girl Natalia and an Angel of Dream Chi all the way back in 2008. Dolls have come and gone over the years, friends all over the world have been made and a passion for creativity has been reignited.</p>
-
-            <p class="sub-text">These days our mission is to create a safe and positive experience for doll collectors where they can see their dreams come to life.</p>
-            
-            <div class="sparkle top-left">✦</div>
-            <div class="sparkle bottom-right">✦</div>
-        </div>
-
-        <div class="content-box">
-            <h2 class="section-title">Our Materials</h2>
-            <ul class="material-list">
-                <li>Mr Super Clear UV cut flat</li>
-                <li>Games Workshop Citadel purity seal</li>
-                <li>Watercolour pencils (Derwent Inktense, Faber-Castell)</li>
-                <li>Chalk pastels (Inscribe, Sennelier)</li>
-                <li>TAMIYA gloss/Semi gloss</li>
-            </ul>
-        </div>
+    <!-- Cherry Blossom Background -->
+    <div class="cherry-blossom">
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
+        <div class="petal"></div>
     </div>
+
+    <!-- Navigation -->
+    <nav class="w-full max-w-4xl mx-auto flex justify-center gap-4 mt-8 mb-12">
+        <a href="#home" class="nav-btn">🐰 Home</a>
+        <a href="#services" class="nav-btn">🐰 Services</a>
+        <a href="#contact" class="nav-btn">🐰 Contact Us</a>
+        <a href="#gallery" class="nav-btn">🐰 Gallery</a>
+    </nav>
+
+    <!-- Intro Card -->
+    <div class="intro-card">
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="logo">🌙</div> <!-- Placeholder for moon/bunny logo -->
+        <h1 class="text-4xl font-bold mb-6">HanafubukiDoll</h1>
+        <p class="text-lg mb-4">
+            Hi! We are Dani and Jas, the people behind HanafubukiDoll.
+        </p>
+        <p class="text-lg mb-4">
+            Our story started with a Boy&Girl Natalia and an Angel of Dream Chi all the way back in 2008. Dolls have come and gone over the years, friends all over the world have been made and a passion for creativity has been reignited. ✧
+        </p>
+        <p class="text-lg">
+            These days our mission is to create a safe and positive experience for doll collectors where they...
+        </p>
+    </div>
+
+    <!-- Additional Sections (Placeholders) -->
+    <section id="services" class="w-full max-w-4xl mx-auto py-16">
+        <h2 class="text-3xl font-bold text-center mb-8">Services</h2>
+        <!-- Add service content here -->
+    </section>
+
+    <section id="contact" class="w-full max-w-4xl mx-auto py-16">
+        <h2 class="text-3xl font-bold text-center mb-8">Contact Us</h2>
+        <!-- Add contact form here -->
+    </section>
+
+    <section id="gallery" class="w-full max-w-4xl mx-auto py-16">
+        <h2 class="text-3xl font-bold text-center mb-8">Gallery</h2>
+        <!-- Add gallery images here -->
+    </section>
 
 </body>
 </html>
