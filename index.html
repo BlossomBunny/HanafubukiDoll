@@ -10,73 +10,87 @@
     <style>
         :root {
             --bg-main: #ffffff;
-            --text-main: #9f2a6d;          /* soft rose pink for main text – on-brand warmth */
-            --text-muted: #c084a1;         /* gentle muted pink-gray */
-            --card-bg: rgba(255, 250, 252, 0.94);  /* almost pure white with tiny pink tint */
-            --card-border: rgba(249, 231, 239, 0.9); /* very light pink border */
-            --accent-pink: #ec4899;
-            --accent-mint: #10b981;
-            --accent-gold: #f59e0b;
-            --mesh-opacity: 0.06;          /* even subtler mesh */
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-main: #0f172a;
-                --text-main: #fbb6ce;      /* light pink for dark mode readability */
-                --text-muted: #d4a3b8;
-                --card-bg: rgba(30, 25, 35, 0.88);
-                --card-border: rgba(236, 72, 153, 0.25);
-                --accent-pink: #f472b6;
-                --accent-mint: #34d399;
-            }
+            --text-main: #c026d3;          /* sakura-rose pink – warm & dreamy */
+            --text-muted: #d386ba;         /* softer muted pink */
+            --card-bg: rgba(255, 251, 253, 0.95);  /* near-white with faint pink tint */
+            --card-border: rgba(249, 231, 241, 0.92);
+            --accent-pink: #ec4899;        /* vivid sakura pink */
+            --accent-mint: #34d399;        /* fresh pastel mint green */
+            --mesh-opacity: 0.05;
         }
 
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             background: var(--bg-main);
             color: var(--text-main);
-            transition: all 0.4s ease;
+            position: relative;
+            overflow-x: hidden;
         }
 
+        /* Subtle mesh – pink + mint only */
         .mesh-bg {
             position: fixed;
             inset: 0;
-            z-index: -1;
+            z-index: -2;
             background: 
-                radial-gradient(circle at 10% 15%, rgba(236,72,153, var(--mesh-opacity)) 0, transparent 40%),
-                radial-gradient(circle at 90% 25%, rgba(16,185,129, var(--mesh-opacity)) 0, transparent 45%),
-                radial-gradient(circle at 75% 85%, rgba(245,158,11, var(--mesh-opacity)*0.8) 0, transparent 35%);
+                radial-gradient(circle at 20% 30%, rgba(236,72,153, var(--mesh-opacity)) 0, transparent 45%),
+                radial-gradient(circle at 80% 70%, rgba(52,211,153, var(--mesh-opacity)) 0, transparent 40%);
             pointer-events: none;
         }
 
+        /* Animated falling petals – cute & sakura style */
+        .petals-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .petal {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(236, 72, 153, 0.7);
+            border-radius: 40% 60% 70% 30%;
+            opacity: 0.8;
+            box-shadow: 0 2px 8px rgba(236,72,153,0.3);
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0%   { transform: translateY(-15vh) rotate(0deg) translateX(0); }
+            100% { transform: translateY(120vh) rotate(1080deg) translateX(30vw); }
+        }
+
+        /* Glass cards – clean & elevated */
         .glass-card {
             background: var(--card-bg);
             backdrop-filter: blur(20px);
             border: 1px solid var(--card-border);
             border-radius: 2.5rem;
-            box-shadow: 0 12px 32px -12px rgba(236,72,153,0.12);
-            transition: all 0.45s cubic-bezier(0.34,1.56,0.64,1);
+            box-shadow: 0 10px 30px rgba(236,72,153,0.1);
+            transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
         }
 
         .glass-card:hover {
-            transform: translateY(-12px);
-            box-shadow: 0 32px 64px -16px rgba(236,72,153,0.2);
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(236,72,153,0.18);
         }
 
         .btn-pill {
             background: linear-gradient(135deg, var(--accent-pink), #db2777);
             color: white;
             font-weight: 700;
-            padding: 1.1rem 2.8rem;
+            padding: 1rem 2.5rem;
             border-radius: 9999px;
             transition: all 0.35s ease;
-            box-shadow: 0 8px 24px rgba(236,72,153,0.3);
+            box-shadow: 0 6px 20px rgba(236,72,153,0.3);
         }
 
         .btn-pill:hover {
-            transform: translateY(-5px) scale(1.06);
-            box-shadow: 0 16px 40px rgba(236,72,153,0.45);
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 12px 32px rgba(236,72,153,0.45);
         }
 
         .btn-mint {
@@ -84,29 +98,47 @@
         }
 
         .pulse-dot {
-            height: 12px; width: 12px;
-            background-color: var(--accent-mint);
+            height: 10px; width: 10px;
+            background: var(--accent-mint);
             border-radius: 50%;
-            animation: pulse 2.4s infinite;
+            animation: pulse 2.2s infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
-            70%      { transform: scale(1.2); box-shadow: 0 0 0 14px rgba(16,185,129,0); }
+            0%, 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52,211,153,0.5); }
+            70%      { transform: scale(1.15); box-shadow: 0 0 0 12px rgba(52,211,153,0); }
         }
 
         .logo-circle {
-            width: 110px;
-            height: 110px;
+            width: 100px;
+            height: 100px;
             background: linear-gradient(135deg, #fce7f3, #f9d8e9);
             border-radius: 50%;
-            border: 6px solid var(--accent-pink);
-            box-shadow: 0 0 0 12px rgba(236,72,153,0.15);
+            border: 5px solid var(--accent-pink);
+            box-shadow: 0 0 0 10px rgba(236,72,153,0.15);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3.5rem;
-            margin: 0 auto 1.8rem;
+            font-size: 3.2rem;
+            margin: 0 auto 1.5rem;
+        }
+
+        /* Gallery placeholders – adorable & pastel */
+        .gallery-placeholder {
+            background: linear-gradient(135deg, #fff0f7, #f0fff9);
+            border-radius: 1.5rem;
+            overflow: hidden;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            box-shadow: inset 0 0 30px rgba(236,72,153,0.08);
+            transition: transform 0.4s ease;
+        }
+
+        .gallery-placeholder:hover {
+            transform: scale(1.04);
         }
     </style>
 </head>
@@ -114,19 +146,24 @@
 
     <div class="mesh-bg"></div>
 
+    <!-- Cute animated petals -->
+    <div class="petals-container" id="petals"></div>
+
     <div class="max-w-6xl mx-auto px-6 pt-20 pb-32">
 
+        <!-- Status pill – kept as you loved it -->
         <div class="flex justify-center mb-12">
-            <div class="glass-card px-7 py-3.5 rounded-full shadow-lg flex items-center gap-3">
+            <div class="glass-card px-6 py-3 rounded-full shadow-md flex items-center gap-3">
                 <div class="pulse-dot"></div>
-                <span class="text-base font-bold text-[var(--text-muted)]">New creations blooming soon ♡</span>
+                <span class="text-sm font-bold text-[var(--text-muted)]">New dolls blooming soon ♡</span>
             </div>
         </div>
 
+        <!-- Hero -->
         <div class="text-center mb-24">
             <div class="logo-circle">🌸</div>
 
-            <h1 class="text-6xl md:text-8xl font-extrabold tracking-tighter mb-8" style="color: var(--text-main);">
+            <h1 class="text-6xl md:text-8xl font-extrabold tracking-tighter mb-8">
                 HanafubukiDoll
             </h1>
 
@@ -137,86 +174,101 @@
             <div class="flex flex-wrap justify-center gap-6">
                 <a href="#gallery" class="btn-pill">Explore Gallery</a>
                 <a href="#services" class="btn-pill btn-mint">Our Services</a>
-                <a href="#contact" class="btn-pill bg-gradient-to-r from-[var(--accent-gold)] to-[#d97706] text-gray-900">Get in Touch</a>
+                <a href="#contact" class="btn-pill">Get in Touch ♡</a>
             </div>
         </div>
 
+        <!-- Story + Materials card layout -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-32">
 
             <div class="lg:col-span-2 glass-card p-12 md:p-16">
                 <div class="flex justify-between items-start mb-10">
                     <div>
-                        <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4" style="color: var(--text-main);">
-                            Welcome to our world ♡
+                        <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+                            Welcome ♡
                         </h2>
                         <p class="text-[var(--text-muted)] font-medium text-lg">
-                            A gentle space for doll dreams since 2008
+                            A gentle world of dolls since 2008
                         </p>
                     </div>
                     <div class="flex gap-2">
                         <div class="w-4 h-4 rounded-full bg-[var(--accent-pink)]"></div>
                         <div class="w-4 h-4 rounded-full bg-[var(--accent-mint)]"></div>
-                        <div class="w-4 h-4 rounded-full bg-[var(--accent-gold)]"></div>
                     </div>
                 </div>
 
-                <div class="space-y-8 text-lg leading-relaxed" style="color: var(--text-main);">
-                    <p>Hi! We're Dani and Jas — the hearts behind HanafubukiDoll.</p>
-                    <p>Our story started in 2008 with Natalia & Chi, sparking connections with collectors around the world. That gentle magic has now fully blossomed again.</p>
-                    <p class="font-medium">We craft each doll with the softest care, using beautiful materials to bring your dreams to life.</p>
+                <div class="space-y-6 text-lg leading-relaxed">
+                    <p>Hi! We're Dani and Jas — the dreamers behind HanafubukiDoll.</p>
+                    <p>Our journey began in 2008 with sweet Natalia & Chi, creating bonds with collectors worldwide. That soft spark has now bloomed beautifully again.</p>
+                    <p class="font-medium">We craft each doll with endless care, using only the loveliest materials to make your dreams feel real.</p>
                 </div>
             </div>
 
             <div class="glass-card p-12 flex flex-col">
-                <h3 class="text-3xl font-extrabold mb-8" style="color: var(--text-main);">Crafted With Care</h3>
-                
-                <div class="space-y-6 flex-grow" style="color: var(--text-main);">
-                    <div class="flex items-center gap-4">
-                        <div class="text-2xl">✦</div>
-                        <p class="font-medium">Super Clear UV cut flats</p>
+                <h3 class="text-3xl font-extrabold mb-8">Crafted With ♡</h3>
+                <div class="space-y-5 flex-grow text-base">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">✿</span>
+                        <p>Super Clear UV cut flats</p>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-2xl">✦</div>
-                        <p class="font-medium">Citadel Purity Seal</p>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">✿</span>
+                        <p>Citadel Purity Seal</p>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-2xl">✦</div>
-                        <p class="font-medium">Derwent Inktense & Faber-Castell pencils</p>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">✿</span>
+                        <p>Derwent Inktense & Faber-Castell pencils</p>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-2xl">✦</div>
-                        <p class="font-medium">Sennelier & Inscribe chalk pastels</p>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">✿</span>
+                        <p>Sennelier & Inscribe chalk pastels</p>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-2xl">✦</div>
-                        <p class="font-medium">Tamiya gloss & semi-gloss finishes</p>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">✿</span>
+                        <p>Tamiya gloss & semi-gloss</p>
                     </div>
                 </div>
-
-                <div class="mt-auto pt-8">
-                    <a href="#services" class="btn-pill btn-mint w-full text-center block py-5 text-lg">
-                        Discover Our Services →
+                <div class="mt-8">
+                    <a href="#services" class="btn-pill btn-mint w-full block text-center py-5">
+                        See Our Services →
                     </a>
                 </div>
             </div>
         </div>
 
-        <div class="text-center">
-            <h2 class="text-4xl md:text-5xl font-extrabold mb-8" style="color: var(--text-main);">Ready to meet your new companion?</h2>
-            <p class="text-xl text-[var(--text-muted)] mb-10 max-w-2xl mx-auto">
-                Browse the gallery or say hello — we'd love to create something magical together.
-            </p>
-            <div class="flex justify-center gap-6 flex-wrap">
-                <a href="#gallery" class="btn-pill text-xl px-12 py-6">View Gallery</a>
-                <a href="#contact" class="btn-pill btn-mint text-xl px-12 py-6">Contact Us ♡</a>
+        <!-- Gallery teaser – adorable placeholders restored -->
+        <section id="gallery" class="text-center">
+            <h2 class="text-4xl font-extrabold mb-12">Little Glimpses ♡</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="gallery-placeholder">🌸</div>
+                <div class="gallery-placeholder">🐰</div>
+                <div class="gallery-placeholder">✧</div>
             </div>
-        </div>
+            <p class="mt-8 text-[var(--text-muted)]">
+                More magical dolls waiting to be discovered...
+            </p>
+        </section>
 
     </div>
 
-    <footer class="text-center py-12 text-[var(--text-muted)] text-sm border-t border-[var(--card-border)] mt-20">
-        © 2026 HanafubukiDoll • Made with love & gentle dreams
+    <footer class="text-center py-12 text-[var(--text-muted)] text-sm border-t border-[var(--card-border)]">
+        © 2026 HanafubukiDoll • Made with sakura dreams & gentle love
     </footer>
+
+    <!-- JavaScript for random cute petals -->
+    <script>
+        const petalsContainer = document.getElementById('petals');
+        for (let i = 0; i < 12; i++) {  // more petals for cuteness
+            const petal = document.createElement('div');
+            petal.className = 'petal';
+            petal.style.left = Math.random() * 100 + '%';
+            petal.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            petal.style.animationDelay = Math.random() * -20 + 's';
+            petal.style.width = (Math.random() * 15 + 12) + 'px';
+            petal.style.height = petal.style.width;
+            petalsContainer.appendChild(petal);
+        }
+    </script>
 
 </body>
 </html>
