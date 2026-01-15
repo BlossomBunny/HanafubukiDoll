@@ -1,102 +1,87 @@
 :root {
     --mint-glow: #98e5bc;
     --sakura-glow: #ffb7d5;
-    --soft-white: #ffffff;
+    --white: #ffffff;
 }
 
 body {
     margin: 0;
+    padding: 0;
     font-family: 'Quicksand', sans-serif;
-    background: #ffb7d5 url('your-sakura-bg.jpg') no-repeat center center fixed;
+    /* Use a high-quality floral pattern or a soft pink background */
+    background: var(--sakura-glow) url('sakura-bg.jpg') no-repeat center center fixed;
     background-size: cover;
+    color: var(--white);
     display: flex;
     justify-content: center;
-    color: var(--soft-white);
+}
+
+.site-wrapper {
+    width: 100%;
+    max-width: 550px;
+    padding: 40px 20px;
     text-align: center;
 }
 
-/* Rounded Navigation Buttons */
-.pill-nav {
-    margin: 40px 0;
+/* Pill Navigation - Matching your original image */
+.navigation {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 15px;
+    gap: 12px;
+    margin-bottom: 60px;
 }
 
-.pill-btn {
-    background: var(--mint-glow);
+.nav-pill {
+    background-color: var(--mint-glow);
     color: white;
-    padding: 12px 30px;
-    border-radius: 50px; /* Perfect pill shape */
+    padding: 10px 25px;
+    border-radius: 50px;
     text-decoration: none;
-    font-weight: bold;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: 0.3s;
 }
 
-.pill-btn:hover {
-    transform: scale(1.05);
-    filter: brightness(1.05);
-}
+.nav-pill:hover { transform: translateY(-2px); }
 
-/* The Main Gradient Card */
-.content-card {
-    background: linear-gradient(to bottom, var(--mint-glow) 0%, var(--sakura-glow) 100%);
-    width: 90%;
-    max-width: 500px;
-    margin: 20px auto;
-    padding: 40px 30px;
-    border-radius: 30px; /* Soft rounded corners */
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+/* The Gradient Content Card */
+.content-box {
+    background: linear-gradient(180deg, var(--mint-glow) 0%, var(--sakura-glow) 100%);
+    border-radius: 35px;
+    padding: 50px 30px;
+    margin-bottom: 40px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-.profile-circle {
-    width: 100px;
-    height: 100px;
+.avatar-wrapper {
+    width: 110px;
+    height: 110px;
     background: white;
     border-radius: 50%;
-    margin: -80px auto 20px; /* Pulls logo up like your image */
-    padding: 5px;
-    overflow: hidden;
+    margin: -95px auto 20px; /* Overlaps top of card */
+    padding: 6px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.profile-circle img { width: 100%; height: auto; }
+.avatar { width: 100%; border-radius: 50%; }
 
-h1, h2 {
+.brand-title {
     font-size: 2.2rem;
+    margin-bottom: 15px;
     text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
 }
 
-p {
-    font-size: 1rem;
-    line-height: 1.6;
-    margin-bottom: 20px;
-    font-weight: 500;
-}
+.main-text { font-weight: 700; margin-bottom: 15px; }
+.sub-text { font-size: 0.95rem; line-height: 1.6; opacity: 0.95; margin-bottom: 15px; }
 
 /* Material List Styles */
-.material-list {
-    list-style: none;
-    padding: 0;
-}
+.material-list { list-style: none; padding: 0; line-height: 1.8; }
 
-.material-list li {
-    margin: 10px 0;
-    font-size: 0.95rem;
-}
-
-/* Sparkling Elements */
-.sparkle {
-    position: absolute;
-    color: white;
-    font-size: 1.2rem;
-    opacity: 0.8;
-}
-
-.s1 { top: 20px; left: 20px; }
-.s2 { bottom: 40px; right: 30px; }
+/* Decorative Sparkles */
+.sparkle { position: absolute; font-size: 1.5rem; opacity: 0.7; }
+.top-left { top: 20px; left: 20px; }
+.bottom-right { bottom: 20px; right: 20px; }
