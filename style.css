@@ -1,0 +1,27 @@
+body {
+    background-color: #fdfdfd; /* Off-white */
+    color: #444;
+    font-family: 'Helvetica', sans-serif;
+    margin: 0;
+}
+
+nav {
+    background: #B2F2BB; /* Mint Green */
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav ul { list-style: none; display: flex; gap: 20px; }
+nav a { text-decoration: none; color: #666; font-weight: bold; }
+
+header {
+    height: 60vh;
+    background: linear-gradient(135deg, #B2F2BB 0%, #FFD1DC 100%); /* Mint to Pink */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
