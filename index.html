@@ -12,10 +12,10 @@
             --bg-main: #ffffff;
             --text-main: #c026d3;          /* sakura-rose pink – warm & dreamy */
             --text-muted: #d386ba;         /* softer muted pink */
-            --card-bg: rgba(255, 251, 253, 0.95);  /* near-white with faint pink tint */
+            --card-bg: rgba(255, 251, 253, 0.95);
             --card-border: rgba(249, 231, 241, 0.92);
-            --accent-pink: #ec4899;        /* vivid sakura pink */
-            --accent-mint: #34d399;        /* fresh pastel mint green */
+            --accent-pink: #ec4899;
+            --accent-mint: #34d399;
             --mesh-opacity: 0.05;
         }
 
@@ -27,7 +27,6 @@
             overflow-x: hidden;
         }
 
-        /* Subtle mesh – pink + mint only */
         .mesh-bg {
             position: fixed;
             inset: 0;
@@ -38,7 +37,6 @@
             pointer-events: none;
         }
 
-        /* Animated falling petals – cute & sakura style */
         .petals-container {
             position: fixed;
             inset: 0;
@@ -63,7 +61,6 @@
             100% { transform: translateY(120vh) rotate(1080deg) translateX(30vw); }
         }
 
-        /* Glass cards – clean & elevated */
         .glass-card {
             background: var(--card-bg);
             backdrop-filter: blur(20px);
@@ -97,16 +94,13 @@
             background: linear-gradient(135deg, var(--accent-mint), #059669);
         }
 
-        .pulse-dot {
-            height: 10px; width: 10px;
-            background: var(--accent-mint);
-            border-radius: 50%;
-            animation: pulse 2.2s infinite;
+        .pulse-slow {
+            animation: pulse-slow 3s ease-in-out infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52,211,153,0.5); }
-            70%      { transform: scale(1.15); box-shadow: 0 0 0 12px rgba(52,211,153,0); }
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50%      { transform: scale(1.15); opacity: 1; }
         }
 
         .logo-circle {
@@ -123,7 +117,6 @@
             margin: 0 auto 1.5rem;
         }
 
-        /* Gallery placeholders – adorable & pastel */
         .gallery-placeholder {
             background: linear-gradient(135deg, #fff0f7, #f0fff9);
             border-radius: 1.5rem;
@@ -151,17 +144,17 @@
 
     <div class="max-w-6xl mx-auto px-6 pt-20 pb-32">
 
-        <!-- Status pill – kept as you loved it -->
+        <!-- Status pill: Option 4 – Blossom + Rabbit combo with pulse -->
         <div class="flex justify-center mb-12">
-            <div class="glass-card px-6 py-3 rounded-full shadow-md flex items-center gap-3">
-                <div class="pulse-dot"></div>
-                <span class="text-sm font-bold text-[var(--text-muted)]">New dolls blooming soon ♡</span>
+            <div class="glass-card px-8 py-4 rounded-full shadow-lg flex items-center gap-4 border border-pink-200/50">
+                <span class="text-2xl pulse-slow">🌸🐰</span>
+                <span class="text-sm font-bold text-[var(--text-muted)]">Blossoming & hopping soon ♡</span>
             </div>
         </div>
 
         <!-- Hero -->
         <div class="text-center mb-24">
-            <div class="logo-circle">🌸</div>
+            <div class="logo-circle">🌙</div> <!-- Switched to crescent moon for brand tie-in -->
 
             <h1 class="text-6xl md:text-8xl font-extrabold tracking-tighter mb-8">
                 HanafubukiDoll
@@ -178,7 +171,7 @@
             </div>
         </div>
 
-        <!-- Story + Materials card layout -->
+        <!-- Story + Materials -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-32">
 
             <div class="lg:col-span-2 glass-card p-12 md:p-16">
@@ -236,13 +229,13 @@
             </div>
         </div>
 
-        <!-- Gallery teaser – adorable placeholders restored -->
+        <!-- Gallery teaser -->
         <section id="gallery" class="text-center">
             <h2 class="text-4xl font-extrabold mb-12">Little Glimpses ♡</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div class="gallery-placeholder">🌸</div>
                 <div class="gallery-placeholder">🐰</div>
-                <div class="gallery-placeholder">✧</div>
+                <div class="gallery-placeholder">🌙</div> <!-- Added crescent moon placeholder -->
             </div>
             <p class="mt-8 text-[var(--text-muted)]">
                 More magical dolls waiting to be discovered...
@@ -255,10 +248,10 @@
         © 2026 HanafubukiDoll • Made with sakura dreams & gentle love
     </footer>
 
-    <!-- JavaScript for random cute petals -->
+    <!-- Petals JS -->
     <script>
         const petalsContainer = document.getElementById('petals');
-        for (let i = 0; i < 12; i++) {  // more petals for cuteness
+        for (let i = 0; i < 12; i++) {
             const petal = document.createElement('div');
             petal.className = 'petal';
             petal.style.left = Math.random() * 100 + '%';
