@@ -3,50 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hanafubuki Doll | Custom Doll Studio</title>
+    <title>HanafubukiDoll</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Quicksand:wght@300;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="sakura-container"></div>
 
-    <nav class="glass-nav">
-        <div class="logo">Hanafubuki<span>Studio</span></div>
-        <ul class="links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="#services">Services</a></li>
-            <li><a href="tracker.html">Track Order</a></li>
-            <li><a href="#contact" class="btn-book">Book Now</a></li>
-        </ul>
-    </nav>
+    <div class="background-overlay"></div>
 
-    <section class="hero-split">
-        <div class="hero-text">
-            <span class="subtitle">Bespoke Doll Face-ups</span>
-            <h1>Where art meets <em>imagination.</em></h1>
-            <p>Specializing in soft, ethereal aesthetics and detailed character work for ball-jointed dolls.</p>
-            <div class="cta-group">
-                <a href="#services" class="primary-btn">View Menu</a>
-                <a href="tracker.html" class="secondary-btn">Check Status</a>
-            </div>
+    <div class="main-container">
+        
+        <nav class="pill-nav">
+            <a href="index.html" class="pill-btn">Home</a>
+            <a href="#services" class="pill-btn">Services</a>
+            <a href="#contact" class="pill-btn">Contact Us</a>
+            <a href="#gallery" class="pill-btn">Gallery</a>
+        </nav>
+
+        <div class="content-card">
+            <div class="profile-circle">
+                <img src="your-logo.png" alt="Logo"> </div>
+            
+            <h1>HanafubukiDoll</h1>
+            
+            <p class="intro-text">
+                Hi! We are Dani and Jas, the people behind HanafubukiDoll.
+            </p>
+            
+            <p class="story-text">
+                Our story started with a Boy&Girl Natalia and an Angel of Dream Chi all the way back in 2008. 
+                Dolls have come and gone over the years, friends all over the world have been made and a 
+                passion for creativity has been reignited.
+            </p>
+
+            <p class="mission-text">
+                These days our mission is to create a safe and positive experience for doll collectors.
+            </p>
+            
+            <div class="sparkle s1">✦</div>
+            <div class="sparkle s2">✦</div>
         </div>
-        <div class="hero-image">
-            <div class="image-frame">
-                <div class="placeholder-art">🌸</div>
-            </div>
-        </div>
-    </section>
 
-    <script>
-        const container = document.getElementById('sakura-container');
-        for (let i = 0; i < 15; i++) {
-            const petal = document.createElement('div');
-            petal.className = 'petal';
-            petal.style.left = Math.random() * 100 + 'vw';
-            petal.style.animationDelay = Math.random() * 5 + 's';
-            petal.style.opacity = Math.random();
-            container.appendChild(petal);
-        }
-    </script>
+        <div class="content-card materials">
+            <h2>Our Materials</h2>
+            <ul class="material-list">
+                <li>Mr Super Clear UV cut flat</li>
+                <li>Games Workshop Citadel purity seal</li>
+                <li>Watercolour pencils (Derwent Inktense, Faber-Castell)</li>
+                <li>Chalk pastels (Inscribe, Sennelier)</li>
+                <li>TAMIYA gloss/Semi gloss</li>
+            </ul>
+        </div>
+    </div>
+
 </body>
 </html>
