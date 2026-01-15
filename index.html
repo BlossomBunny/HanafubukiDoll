@@ -2,22 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hanafubuki Doll | Custom Doll Studio</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav>
-        <div class="logo">Hanafubuki</div>
-        <ul>
+
+    <nav class="navbar">
+        <div class="logo">Hanafubuki<span>Studio</span></div>
+        <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
-            <li><a href="booking.html">Booking</a></li>
-            <li><a href="tracker.html">Order Tracker</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="tracker.html">Track Order</a></li>
+            <li><a href="#contact" class="btn-small">Book Now</a></li>
         </ul>
     </nav>
 
-    <header>
-        <h1>Welcome to the Studio</h1>
-        <p>Creating dreams one step at a time.</p>
-    </header>
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Hand-painted dreams, <br><em>one doll at a time.</em></h1>
+            <p>Bespoke face-ups and aesthetic styling for the modern collector.</p>
+            <div class="hero-btns">
+                <a href="#services" class="btn-primary">View Services</a>
+                <a href="https://instagram.com/hanafubukidoll" class="btn-secondary">Gallery</a>
+            </div>
+        </div>
+        <div class="hero-image-placeholder"></div>
+    </section>
+
+    <section id="services" class="feature-grid">
+        <div class="card">
+            <h3>Custom Face-ups</h3>
+            <p>Detailed, soulful expressions tailored to your character's personality.</p>
+        </div>
+        <div class="card">
+            <h3>Full Styling</h3>
+            <p>Wig styling and eye placement to bring the whole look together.</p>
+        </div>
+        <div class="card">
+            <h3>Restoration</h3>
+            <p>Careful cleaning and refreshing for vintage or well-loved dolls.</p>
+        </div>
+    </section>
+
 </body>
 </html>
