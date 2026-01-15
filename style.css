@@ -1,99 +1,102 @@
 :root {
-    --mint: #E0F7F1;
-    --sakura: #FFD1DC;
-    --dark: #4A4A4A;
-    --white: #ffffff;
+    --mint-glow: #98e5bc;
+    --sakura-glow: #ffb7d5;
+    --soft-white: #ffffff;
 }
 
 body {
-    font-family: 'Quicksand', sans-serif;
     margin: 0;
-    overflow-x: hidden;
-    background-color: var(--white);
-    color: var(--dark);
-}
-
-/* Glass Navigation */
-.glass-nav {
-    position: fixed;
-    top: 20px;
-    left: 5%;
-    right: 5%;
-    padding: 15px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(15px);
-    border-radius: 50px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    z-index: 1000;
-}
-
-.logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; }
-.logo span { font-weight: 300; opacity: 0.6; margin-left: 5px; }
-
-.links { display: flex; list-style: none; gap: 30px; align-items: center; }
-.links a { text-decoration: none; color: var(--dark); font-size: 0.9rem; letter-spacing: 1px; }
-
-/* Hero Section */
-.hero-split {
-    display: flex;
-    height: 100vh;
-    align-items: center;
-    padding: 0 10%;
-    background: linear-gradient(to right, var(--mint), var(--white));
-}
-
-.hero-text { flex: 1; padding-right: 50px; }
-.subtitle { text-transform: uppercase; letter-spacing: 3px; font-size: 0.7rem; color: #888; }
-.hero-text h1 { font-family: 'Playfair Display', serif; font-size: 4rem; line-height: 1.1; margin: 20px 0; }
-.hero-text em { font-weight: normal; color: #ffb7c5; }
-
-/* Floating Image Frame */
-.hero-image { flex: 1; display: flex; justify-content: center; }
-.image-frame {
-    width: 400px;
-    height: 500px;
-    background: var(--sakura);
-    border-radius: 200px 200px 20px 20px; /* Elegant arch shape */
-    box-shadow: 30px 30px 0px var(--mint);
+    font-family: 'Quicksand', sans-serif;
+    background: #ffb7d5 url('your-sakura-bg.jpg') no-repeat center center fixed;
+    background-size: cover;
     display: flex;
     justify-content: center;
-    align-items: center;
-    font-size: 5rem;
-    animation: float 6s ease-in-out infinite;
+    color: var(--soft-white);
+    text-align: center;
 }
 
-/* Sakura Petal Animation */
-.petal {
-    position: fixed;
-    top: -10%;
-    width: 15px;
-    height: 15px;
-    background: var(--sakura);
-    border-radius: 100% 0 100% 0;
-    filter: blur(1px);
-    animation: fall 10s linear infinite;
+/* Rounded Navigation Buttons */
+.pill-nav {
+    margin: 40px 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
 }
 
-@keyframes fall {
-    0% { transform: translateY(0) rotate(0deg); }
-    100% { transform: translateY(110vh) rotate(360deg); left: calc(inherit + 50px); }
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
-}
-
-/* Buttons */
-.primary-btn {
-    display: inline-block;
-    padding: 15px 35px;
-    background: var(--dark);
+.pill-btn {
+    background: var(--mint-glow);
     color: white;
+    padding: 12px 30px;
+    border-radius: 50px; /* Perfect pill shape */
     text-decoration: none;
-    border-radius: 5px;
-    margin-right: 15px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
 }
+
+.pill-btn:hover {
+    transform: scale(1.05);
+    filter: brightness(1.05);
+}
+
+/* The Main Gradient Card */
+.content-card {
+    background: linear-gradient(to bottom, var(--mint-glow) 0%, var(--sakura-glow) 100%);
+    width: 90%;
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 40px 30px;
+    border-radius: 30px; /* Soft rounded corners */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.profile-circle {
+    width: 100px;
+    height: 100px;
+    background: white;
+    border-radius: 50%;
+    margin: -80px auto 20px; /* Pulls logo up like your image */
+    padding: 5px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.profile-circle img { width: 100%; height: auto; }
+
+h1, h2 {
+    font-size: 2.2rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+p {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+/* Material List Styles */
+.material-list {
+    list-style: none;
+    padding: 0;
+}
+
+.material-list li {
+    margin: 10px 0;
+    font-size: 0.95rem;
+}
+
+/* Sparkling Elements */
+.sparkle {
+    position: absolute;
+    color: white;
+    font-size: 1.2rem;
+    opacity: 0.8;
+}
+
+.s1 { top: 20px; left: 20px; }
+.s2 { bottom: 40px; right: 30px; }
