@@ -10,22 +10,65 @@
     <style>
         :root {
             --bg-main: #ffffff;
-            --text-main: #e84a7c; /* sakura-rose pastel pink for main text */
-            --text-muted: #f4a3c9; /* softer muted pastel pink */
-            --card-bg: rgba(255, 251, 253, 0.95);
-            --card-border: rgba(249, 231, 241, 0.92);
-            --accent-pink: #f78fb3; /* primary pastel sakura pink */
-            --accent-mint: #a7e9d0; /* pastel mint green */
-            --accent-mint-dark: #8fdac1; /* for mint gradients */
-            --mesh-opacity: 0.05;
+            --text-main: #e84a7c;           /* soft sakura-rose pink */
+            --text-muted: #f4a3c9;          /* lighter muted pink */
+            --accent-pink: #f78fb3;         /* primary pastel sakura pink */
+            --accent-mint: #a7e9d0;         /* pastel mint green */
+            --accent-mint-dark: #8fdac1;    /* mint hover/gradient */
+            --card-bg: rgba(255, 251, 253, 0.96);
+            --card-border: rgba(255, 200, 230, 0.6);
+            --mesh-opacity: 0.04;
         }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: var(--bg-main);
             color: var(--text-main);
             overflow-x: hidden;
         }
-        /* Glassmorphism Effect */
+
+        /* Sticky nav */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(255, 251, 253, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 200, 230, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            box-shadow: 0 4px 20px rgba(247, 143, 179, 0.08);
+        }
+
+        .nav-btn {
+            color: var(--text-main);
+            font-weight: 600;
+            padding: 0.75rem 1.25rem;
+            border-radius: 9999px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn:hover {
+            background: rgba(247, 143, 179, 0.12);
+            color: var(--accent-pink);
+            transform: scale(1.05);
+        }
+
+        .nav-btn.mint {
+            background: rgba(167, 233, 208, 0.15);
+        }
+
+        .nav-btn.mint:hover {
+            background: rgba(167, 233, 208, 0.3);
+            color: var(--accent-mint-dark);
+        }
+
+        /* Glassmorphism */
         .glass-card {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
@@ -33,21 +76,24 @@
             border-radius: 2rem;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+
         .mesh-bg {
             position: fixed;
             inset: 0;
             z-index: -2;
-            background:
-                radial-gradient(circle at 20% 30%, rgba(247, 143, 179, var(--mesh-opacity)) 0, transparent 45%),
-                radial-gradient(circle at 80% 70%, rgba(167, 233, 208, var(--mesh-opacity)) 0, transparent 40%);
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(247,143,179,var(--mesh-opacity)) 0, transparent 45%),
+                radial-gradient(circle at 80% 70%, rgba(167,233,208,var(--mesh-opacity)) 0, transparent 40%);
             pointer-events: none;
         }
+
         .petals-container {
             position: fixed;
             inset: 0;
             pointer-events: none;
             z-index: -1;
         }
+
         .petal {
             position: absolute;
             opacity: 0.75;
@@ -56,42 +102,24 @@
             user-select: none;
             will-change: transform;
         }
+
         @keyframes fall {
-            0% { transform: translateY(-10vh) rotate(0deg); }
+            0%   { transform: translateY(-10vh) rotate(0deg); }
             100% { transform: translateY(110vh) rotate(720deg); }
         }
-        .btn-pill {
-            background: linear-gradient(135deg, var(--accent-pink), #f4a3c9);
-            color: white;
-            font-weight: 700;
-            padding: 1rem 2.5rem;
-            border-radius: 9999px;
-            transition: all 0.3s ease;
-            display: inline-block;
-            box-shadow: 0 10px 20px -10px rgba(247, 143, 179, 0.5);
-        }
-        .btn-pill:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 25px -10px rgba(247, 143, 179, 0.6);
-        }
-        .btn-mint {
-            background: linear-gradient(135deg, var(--accent-mint), var(--accent-mint-dark));
-            color: #ffffff;
-            box-shadow: 0 10px 20px -10px rgba(167, 233, 208, 0.5);
-        }
-        .btn-mint:hover {
-            box-shadow: 0 15px 25px -10px rgba(167, 233, 208, 0.6);
-        }
+
         .pulse-dot {
             height: 10px; width: 10px;
-            background: #ffb6c1; /* pastel sakura pink */
+            background: #ffb6c1; /* pastel pink */
             border-radius: 50%;
             animation: pulse 2.2s infinite;
         }
+
         @keyframes pulse {
-            0%, 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 182, 193, 0.6); }
-            70% { transform: scale(1.15); box-shadow: 0 0 0 10px rgba(255, 182, 193, 0); }
+            0%, 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,182,193,0.6); }
+            70% { transform: scale(1.15); box-shadow: 0 0 0 10px rgba(255,182,193,0); }
         }
+
         .gallery-placeholder {
             background: linear-gradient(135deg, #fff0f7, #f0fff9);
             border-radius: 2rem;
@@ -99,53 +127,47 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 4rem;
-            box-shadow: inset 0 0 30px rgba(247, 143, 179, 0.08);
+            font-size: 5rem;
+            box-shadow: inset 0 0 30px rgba(247,143,179,0.08);
             transition: transform 0.4s ease;
         }
+
         .gallery-placeholder:hover {
             transform: scale(1.04);
         }
-        .animate-twinkle {
-            animation: twinkle 1.5s infinite alternate;
-        }
-        @keyframes twinkle {
-            0% { opacity: 0.8; }
-            100% { opacity: 1; }
-        }
-</style>
-
-<!-- Body content remains the same, but update placeholders and emojis for branding -->
-<body>
+    </style>
+</head>
+<body class="relative">
     <div class="mesh-bg"></div>
     <div class="petals-container" id="petals"></div>
+
+    <!-- Sticky Nav -->
     <nav class="p-6 flex justify-between items-center max-w-6xl mx-auto">
-        <div class="text-2xl font-black tracking-tighter">🐰 HANAFUBUKI 🌸</div> <!-- Kawaii branding with rabbit + sakura -->
-        <div class="hidden md:flex gap-8 font-bold text-sm tracking-widest uppercase">
-            <a href="services.html" class="hover:text-[var(--accent-pink)] transition-colors">Services</a>
-            <a href="#gallery" class="hover:text-[var(--accent-pink)] transition-colors">Gallery</a>
-            <a href="contact.html" class="hover:text-[var(--accent-pink)] transition-colors">Contact</a>
+        <div class="text-2xl font-black tracking-tighter flex items-center gap-2">
+            🐰 HanafubukiDoll 🌸
+        </div>
+        <div class="flex gap-4 md:gap-8 font-medium text-sm uppercase">
+            <a href="services.html" class="nav-btn">Services ♡</a>
+            <a href="#gallery" class="nav-btn">Gallery ♡</a>
+            <a href="contact.html" class="nav-btn mint">Contact/Quote ♡</a>
         </div>
     </nav>
+
     <main class="max-w-6xl mx-auto px-6 py-20">
-       
         <section class="text-center mb-32">
             <div class="inline-flex items-center gap-3 bg-white/50 border border-pink-100 px-6 py-2 rounded-full mb-8">
                 <div class="pulse-dot"></div>
                 <span class="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">Commissions Closed ♡</span>
             </div>
            
-            <h1 class="text-6xl md:text-8xl font-extrabold tracking-tighter mb-6 leading-tight">
-                Delivering Dreams<br>One Face At A Time <span class="animate-twinkle text-5xl">🌙</span>
+            <h1 class="text-6xl md:text-6xl font-extrabold tracking-tighter mb-6 leading-tight">
+                Delivering Dreams<br>One Face At A Time <span class="text-5xl">🌙</span>
             </h1>
             <p class="text-xl text-[var(--text-muted)] max-w-3xl mx-auto mb-12 leading-relaxed">
-                Premium BJD face-ups and custom doll aesthetics. Crafting magic in our studio since 2008.
+                Custom doll aesthetics and accessories amde with love ♡ Crafting magic in our studio since 2021.
             </p>
-            <div class="flex flex-wrap justify-center gap-6">
-                <a href="services.html" class="btn-pill">View Services</a>
-                <a href="contact.html" class="btn-pill btn-mint">Request a Quote</a>
-            </div>
         </section>
+
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
             <div class="glass-card p-12 md:p-16">
                 <h2 class="text-4xl font-extrabold mb-8">Hi! We're Dani & Jas ♡</h2>
@@ -155,10 +177,11 @@
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
-                <div class="gallery-placeholder">🐰</div> <!-- White rabbit -->
-                <div class="gallery-placeholder mt-8">🌸</div> <!-- Sakura flower -->
+                <div class="gallery-placeholder">🐰</div>
+                <div class="gallery-placeholder mt-8">🌸</div>
             </div>
         </section>
+
         <section class="mb-32">
             <h2 class="text-4xl font-extrabold text-center mb-16">The Studio Experience</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
@@ -167,31 +190,34 @@
                     <p class="text-[var(--text-muted)]">We provide a digital mock-up as standard to ensure our vision matches yours perfectly.</p>
                 </div>
                 <div class="p-8">
-                    <div class="text-3xl mb-4">02. Craftsmanship</div>
+                    <div class="text-3xl mb-4">02. Progress</div>
                     <p class="text-[var(--text-muted)]">Only the highest quality materials and Mr. Super Clear UV are used in our studio.</p>
                 </div>
                 <div class="p-8">
                     <div class="text-3xl mb-4">03. Safe Return</div>
-                    <p class="text-[var(--text-muted)]">Your doll is safely packed and shipped back with care instructions and a small gift.</p>
+                    <p class="text-[var(--text-muted)]">Your doll is safely packed and shipped back home with their beautiful new look!</p>
                 </div>
             </div>
         </section>
+
         <section id="gallery" class="text-center">
             <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
                 <h2 class="text-4xl font-extrabold">Latest Makeovers</h2>
-                <a href="#" class="text-[var(--accent-pink)] font-bold border-b-2 border-pink-200 hover:border-pink-500 transition-all">Follow on Instagram →</a>
+                <a href="#" class="text-[var(--accent-pink)] font-bold border-b-2 border-pink-200 hover:border-[var(--accent-pink)] transition-all">Follow on Instagram →</a>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                <div class="gallery-placeholder">🐰</div> <!-- White rabbit -->
-                <div class="gallery-placeholder">🌸</div> <!-- Sakura flower */
-                <div class="gallery-placeholder">🌙</div> <!-- Crescent moon -->
+                <div class="gallery-placeholder">🐰</div>
+                <div class="gallery-placeholder">🌸</div>
+                <div class="gallery-placeholder">🌙</div>
             </div>
         </section>
     </main>
+
     <footer class="py-20 text-center border-t border-pink-50">
         <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
         <p class="text-[var(--text-muted)] text-sm">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
     </footer>
+
     <script>
         const container = document.getElementById('petals');
         const petalCount = 19;
@@ -201,35 +227,33 @@
             p.className = 'petal';
             p.innerText = '🌸';
 
-            // Size variation: 14–38px
             const size = Math.random() * 24 + 14;
             p.style.fontSize = size + 'px';
 
-            // Better horizontal spread (zoned so left side gets petals)
-            const zoneWidth = 100 / 5; // 5 zones across width
+            const zoneWidth = 100 / 5;
             const zone = Math.floor(i / (petalCount / 5));
             p.style.left = (zone * zoneWidth + Math.random() * zoneWidth) + '%';
 
-            // Vertical spread: some start mid/lower screen for instant visibility
-            p.style.top = (Math.random() * 120 - 20) + '%'; // -20% to 100%
+            p.style.top = (Math.random() * 120 - 20) + '%';
 
-            // Fall duration: 15–30s
             const duration = Math.random() * 15 + 15;
             p.style.animationDuration = duration + 's';
 
-            // Negative delay + random → immediate, staggered falling
             p.style.animationDelay = `-${Math.random() * duration}s`;
 
-            // Random initial rotation + slight scale for depth
             const rot = Math.random() * 90 - 45;
-            const scale = Math.random() * 0.3 + 0.8; // 0.8–1.1x
+            const scale = Math.random() * 0.3 + 0.8;
             p.style.transform = `rotate(${rot}deg) scale(${scale})`;
 
-            // Lighten & soften emoji colour
             p.style.filter = 'brightness(1.1) saturate(0.9) opacity(0.85)';
 
             container.appendChild(p);
         }
+
+        // Optional: add subtle shadow to nav on scroll
+        window.addEventListener('scroll', () => {
+            document.querySelector('nav').classList.toggle('scrolled', window.scrollY > 50);
+        });
     </script>
 </body>
 </html>
