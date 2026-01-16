@@ -48,17 +48,18 @@
 
     .petal {
         position: absolute;
-        background: rgba(255, 190, 225, 0.82); /* deeper, more visible sakura pink */
-        opacity: 0.82; /* clearly visible but still soft */
-        border-radius: 90% 90% 10% 10% / 100% 100% 0% 0%; /* extreme teardrop-heart: very round top, sharp heart-like taper bottom */
-        box-shadow: 0 2px 10px rgba(255, 182, 193, 0.25);
+        background: rgba(255, 200, 230, 0.82); /* visible soft pink – deeper for visibility */
+        opacity: 0.82; /* bolder – still soft but clearly visible */
+        border-radius: 100% 100% 0% 0% / 100% 100% 0% 0%; /* extreme round top + sharp cleft bottom */
+        box-shadow: 0 2px 10px rgba(255, 182, 193, 0.22);
         animation: fall 20s linear infinite;
         pointer-events: none;
+        transform-origin: 50% 20%; /* pivot near top for natural teardrop rotation */
     }
 
     @keyframes fall {
-        0%   { transform: translateY(-40vh) rotate(0deg); }
-        100% { transform: translateY(140vh) rotate(1080deg); } /* 3 full rotations */
+        0%   { transform: translateY(-40vh) rotate(0deg) scale(1); }
+        100% { transform: translateY(140vh) rotate(1080deg) scale(0.95); }
     }
         .glass-card:hover {
             transform: translateY(-10px);
@@ -253,13 +254,15 @@ These days our mission is to create a safe and positive experience for doll coll
         const petal = document.createElement('div');
         petal.className = 'petal';
 
-        // Size
-        const size = Math.random() * 12 + 16; // 16–28 px
+        // Size variation
+        const size = Math.random() * 12 + 18; // 18–30 px
         petal.style.width = size + 'px';
-        petal.style.height = (size * 1.75) + 'px'; // very tall = strong teardrop/heart taper
+        petal.style.height = (size * 1.85) + 'px'; // very tall ratio = strong teardrop/heart taper
 
         petal.style.left = Math.random() * 100 + '%';
-        petal.style.top = (Math.random() * 140 - 40) + '%'; // scattered start
+
+        // Start scattered across full height (some mid/lower screen immediately)
+        petal.style.top = (Math.random() * 140 - 40) + '%'; // -40% to 100%
 
         const duration = Math.random() * 10 + 18; // 18–28s fall
         petal.style.animationDuration = duration + 's';
