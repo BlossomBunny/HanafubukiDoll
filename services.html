@@ -8,16 +8,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .tab-btn.active { background: var(--accent-pink); color: white; transform: translateY(-2px); }
+        .disabled-section { opacity: 0.4; pointer-events: none; filter: grayscale(0.5); }
+        .transition-all { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
 <body>
     <div class="mesh-bg"></div>
     <div class="petals-container" id="petals"></div>
 
-    <nav class="p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md">
+    <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="text-xl md:text-2xl font-black tracking-tighter">
                 <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
@@ -30,158 +29,110 @@
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto px-6 py-16">
+    <main class="max-w-4xl mx-auto px-6 py-16">
         <header class="text-center mb-12">
-            <h1 class="text-5xl font-extrabold mb-4">Studio Menu</h1>
-            <p class="text-[var(--text-muted)]">Select a category to view our offerings and live status.</p>
+            <h1 class="text-5xl font-extrabold mb-4">Quote Builder</h1>
+            <p class="text-[var(--text-muted)]">Select your desired services for a rough estimate ♡</p>
         </header>
 
-        <div class="flex flex-wrap justify-center gap-4 mb-12">
-            <button onclick="openTab('faceups')" class="tab-btn nav-btn nav-btn-mint active" id="defaultOpen">Face-Up Packages ♡</button>
-            <button onclick="openTab('extras')" class="tab-btn nav-btn nav-btn-mint">Parts & Extras ♡</button>
-            <button onclick="openTab('queue')" class="tab-btn nav-btn nav-btn-pink">Quote Calculator ♡</button>
-        </div>
+        <div class="glass-card p-8 md:p-12 shadow-2xl">
+            <div class="space-y-10">
+                
+                <section>
+                    <h3 class="text-xs font-bold uppercase tracking-widest mb-4 text-[var(--accent-pink)]">1. Face-Up Services (Unlocks Detail Extras)</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <label class="flex items-center justify-between p-5 rounded-2xl border border-pink-50 bg-white/30 cursor-pointer hover:bg-white/60 transition-all">
+                            <span class="flex items-center gap-3 font-bold">
+                                <input type="checkbox" class="primary-service addon-price w-6 h-6 accent-[var(--accent-pink)]" value="85" onchange="toggleAddons(this); calculateTotal()">
+                                Standard Face-Up
+                            </span>
+                            <span class="font-black text-xl">£85</span>
+                        </label>
+                        <label class="flex items-center justify-between p-5 rounded-2xl border border-pink-50 bg-white/30 cursor-pointer hover:bg-white/60 transition-all">
+                            <span class="flex items-center gap-3 font-bold">
+                                <input type="checkbox" class="primary-service addon-price w-6 h-6 accent-[var(--accent-pink)]" value="160" onchange="toggleAddons(this); calculateTotal()">
+                                Smartdoll / Dollfie Package
+                            </span>
+                            <span class="font-black text-xl">£160+</span>
+                        </label>
+                    </div>
+                </section>
 
-        <div id="faceups" class="tab-content active animate-fadeIn">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="glass-card p-8 flex flex-col border-b-4 border-[var(--accent-pink)]">
-                    <span class="text-3xl mb-4">🎨</span>
-                    <h3 class="text-xl font-bold mb-2">Standard Face-Up</h3>
-                    <p class="text-sm text-[var(--text-muted)] mb-6">On your provided head. Includes progress photos.</p>
-                    <div class="text-3xl font-black mb-6">£120</div>
-                    <a href="contact.html" class="nav-btn nav-btn-pink mt-auto">Enquire</a>
-                </div>
-                <div class="glass-card p-8 flex flex-col border-b-4 border-[var(--accent-mint)]">
-                    <span class="text-3xl mb-4">✨</span>
-                    <h3 class="text-xl font-bold mb-2">Smartdoll Package</h3>
-                    <p class="text-sm text-[var(--text-muted)] mb-6">Face-up + Smartdoll Head included.</p>
-                    <div class="text-3xl font-black mb-6">£180</div>
-                    <a href="contact.html" class="nav-btn nav-btn-mint mt-auto">Check Stock</a>
-                </div>
-                <div class="glass-card p-8 flex flex-col border-b-4 border-[var(--accent-pink)]">
-                    <span class="text-3xl mb-4">🌙</span>
-                    <h3 class="text-xl font-bold mb-2">Dollfie Dream Package</h3>
-                    <p class="text-sm text-[var(--text-muted)] mb-6">Face-up + Dollfie Dream Head included.</p>
-                    <div class="text-3xl font-black mb-6">£180</div>
-                    <a href="contact.html" class="nav-btn nav-btn-pink mt-auto">Check Stock</a>
-                </div>
-            </div>
-        </div>
+                <section id="addonSection" class="disabled-section transition-all">
+                    <h3 class="text-xs font-bold uppercase tracking-widest mb-4 text-[var(--accent-pink)]">2. Face-Up Details</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label class="flex items-center justify-between p-4 rounded-xl border border-pink-50 bg-white/20 cursor-pointer hover:bg-white/40">
+                            <span class="text-sm">Ear Piercings</span>
+                            <span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="5" onchange="calculateTotal()"> +£5</span>
+                        </label>
+                        <label class="flex items-center justify-between p-4 rounded-xl border border-pink-50 bg-white/20 cursor-pointer hover:bg-white/40">
+                            <span class="text-sm">Eyelash Installation</span>
+                            <span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="15" onchange="calculateTotal()"> +£15</span>
+                        </label>
+                    </div>
+                </section>
 
-        <div id="extras" class="tab-content animate-fadeIn">
-            <div class="glass-card overflow-hidden">
-                <table class="w-full text-left">
-                    <tr class="border-b border-pink-100">
-                        <td class="p-6 font-bold">Ear Piercings</td>
-                        <td class="p-6">£5/pair</td>
-                        <td class="p-6 text-sm text-[var(--text-muted)]">Enquire for styles</td>
-                    </tr>
-                    <tr class="border-b border-pink-100 bg-pink-50/20">
-                        <td class="p-6 font-bold">XL Manicure</td>
-                        <td class="p-6">£30 - £50</td>
-                        <td class="p-6 text-sm text-[var(--text-muted)]">Acrylics on provided/new hands</td>
-                    </tr>
-                    <tr class="border-b border-pink-100">
-                        <td class="p-6 font-bold">Custom Eyes</td>
-                        <td class="p-6">£20/pair</td>
-                        <td class="p-6 text-sm text-[var(--text-muted)]">Discuss designs with us</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
+                <section>
+                    <h3 class="text-xs font-bold uppercase tracking-widest mb-4 text-[var(--accent-pink)]">3. Independent Services</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <label class="flex items-center justify-between p-5 rounded-2xl border border-pink-50 bg-white/30 cursor-pointer hover:bg-white/60 transition-all">
+                            <span class="font-bold">XL Manicure (Acrylics)</span>
+                            <span class="font-black"><input type="checkbox" class="addon-price ml-3 w-5 h-5" value="30" onchange="calculateTotal()"> £30+</span>
+                        </label>
+                        <label class="flex items-center justify-between p-5 rounded-2xl border border-pink-50 bg-white/30 cursor-pointer hover:bg-white/60 transition-all">
+                            <span class="font-bold">Custom Resin Eyes (Pair)</span>
+                            <span class="font-black"><input type="checkbox" class="addon-price ml-3 w-5 h-5" value="20" onchange="calculateTotal()"> £20</span>
+                        </label>
+                    </div>
+                </section>
 
-        <<div id="queue" class="tab-content animate-fadeIn">
-    <div class="glass-card p-10 max-w-2xl mx-auto">
-        <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold mb-2">Quote Calculator ♡</h2>
-            <p class="text-[var(--text-muted)] text-sm">Select your options for a rough estimate</p>
-        </div>
-
-        <div class="space-y-6">
-            <div>
-                <label class="block text-sm font-bold mb-3 uppercase tracking-widest">1. Choose Base Service</label>
-                <select id="baseService" onchange="calculateTotal()" class="w-full p-4 rounded-2xl bg-white/50 border border-pink-100 text-[var(--text-main)] font-medium outline-none focus:border-[var(--accent-mint)] transition-all">
-                    <option value="0">Select a service...</option>
-                    <option value="85">Standard Face-Up (£85)</option>
-                    <option value="160">Smartdoll Package (£160)</option>
-                    <option value="180">Dollfie Dream Package (£180)</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-bold mb-3 uppercase tracking-widest">2. Add Extras</label>
-                <div class="grid grid-cols-1 gap-3">
-                    <label class="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-pink-50 cursor-pointer hover:bg-white/50 transition-all">
-                        <span class="flex items-center gap-3">
-                            <input type="checkbox" class="addon-price w-5 h-5 accent-[var(--accent-pink)]" value="5" onchange="calculateTotal()">
-                            Ear Piercings
-                        </span>
-                        <span class="font-bold">+£5</span>
-                    </label>
-                    <label class="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-pink-50 cursor-pointer hover:bg-white/50 transition-all">
-                        <span class="flex items-center gap-3">
-                            <input type="checkbox" class="addon-price w-5 h-5 accent-[var(--accent-pink)]" value="15" onchange="calculateTotal()">
-                            Eyelash Installation
-                        </span>
-                        <span class="font-bold">+£15</span>
-                    </label>
-                    <label class="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-pink-50 cursor-pointer hover:bg-white/50 transition-all">
-                        <span class="flex items-center gap-3">
-                            <input type="checkbox" class="addon-price w-5 h-5 accent-[var(--accent-pink)]" value="20" onchange="calculateTotal()">
-                            Custom Resin Eyes
-                        </span>
-                        <span class="font-bold">+£20</span>
-                    </label>
+                <div class="mt-12 p-8 bg-[var(--accent-pink)] rounded-3xl text-white flex flex-col md:flex-row justify-between items-center gap-6 shadow-xl">
+                    <div class="text-center md:text-left">
+                        <span class="block text-xs uppercase font-bold tracking-widest opacity-80">Estimated Quote</span>
+                        <span class="text-5xl font-black" id="totalDisplay">£0</span>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <a href="contact.html" class="nav-btn nav-btn-mint px-10 py-4 text-lg">Request Quote ♡</a>
+                        <button onclick="resetCalc()" class="text-[10px] uppercase font-bold tracking-widest opacity-60 hover:opacity-100 transition-opacity">Reset Calculator</button>
+                    </div>
                 </div>
             </div>
-
-            <div class="mt-8 p-6 bg-[var(--accent-pink)] rounded-3xl text-white text-center shadow-lg">
-                <span class="block text-xs uppercase font-bold tracking-tighter opacity-80">Estimated Total</span>
-                <span class="text-4xl font-black" id="totalDisplay">£0</span>
-            </div>
-            
-            <p class="text-[10px] text-center text-[var(--text-muted)] italic">
-                *This is a rough estimate. Final quotes may vary based on complexity.
-            </p>
         </div>
-    </div>
-</div>
-
-<script>
-    function calculateTotal() {
-        // Get the base price from the dropdown
-        let base = parseFloat(document.getElementById('baseService').value);
-        
-        // Get all checked add-ons
-        let addons = document.querySelectorAll('.addon-price:checked');
-        let addonTotal = 0;
-        addons.forEach(checkbox => {
-            addonTotal += parseFloat(checkbox.value);
-        });
-
-        // Update the display
-        let finalTotal = base + addonTotal;
-        document.getElementById('totalDisplay').innerText = '£' + finalTotal;
-    }
-</script>  
+    </main>
 
     <script>
-        // Simple Tab Logic
-        function openTab(tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
+        function toggleAddons() {
+            const addonSection = document.getElementById('addonSection');
+            const primaryCheckboxes = document.querySelectorAll('.primary-service');
+            const anyChecked = Array.from(primaryCheckboxes).some(c => c.checked);
+            
+            if (anyChecked) {
+                addonSection.classList.remove('disabled-section');
+            } else {
+                addonSection.classList.add('disabled-section');
+                // Auto-uncheck dependent items if head is deselected
+                const subAddons = addonSection.querySelectorAll('input');
+                subAddons.forEach(s => s.checked = false);
             }
-            tablinks = document.getElementsByClassName("tab-btn");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].classList.remove("active");
-            }
-            document.getElementById(tabName).style.display = "block";
-            event.currentTarget.classList.add("active");
         }
 
-        // Falling Petals
+        function calculateTotal() {
+            let checkboxes = document.querySelectorAll('.addon-price:checked');
+            let total = 0;
+            checkboxes.forEach(box => {
+                total += parseFloat(box.value);
+            });
+            document.getElementById('totalDisplay').innerText = '£' + total;
+        }
+
+        function resetCalc() {
+            const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+            allCheckboxes.forEach(cb => cb.checked = false);
+            toggleAddons();
+            calculateTotal();
+        }
+
+        // Falling Petals Logic
         const container = document.getElementById('petals');
         for (let i = 0; i < 15; i++) {
             const p = document.createElement('div');
@@ -195,6 +146,5 @@
             container.appendChild(p);
         }
     </script>
-    </main>
 </body>
 </html>
