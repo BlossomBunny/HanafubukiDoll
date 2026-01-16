@@ -48,17 +48,17 @@
 
     .petal {
         position: absolute;
-        background: rgba(255, 210, 235, 0.78); /* visible soft sakura pink */
-        opacity: 0.78; /* bolder – adjust down to 0.65–0.7 if too strong */
-        border-radius: 70% 70% 30% 30% / 90% 90% 20% 20%; /* strong teardrop: rounded top, tapered bottom */
-        box-shadow: 0 2px 10px rgba(255, 182, 193, 0.22);
+        background: rgba(255, 190, 225, 0.82); /* deeper, more visible sakura pink */
+        opacity: 0.82; /* clearly visible but still soft */
+        border-radius: 90% 90% 10% 10% / 100% 100% 0% 0%; /* extreme teardrop-heart: very round top, sharp heart-like taper bottom */
+        box-shadow: 0 2px 10px rgba(255, 182, 193, 0.25);
         animation: fall 20s linear infinite;
         pointer-events: none;
     }
 
     @keyframes fall {
         0%   { transform: translateY(-40vh) rotate(0deg); }
-        100% { transform: translateY(140vh) rotate(1080deg); } /* 3 full rotations during fall */
+        100% { transform: translateY(140vh) rotate(1080deg); } /* 3 full rotations */
     }
         .glass-card:hover {
             transform: translateY(-10px);
@@ -249,31 +249,23 @@ These days our mission is to create a safe and positive experience for doll coll
 <script>
     const petalsContainer = document.getElementById('petals');
     
-    // 10 petals – good balance of visibility and calmness
     for (let i = 0; i < 10; i++) {
         const petal = document.createElement('div');
         petal.className = 'petal';
 
-        // Size variation: delicate teardrop range
+        // Size
         const size = Math.random() * 12 + 16; // 16–28 px
         petal.style.width = size + 'px';
-        petal.style.height = (size * 1.55) + 'px'; // taller ratio = more pronounced taper/teardrop
+        petal.style.height = (size * 1.75) + 'px'; // very tall = strong teardrop/heart taper
 
-        // Horizontal spread across full width
         petal.style.left = Math.random() * 100 + '%';
+        petal.style.top = (Math.random() * 140 - 40) + '%'; // scattered start
 
-        // Vertical spread: petals start scattered across full height
-        // Some above screen (-40%), some already mid/lower screen (up to 100%)
-        petal.style.top = (Math.random() * 140 - 40) + '%';
-
-        // Fall duration: 16–26 seconds – visible downward movement quickly
-        const duration = Math.random() * 10 + 16;
+        const duration = Math.random() * 10 + 18; // 18–28s fall
         petal.style.animationDuration = duration + 's';
 
-        // Strong negative delay → petals are already falling/moving when page loads
         petal.style.animationDelay = `-${Math.random() * duration * 0.95}s`;
 
-        // Random initial rotation for natural look
         petal.style.transform = `rotate(${Math.random() * 90 - 45}deg)`;
 
         petalsContainer.appendChild(petal);
