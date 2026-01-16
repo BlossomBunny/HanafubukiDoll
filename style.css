@@ -54,24 +54,24 @@ body {
 /* --- BUTTON COMPONENTS --- */
 .nav-btn {
     font-weight: 700;
-    padding: 0.6rem 1.25rem;
+    /* Updated: using 'clamp' to make font size fluid between mobile and desktop */
+    font-size: clamp(0.65rem, 2vw, 0.75rem); 
+    padding: 0.5rem 1rem;
     border-radius: 9999px;
     transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    font-size: 0.75rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    white-space: nowrap; /* Prevents the text inside the button from breaking */
 }
 
-.nav-btn-pink { background: var(--accent-pink); color: white; }
-.nav-btn-mint { background: var(--accent-mint); color: #4a5568; }
-
-.nav-btn:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.05);
+@media (min-width: 768px) {
+    .nav-btn {
+        padding: 0.6rem 1.25rem;
+    }
 }
 
 /* --- REUSABLE GLASS COMPONENTS --- */
