@@ -39,36 +39,27 @@
         }
 
       .petals-container {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: -1;
-    overflow: hidden;
-}
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+        overflow: hidden;
+    }
 
-.petal {
-    position: absolute;
-    background: rgba(255, 200, 230, 0.78); /* more visible soft pink */
-    opacity: 0.78; /* noticeably bolder but still dreamy */
-    border-radius: 50% 50% 60% 40% / 70% 70% 30% 40%; /* teardrop: rounded top, tapered bottom */
-    box-shadow: 0 2px 10px rgba(255, 182, 193, 0.22);
-    animation:
-        fall 20s linear infinite,
-        sway 8s ease-in-out infinite;
-    pointer-events: none;
-}
+    .petal {
+        position: absolute;
+        background: rgba(255, 210, 235, 0.78); /* visible soft sakura pink */
+        opacity: 0.78; /* bolder – adjust down to 0.65–0.7 if too strong */
+        border-radius: 70% 70% 30% 30% / 90% 90% 20% 20%; /* strong teardrop: rounded top, tapered bottom */
+        box-shadow: 0 2px 10px rgba(255, 182, 193, 0.22);
+        animation: fall 20s linear infinite;
+        pointer-events: none;
+    }
 
-/* Downward fall with gentle drift */
-@keyframes fall {
-    0%   { transform: translateY(-30vh) rotate(0deg) translateX(0); }
-    100% { transform: translateY(130vh) rotate(720deg) translateX(25vw); }
-}
-
-/* Gentle left-right sway/flutter as they fall */
-@keyframes sway {
-    0%, 100% { transform: translateX(0vw); }
-    50%      { transform: translateX(9vw); }
-}
+    @keyframes fall {
+        0%   { transform: translateY(-40vh) rotate(0deg); }
+        100% { transform: translateY(140vh) rotate(1080deg); } /* 3 full rotations during fall */
+    }
         .glass-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 25px 50px rgba(236,72,153,0.18);
@@ -151,8 +142,7 @@
 
     <div class="mesh-bg"></div>
 
-    <!-- Cute animated petals -->
-    <div class="petals-container" id="petals"></div>
+  <div class="petals-container" id="petals"></div>
 
     <div class="max-w-6xl mx-auto px-6 pt-20 pb-32">
 
@@ -259,26 +249,32 @@ These days our mission is to create a safe and positive experience for doll coll
 <script>
     const petalsContainer = document.getElementById('petals');
     
+    // 10 petals – good balance of visibility and calmness
     for (let i = 0; i < 10; i++) {
         const petal = document.createElement('div');
         petal.className = 'petal';
 
-        const size = Math.random() * 12 + 16; // 16–28px
+        // Size variation: delicate teardrop range
+        const size = Math.random() * 12 + 16; // 16–28 px
         petal.style.width = size + 'px';
-        petal.style.height = (size * 1.35) + 'px'; // taller = strong teardrop
+        petal.style.height = (size * 1.55) + 'px'; // taller ratio = more pronounced taper/teardrop
 
+        // Horizontal spread across full width
         petal.style.left = Math.random() * 100 + '%';
 
-        // Start scattered across full height for instant visibility
-        petal.style.top = (Math.random() * 120 - 20) + '%'; // -20% to 100%
+        // Vertical spread: petals start scattered across full height
+        // Some above screen (-40%), some already mid/lower screen (up to 100%)
+        petal.style.top = (Math.random() * 140 - 40) + '%';
 
-        const duration = Math.random() * 10 + 18; // 18–28s fall
-        petal.style.animationDuration = `${duration}s, ${duration * 0.45}s`;
+        // Fall duration: 16–26 seconds – visible downward movement quickly
+        const duration = Math.random() * 10 + 16;
+        petal.style.animationDuration = duration + 's';
 
-        petal.style.animationDelay = `-${Math.random() * duration * 0.9}s, 0s`;
+        // Strong negative delay → petals are already falling/moving when page loads
+        petal.style.animationDelay = `-${Math.random() * duration * 0.95}s`;
 
-        // Random initial rotation
-        petal.style.transform = `rotate(${Math.random() * 60 - 30}deg)`;
+        // Random initial rotation for natural look
+        petal.style.transform = `rotate(${Math.random() * 90 - 45}deg)`;
 
         petalsContainer.appendChild(petal);
     }
