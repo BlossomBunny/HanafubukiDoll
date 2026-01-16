@@ -7,117 +7,132 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn.active { background: var(--accent-pink); color: white; transform: translateY(-2px); }
+    </style>
 </head>
 <body>
     <div class="mesh-bg"></div>
     <div class="petals-container" id="petals"></div>
 
-  <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="text-xl md:text-2xl font-black tracking-tighter">
-    <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
-</div>
-        
-        <div class="flex flex-wrap justify-center gap-2 md:gap-4">
-            <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
-            <a href="services.html" class="nav-btn nav-btn-mint">Services ♡</a>
-            <a href="contact.html" class="nav-btn nav-btn-pink">Contact ♡</a>
+    <nav class="p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-xl md:text-2xl font-black tracking-tighter">
+                <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
+                <a href="services.html" class="nav-btn nav-btn-mint">Services ♡</a>
+                <a href="contact.html" class="nav-btn nav-btn-pink">Contact ♡</a>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-    <main class="max-w-4xl mx-auto px-6 py-16">
-        <header class="text-center mb-16">
-            <h1 class="text-5xl font-extrabold mb-6">Services & Pricing</h1>
-            <p class="text-lg text-[var(--text-muted)]">Hand-painted aesthetics for your beloved dolls.</p>
+    <main class="max-w-6xl mx-auto px-6 py-16">
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-extrabold mb-4">Studio Menu</h1>
+            <p class="text-[var(--text-muted)]">Select a category to view our offerings and live status.</p>
         </header>
 
-        <section class="glass-card p-10 mb-12 border-l-8 border-[var(--accent-mint)]">
-            <h2 class="text-2xl font-extrabold mb-6">Important Information ♡</h2>
-            <div class="space-y-4 text-[var(--text-muted)] leading-relaxed">
-                <p>Each face-up is created by hand using high-grade artists pencils and pastels.</p>
-                <p>We ask for your understanding that each part of the faceup is drawn by hand and therefore will not be 100% symmetrical.</p>
-                <p>You will always receive progress photos before any final sealing so that minor adjustments can be made.</p>
-                <p>Typically a face-up alone will take 2-4 weeks to complete.</p>
-            </div>
-        </section>
+        <div class="flex flex-wrap justify-center gap-4 mb-12">
+            <button onclick="openTab('faceups')" class="tab-btn nav-btn nav-btn-mint active" id="defaultOpen">Face-Up Packages ♡</button>
+            <button onclick="openTab('extras')" class="tab-btn nav-btn nav-btn-mint">Parts & Extras ♡</button>
+            <button onclick="openTab('queue')" class="tab-btn nav-btn nav-btn-pink">Live Queue ♡</button>
+        </div>
 
-        <section class="glass-card overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-[var(--accent-pink)] text-white">
-                            <th class="p-6 font-extrabold uppercase text-xs tracking-widest">Service</th>
-                            <th class="p-6 font-extrabold uppercase text-xs tracking-widest">Price</th>
-                            <th class="p-6 font-extrabold uppercase text-xs tracking-widest">Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-[var(--text-main)]">
-                        <tr class="border-b border-pink-100">
-                            <td class="p-6 font-bold">Face-Up</td>
-                            <td class="p-6">£85</td>
-                            <td class="p-6 text-sm text-[var(--text-muted)]">You provide head</td>
-                        </tr>
-                        <tr class="border-b border-pink-100 bg-pink-50/30">
-                            <td class="p-6 font-bold">Face-Up + Smartdoll Head</td>
-                            <td class="p-6">£160</td>
-                            <td class="p-6 text-sm text-[var(--text-muted)]">Contact for stock</td>
-                        </tr>
-                        <tr class="border-b border-pink-100">
-                            <td class="p-6 font-bold">Face-Up + Dollfie Dream Head</td>
-                            <td class="p-6">£180</td>
-                            <td class="p-6 text-sm text-[var(--text-muted)]">Contact for stock</td>
-                        </tr>
-                        <tr class="border-b border-pink-100 bg-pink-50/30">
-                            <td class="p-6 font-bold">Body Blushing</td>
-                            <td class="p-6">£-</td>
-                            <td class="p-6 text-sm text-[var(--text-muted)]">Contact for quote</td>
-                        </tr>
-                        <tr class="border-b border-pink-100">
-                            <td class="p-6 font-bold">Ear Piercings</td>
-                            <td class="p-6">£5/pair</td>
-                            <td class="p-6 text-sm text-[var(--text-muted)]">Enquire for styles</td>
-                        </tr>
-                        <tr class="border-b border-pink-100 bg-pink-50/30">
-                            <td class="p-6 font-bold">Face Mods</td>
-                            <td class="p-6">£-</td>
-                            <td class="p-6 text-sm text-[var(--text-muted)]">Contact for quote</td>
-                        </tr>
-                        <tr class="border-b border-pink-100">
-                            <td class="p-6 font-bold">Tattoo work</td>
-                            <td class="p-6">£-</td>
-                            <td class="p-6 text-sm text-[var(--text-muted)]">Contact for quote</td>
-                        </tr>
-                        <tr class="border-b border-pink-100 bg-pink-50/30">
-                            <td class="p-6 font-bold">Standard Eyes</td>
-                            <td class="p-6">£10/pair</td>
-                            <td class="p-6 text-sm text-[var(--text-muted)]">-</td>
-                        </tr>
-                        <tr class="border-b border-pink-100">
-                            <td class="p-6 font-bold">Glitter Eyes</td>
-                            <td class="p-6">£15/pair</td>
-                            <td class="p-6 text-sm text-[var(--text-muted)]">-</td>
-                        </tr>
-                        <tr class="border-b border-pink-100 bg-pink-50/30">
-                            <td class="p-6 font-bold">Custom Eyes</td>
-                            <td class="p-6">£20/pair</td>
-                            <td class="p-6 text-sm text-[var(--text-muted)]">Contact us to discuss</td>
-                        </tr>
-                    </tbody>
+        <div id="faceups" class="tab-content active animate-fadeIn">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass-card p-8 flex flex-col border-b-4 border-[var(--accent-pink)]">
+                    <span class="text-3xl mb-4">🎨</span>
+                    <h3 class="text-xl font-bold mb-2">Standard Face-Up</h3>
+                    <p class="text-sm text-[var(--text-muted)] mb-6">On your provided head. Includes progress photos.</p>
+                    <div class="text-3xl font-black mb-6">£120</div>
+                    <a href="contact.html" class="nav-btn nav-btn-pink mt-auto">Enquire</a>
+                </div>
+                <div class="glass-card p-8 flex flex-col border-b-4 border-[var(--accent-mint)]">
+                    <span class="text-3xl mb-4">✨</span>
+                    <h3 class="text-xl font-bold mb-2">Smartdoll Package</h3>
+                    <p class="text-sm text-[var(--text-muted)] mb-6">Face-up + Smartdoll Head included.</p>
+                    <div class="text-3xl font-black mb-6">£180</div>
+                    <a href="contact.html" class="nav-btn nav-btn-mint mt-auto">Check Stock</a>
+                </div>
+                <div class="glass-card p-8 flex flex-col border-b-4 border-[var(--accent-pink)]">
+                    <span class="text-3xl mb-4">🌙</span>
+                    <h3 class="text-xl font-bold mb-2">Dollfie Dream Package</h3>
+                    <p class="text-sm text-[var(--text-muted)] mb-6">Face-up + Dollfie Dream Head included.</p>
+                    <div class="text-3xl font-black mb-6">£180</div>
+                    <a href="contact.html" class="nav-btn nav-btn-pink mt-auto">Check Stock</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="extras" class="tab-content animate-fadeIn">
+            <div class="glass-card overflow-hidden">
+                <table class="w-full text-left">
+                    <tr class="border-b border-pink-100">
+                        <td class="p-6 font-bold">Ear Piercings</td>
+                        <td class="p-6">£5/pair</td>
+                        <td class="p-6 text-sm text-[var(--text-muted)]">Enquire for styles</td>
+                    </tr>
+                    <tr class="border-b border-pink-100 bg-pink-50/20">
+                        <td class="p-6 font-bold">XL Manicure</td>
+                        <td class="p-6">£30 - £50</td>
+                        <td class="p-6 text-sm text-[var(--text-muted)]">Acrylics on provided/new hands</td>
+                    </tr>
+                    <tr class="border-b border-pink-100">
+                        <td class="p-6 font-bold">Custom Eyes</td>
+                        <td class="p-6">£20/pair</td>
+                        <td class="p-6 text-sm text-[var(--text-muted)]">Discuss designs with us</td>
+                    </tr>
                 </table>
             </div>
-        </section>
+        </div>
 
-        <div class="mt-12 text-center">
-            <a href="contact.html" class="nav-btn nav-btn-mint px-12 py-4">Request a Quote ♡</a>
+        <div id="queue" class="tab-content animate-fadeIn">
+            <div class="glass-card p-10">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold mb-2">Studio Status</h2>
+                    <p class="text-[var(--text-muted)]">Current turnaround: 2-4 weeks</p>
+                </div>
+                <div class="space-y-4 max-w-2xl mx-auto">
+                    <div class="flex justify-between items-center p-5 bg-white/40 rounded-2xl border border-pink-100">
+                        <div>
+                            <span class="block font-bold">Order #HB-102</span>
+                            <span class="text-xs text-[var(--text-muted)]">Client: S. Miller</span>
+                        </div>
+                        <span class="px-4 py-1 bg-[var(--accent-mint)] text-xs font-bold rounded-full">In Progress: Painting</span>
+                    </div>
+                    <div class="flex justify-between items-center p-5 bg-white/40 rounded-2xl border border-pink-100">
+                        <div>
+                            <span class="block font-bold">Order #HB-103</span>
+                            <span class="text-xs text-[var(--text-muted)]">Client: J. Doe</span>
+                        </div>
+                        <span class="px-4 py-1 bg-pink-100 text-xs font-bold rounded-full">Waiting: Base Seal</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
-    <footer class="py-12 text-center text-[var(--text-muted)] text-sm border-t border-pink-50">
-        © 2026 HanafubukiDoll • Made with cherry blossoms and magic!
-    </footer>
-
     <script>
+        // Simple Tab Logic
+        function openTab(tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabName).style.display = "block";
+            event.currentTarget.classList.add("active");
+        }
+
+        // Falling Petals
         const container = document.getElementById('petals');
         for (let i = 0; i < 15; i++) {
             const p = document.createElement('div');
