@@ -162,7 +162,7 @@
             <div class="logo-circle">🌸</div>
 
             <h1 class="text-6xl md:text-8xl font-extrabold tracking-tighter mb-8">
-                HanafubukiDoll's Studio
+                🌸HanafubukiDoll Studio🌸
             </h1>
 
             <p class="text-xl md:text-2xl text-[var(--text-muted)] max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
@@ -232,7 +232,7 @@ These days our mission is to create a safe and positive experience for doll coll
             </div>
         </div>
 
-        <!-- Gallery teaser -->
+        
         <section id="gallery" class="text-center">
             <h2 class="text-4xl font-extrabold mb-12">Our Latest Work ♡</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -247,36 +247,35 @@ These days our mission is to create a safe and positive experience for doll coll
 
     </div>
 
-    <--Petal Script-->
 <script>
     const petalsContainer = document.getElementById('petals');
-    const emojis = ['🌸', '🌸', '🌸', '🌸','🌸']; // mostly sakura, some variation
+    const emojis = ['🌸', '🌸', '🌸', '🌸','🌸'];
 
     for (let i = 0; i < 19; i++) {  
         const petal = document.createElement('div');
         petal.className = 'petal';
 
-        // Random size: 14–32 px
+       
         const size = Math.random() * 18 + 14;
         petal.style.fontSize = size + 'px';
 
-        // Random emoji
+        
         petal.textContent = emojis[Math.floor(Math.random() * emojis.length)];
 
-        // Position spread across full width
+       
         petal.style.left = Math.random() * 100 + '%';
 
-        // Start scattered vertically (some already visible mid/lower screen)
+        
         petal.style.top = (Math.random() * 140 - 40) + '%'; // -40% to 100%
 
-        // Fall duration: 18–28 seconds
+       
         const duration = Math.random() * 10 + 18;
         petal.style.animationDuration = duration + 's';
 
-        // Negative delay → instant movement
+        
         petal.style.animationDelay = `-${Math.random() * duration * 0.95}s`;
 
-        // Random initial rotation
+       
         petal.style.transform = `rotate(${Math.random() * 90 - 45}deg)`;
 
         petalsContainer.appendChild(petal);
