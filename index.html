@@ -96,11 +96,14 @@
 
     <script>
         const container = document.getElementById('petals');
+        // Resetting petal logic to ensure they fall from top to bottom
         for (let i = 0; i < 19; i++) {
             const p = document.createElement('div');
             p.className = 'petal';
             p.innerText = '🌸';
             p.style.left = Math.random() * 100 + 'vw';
+            // Start petals at different heights to create a continuous flow
+            p.style.top = '-5vh'; 
             p.style.fontSize = (Math.random() * 20 + 15) + 'px';
             p.style.animationDuration = (Math.random() * 10 + 15) + 's';
             p.style.animationDelay = (Math.random() * -20) + 's';
