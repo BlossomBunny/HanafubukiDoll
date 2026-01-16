@@ -48,27 +48,44 @@
 
 .petal {
     position: absolute;
-    background: rgba(252, 231, 243, 0.45);   /* very pale pink, semi-transparent */
-    border-radius: 50% 60% 70% 40% / 60% 70% 50% 40%;  /* softer, more organic shape */
-    box-shadow: 0 2px 12px rgba(236, 72, 153, 0.08);
-    backdrop-filter: blur(1px);               /* gentle dreamy blur */
-    opacity: 0.45;                            /* much softer starting opacity */
-    pointer-events: none;
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 230, 242, 0.55); /* pale, soft sakura pink */
+    opacity: 0.42; /* visible but dreamy — adjust down to 0.3 if too strong */
+    box-shadow: 0 2px 10px rgba(255, 182, 193, 0.15);
+    backdrop-filter: blur(0.8px);
+    clip-path: polygon(
+        50% 0%,     /* top center */
+        100% 38%,   /* right top */
+        82% 100%,   /* right bottom */
+        18% 100%,   /* left bottom */
+        0% 38%      /* left top */
+    ); /* classic 5-petaled sakura shape */
     animation: 
-        fall 35s linear infinite,              /* much slower fall */
-        sway 12s ease-in-out infinite;         /* gentle side-to-side movement */
+        fall 55s linear infinite,
+        rotate 28s linear infinite,
+        sway 14s ease-in-out infinite;
+    transform-origin: 50% 50%;
 }
 
+/* Slow continuous downward fall with horizontal drift */
 @keyframes fall {
-    0%   { transform: translateY(-20vh) rotate(0deg) translateX(0); opacity: 0.3; }
-    20%  { opacity: 0.6; }
-    80%  { opacity: 0.6; }
-    100% { transform: translateY(120vh) rotate(720deg) translateX(40vw); opacity: 0; }
+    0%   { transform: translateY(-25vh) translateX(0); }
+    100% { transform: translateY(125vh) translateX(30vw); }
 }
 
+/* Gentle constant rotation */
+@keyframes rotate {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(720deg); } /* 2 full spins over long time */
+}
+
+/* Soft side-to-side + up/down wobble */
 @keyframes sway {
-    0%, 100%   { transform: translateX(0); }
-    50%        { transform: translateX(8vw); }
+    0%, 100% { transform: translateX(0) translateY(0); }
+    25%  { transform: translateX(6vw) translateY(-2vh); }
+    50%  { transform: translateX(-4vw) translateY(3vh); }
+    75%  { transform: translateX(5vw) translateY(-1vh); }
 }
 
         .glass-card:hover {
@@ -257,30 +274,37 @@ These days our mission is to create a safe and positive experience for doll coll
 
     </div>
 
-    <!-- Petals JS – softer & gentler version -->
+    <!-- Improved petals script – more petals, better distribution, constant gentle fall -->
 <script>
     const petalsContainer = document.getElementById('petals');
-    for (let i = 0; i < 8; i++) {  // fewer petals = less busy
+    
+    // 10 petals – enough to feel like gentle sakura rain, but not overwhelming
+    for (let i = 0; i < 10; i++) {
         const petal = document.createElement('div');
         petal.className = 'petal';
-        
-        // more variation, smaller overall
-        const size = Math.random() * 10 + 8; // 8–18px instead of 12–27px
+
+        // Size variation: delicate range
+        const size = Math.random() * 10 + 14; // 14–24px
         petal.style.width = size + 'px';
         petal.style.height = size + 'px';
-        
-        petal.style.left = Math.random() * 100 + '%';
-        
-        // longer & more varied duration
-        const duration = Math.random() * 20 + 30; // 30–50 seconds
-        petal.style.animationDuration = duration + 's, ' + (duration * 0.4) + 's';
-        
-        // more negative delay so they start spread out
-        petal.style.animationDelay = (Math.random() * -duration) + 's';
-        
+
+        // Spread evenly across width
+        petal.style.left = `${Math.random() * 100}%`;
+
+        // Start at different heights so they don't all appear at top
+        petal.style.top = `${Math.random() * -30}%`; // some start above screen
+
+        // Fall duration: 45–75 seconds → very slow, dreamy drift
+        const fallDuration = Math.random() * 30 + 45;
+        petal.style.animationDuration = `${fallDuration}s, ${fallDuration * 0.8}s, ${fallDuration * 0.5}s`;
+
+        // Staggered delays so petals are always present
+        petal.style.animationDelay = `-${Math.random() * fallDuration}s, 0s, ${Math.random() * 8}s`;
+
         petalsContainer.appendChild(petal);
     }
 </script>
+
     <footer class="text-center py-12 text-[var(--text-muted)] text-sm border-t border-[var(--card-border)]">
         © 2026 HanafubukiDoll • Made with cherry blossoms and magic!
     </footer>
