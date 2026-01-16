@@ -5,8 +5,9 @@
     --text-muted: #f4a3c9;         /* Lighter muted pink */
     --accent-pink: #f78fb3;        /* Primary pastel pink */
     --accent-mint: #a7e9d0;        /* Your pastel mint */
-    --card-bg: rgba(255, 251, 253, 0.96);
-    --card-border: rgba(255, 200, 230, 0.6);
+    /* UPDATED: Lowered alpha to 0.6 for better glass transparency */
+    --card-bg: rgba(255, 251, 253, 0.6); 
+    --card-border: rgba(255, 200, 230, 0.5);
     --mesh-opacity: 0.04;
 }
 
@@ -39,7 +40,8 @@ body {
 
 .petal {
     position: absolute;
-    opacity: 0.75;
+    /* UPDATED: Lowered to 0.35 for a subtle background feel */
+    opacity: 0.35; 
     animation: fall 22s linear infinite;
     will-change: transform;
 }
@@ -72,22 +74,27 @@ body {
     filter: brightness(1.05);
 }
 
-/* --- REUSABLE COMPONENTS --- */
+/* --- REUSABLE GLASS COMPONENTS --- */
 .glass-card {
     background: var(--card-bg);
-    backdrop-filter: blur(12px);
+    /* This creates the frosted glass look */
+    backdrop-filter: blur(16px); 
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--card-border);
     border-radius: 2rem;
+    box-shadow: 0 8px 32px 0 rgba(247, 143, 179, 0.1);
 }
 
 .gallery-placeholder {
-    background: linear-gradient(135deg, #fff0f7, #f0fff9);
+    background: linear-gradient(135deg, rgba(255,240,247,0.4), rgba(240,255,249,0.4));
+    backdrop-filter: blur(4px);
     border-radius: 2rem;
     aspect-ratio: 1 / 1;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: transform 0.4s ease;
+    border: 1px solid var(--card-border);
 }
 
 .pulse-dot {
