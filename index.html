@@ -48,18 +48,17 @@
 
 .petal {
     position: absolute;
-    background: rgba(255, 230, 242, 0.58); /* pale pink — visible on white */
+    background: rgba(255, 182, 193, 0.68); /* bolder soft sakura pink */
     border-radius: 50% 60% 70% 40% / 60% 70% 50% 40%;
-    box-shadow: 0 2px 10px rgba(236, 72, 153, 0.12);
-    opacity: 0.65; /* clearly visible but soft — lower to 0.4 if too strong */
-    animation: fall 24s linear infinite;
+    box-shadow: 0 2px 10px rgba(236, 72, 153, 0.18);
+    opacity: 0.68; /* noticeably bolder but still gentle */
+    animation: fall 22s linear infinite;
     pointer-events: none;
 }
 
-/* Simple, repeating fall with rotation — starts visible, never disappears */
 @keyframes fall {
-    0%   { transform: translateY(-20%) rotate(0deg); opacity: 0.65; }
-    100% { transform: translateY(120%) rotate(720deg); opacity: 0.65; }
+    0%   { transform: translateY(-20%) rotate(0deg); }
+    100% { transform: translateY(120%) rotate(540deg); }
 }
         .glass-card:hover {
             transform: translateY(-10px);
@@ -251,30 +250,27 @@ These days our mission is to create a safe and positive experience for doll coll
 <script>
     const petalsContainer = document.getElementById('petals');
     
-    // 10 petals — enough to see movement quickly
     for (let i = 0; i < 10; i++) {
         const petal = document.createElement('div');
         petal.className = 'petal';
 
-        // Size: delicate
-        const size = Math.random() * 10 + 14; // 14–24 px
+        const size = Math.random() * 12 + 14; // 14–26px
         petal.style.width = size + 'px';
         petal.style.height = size + 'px';
 
-        // Spread across full width
         petal.style.left = Math.random() * 100 + '%';
+        
+        // Start scattered across FULL height (negative = above screen, positive = already visible)
+        petal.style.top = (Math.random() * 140 - 40) + '%'; // from -40% to 100%
 
-        // Start scattered vertically so some are immediately visible
-        petal.style.top = Math.random() * 100 + '%';
-
-        // Fall time: 18–30 seconds → noticeable but calm
-        const duration = Math.random() * 12 + 18;
+        // Faster fall: 16–28 seconds → you see clear downward movement
+        const duration = Math.random() * 12 + 16;
         petal.style.animationDuration = duration + 's';
 
-        // Negative delay so petals are already falling when page loads
-        petal.style.animationDelay = `-${Math.random() * duration}s`;
+        // Strong negative delay → petals are already moving when page loads
+        petal.style.animationDelay = `-${Math.random() * duration * 0.85}s`;
 
-        // Initial random rotation so they don't all look identical
+        // Random initial rotation so they look natural
         petal.style.transform = `rotate(${Math.random() * 360}deg)`;
 
         petalsContainer.appendChild(petal);
