@@ -1,1 +1,68 @@
-//soon be updated
+/* --- BRAND VARIABLES --- */
+:root {
+    --bg-main: #ffffff;
+    --text-main: #e84a7c;          /* Sakura-rose pink */
+    --text-muted: #f4a3c9;         /* Lighter muted pink */
+    --accent-pink: #f78fb3;        /* Primary pastel pink */
+    --accent-mint: #a7e9d0;        /* Your pastel mint */
+    --card-bg: rgba(255, 251, 253, 0.96);
+    --card-border: rgba(255, 200, 230, 0.6);
+    --mesh-opacity: 0.04;
+}
+
+/* --- GLOBAL STYLES --- */
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg-main);
+    color: var(--text-main);
+    overflow-x: hidden;
+}
+
+/* --- BUTTON COMPONENTS --- */
+.nav-btn {
+    font-weight: 700;
+    padding: 0.6rem 1.25rem;
+    border-radius: 9999px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.nav-btn-pink {
+    background: var(--accent-pink);
+    color: white;
+}
+
+.nav-btn-mint {
+    background: var(--accent-mint);
+    color: #4a5568; /* Readable dark grey-pink */
+}
+
+.nav-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+
+/* --- REUSABLE COMPONENTS --- */
+.glass-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    border-radius: 2rem;
+}
+
+.gallery-placeholder {
+    background: linear-gradient(135deg, #fff0f7, #f0fff9);
+    border-radius: 2rem;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.4s ease;
+}
