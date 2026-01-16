@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HanafubukiDoll — Dreamy Collectible Dolls</title>
+    <title>HanafubukiDoll Aesthetic Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -47,20 +47,29 @@
         }
 
         .petal {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: rgba(236, 72, 153, 0.7);
-            border-radius: 40% 60% 70% 30%;
-            opacity: 0.8;
-            box-shadow: 0 2px 8px rgba(236,72,153,0.3);
-            animation: fall linear infinite;
-        }
+    position: absolute;
+    background: rgba(252, 231, 243, 0.45);   /* very pale pink, semi-transparent */
+    border-radius: 50% 60% 70% 40% / 60% 70% 50% 40%;  /* softer, more organic shape */
+    box-shadow: 0 2px 12px rgba(236, 72, 153, 0.08);
+    backdrop-filter: blur(1px);               /* gentle dreamy blur */
+    opacity: 0.45;                            /* much softer starting opacity */
+    pointer-events: none;
+    animation: 
+        fall 35s linear infinite,              /* much slower fall */
+        sway 12s ease-in-out infinite;         /* gentle side-to-side movement */
+}
 
-        @keyframes fall {
-            0%   { transform: translateY(-15vh) rotate(0deg) translateX(0); }
-            100% { transform: translateY(120vh) rotate(1080deg) translateX(30vw); }
-        }
+@keyframes fall {
+    0%   { transform: translateY(-20vh) rotate(0deg) translateX(0); opacity: 0.3; }
+    20%  { opacity: 0.6; }
+    80%  { opacity: 0.6; }
+    100% { transform: translateY(120vh) rotate(720deg) translateX(40vw); opacity: 0; }
+}
+
+@keyframes sway {
+    0%, 100%   { transform: translateX(0); }
+    50%        { transform: translateX(8vw); }
+}
 
         .glass-card {
             background: var(--card-bg);
@@ -176,7 +185,7 @@
             </h1>
 
             <p class="text-xl md:text-2xl text-[var(--text-muted)] max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
-                Making The Doll World Beautiful One Face AT A Time
+                Delivering Dreams One Face At A Time
             </p>
 
             <div class="flex flex-wrap justify-center gap-6">
@@ -244,37 +253,45 @@ These days our mission is to create a safe and positive experience for doll coll
 
         <!-- Gallery teaser -->
         <section id="gallery" class="text-center">
-            <h2 class="text-4xl font-extrabold mb-12">Little Glimpses ♡</h2>
+            <h2 class="text-4xl font-extrabold mb-12">Our Latest Work ♡</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div class="gallery-placeholder">🌸</div>
                 <div class="gallery-placeholder">🐰</div>
                 <div class="gallery-placeholder">🌙</div>
             </div>
             <p class="mt-8 text-[var(--text-muted)]">
-                More magical dolls waiting to be discovered...
+                View our full gallery for more magical makeovers
             </p>
         </section>
 
     </div>
 
     <footer class="text-center py-12 text-[var(--text-muted)] text-sm border-t border-[var(--card-border)]">
-        © 2026 HanafubukiDoll • Made with sakura dreams & gentle love
+        © 2026 HanafubukiDoll • Made with cherry blossoms and magic!
     </footer>
 
     <!-- Petals JS -->
-    <script>
-        const petalsContainer = document.getElementById('petals');
-        for (let i = 0; i < 12; i++) {
-            const petal = document.createElement('div');
-            petal.className = 'petal';
-            petal.style.left = Math.random() * 100 + '%';
-            petal.style.animationDuration = (Math.random() * 10 + 15) + 's';
-            petal.style.animationDelay = Math.random() * -20 + 's';
-            petal.style.width = (Math.random() * 15 + 12) + 'px';
-            petal.style.height = petal.style.width;
-            petalsContainer.appendChild(petal);
-        }
-    </script>
+<script>
+    const petalsContainer = document.getElementById('petals');
+    for (let i = 0; i < 8; i++) {  // fewer petals = less busy
+        const petal = document.createElement('div');
+        petal.className = 'petal';
+        
+    
+        const size = Math.random() * 10 + 8; // 8–18px instead of 12–27px
+        petal.style.width = size + 'px';
+        petal.style.height = size + 'px';
+        
+        petal.style.left = Math.random() * 100 + '%';
+        
+        const duration = Math.random() * 20 + 30; // 30–50 seconds
+        petal.style.animationDuration = duration + 's, ' + (duration * 0.4) + 's';
+        
+        petal.style.animationDelay = (Math.random() * -duration) + 's';
+        
+        petalsContainer.appendChild(petal);
+    }
+</script>
 
 </body>
 </html>
