@@ -44,22 +44,23 @@
         pointer-events: none;
         z-index: -1;
         overflow: hidden;
+        font-size: 0; /* prevents line-height issues */
     }
 
     .petal {
         position: absolute;
-        background: rgba(255, 200, 230, 0.82); /* visible soft pink – deeper for visibility */
-        opacity: 0.82; /* bolder – still soft but clearly visible */
-        border-radius: 100% 100% 0% 0% / 100% 100% 0% 0%; /* extreme round top + sharp cleft bottom */
-        box-shadow: 0 2px 10px rgba(255, 182, 193, 0.22);
-        animation: fall 20s linear infinite;
+        font-size: 0; /* base size set via JS */
+        line-height: 1;
+        opacity: 0.65; /* soft but visible */
+        filter: brightness(1.15) saturate(0.85); /* lighten + slightly desaturate for dreamy pastel */
+        animation: fall 22s linear infinite;
         pointer-events: none;
-        transform-origin: 50% 20%; /* pivot near top for natural teardrop rotation */
+        user-select: none;
     }
 
     @keyframes fall {
-        0%   { transform: translateY(-40vh) rotate(0deg) scale(1); }
-        100% { transform: translateY(140vh) rotate(1080deg) scale(0.95); }
+        0%   { transform: translateY(-40vh) rotate(0deg); }
+        100% { transform: translateY(140vh) rotate(1080deg); }
     }
         .glass-card:hover {
             transform: translateY(-10px);
@@ -249,26 +250,33 @@ These days our mission is to create a safe and positive experience for doll coll
     <--Petal Script-->
 <script>
     const petalsContainer = document.getElementById('petals');
-    
-    for (let i = 0; i < 10; i++) {
+    const emojis = ['🌸', '🌸', '🌸', '🌸', '🌸', '🌸']; 
+
+    for (let i = 0; i < 12; i++) {  // 12 for gentle coverage
         const petal = document.createElement('div');
         petal.className = 'petal';
 
-        // Size variation
-        const size = Math.random() * 12 + 18; // 18–30 px
-        petal.style.width = size + 'px';
-        petal.style.height = (size * 1.85) + 'px'; // very tall ratio = strong teardrop/heart taper
+        // Random size: 14–32 px
+        const size = Math.random() * 18 + 14;
+        petal.style.fontSize = size + 'px';
 
+        // Random emoji
+        petal.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+        // Position spread across full width
         petal.style.left = Math.random() * 100 + '%';
 
-        // Start scattered across full height (some mid/lower screen immediately)
+        // Start scattered vertically (some already visible mid/lower screen)
         petal.style.top = (Math.random() * 140 - 40) + '%'; // -40% to 100%
 
-        const duration = Math.random() * 10 + 18; // 18–28s fall
+        // Fall duration: 18–28 seconds
+        const duration = Math.random() * 10 + 18;
         petal.style.animationDuration = duration + 's';
 
+        // Negative delay → instant movement
         petal.style.animationDelay = `-${Math.random() * duration * 0.95}s`;
 
+        // Random initial rotation
         petal.style.transform = `rotate(${Math.random() * 90 - 45}deg)`;
 
         petalsContainer.appendChild(petal);
