@@ -46,42 +46,27 @@
             overflow: hidden;
         }
 
-    
-    .petal {
-        position: absolute;
-        width: 24px;
-        height: 28px;
-        background: rgba(255, 228, 240, 0.28);   /* extremely pale pink – almost white */
-        opacity: 0.35;                            /* very subtle */
-        border-radius: 50% 70% 60% 80% / 70% 60% 80% 50%;  /* soft 5-petal-ish shape */
-        box-shadow: 0 1px 6px rgba(236, 72, 153, 0.06);
-        pointer-events: none;
-        will-change: transform, opacity;
-        animation: 
-            drift 45s linear infinite,
-            flutter 8s ease-in-out infinite alternate,
-            fade 45s linear forwards;
-    }
+        .petal {
+    position: absolute;
+    background: rgba(255, 240, 248, 0.18);   
+    opacity: 0.16;                           
+    border-radius: 50% 80% 70% 90% / 80% 60% 90% 70%;  
+    box-shadow: 0 1px 6px rgba(255, 182, 193, 0.04);
+    pointer-events: none;
+    will-change: transform;
+    animation: flutter 18s ease-in-out infinite;
+    transform-origin: center;
+}
 
-    @keyframes drift {
-        0%   { transform: translateY(-30vh) translateX(-10vw) rotate(0deg); }
-        100% { transform: translateY(130vh) translateX(20vw) rotate(720deg); }
-    }
 
-    @keyframes flutter {
-        0%   { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-        25%  { transform: rotateX(8deg) rotateY(12deg) rotateZ(5deg); }
-        50%  { transform: rotateX(-6deg) rotateY(-10deg) rotateZ(-4deg); }
-        75%  { transform: rotateX(10deg) rotateY(8deg) rotateZ(6deg); }
-        100% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-    }
-
-    @keyframes fade {
-        0%   { opacity: 0.08; }
-        15%  { opacity: 0.35; }
-        85%  { opacity: 0.35; }
-        100% { opacity: 0; }
-    }
+@keyframes flutter {
+    0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
+    20%  { transform: translate(4vw, -2vh) rotate(6deg) scale(1.03); }
+    40%  { transform: translate(-3vw, 1vh) rotate(-8deg) scale(0.98); }
+    60%  { transform: translate(5vw, -1vh) rotate(5deg) scale(1.02); }
+    80%  { transform: translate(-2vw, 2vh) rotate(-4deg) scale(0.99); }
+    100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
 
         .glass-card {
             background: var(--card-bg);
@@ -282,31 +267,31 @@ These days our mission is to create a safe and positive experience for doll coll
         © 2026 HanafubukiDoll • Made with cherry blossoms and magic!
     </footer>
 
-    <script>
+    <!-- Updated petals script – constant gentle flutter, no disappearing -->
+<script>
     const petalsContainer = document.getElementById('petals');
     
-    // Only 6–8 petals max – keeps it subtle
-    for (let i = 0; i < 7; i++) {
+    // 5–7 petals max – keeps background calm
+    for (let i = 0; i < 6; i++) {
         const petal = document.createElement('div');
         petal.className = 'petal';
 
-        // Slight size variation (smaller = gentler)
-        const baseSize = Math.random() * 8 + 16; // 16–24px
-        petal.style.width = baseSize + 'px';
-        petal.style.height = (baseSize * 1.15) + 'px'; // slightly taller than wide
+        // Small & varied size
+        const size = Math.random() * 10 + 14; // 14–24 px
+        petal.style.width = size + 'px';
+        petal.style.height = (size * 1.12) + 'px';
 
-        // Random horizontal start position
+        // Spread across full viewport
         petal.style.left = Math.random() * 100 + '%';
+        petal.style.top = Math.random() * 100 + '%';  // start at random heights
 
-        // Very long & varied duration (45–70 seconds)
-        const duration = Math.random() * 25 + 45;
-        petal.style.animationDuration = `${duration}s, ${duration * 0.22}s, ${duration}s`;
+        // Different animation speed & delay for each → natural constant motion
+        const duration = Math.random() * 12 + 16; // 16–28 seconds per cycle
+        petal.style.animationDuration = duration + 's';
+        petal.style.animationDelay = (Math.random() * -duration) + 's';
 
-        // Staggered start so they don't all appear at once
-        petal.style.animationDelay = `-${Math.random() * duration * 0.8}s, 0s, 0s`;
-
-        // Random slight horizontal offset for more natural drift
-        petal.style.transform = `translateX(${Math.random() * 40 - 20}px)`;
+        // Initial random rotation & position offset
+        petal.style.transform = `rotate(${Math.random() * 60 - 30}deg) translate(${Math.random() * 40 - 20}px, ${Math.random() * 30 - 15}px)`;
 
         petalsContainer.appendChild(petal);
     }
