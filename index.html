@@ -48,34 +48,35 @@
 
 .petal {
     position: absolute;
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 230, 242, 0.65); /* correct pale sakura pink */
-    opacity: 0.65; /* visible but soft */
-    box-shadow: 0 2px 8px rgba(255, 182, 193, 0.15);
-    clip-path: polygon(
-        50% 0%,
-        100% 35%,
-        80% 100%,
-        20% 100%,
-        0% 35%
-    ); /* 5-petaled sakura shape — no box, no blob */
+    width: 32px;
+    height: 32px;
+    opacity: 0.72;                  /* bolder as requested — adjust down to ~0.55 if too strong */
     animation:
-        fall 20s linear infinite,
-        sway 8s ease-in-out infinite;
+        fall 18s linear infinite,
+        rotate 12s linear infinite,
+        sway 9s ease-in-out infinite;
     pointer-events: none;
+    will-change: transform, opacity;
 }
 
-/* Downward fall with drift */
+/* Main downward fall with horizontal drift */
 @keyframes fall {
-    0%   { transform: translateY(-30vh) translateX(0) rotate(0deg); }
-    100% { transform: translateY(130vh) translateX(25vw) rotate(720deg); }
+    0%   { transform: translateY(-35vh) translateX(0); opacity: 0.4; }
+    20%  { opacity: 0.85; }
+    80%  { opacity: 0.85; }
+    100% { transform: translateY(135vh) translateX(30vw); opacity: 0.3; }
 }
 
-/* Gentle sway / flutter */
+/* Gentle constant spin */
+@keyframes rotate {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(720deg); }
+}
+
+/* Soft breeze-like side-to-side + up/down flutter */
 @keyframes sway {
-    0%, 100%   { transform: translateX(0) rotate(0deg); }
-    50%        { transform: translateX(8vw) rotate(10deg); }
+    0%, 100% { transform: translateX(0vw) translateY(0vh); }
+    50%      { transform: translateX(10vw) translateY(-3vh); }
 }
         .glass-card:hover {
             transform: translateY(-10px);
@@ -264,30 +265,61 @@ These days our mission is to create a safe and positive experience for doll coll
     </div>
 
     <--Petal Script-->
-<!-- Script: immediate start, full-screen spread, no blobs -->
 <script>
     const petalsContainer = document.getElementById('petals');
     
+    // 10 petals — good balance of visibility and calmness
     for (let i = 0; i < 10; i++) {
         const petal = document.createElement('div');
         petal.className = 'petal';
 
-        const size = Math.random() * 10 + 16; // 16–26 px
+        // Size variation (18–34 px)
+        const size = Math.random() * 16 + 18;
         petal.style.width = size + 'px';
-        petal.style.height = size * 1.05 + 'px'; // slight oval for petal feel
+        petal.style.height = size + 'px';
 
+        // Horizontal spread
         petal.style.left = Math.random() * 100 + '%';
 
-        // Start scattered: some already mid-screen or lower
-        petal.style.top = (Math.random() * 120 - 20) + '%'; // -20% to 100%
+        // Vertical spread — starts scattered so many are visible instantly
+        petal.style.top = (Math.random() * 140 - 40) + '%'; // -40% → 100%
 
-        const duration = Math.random() * 10 + 18; // 18–28 seconds fall
-        petal.style.animationDuration = `${duration}s, ${duration * 0.45}s`;
+        // Fall duration: 16–26 seconds — clear downward movement
+        const duration = Math.random() * 10 + 16;
+        petal.style.animationDuration = `${duration}s, ${duration * 0.8}s, ${duration * 0.55}s`;
 
-        petal.style.animationDelay = `-${Math.random() * duration}s, 0s`;
+        // Strong negative delay + variation → petals everywhere immediately
+        petal.style.animationDelay = `-${Math.random() * duration * 0.95}s, 0s, ${Math.random() * 5}s`;
 
         // Random initial tilt
-        petal.style.transform = `rotate(${Math.random() * 40 - 20}deg)`;
+        petal.style.transform = `rotate(${Math.random() * 80 - 40}deg)`;
+
+        // Two SVG variants for variety: full flower + single petal
+        const isFlower = Math.random() > 0.6; // ~40% full flowers, 60% single petals
+        petal.innerHTML = isFlower ? `
+            <svg viewBox="0 0 100 100" width="100%" height="100%">
+                <path fill="currentColor" d="
+                    M50,15 
+                    C65,5 80,25 78,45 
+                    C90,65 78,85 55,88 
+                    C45,90 35,88 22,80 
+                    C10,65 20,45 50,15 Z
+                    M50,15 
+                    C35,5 20,25 22,45 
+                    C10,65 22,85 45,88 
+                    C55,90 65,88 78,80 
+                    C90,65 80,45 50,15 Z" />
+            </svg>
+        ` : `
+            <svg viewBox="0 0 100 100" width="100%" height="100%">
+                <path fill="currentColor" d="
+                    M50,20 
+                    C70,10 85,35 80,55 
+                    C75,75 55,90 35,85 
+                    C15,80 10,60 25,40 
+                    C35,25 45,20 50,20 Z" />
+            </svg>
+        `;
 
         petalsContainer.appendChild(petal);
     }
