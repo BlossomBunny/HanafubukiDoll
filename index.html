@@ -38,7 +38,7 @@
             pointer-events: none;
         }
 
-        .petals-container {
+       .petals-container {
     position: fixed;
     inset: 0;
     pointer-events: none;
@@ -48,31 +48,19 @@
 
 .petal {
     position: absolute;
-    background: rgba(252, 231, 243, 0.55); /* a bit more visible pale pink */
+    background: rgba(255, 230, 242, 0.58); /* pale pink — visible on white */
     border-radius: 50% 60% 70% 40% / 60% 70% 50% 40%;
-    box-shadow: 0 2px 12px rgba(236, 72, 153, 0.12);
-    backdrop-filter: blur(1px);
-    opacity: 0.48; /* slightly more noticeable but still soft */
+    box-shadow: 0 2px 10px rgba(236, 72, 153, 0.12);
+    opacity: 0.55; /* clearly visible but soft — lower to 0.4 if too strong */
+    animation: fall 24s linear infinite;
     pointer-events: none;
-    animation:
-        fall 28s linear infinite,     /* faster fall: 20–35s range */
-        sway 10s ease-in-out infinite;
 }
 
-/* Faster, full-screen fall with drift */
+/* Simple, repeating fall with rotation — starts visible, never disappears */
 @keyframes fall {
-    0%   { transform: translateY(-25vh) rotate(0deg) translateX(0); opacity: 0.3; }
-    20%  { opacity: 0.65; }
-    80%  { opacity: 0.65; }
-    100% { transform: translateY(125vh) rotate(540deg) translateX(35vw); opacity: 0.2; }
+    0%   { transform: translateY(-20%) rotate(0deg); opacity: 0.55; }
+    100% { transform: translateY(120%) rotate(720deg); opacity: 0.55; }
 }
-
-/* Gentle side sway */
-@keyframes sway {
-    0%, 100% { transform: translateX(0vw); }
-    50%      { transform: translateX(10vw); }
-}
-
         .glass-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 25px 50px rgba(236,72,153,0.18);
@@ -263,31 +251,31 @@ These days our mission is to create a safe and positive experience for doll coll
 <script>
     const petalsContainer = document.getElementById('petals');
     
-
-    for (let i = 0; i < 9; i++) {
+    // 10 petals — enough to see movement quickly
+    for (let i = 0; i < 10; i++) {
         const petal = document.createElement('div');
         petal.className = 'petal';
 
-       
-        const size = Math.random() * 10 + 12; // 12–22px
+        // Size: delicate
+        const size = Math.random() * 10 + 14; // 14–24 px
         petal.style.width = size + 'px';
         petal.style.height = size + 'px';
 
-       
+        // Spread across full width
         petal.style.left = Math.random() * 100 + '%';
 
-     
-        petal.style.top = (Math.random() * 140 - 40) + '%'; // -40% to 100%
+        // Start scattered vertically so some are immediately visible
+        petal.style.top = Math.random() * 100 + '%';
 
-        
-        const duration = Math.random() * 15 + 20;
-        petal.style.animationDuration = duration + 's, ' + (duration * 0.4) + 's';
+        // Fall time: 18–30 seconds → noticeable but calm
+        const duration = Math.random() * 12 + 18;
+        petal.style.animationDuration = duration + 's';
 
-  
-        petal.style.animationDelay = `-${Math.random() * duration * 0.9}s, ${Math.random() * 4}s`;
+        // Negative delay so petals are already falling when page loads
+        petal.style.animationDelay = `-${Math.random() * duration}s`;
 
-  
-        petal.style.transform = `rotate(${Math.random() * 60 - 30}deg)`;
+        // Initial random rotation so they don't all look identical
+        petal.style.transform = `rotate(${Math.random() * 360}deg)`;
 
         petalsContainer.appendChild(petal);
     }
