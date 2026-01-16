@@ -90,31 +90,80 @@
             </div>
         </div>
 
-        <div id="queue" class="tab-content animate-fadeIn">
-            <div class="glass-card p-10">
-                <div class="text-center mb-10">
-                    <h2 class="text-3xl font-bold mb-2">Studio Status</h2>
-                    <p class="text-[var(--text-muted)]">Current turnaround: 2-4 weeks</p>
-                </div>
-                <div class="space-y-4 max-w-2xl mx-auto">
-                    <div class="flex justify-between items-center p-5 bg-white/40 rounded-2xl border border-pink-100">
-                        <div>
-                            <span class="block font-bold">Order #HB-102</span>
-                            <span class="text-xs text-[var(--text-muted)]">Client: S. Miller</span>
-                        </div>
-                        <span class="px-4 py-1 bg-[var(--accent-mint)] text-xs font-bold rounded-full">In Progress: Painting</span>
-                    </div>
-                    <div class="flex justify-between items-center p-5 bg-white/40 rounded-2xl border border-pink-100">
-                        <div>
-                            <span class="block font-bold">Order #HB-103</span>
-                            <span class="text-xs text-[var(--text-muted)]">Client: J. Doe</span>
-                        </div>
-                        <span class="px-4 py-1 bg-pink-100 text-xs font-bold rounded-full">Waiting: Base Seal</span>
-                    </div>
+        <<div id="queue" class="tab-content animate-fadeIn">
+    <div class="glass-card p-10 max-w-2xl mx-auto">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold mb-2">Quote Calculator ♡</h2>
+            <p class="text-[var(--text-muted)] text-sm">Select your options for a rough estimate</p>
+        </div>
+
+        <div class="space-y-6">
+            <div>
+                <label class="block text-sm font-bold mb-3 uppercase tracking-widest">1. Choose Base Service</label>
+                <select id="baseService" onchange="calculateTotal()" class="w-full p-4 rounded-2xl bg-white/50 border border-pink-100 text-[var(--text-main)] font-medium outline-none focus:border-[var(--accent-mint)] transition-all">
+                    <option value="0">Select a service...</option>
+                    <option value="85">Standard Face-Up (£85)</option>
+                    <option value="160">Smartdoll Package (£160)</option>
+                    <option value="180">Dollfie Dream Package (£180)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold mb-3 uppercase tracking-widest">2. Add Extras</label>
+                <div class="grid grid-cols-1 gap-3">
+                    <label class="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-pink-50 cursor-pointer hover:bg-white/50 transition-all">
+                        <span class="flex items-center gap-3">
+                            <input type="checkbox" class="addon-price w-5 h-5 accent-[var(--accent-pink)]" value="5" onchange="calculateTotal()">
+                            Ear Piercings
+                        </span>
+                        <span class="font-bold">+£5</span>
+                    </label>
+                    <label class="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-pink-50 cursor-pointer hover:bg-white/50 transition-all">
+                        <span class="flex items-center gap-3">
+                            <input type="checkbox" class="addon-price w-5 h-5 accent-[var(--accent-pink)]" value="15" onchange="calculateTotal()">
+                            Eyelash Installation
+                        </span>
+                        <span class="font-bold">+£15</span>
+                    </label>
+                    <label class="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-pink-50 cursor-pointer hover:bg-white/50 transition-all">
+                        <span class="flex items-center gap-3">
+                            <input type="checkbox" class="addon-price w-5 h-5 accent-[var(--accent-pink)]" value="20" onchange="calculateTotal()">
+                            Custom Resin Eyes
+                        </span>
+                        <span class="font-bold">+£20</span>
+                    </label>
                 </div>
             </div>
+
+            <div class="mt-8 p-6 bg-[var(--accent-pink)] rounded-3xl text-white text-center shadow-lg">
+                <span class="block text-xs uppercase font-bold tracking-tighter opacity-80">Estimated Total</span>
+                <span class="text-4xl font-black" id="totalDisplay">£0</span>
+            </div>
+            
+            <p class="text-[10px] text-center text-[var(--text-muted)] italic">
+                *This is a rough estimate. Final quotes may vary based on complexity.
+            </p>
         </div>
-    </main>
+    </div>
+</div>
+
+<script>
+    function calculateTotal() {
+        // Get the base price from the dropdown
+        let base = parseFloat(document.getElementById('baseService').value);
+        
+        // Get all checked add-ons
+        let addons = document.querySelectorAll('.addon-price:checked');
+        let addonTotal = 0;
+        addons.forEach(checkbox => {
+            addonTotal += parseFloat(checkbox.value);
+        });
+
+        // Update the display
+        let finalTotal = base + addonTotal;
+        document.getElementById('totalDisplay').innerText = '£' + finalTotal;
+    }
+</script>  
 
     <script>
         // Simple Tab Logic
@@ -146,5 +195,6 @@
             container.appendChild(p);
         }
     </script>
+    </main>
 </body>
 </html>
