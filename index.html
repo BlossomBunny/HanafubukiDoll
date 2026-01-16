@@ -38,7 +38,7 @@
             pointer-events: none;
         }
 
-       .petals-container {
+      .petals-container {
     position: fixed;
     inset: 0;
     pointer-events: none;
@@ -50,17 +50,32 @@
     position: absolute;
     width: 28px;
     height: 28px;
-    opacity: 0.55;               /* bolder as you wanted */
-    background: rgba(255, 220, 240, 0.75); /* visible pale pink */
-    box-shadow: 0 2px 8px rgba(255, 182, 193, 0.18);
-    animation: fall 18s linear infinite;
+    background: rgba(255, 230, 242, 0.65); /* correct pale sakura pink */
+    opacity: 0.65; /* visible but soft */
+    box-shadow: 0 2px 8px rgba(255, 182, 193, 0.15);
+    clip-path: polygon(
+        50% 0%,
+        100% 35%,
+        80% 100%,
+        20% 100%,
+        0% 35%
+    ); /* 5-petaled sakura shape — no box, no blob */
+    animation:
+        fall 20s linear infinite,
+        sway 8s ease-in-out infinite;
     pointer-events: none;
 }
 
-/* Strong downward fall with rotation — guaranteed movement */
+/* Downward fall with drift */
 @keyframes fall {
-    0%   { transform: translateY(-30vh) rotate(0deg); }
-    100% { transform: translateY(130vh) rotate(1080deg); } /* 3 full rotations */
+    0%   { transform: translateY(-30vh) translateX(0) rotate(0deg); }
+    100% { transform: translateY(130vh) translateX(25vw) rotate(720deg); }
+}
+
+/* Gentle sway / flutter */
+@keyframes sway {
+    0%, 100%   { transform: translateX(0) rotate(0deg); }
+    50%        { transform: translateX(8vw) rotate(10deg); }
 }
         .glass-card:hover {
             transform: translateY(-10px);
@@ -249,49 +264,35 @@ These days our mission is to create a safe and positive experience for doll coll
     </div>
 
     <--Petal Script-->
-<!-- Petals script – scattered start + real petal shape via SVG -->
+<!-- Script: immediate start, full-screen spread, no blobs -->
 <script>
     const petalsContainer = document.getElementById('petals');
     
-    // 8–10 petals for gentle coverage
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 10; i++) {
         const petal = document.createElement('div');
         petal.className = 'petal';
 
-        // Size variation
-        const size = Math.random() * 12 + 16; // 16–28 px
+        const size = Math.random() * 10 + 16; // 16–26 px
         petal.style.width = size + 'px';
-        petal.style.height = size + 'px';
+        petal.style.height = size * 1.05 + 'px'; // slight oval for petal feel
 
-        // Horizontal spread
         petal.style.left = Math.random() * 100 + '%';
 
-        // Vertical spread: some start already visible (0–80%), some above (-30%)
-        petal.style.top = (Math.random() * 110 - 30) + '%';
+        // Start scattered: some already mid-screen or lower
+        petal.style.top = (Math.random() * 120 - 20) + '%'; // -20% to 100%
 
-        // Fall time: 14–24 seconds → visible downward movement quickly
-        const duration = Math.random() * 10 + 14;
-        petal.style.animationDuration = duration + 's';
+        const duration = Math.random() * 10 + 18; // 18–28 seconds fall
+        petal.style.animationDuration = `${duration}s, ${duration * 0.45}s`;
 
-        // Negative delay → petals are already falling on load
-        petal.style.animationDelay = `-${Math.random() * duration * 0.9}s`;
+        petal.style.animationDelay = `-${Math.random() * duration}s, 0s`;
 
-        // Real cherry blossom petal shape via inline SVG
-        petal.innerHTML = `
-            <svg viewBox="0 0 100 100" width="100%" height="100%">
-                <path fill="currentColor" d="
-                    M50,10 
-                    C 65,0 85,20 80,40 
-                    C 90,60 80,80 60,85 
-                    C 40,90 20,80 20,60 
-                    C 10,40 25,20 50,10 
-                    Z" />
-            </svg>
-        `;
+        // Random initial tilt
+        petal.style.transform = `rotate(${Math.random() * 40 - 20}deg)`;
 
         petalsContainer.appendChild(petal);
     }
 </script>
+        
     <footer class="text-center py-12 text-[var(--text-muted)] text-sm border-t border-[var(--card-border)]">
         © 2026 HanafubukiDoll • Made with cherry blossoms and magic!
     </footer>
