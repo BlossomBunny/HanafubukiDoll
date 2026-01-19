@@ -14,10 +14,24 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
+    
 <body class="bg-[#fdfbfb] min-h-screen p-4 md:p-10">
     <div class="mesh-bg"></div>
 
     <div class="max-w-3xl mx-auto relative z-10">
+
+        <header class="w-full py-6 px-4 md:px-10 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-[100] border-b border-pink-50">
+    <a href="index.html" class="flex items-center gap-3">
+        <span class="text-2xl">🐰</span>
+        <h1 class="font-black text-xl tracking-tighter uppercase italic text-gray-800">HanafubukiDoll</h1>
+    </a>
+    
+    <nav class="flex gap-4 md:gap-8">
+        <a href="index.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors">Home</a>
+        <a href="contact.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors">Book a Slot</a>
+        <a href="admin.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors opacity-30 hover:opacity-100">Admin</a>
+    </nav>
+</header>
         
         <div id="entryChoice" class="glass-card p-10 text-center space-y-8 animate-fadeIn">
             <h1 class="text-4xl font-black tracking-tighter text-gray-800">Connect with the Studio</h1>
@@ -223,5 +237,20 @@
 
         window.onload = checkServiceAvailability;
     </script>
+    <footer class="w-full py-12 px-6 mt-20 border-t border-pink-50 bg-white/30">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+        <div class="text-center md:text-left">
+            <p class="font-black italic text-lg tracking-tighter">HanafubukiDoll</p>
+            <p class="text-[10px] uppercase tracking-[0.2em] opacity-40">Hand-painted in the UK ♡</p>
+        </div>
+        
+        <div class="flex gap-6 text-[10px] font-black uppercase tracking-widest opacity-60">
+            <a href="https://instagram.com/hanafubukidoll" target="_blank" class="hover:text-pink-500">Instagram</a>
+            <a href="mailto:Admin@hanafubukidoll.co.uk" class="hover:text-pink-500">Contact</a>
+        </div>
+        
+        <p class="text-[9px] opacity-30 italic">© 2026 HanafubukiDoll. All Rights Reserved.</p>
+    </div>
+</footer>
 </body>
 </html>
