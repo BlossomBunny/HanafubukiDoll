@@ -10,10 +10,17 @@
     <style>
         .form-step { display: none; }
         .form-step.active { display: block; }
-        .progress-bar { transition: width 0.4s ease; }
+        .animate-bounce-in {
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
-<body>
+<body class="bg-[#fdfbfb]">
     <div class="mesh-bg"></div>
     <div class="petals-container" id="petals"></div>
 
@@ -31,32 +38,35 @@
     </nav>
 
     <main class="max-w-3xl mx-auto px-6 py-16">
-        <div class="text-center mb-8">
-            <h1 class="text-5xl font-extrabold mb-4 tracking-tighter">Commission Inquiry</h1>
-            <p class="text-[var(--text-muted)]">Let's bring your character to life ♡</p>
+        <div id="successMessage" class="hidden text-center animate-bounce-in py-20">
+            <div class="text-6xl mb-6">🌸</div>
+            <h1 class="text-5xl font-extrabold mb-4 tracking-tighter">Inquiry Sent!</h1>
+            <p class="text-[var(--text-muted)] mb-8">Thank you so much! I've received your details and will get back to you shortly via social media or email. ♡</p>
+            <a href="index.html" class="nav-btn nav-btn-mint px-10 py-4 inline-block">Return Home ♡</a>
         </div>
 
-        <div class="w-full bg-white/30 h-2 rounded-full mb-12 overflow-hidden">
-            <div id="progress" class="bg-[var(--accent-pink)] h-full progress-bar" style="width: 25%;"></div>
-        </div>
+        <div id="formContainer">
+            <header class="text-center mb-12">
+                <h1 class="text-5xl font-extrabold mb-4 tracking-tighter">Commission Form</h1>
+                <p class="text-[var(--text-muted)]">Please fill out the details below to start your project.</p>
+            </header>
 
-        <div class="glass-card p-8 md:p-12 shadow-2xl relative">
-            <form id="commissionForm">
+            <div class="w-full bg-white/30 h-1.5 rounded-full mb-12 overflow-hidden">
+                <div id="progress" class="bg-[var(--accent-pink)] h-full transition-all duration-500" style="width: 33%;"></div>
+            </div>
+
+            <form id="commissionForm" class="glass-card p-8 md:p-12 shadow-2xl relative">
                 
                 <div class="form-step active" id="step1">
                     <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><span>1.</span> Personal Info ♡</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-xs font-bold uppercase mb-2">Name / Nickname</label>
-                            <input type="text" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="Your name">
+                            <label class="block text-xs font-bold uppercase mb-2 opacity-50">Legal Name / Nickname</label>
+                            <input type="text" id="custName" required class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="e.g. Jane Doe">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase mb-2">Email Address</label>
-                            <input type="email" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="hello@example.com">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase mb-2">Social Media Handle (IG/Twitter)</label>
-                            <input type="text" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="@yourhandle">
+                            <label class="block text-xs font-bold uppercase mb-2 opacity-50">Social Media Handle</label>
+                            <input type="text" id="socialHandle" required class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="e.g. @yourname (IG/Twitter)">
                         </div>
                     </div>
                 </div>
@@ -65,83 +75,156 @@
                     <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><span>2.</span> The Doll ♡</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-xs font-bold uppercase mb-2">Doll Sculpt & Company</label>
-                            <input type="text" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="e.g. Smartdoll Mirai">
+                            <label class="block text-xs font-bold uppercase mb-2 opacity-50">Doll Sculpt & Company</label>
+                            <input type="text" id="dollSculpt" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="e.g. SmartDoll Mirai">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase mb-2">Skintone</label>
-                            <select class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300">
-                                <option>Cinnamon / Tea</option>
-                                <option>Milk / White</option>
-                                <option>Cocoa / Tan</option>
-                                <option>Other (Please specify in notes)</option>
-                            </select>
+                            <label class="block text-xs font-bold uppercase mb-2 opacity-50">Design Notes & Vibe</label>
+                            <textarea id="dollNotes" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300 h-32" placeholder="Tell me about their personality, colors, or specific requests..."></textarea>
                         </div>
                     </div>
                 </div>
 
                 <div class="form-step" id="step3">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><span>3.</span> Aesthetic & Vision ♡</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase mb-2">Character Personality / Vibe</label>
-                            <textarea class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300 h-32" placeholder="Shy, grumpy, energetic, etc..."></textarea>
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><span>3.</span> References ♡</h2>
+                    <div class="space-y-6">
+                        <div class="border-2 border-dashed border-pink-200 rounded-2xl p-8 text-center bg-pink-50/20">
+                            <label class="cursor-pointer">
+                                <span class="block text-sm font-bold opacity-60 mb-2">Upload Reference Photos</span>
+                                <input type="file" id="fileUpload" multiple accept="image/*" class="hidden">
+                                <span class="nav-btn-mint text-xs px-4 py-2 inline-block">Choose Files</span>
+                            </label>
+                            <div id="fileList" class="mt-4 text-[10px] font-bold text-pink-400"></div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase mb-2">Reference Links (Pinterest/Imgur)</label>
-                            <input type="text" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="Link to moodboard">
-                        </div>
-                    </div>
-                </div>
 
-                <div class="form-step" id="step4">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><span>4.</span> Final Details ♡</h2>
-                    <div class="space-y-4">
-                        <p class="text-sm text-[var(--text-muted)] mb-4">Are there any specific "Must-Haves" or "Don'ts"? (e.g. No heavy blushing, specific glitter placement, etc.)</p>
-                        <textarea class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300 h-32" placeholder="Your specific requests..."></textarea>
+                        <div class="relative py-4">
+                            <div class="absolute inset-0 flex items-center"><span class="w-full border-t border-pink-100"></span></div>
+                            <div class="relative flex justify-center text-[10px] uppercase font-bold text-pink-300"><span class="bg-white/80 px-2 backdrop-blur-sm">OR</span></div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-2 opacity-50">Reference URLs (Pinterest/Imgur)</label>
+                            <input type="text" id="refLinks" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="Paste links here...">
+                        </div>
                     </div>
                 </div>
 
                 <div class="flex justify-between mt-12 pt-8 border-t border-pink-50">
-                    <button type="button" id="prevBtn" onclick="changeStep(-1)" class="nav-btn nav-btn-mint opacity-0 pointer-events-none transition-opacity">Back</button>
-                    <button type="button" id="nextBtn" onclick="changeStep(1)" class="nav-btn nav-btn-pink">Next Step</button>
+                    <button type="button" id="prevBtn" onclick="changeStep(-1)" class="opacity-0 pointer-events-none text-sm font-bold text-pink-300 transition-opacity">← Back</button>
+                    <button type="button" id="nextBtn" onclick="handleNext()" class="nav-btn nav-btn-pink">Next Step</button>
                 </div>
             </form>
         </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         let currentStep = 1;
-        const totalSteps = 4;
+        const totalSteps = 3;
+
+        // Show selected file names
+        document.getElementById('fileUpload').addEventListener('change', e => {
+            const files = Array.from(e.target.files);
+            document.getElementById('fileList').innerText = files.length > 0 ? `${files.length} file(s) selected: ` + files.map(f => f.name).join(', ') : '';
+        });
 
         function changeStep(n) {
             const steps = document.querySelectorAll(".form-step");
-            
-            // Hide current step
             steps[currentStep - 1].classList.remove("active");
-            
-            // Update step number
             currentStep += n;
-
-            // Show new step
             steps[currentStep - 1].classList.add("active");
 
-            // Update Progress Bar
+            // Update UI
             document.getElementById("progress").style.width = (currentStep / totalSteps) * 100 + "%";
-
-            // Button visibility logic
             document.getElementById("prevBtn").style.opacity = currentStep === 1 ? "0" : "1";
             document.getElementById("prevBtn").style.pointerEvents = currentStep === 1 ? "none" : "auto";
-            
-            if (currentStep === totalSteps) {
-                document.getElementById("nextBtn").innerText = "Submit Inquiry ♡";
-                document.getElementById("nextBtn").classList.add("nav-btn-mint");
-                document.getElementById("nextBtn").classList.remove("nav-btn-pink");
+            document.getElementById("nextBtn").innerText = currentStep === totalSteps ? "Submit Inquiry ♡" : "Next Step";
+        }
+
+        async function handleNext() {
+            if (currentStep < totalSteps) {
+                changeStep(1);
             } else {
-                document.getElementById("nextBtn").innerText = "Next Step";
-                document.getElementById("nextBtn").classList.add("nav-btn-pink");
-                document.getElementById("nextBtn").classList.remove("nav-btn-mint");
+                await submitInquiry();
             }
+        }
+
+        async function submitInquiry() {
+            const btn = document.getElementById('nextBtn');
+            btn.disabled = true;
+            btn.innerText = "Sending... ✨";
+
+            try {
+                const files = document.getElementById('fileUpload').files;
+                let finalImageUrls = [];
+
+                // 1. Upload files to Storage
+                if (files.length > 0) {
+                    for (const file of files) {
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `${Math.random()}-${Date.now()}.${fileExt}`;
+                        
+                        const { data, error } = await _supabase.storage
+                            .from('references')
+                            .upload(fileName, file);
+                        
+                        if (error) throw error;
+
+                        const { data: publicUrlData } = _supabase.storage
+                            .from('references')
+                            .getPublicUrl(fileName);
+                        
+                        finalImageUrls.push(publicUrlData.publicUrl);
+                    }
+                }
+
+                // 2. Add text links if present
+                const links = document.getElementById('refLinks').value;
+                if (links) finalImageUrls.push(links);
+
+                // 3. Save to Database
+                const { error: dbError } = await _supabase
+                    .from('commissions')
+                    .insert([{
+                        customer_name: document.getElementById('custName').value,
+                        social_handle: document.getElementById('socialHandle').value,
+                        doll_sculpt: document.getElementById('dollSculpt').value,
+                        notes: document.getElementById('dollNotes').value,
+                        image_urls: finalImageUrls,
+                        status: 'inquiry',
+                        total_price: 0
+                    }]);
+
+                if (dbError) throw dbError;
+
+                // 4. Success State
+                document.getElementById('formContainer').classList.add('hidden');
+                document.getElementById('successMessage').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (err) {
+                console.error(err);
+                alert("Something went wrong! " + err.message);
+                btn.disabled = false;
+                btn.innerText = "Try Again ♡";
+            }
+        }
+
+        // Bloom Petal Animation
+        const container = document.getElementById('petals');
+        for (let i = 0; i < 15; i++) {
+            const p = document.createElement('div');
+            p.className = 'petal'; p.innerText = '🌸';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.top = '-5vh';
+            p.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            p.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            p.style.animationDelay = (Math.random() * -20) + 's';
+            container.appendChild(p);
         }
     </script>
 </body>
