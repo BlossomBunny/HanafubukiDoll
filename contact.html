@@ -180,7 +180,7 @@
                 if (!service.is_live && container) {
                     container.innerHTML = `
                         <div class="p-6 bg-pink-50/50 rounded-2xl border-2 border-dashed border-pink-200 text-center animate-fadeIn">
-                            <p class="text-[10px] font-black uppercase text-pink-400 mb-2">🌸 ${service.id} is currently full</p>
+                            <p class="text-[10px] font-black uppercase text-pink-400 mb-2">🌸 Our ${service.id} service is currently full</p>
                             <p class="text-xs mb-4 text-gray-600 font-medium">Sorry, We are not taking new orders for this service right now. Join the waitlist to be notified!</p>
                             <div class="flex gap-2 max-w-sm mx-auto">
                                 <input type="email" id="wait-email-${service.id}" placeholder="your@email.com" class="flex-1 p-3 rounded-xl border border-pink-100 text-sm outline-none focus:ring-2 ring-pink-100">
@@ -199,7 +199,7 @@
             
             const { error } = await _supabase.from('waitlist').insert([{ email, service_requested: serviceName }]);
             if (!error) {
-                alert("You've been added to the waitlist! ♡");
+                alert("You've been added to the waitlist! ♡ We'll email you when this service has been resumed!");
                 emailInput.value = "";
             }
         }
