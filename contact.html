@@ -60,14 +60,18 @@
         <form id="bookingForm" class="step-hidden space-y-8 pb-20 animate-fadeIn">
             <button type="button" onclick="location.reload()" class="text-[10px] font-black uppercase tracking-widest text-pink-400 hover:text-pink-600">← Back to Options</button>
 
-            <div class="glass-card p-8 space-y-6">
-                <h2 class="text-2xl font-black tracking-tighter">1. Artist Details</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" id="custName" placeholder="Full Name" required class="w-full p-4 rounded-xl border border-pink-100 outline-none focus:ring-2 ring-pink-200">
-                    <input type="text" id="socialHandle" placeholder="Social Handle (@...)" class="w-full p-4 rounded-xl border border-pink-100 outline-none">
-                    <input type="email" id="custEmail" placeholder="Email Address (Required)" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
-                    <input type="text" id="dollSculpt" placeholder="Doll Company & Sculpt" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
-                </div>
+           <div class="glass-card p-8 space-y-6">
+    <h2 class="text-2xl font-black tracking-tighter">1. Your Details</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="text" id="custName" placeholder="Full Name*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none focus:ring-2 ring-pink-200">
+        <input type="text" id="socialHandle" placeholder="Social Handle (@...)" class="w-full p-4 rounded-xl border border-pink-100 outline-none">
+        <input type="text" id="Country" placeholder="USA" required class="w-full p-4 rounded-xl border border-pink-100 outline-none">
+        <input type="email" id="custEmail" placeholder="Email Address*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
+        <input type="text" id="dollCompany" placeholder="Doll Company (e.g. SmartDoll)*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
+        <input type="text" id="dollSculpt" placeholder="Doll Sculpt (e.g. Mirai)*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none">
+        <input type="text" id="dollSkintone" placeholder="Skintone (e.g. Cinnamon)*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none">
+    </div>
+</div>
             </div>
 
             <div class="space-y-6">
@@ -121,11 +125,21 @@
                 </div>
             </div>
 
-            <div class="glass-card p-8 space-y-6">
-                <div class="p-4 bg-pink-50 rounded-xl border border-pink-100 text-[11px] h-32 overflow-y-auto text-gray-500 leading-relaxed">
-                    <p class="font-bold mb-2 uppercase tracking-tighter text-pink-500">Terms of Service:</p>
-                    <p>All deposits are non-refundable. Shipping is the responsibility of the client. Artist has creative freedom within the discussed concept. Items left in studio for over 6 months without communication become studio property.</p>
-                </div>
+            <div class="p-5 bg-pink-50/50 rounded-2xl border border-pink-100 text-[11px] h-48 overflow-y-auto text-gray-600 leading-relaxed custom-scrollbar">
+    <p class="font-black mb-3 uppercase tracking-widest text-pink-500 border-b border-pink-100 pb-1">Studio Terms of Service</p>
+    
+    <div class="space-y-3">
+        <p><strong>♡ Payments:</strong> Payment is required in full before work can begin. Layaway is accepted but should be discussed prior to submitting a commission form. All payments are non-refundable after work has commenced.</p>
+        
+        <p><strong>♡ Shipping:</strong> Client covers all shipping/insurance/customs costs. We are not liable for postal loss or damage after the item is shipped, but will assist in creating a case with the mail carrier.</p>
+        
+        <p><strong>♡ Artistic Freedom:</strong> By booking, you trust our artistic style. We do not offer exact copies of other artists' work and retain the right to refuse a commission we feel we can't fulfil..</p>
+        
+        <p><strong>♡ Abandonment:</strong> Items left for 3+ months without contact will be forfeited to the studio to cover costs.</p>
+        
+        <p><strong>♡ Photo Rights:</strong> We will use photos of the work for social media/portfolio use unless otherwise agreed.</p>
+    </div>
+</div>
                 <label class="flex items-start gap-3 cursor-pointer">
                     <input type="checkbox" id="tosCheck" required class="mt-1 w-5 h-5 accent-pink-500">
                     <span class="text-xs font-bold text-gray-700">I agree to the Terms of Service and understand the non-refundable deposit. ♡</span>
