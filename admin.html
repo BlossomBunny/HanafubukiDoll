@@ -116,58 +116,32 @@
             `).join('');
         }
 
-        async function openDrawer(id) {
-            activeJobId = id;
-            const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
-            const content = document.getElementById('drawerContent');
-
-            content.innerHTML = `
-                <div class="space-y-6">
-                    <div class="p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
-                        <h4 class="text-[10px] font-black uppercase text-emerald-700 mb-2">Requested Services</h4>
-                        <div class="flex flex-wrap gap-2">
-                            ${job.services_list?.map(s => `<span class="px-3 py-1 bg-white rounded-full text-[10px] font-bold border border-emerald-200">${s}</span>`).join('') || 'No specific services selected'}
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase opacity-40">Job Status</label>
-                            <select id="updateStatus" class="w-full p-3 bg-pink-50/30 rounded-xl border border-pink-100 font-bold text-sm outline-none">
-                                <option value="inquiry" ${job.status === 'inquiry' ? 'selected' : ''}>Inquiry</option>
-                                <option value="queued" ${job.status === 'queued' ? 'selected' : ''}>Queued</option>
-                                <option value="painting" ${job.status === 'painting' ? 'selected' : ''}>Painting</option>
-                                <option value="shipped" ${job.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                                <option value="rejected" ${job.status === 'rejected' ? 'selected' : ''}>Rejected</option>
-                            </select>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase opacity-40">Quote (£)</label>
-                            <input id="updatePrice" type="number" value="${job.total_price}" class="w-full p-3 border border-pink-100 rounded-xl font-bold">
-                        </div>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase opacity-40">Client Notes</label>
-                        <div class="p-4 bg-gray-50 rounded-xl text-sm italic">"${job.notes}"</div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label class="text-[10px] font-black uppercase opacity-40">References</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            ${job.image_urls?.map(url => `<a href="${url}" target="_blank"><img src="${url}" class="rounded-xl w-full aspect-square object-cover"></a>`).join('')}
-                        </div>
-                `
-<div class="flex items-center gap-2 p-3 bg-blue-50 border border-blue-100 rounded-xl">
-    <span class="text-blue-500">✅</span>
-    <span class="text-[10px] font-black uppercase text-blue-700">Client has agreed to Terms of Service</span>
-</div>
-`
-                    </div>
+        // Inside openDrawer function in admin.html
+content.innerHTML = `
+    <div class="space-y-8">
+        ${job.faceup_details.base !== 'None' ? `
+            <div class="p-4 bg-pink-50 rounded-2xl border border-pink-100">
+                <h4 class="text-[10px] font-black uppercase text-pink-600 mb-2">Face-up Spec</h4>
+                <p class="font-bold">${job.faceup_details.base} (${job.faceup_details.addons.join(', ')})</p>
+                <p class="text-sm italic mt-2">"${job.faceup_details.notes}"</p>
+                <div class="flex gap-2 mt-4 overflow-x-auto">
+                    ${job.faceup_details.images.map(img => `<img src="${img}" class="h-20 w-20 object-cover rounded-lg border">`).join('')}
                 </div>
-            `;
-            document.getElementById('detailDrawer').classList.remove('translate-x-full');
-        }
+            </div>
+        ` : ''}
+
+        ${job.manicure_details.base !== 'None' ? `
+            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <h4 class="text-[10px] font-black uppercase text-emerald-600 mb-2">Hand/Nail Spec</h4>
+                <p class="font-bold">${job.manicure_details.base}</p>
+                <p class="text-sm italic mt-2">"${job.manicure_details.notes}"</p>
+                <div class="flex gap-2 mt-4">
+                    ${job.manicure_details.images.map(img => `<img src="${img}" class="h-20 w-20 object-cover rounded-lg border">`).join('')}
+                </div>
+            </div>
+        ` : ''}
+    </div>
+`;
 
         document.getElementById('saveBtn').addEventListener('click', async () => {
             const btn = document.getElementById('saveBtn');
