@@ -6,37 +6,53 @@
     <title>Studio Login - HanafubukiDoll</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Ensuring the accent color works even if the CSS variable isn't loaded */
+        :root { --accent-pink: #f472b6; --text-muted: #9ca3af; }
+    </style>
 </head>
-<body class="bg-[#fdfbfb] flex items-center justify-center min-h-screen">
+<body class="bg-[#fdfbfb] flex flex-col min-h-screen">
     <div class="mesh-bg"></div>
-    <header class="w-full py-6 px-4 md:px-10 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-[100] border-b border-pink-50">
-    <a href="index.html" class="flex items-center gap-3">
-        <span class="text-2xl">🐰</span>
-        <h1 class="font-black text-xl tracking-tighter uppercase italic text-gray-800">HanafubukiDoll</h1>
-    </a>
-    
-    <nav class="flex gap-4 md:gap-8">
-        <a href="index.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors">Home</a>
-        <a href="contact.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors">Book a Slot</a>
-        <a href="admin.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors opacity-30 hover:opacity-100">Admin</a>
-    </nav>
-</header>
-    <div class="glass-card p-10 w-full max-w-md relative z-10 shadow-2xl">
-        <div class="text-center mb-8">
-            <span class="text-4xl">🔑</span>
-            <h1 class="text-3xl font-black tracking-tighter mt-4">Studio Access</h1>
-            <p class="text-[10px] text-pink-400 font-bold uppercase tracking-widest mt-2">Dani & Jas Only ♡</p>
-        </div>
 
-        <form id="loginForm" class="space-y-4">
-            <input type="email" id="email" placeholder="Studio Email" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300 outline-none transition-all" required>
-            <input type="password" id="password" placeholder="Password" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300 outline-none transition-all" required>
-            <button type="submit" id="loginBtn" class="w-full bg-[var(--accent-pink)] text-white py-4 rounded-2xl font-bold shadow-lg hover:brightness-110 active:scale-95 transition-all">
-                Enter Dashboard ♡
-            </button>
-        </form>
-        <p id="errorMsg" class="text-red-400 text-xs mt-4 text-center hidden font-medium"></p>
-    </div>
+    <header class="w-full py-6 px-4 md:px-10 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-[100] border-b border-pink-50">
+        <a href="index.html" class="flex items-center gap-3">
+            <span class="text-2xl">🐰</span>
+            <h1 class="font-black text-xl tracking-tighter uppercase italic text-gray-800">HanafubukiDoll</h1>
+        </a>
+        
+        <nav class="flex gap-4 md:gap-8">
+            <a href="index.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors">Home</a>
+            <a href="contact.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors">Book a Slot</a>
+            <a href="admin.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors opacity-30">Admin</a>
+        </nav>
+    </header>
+
+    <main class="flex-1 flex items-center justify-center p-6">
+        <div class="glass-card p-10 w-full max-w-md relative z-10 shadow-2xl bg-white/80 backdrop-blur-lg rounded-[2.5rem] border border-pink-100">
+            <div class="text-center mb-8">
+                <span class="text-4xl">🔑</span>
+                <h1 class="text-3xl font-black tracking-tighter mt-4 text-gray-800">Studio Access</h1>
+                <p class="text-[10px] text-pink-400 font-bold uppercase tracking-widest mt-2">Dani & Jas Only ♡</p>
+            </div>
+
+            <form id="loginForm" class="space-y-4">
+                <input type="email" id="email" placeholder="Studio Email" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:ring-2 focus:ring-pink-200 outline-none transition-all" required>
+                <input type="password" id="password" placeholder="Password" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:ring-2 focus:ring-pink-200 outline-none transition-all" required>
+                <button type="submit" id="loginBtn" class="w-full bg-pink-400 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-pink-500 active:scale-95 transition-all">
+                    Enter Dashboard ♡
+                </button>
+            </form>
+            <p id="errorMsg" class="text-red-400 text-xs mt-4 text-center hidden font-medium"></p>
+        </div>
+    </main>
+
+    <footer class="py-10 text-center border-t border-pink-50 bg-white/30">
+        <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-2">HanafubukiDoll Aesthetic Studio</p>
+        <p class="text-gray-400 text-[11px] mb-4">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
+        <a href="login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors duration-300 uppercase tracking-widest font-bold">
+            Staff Access 🔒
+        </a>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -66,14 +82,5 @@
             }
         });
     </script>
-         <footer class="py-20 text-center border-t border-pink-50">
-        <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
-        <p class="text-[var(--text-muted)] text-sm">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
-         
-    </p>
-    <a href="login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors duration-300 uppercase tracking-widest font-bold">
-        Staff Access 🔒
-    </a>
-    </footer>
 </body>
 </html>
