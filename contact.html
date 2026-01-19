@@ -51,70 +51,42 @@
             <div class="glass-card p-8 space-y-10">
                 <h2 class="text-2xl font-black tracking-tighter">2. Service Selection</h2>
 
-                <div class="space-y-4">
-                    <label class="block text-xs font-black uppercase tracking-widest opacity-40">Face-Up Options</label>
-                    <select id="faceupBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white" onchange="toggleAddons('faceupAddons', this.value)">
-                        <option value="None">None</option>
-                        <option value="Standard Face-Up">Standard Face-Up</option>
-                        <option value="Face-Up + Smartdoll Head">Face-Up + Smartdoll Head</option>
-                        <option value="Face-Up + Dollfie Dream Head">Face-Up + Dollfie Dream Head</option>
-                    </select>
-                    <div id="faceupAddons" class="step-hidden p-4 bg-pink-50/50 rounded-xl space-y-3">
-                        <p class="text-[10px] font-bold uppercase opacity-50">Add-ons:</p>
-                        <div class="addon-grid">
-                            <label class="text-xs flex items-center gap-2"><input type="checkbox" value="Eyelashes" class="service-check"> Eyelashes</label>
-                            <label class="text-xs flex items-center gap-2"><input type="checkbox" value="Piercings" class="service-check"> Piercings</label>
-                            <label class="text-xs flex items-center gap-2"><input type="checkbox" value="Modifications" class="service-check"> Modifications</label>
-                        </div>
-                    </div>
-                </div>
+                <div class="glass-card p-6 space-y-4 border-l-4 border-pink-400">
+    <h3 class="font-black text-pink-500 uppercase text-xs tracking-widest">1. Face-Up Details</h3>
+    <select id="faceupBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white" onchange="toggleCategory('faceupFields', this.value)">
+        <option value="None">No Faceup Needed</option>
+        <option value="Standard Face-Up">Standard Face-Up</option>
+        <option value="Face-Up + Smartdoll Head">Face-Up + Smartdoll Head</option>
+        <option value="Face-Up + Dollfie Dream Head">Face-Up + Dollfie Dream Head</option>
+    </select>
+    
+    <div id="faceupFields" class="hidden space-y-4 pt-4 animate-fadeIn">
+        <div class="addon-grid">
+            <label class="text-xs flex items-center gap-2"><input type="checkbox" class="faceup-addon" value="Eyelashes"> Eyelashes</label>
+            <label class="text-xs flex items-center gap-2"><input type="checkbox" class="faceup-addon" value="Piercings"> Piercings</label>
+            <label class="text-xs flex items-center gap-2"><input type="checkbox" class="faceup-addon" value="Modifications"> Modifications</label>
+        </div>
+        <textarea id="faceupNotes" placeholder="Face-up specific notes (expression, colors, etc.)" class="w-full p-3 text-sm rounded-xl border border-pink-50 h-24"></textarea>
+        <input type="file" id="faceupFiles" multiple class="text-[10px]">
+    </div>
+</div>
 
-                <div class="space-y-4 border-t border-pink-50 pt-6">
-                    <label class="block text-xs font-black uppercase tracking-widest opacity-40">Manicure Options</label>
-                    <select id="maniBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white" onchange="toggleAddons('maniAddons', this.value)">
-                        <option value="None">None</option>
-                        <option value="Standard Manicure">Standard Manicure</option>
-                        <option value="Acrylic Manicure">Acrylic Manicure</option>
-                        <option value="Smartdoll Decora Hands">Smartdoll Decora Hands</option>
-                        <option value="Dollfie Dream Decora Hands">Dollfie Dream Decora Hands</option>
-                    </select>
-                    <div id="maniAddons" class="step-hidden p-4 bg-pink-50/50 rounded-xl space-y-3">
-                        <div class="addon-grid">
-                            <label class="text-xs flex items-center gap-2"><input type="checkbox" value="Pedicure" class="service-check"> + Pedicure</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-4 border-t border-pink-50 pt-6">
-                    <label class="block text-xs font-black uppercase tracking-widest opacity-40">Body Work</label>
-                    <div class="addon-grid">
-                        <label class="text-xs flex items-center gap-2"><input type="checkbox" value="Face/Body Mods" class="service-check"> Face/Body Mods</label>
-                        <label class="text-xs flex items-center gap-2"><input type="checkbox" value="Tattoos/Blushing" class="service-check"> Tattoos/Blushing</label>
-                    </div>
-                </div>
-
-                <div class="space-y-4 border-t border-pink-50 pt-6">
-                    <label class="block text-xs font-black uppercase tracking-widest opacity-40">Eye Options</label>
-                    <select id="eyeBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white">
-                        <option value="None">None</option>
-                        <option value="Follow-Me Eyes">Follow-Me Eyes</option>
-                        <option value="Glitter Follow-Me Eyes">Glitter Follow-Me Eyes</option>
-                        <option value="Custom Follow-Me Eyes">Custom Follow-Me Eyes</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="glass-card p-8 space-y-6">
-                <h2 class="text-2xl font-black tracking-tighter">3. Concept & References</h2>
-                <textarea id="designNotes" placeholder="Describe your vision (colors, personality, specific requests)..." class="w-full p-6 rounded-2xl border border-pink-100 h-40 outline-none"></textarea>
-                
-                <div class="p-6 border-2 border-dashed border-pink-100 rounded-2xl text-center">
-                    <input type="file" id="fileUpload" multiple class="hidden">
-                    <button type="button" onclick="document.getElementById('fileUpload').click()" class="text-pink-400 font-bold hover:underline">
-                        Click to upload Reference Images ♡
-                    </button>
-                    <p id="fileCount" class="text-[10px] mt-2 opacity-40">No files selected</p>
-                </div>
+<div class="glass-card p-6 space-y-4 border-l-4 border-emerald-400">
+    <h3 class="font-black text-emerald-500 uppercase text-xs tracking-widest">2. Manicure/Pedicure Details</h3>
+    <select id="maniBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white" onchange="toggleCategory('maniFields', this.value)">
+        <option value="None">No Manicure Needed</option>
+        <option value="Standard Manicure">Standard Manicure</option>
+        <option value="Acrylic Manicure">Acrylic Manicure</option>
+        <option value="Smartdoll Decora Hands">Smartdoll Decora Hands</option>
+        <option value="Dollfie Dream Decora Hands">Dollfie Dream Decora Hands</option>
+    </select>
+    
+    <div id="maniFields" class="hidden space-y-4 pt-4 animate-fadeIn">
+        <label class="text-xs flex items-center gap-2"><input type="checkbox" id="pediAddon" value="Pedicure"> Include Pedicure?</label>
+        <textarea id="maniNotes" placeholder="Nail colors, patterns, or decora themes..." class="w-full p-3 text-sm rounded-xl border border-pink-50 h-24"></textarea>
+        <input type="file" id="maniFiles" multiple class="text-[10px]">
+    </div>
+</div>
                 <div class="glass-card p-8 border-2 border-pink-200 bg-pink-50/20 space-y-4">
     <h2 class="text-xl font-black tracking-tighter flex items-center gap-2">
         <span>📜</span> Terms of Service
