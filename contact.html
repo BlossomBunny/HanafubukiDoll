@@ -3,34 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book a Slot - HanafubukiDoll</title>
+    <title>Services - HanafubukiDoll</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .step-hidden { display: none; }
-        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border-radius: 2rem; border: 1px solid #fce7f3; }
-        .service-block { transition: all 0.3s ease; }
-        .animate-fadeIn { animation: fadeIn 0.5s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-             
-    
-<body class="bg-[#fdfbfb] min-h-screen">
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn.active { background: var(--accent-pink) !important; color: white !important; transform: translateY(-2px); }
+        .disabled-section { opacity: 0.3; pointer-events: none; filter: grayscale(1); transition: all 0.4s ease; }
+    </style>
+</head>
+<body>
     <div class="mesh-bg"></div>
+    <div class="petals-container" id="petals"></div>
 
-   <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="text-xl md:text-2xl font-black tracking-tighter">
-            <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
+    <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-xl md:text-2xl font-black tracking-tighter">
+                <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
+                <a href="services.html" class="nav-btn nav-btn-mint">Services ♡</a>
+                <a href="contact.html" class="nav-btn nav-btn-pink">Contact ♡</a>
+            </div>
         </div>
-        <div class="flex flex-wrap justify-center gap-2 md:gap-4">
-            <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
-            <a href="services.html" class="nav-btn nav-btn-mint">Services ♡</a>
-            <a href="contact.html" class="nav-btn nav-btn-pink">Contact ♡</a>
-        </div>
-    </div>
-</nav>
+    </nav>
         
     <main class="max-w-3xl mx-auto relative z-10 p-6 md:p-10">
 
