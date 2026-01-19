@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio Login - HanafubukiDoll</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#fdfbfb] flex items-center justify-center min-h-screen">
+    <div class="mesh-bg"></div>
+    
+    <div class="glass-card p-10 w-full max-w-md relative z-10 shadow-2xl">
+        <div class="text-center mb-8">
+            <span class="text-4xl">🔑</span>
+            <h1 class="text-3xl font-black tracking-tighter mt-4">Studio Access</h1>
+            <p class="text-[10px] text-pink-400 font-bold uppercase tracking-widest mt-2">Dani & Jas Only ♡</p>
+        </div>
+
+        <form id="loginForm" class="space-y-4">
+            <input type="email" id="email" placeholder="Studio Email" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300 outline-none transition-all" required>
+            <input type="password" id="password" placeholder="Password" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300 outline-none transition-all" required>
+            <button type="submit" id="loginBtn" class="w-full bg-[var(--accent-pink)] text-white py-4 rounded-2xl font-bold shadow-lg hover:brightness-110 active:scale-95 transition-all">
+                Enter Dashboard ♡
+            </button>
+        </form>
+        <p id="errorMsg" class="text-red-400 text-xs mt-4 text-center hidden font-medium"></p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            btn.innerText = "Verifying... ✨";
+            errorMsg.classList.add('hidden');
+            
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+            });
+
+            if (error) {
+                errorMsg.innerText = "Access Denied: " + error.message;
+                errorMsg.classList.remove('hidden');
+                btn.innerText = "Enter Dashboard ♡";
+            } else {
+                window.location.href = 'admin.html';
+            }
+        });
+    </script>
+</body>
+</html>
