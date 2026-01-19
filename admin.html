@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - HanafubukiDoll</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --status-inquiry: #fef3c7; /* Yellow */
+            --status-queued: #dbeafe; /* Blue */
+            --status-painting: #fce7f3; /* Pink */
+            --status-shipped: #d1fae5; /* Green */
+        }
+        .status-badge { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .row-hover:hover { background-color: rgba(255, 255, 255, 0.5); transform: scale(1.005); transition: all 0.2s ease; }
+    </style>
+</head>
+<body class="bg-[#fdfbfb]">
+    <div class="mesh-bg"></div>
+
+    <div class="flex min-h-screen">
+        <aside class="w-64 bg-white/80 backdrop-blur-lg border-r border-pink-50 p-6 hidden lg:block">
+            <div class="text-xl font-black mb-10 tracking-tighter">
+                🐰 Studio Manager
+            </div>
+            <nav class="space-y-2">
+                <a href="#" class="block p-3 bg-[var(--accent-pink)] text-white rounded-xl font-bold text-sm">Commissions</a>
+                <a href="#" class="block p-3 hover:bg-pink-50 rounded-xl font-bold text-sm text-[var(--text-muted)]">Waitlist</a>
+                <a href="#" class="block p-3 hover:bg-pink-50 rounded-xl font-bold text-sm text-[var(--text-muted)]">Inventory</a>
+                <a href="#" class="block p-3 hover:bg-pink-50 rounded-xl font-bold text-sm text-[var(--text-muted)]">Settings</a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-4 md:p-10">
+            <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                <div>
+                    <h1 class="text-3xl font-black tracking-tighter">Current Projects</h1>
+                    <p class="text-sm text-[var(--text-muted)]">Welcome back! You have 3 dolls to ship this week.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button class="nav-btn nav-btn-pink text-sm px-6">+ New Manual Entry</button>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="glass-card p-6 border-b-4 border-yellow-400">
+                    <span class="text-[10px] font-bold uppercase opacity-50">Inquiry</span>
+                    <div class="text-2xl font-black">05</div>
+                </div>
+                <div class="glass-card p-6 border-b-4 border-blue-400">
+                    <span class="text-[10px] font-bold uppercase opacity-50">Queued</span>
+                    <div class="text-2xl font-black">08</div>
+                </div>
+                <div class="glass-card p-6 border-b-4 border-pink-400">
+                    <span class="text-[10px] font-bold uppercase opacity-50">Painting</span>
+                    <div class="text-2xl font-black">03</div>
+                </div>
+                <div class="glass-card p-6 border-b-4 border-green-400">
+                    <span class="text-[10px] font-bold uppercase opacity-50">Completed</span>
+                    <div class="text-2xl font-black">142</div>
+                </div>
+            </div>
+
+            <div class="glass-card overflow-hidden">
+                <div class="p-6 border-b border-pink-50 flex flex-col md:flex-row gap-4 justify-between bg-white/30">
+                    <input type="text" placeholder="Search customer or sculpt..." class="px-4 py-2 rounded-xl border border-pink-100 bg-white/50 text-sm focus:outline-pink-300 w-full md:w-64">
+                    <div class="flex gap-2">
+                        <select class="px-4 py-2 rounded-xl border border-pink-100 bg-white/50 text-sm">
+                            <option>All Statuses</option>
+                            <option>Painting</option>
+                            <option>Inquiry</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] bg-pink-50/20">
+                            <tr>
+                                <th class="p-6">Customer</th>
+                                <th class="p-6">Doll / Sculpt</th>
+                                <th class="p-6">Status</th>
+                                <th class="p-6">Date Added</th>
+                                <th class="p-6 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            <tr class="row-hover border-b border-pink-50/50">
+                                <td class="p-6 font-bold">@DollieDays</td>
+                                <td class="p-6">
+                                    <span class="block font-semibold">DDH-01</span>
+                                    <span class="text-[10px] opacity-60">Semi-White / Custom Eyes</span>
+                                </td>
+                                <td class="p-6">
+                                    <span class="status-badge bg-pink-100 text-pink-700">Painting</span>
+                                </td>
+                                <td class="p-6 text-[var(--text-muted)]">Jan 12, 2024</td>
+                                <td class="p-6 text-right">
+                                    <button class="px-4 py-2 bg-white border border-pink-100 rounded-lg font-bold text-xs hover:bg-pink-50 transition-colors">View Details</button>
+                                </td>
+                            </tr>
+
+                            <tr class="row-hover border-b border-pink-50/50">
+                                <td class="p-6 font-bold">@Lulu_Vinyl</td>
+                                <td class="p-6">
+                                    <span class="block font-semibold">Smartdoll Mirai</span>
+                                    <span class="text-[10px] opacity-60">Tea / Piercings</span>
+                                </td>
+                                <td class="p-6">
+                                    <span class="status-badge bg-yellow-100 text-yellow-700">Inquiry</span>
+                                </td>
+                                <td class="p-6 text-[var(--text-muted)]">Jan 15, 2024</td>
+                                <td class="p-6 text-right">
+                                    <button class="px-4 py-2 bg-white border border-pink-100 rounded-lg font-bold text-xs hover:bg-pink-50">View Details</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
