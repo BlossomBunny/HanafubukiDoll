@@ -130,9 +130,14 @@
         </form>
     </main>
 
-    <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
-        <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Aesthetic Studio</p>
-        <p class="text-gray-400 text-sm italic">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
+              <footer class="py-20 text-center border-t border-pink-50">
+        <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
+        <p class="text-[var(--text-muted)] text-sm">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
+         
+    </p>
+    <a href="login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors duration-300 uppercase tracking-widest font-bold">
+        Staff Access 🔒
+    </a>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -151,7 +156,7 @@
                     container.innerHTML = `
                         <div class="p-6 bg-pink-50/50 rounded-2xl border-2 border-dashed border-pink-200 text-center animate-fadeIn">
                             <p class="text-[10px] font-black uppercase text-pink-400 mb-2">🌸 ${service.id} is currently full</p>
-                            <p class="text-xs mb-4 text-gray-600 font-medium">Dani & Jas are not taking new orders for this service right now. Join the waitlist to be notified!</p>
+                            <p class="text-xs mb-4 text-gray-600 font-medium">We are not taking new orders for this service right now. Join the waitlist to be notified!</p>
                             <div class="flex gap-2 max-w-sm mx-auto">
                                 <input type="email" id="wait-email-${service.id}" placeholder="your@email.com" class="flex-1 p-3 rounded-xl border border-pink-100 text-sm outline-none focus:ring-2 ring-pink-100">
                                 <button type="button" onclick="joinWaitlist('${service.id}')" class="bg-pink-400 text-white px-4 rounded-xl font-bold text-xs hover:bg-pink-500 transition-colors">Join</button>
@@ -245,5 +250,6 @@
 
         window.onload = checkServiceAvailability;
     </script>
+
 </body>
 </html>
