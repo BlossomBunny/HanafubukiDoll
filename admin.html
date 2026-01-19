@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Studio Manager - HanafubukiDoll</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
         .bg-status-inquiry { background-color: #fef3c7; color: #92400e; }
@@ -13,50 +13,81 @@
         .bg-status-painting { background-color: #fce7f3; color: #9d174d; }
         .bg-status-shipped { background-color: #d1fae5; color: #065f46; }
         .bg-status-rejected { background-color: #f3f4f6; color: #374151; }
-        .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; display: inline-block; }
+        .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .sticky-bar { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); border-bottom: 1px solid #fce7f3; }
         #adminLayout { display: none; }
+        
+        /* Toggle Switch Style */
+        .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #f472b6; }
+        input:checked + .slider:before { transform: translateX(14px); }
     </style>
 </head>
-<body class="bg-[#fdfbfb] min-h-screen">
-    <div class="mesh-bg"></div>
-
-    <div id="adminLayout" class="flex min-h-screen">
-        <aside class="w-64 bg-white/80 backdrop-blur-lg border-r border-pink-50 p-6 flex flex-col sticky top-0 h-screen">
-            <div class="text-xl font-black mb-10 tracking-tighter">🐰 Studio Manager</div>
-            <nav class="space-y-2 flex-1">
-                <a href="#" class="block p-3 bg-pink-500 text-white rounded-xl font-bold text-sm">Commissions</a>
-                <a href="index.html" class="block p-3 hover:bg-pink-50 rounded-xl font-bold text-sm text-gray-400">← Back to Site</a>
-            </nav>
-            <div class="pt-6 border-t border-pink-50">
-                <button onclick="handleLogout()" class="w-full text-left p-3 text-red-400 font-bold text-xs">🚪 Sign Out</button>
-            </div>
-        </aside>
-
-        <main class="flex-1 p-10">
-            <header class="flex justify-between items-center mb-8">
-                <div>
-                    <h1 class="text-4xl font-black tracking-tighter">Workbench</h1>
-                    <div class="flex gap-4 mt-2">
-                         <div class="flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-pink-100 shadow-sm">
-                            <input type="checkbox" id="filterRejected" onchange="fetchData()" class="accent-pink-400">
-                            <label for="filterRejected" class="text-[9px] font-black uppercase opacity-50">Hide Rejected</label>
-                        </div>
+<body class="bg-[#fdfbfb]">
+    <div id="adminLayout" class="min-h-screen">
+        <header class="sticky-bar bg-white/70 p-4">
+            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-6">
+                <div class="flex gap-6">
+                    <div class="text-center">
+                        <p class="text-[9px] font-black uppercase opacity-40">Inquiries</p>
+                        <p id="statInquiry" class="text-lg font-black text-amber-500">0</p>
+                    </div>
+                    <div class="text-center border-l border-pink-100 pl-6">
+                        <p class="text-[9px] font-black uppercase opacity-40">Active Dolls</p>
+                        <p id="statActive" class="text-lg font-black text-pink-500">0</p>
                     </div>
                 </div>
-                <button onclick="fetchData()" class="bg-emerald-400 text-white px-6 py-2 rounded-xl font-bold text-xs shadow-lg">Refresh ↻</button>
-            </header>
 
-            <div class="glass-card overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                    <thead class="text-[10px] font-black uppercase tracking-widest text-gray-400 bg-pink-50/30">
+                <div class="flex items-center gap-6 bg-pink-50/50 p-2 px-4 rounded-2xl border border-pink-100">
+                    <p class="text-[10px] font-black uppercase text-pink-400">Services:</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold">Faceup</span>
+                        <label class="switch"><input type="checkbox" id="toggle-faceups" onchange="updateServiceStatus('faceups', this.checked)"><span class="slider"></span></label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold">Mani</span>
+                        <label class="switch"><input type="checkbox" id="toggle-manicures" onchange="updateServiceStatus('manicures', this.checked)"><span class="slider"></span></label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold">Eyes</span>
+                        <label class="switch"><input type="checkbox" id="toggle-eyes" onchange="updateServiceStatus('eyes', this.checked)"><span class="slider"></span></label>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="fetchData()" class="p-2 bg-white rounded-lg shadow-sm border border-pink-50 hover:bg-pink-50">↻</button>
+                    <a href="index.html" class="p-2 px-4 bg-gray-100 rounded-lg text-[10px] font-bold uppercase tracking-widest">Back to Site</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-3xl font-black tracking-tighter italic">Workbench ♡</h1>
+                <div class="flex gap-4">
+                    <label class="text-[10px] font-bold flex items-center gap-2">
+                        <input type="checkbox" id="filterRejected" onchange="fetchData()" checked> Hide Rejected
+                    </label>
+                    <label class="text-[10px] font-bold flex items-center gap-2">
+                        <input type="checkbox" id="filterCompleted" onchange="fetchData()" checked> Hide Shipped
+                    </label>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl border border-pink-50 shadow-sm overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-pink-50/30 text-[10px] font-black uppercase tracking-widest text-gray-400">
                         <tr>
                             <th class="p-6">Client</th>
-                            <th class="p-6">Doll & Services</th>
+                            <th class="p-6">Requested Services</th>
                             <th class="p-6">Status</th>
                             <th class="p-6 text-right">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="mainTableBody" class="text-sm"></tbody>
+                    <tbody id="mainTableBody"></tbody>
                 </table>
             </div>
         </main>
@@ -67,9 +98,9 @@
             <h2 class="font-black text-xl text-pink-500">Project Details</h2>
             <button onclick="closeDrawer()" class="text-3xl">&times;</button>
         </div>
-        <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-8"></div>
+        <div id="drawerContent" class="p-8 flex-1 overflow-y-auto"></div>
         <div class="p-6 bg-gray-50 border-t">
-            <button id="saveBtn" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-bold shadow-lg">Save Changes ♡</button>
+            <button id="saveBtn" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-bold shadow-lg">Save Changes</button>
         </div>
     </div>
 
@@ -78,115 +109,64 @@
         const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
         let activeJobId = null;
 
         async function checkAccess() {
             const { data: { session } } = await _supabase.auth.getSession();
             if (!session) window.location.href = 'login.html';
-            else { document.getElementById('adminLayout').style.display = 'flex'; fetchData(); }
+            else { 
+                document.getElementById('adminLayout').style.display = 'block'; 
+                await loadToggles();
+                fetchData(); 
+            }
         }
 
-        async function handleLogout() { await _supabase.auth.signOut(); window.location.href = 'login.html'; }
+        // LOAD LIVE TOGGLES
+        async function loadToggles() {
+            const { data } = await _supabase.from('studio_settings').select('*');
+            data.forEach(setting => {
+                const el = document.getElementById(`toggle-${setting.id}`);
+                if (el) el.checked = setting.is_live;
+            });
+        }
+
+        // UPDATE LIVE STATUS
+        async function updateServiceStatus(id, isLive) {
+            await _supabase.from('studio_settings').update({ is_live: isLive }).eq('id', id);
+        }
 
         async function fetchData() {
             let query = _supabase.from('commissions').select('*').order('created_at', { ascending: false });
             if (document.getElementById('filterRejected').checked) query = query.neq('status', 'rejected');
+            if (document.getElementById('filterCompleted').checked) query = query.neq('status', 'shipped');
+            
             const { data } = await query;
             renderTable(data);
+            
+            // Update Stats
+            document.getElementById('statInquiry').innerText = data.filter(j => j.status === 'inquiry').length;
+            document.getElementById('statActive').innerText = data.filter(j => ['queued', 'painting'].includes(j.status)).length;
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('mainTableBody');
             tbody.innerHTML = data.map(job => `
-                <tr class="border-b border-pink-50/50 hover:bg-white/60">
+                <tr class="border-b border-pink-50/50 hover:bg-pink-50/20">
                     <td class="p-6">
-                        <span class="font-bold text-gray-800">${job.social_handle || 'N/A'}</span>
-                        <span class="block text-[10px] opacity-60">${job.customer_email}</span>
+                        <span class="font-bold block">${job.social_handle || 'N/A'}</span>
+                        <span class="text-[10px] opacity-50">${job.customer_email}</span>
                     </td>
                     <td class="p-6">
-                        <span class="font-semibold text-pink-500">${job.doll_sculpt}</span>
-                        <span class="block text-[9px] text-emerald-600 font-bold uppercase">${job.services_list?.join(' • ') || 'General Inquiry'}</span>
+                        <p class="text-xs font-bold text-pink-500">${job.doll_sculpt}</p>
+                        <p class="text-[9px] uppercase font-black opacity-40">${job.services_list?.join(' • ') || 'General'}</p>
                     </td>
                     <td class="p-6"><span class="status-badge bg-status-${job.status}">${job.status}</span></td>
-                    <td class="p-6 text-right">
-                        <button onclick="openDrawer('${job.id}')" class="px-4 py-2 bg-white border border-pink-100 rounded-lg font-bold text-xs">View ♡</button>
-                    </td>
+                    <td class="p-6 text-right"><button onclick="openDrawer('${job.id}')" class="text-xs font-bold underline">Edit</button></td>
                 </tr>
             `).join('');
         }
 
-        // Inside openDrawer function in admin.html
-content.innerHTML = `
-    <div class="space-y-8">
-        ${job.faceup_details.base !== 'None' ? `
-            <div class="p-4 bg-pink-50 rounded-2xl border border-pink-100">
-                <h4 class="text-[10px] font-black uppercase text-pink-600 mb-2">Face-up Spec</h4>
-                <p class="font-bold">${job.faceup_details.base} (${job.faceup_details.addons.join(', ')})</p>
-                <p class="text-sm italic mt-2">"${job.faceup_details.notes}"</p>
-                <div class="flex gap-2 mt-4 overflow-x-auto">
-                    ${job.faceup_details.images.map(img => `<img src="${img}" class="h-20 w-20 object-cover rounded-lg border">`).join('')}
-                </div>
-            </div>
-        ` : ''}
-
-        ${job.manicure_details.base !== 'None' ? `
-            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                <h4 class="text-[10px] font-black uppercase text-emerald-600 mb-2">Hand/Nail Spec</h4>
-                <p class="font-bold">${job.manicure_details.base}</p>
-                <p class="text-sm italic mt-2">"${job.manicure_details.notes}"</p>
-                <div class="flex gap-2 mt-4">
-                    ${job.manicure_details.images.map(img => `<img src="${img}" class="h-20 w-20 object-cover rounded-lg border">`).join('')}
-                </div>
-            </div>
-        ` : ''}
-    </div>
-`;
-
-       document.getElementById('saveBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('saveBtn');
-    const originalText = btn.innerText;
-    
-    // UI Feedback
-    btn.innerText = "Syncing... ✨";
-    btn.disabled = true;
-
-    // 1. Prepare the data from the drawer inputs
-    const updatedData = {
-        status: document.getElementById('updateStatus').value,
-        total_price: Number(document.getElementById('updatePrice').value) || 0,
-        // If you added balance_remaining to your table, include it here:
-        // balance_remaining: Number(document.getElementById('updateBalance').value) || 0
-    };
-
-    // 2. Update Supabase
-    const { error } = await _supabase
-        .from('commissions')
-        .update(updatedData)
-        .eq('id', activeJobId);
-
-    if (!error) {
-        btn.innerText = "Saved! ♡";
-        btn.classList.add('bg-emerald-500'); // Brief color change for success
-        
-        // 3. Refresh the data and the stats bar
-        setTimeout(async () => {
-            btn.innerText = originalText;
-            btn.disabled = false;
-            btn.classList.remove('bg-emerald-500');
-            
-            closeDrawer(); 
-            await fetchData(); // This re-runs the stats calculation
-        }, 800);
-    } else {
-        console.error("Save Error:", error.message);
-        alert("Failed to save changes. Please check your connection.");
-        btn.innerText = originalText;
-        btn.disabled = false;
-    }
-});
-
-        function closeDrawer() { document.getElementById('detailDrawer').classList.add('translate-x-full'); }
+        // Include the openDrawer and saveBtn logic from the previous answer here...
         window.onload = checkAccess;
     </script>
 </body>
