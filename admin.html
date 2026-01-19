@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Status Badge Colors */
         .bg-status-inquiry { background-color: #fef3c7; color: #92400e; }
         .bg-status-queued { background-color: #dbeafe; color: #1e40af; }
         .bg-status-painting { background-color: #fce7f3; color: #9d174d; }
@@ -23,31 +22,27 @@
             display: inline-block;
         }
         
-        .row-hover:hover { 
-            background-color: rgba(255, 255, 255, 0.6); 
-            transition: all 0.2s ease; 
-        }
-
-        #detailDrawer { 
-            box-shadow: -10px 0 30px rgba(0,0,0,0.05); 
-        }
+        #detailDrawer { box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
+        .hidden-until-auth { display: none; }
     </style>
 </head>
 <body class="bg-[#fdfbfb] min-h-screen">
     <div class="mesh-bg"></div>
 
-    <div class="flex">
+    <div id="adminLayout" class="hidden-until-auth flex">
         <aside class="w-64 bg-white/80 backdrop-blur-lg border-r border-pink-50 p-6 hidden lg:flex flex-col sticky top-0 h-screen">
             <div class="text-xl font-black mb-10 tracking-tighter">
                 <span class="bounce-bunny">🐰</span> Studio Manager
             </div>
             <nav class="space-y-2 flex-1">
                 <a href="#" class="block p-3 bg-[var(--accent-pink)] text-white rounded-xl font-bold text-sm shadow-md">Commissions</a>
-                <a href="#" class="block p-3 hover:bg-pink-50 rounded-xl font-bold text-sm text-[var(--text-muted)]">Waitlist</a>
                 <a href="#" class="block p-3 hover:bg-pink-50 rounded-xl font-bold text-sm text-[var(--text-muted)]">Inventory</a>
             </nav>
-            <div class="pt-6 border-t border-pink-50">
-                <a href="index.html" class="text-xs font-bold text-pink-400 hover:underline">← Back to Storefront</a>
+            <div class="pt-6 border-t border-pink-50 space-y-4">
+                <p id="userIdent" class="text-[10px] font-bold text-pink-300 uppercase px-3"></p>
+                <button onclick="handleLogout()" class="w-full text-left p-3 hover:bg-red-50 text-red-400 rounded-xl font-bold text-xs transition-colors">
+                    🚪 Sign Out
+                </button>
             </div>
         </aside>
 
@@ -55,9 +50,9 @@
             <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
                 <div>
                     <h1 class="text-4xl font-black tracking-tighter">Dashboard</h1>
-                    <p class="text-sm text-[var(--text-muted)]">Manage your doll commissions and updates.</p>
+                    <p class="text-sm text-[var(--text-muted)]">Hello! Here are the latest commission inquiries.</p>
                 </div>
-                <button onclick="fetchCommissions()" class="nav-btn-mint text-xs px-6 py-2">Refresh Data ↻</button>
+                <button onclick="fetchCommissions()" class="nav-btn-mint text-xs px-6 py-2">Refresh ↻</button>
             </header>
 
             <div class="glass-card overflow-hidden">
@@ -68,16 +63,11 @@
                                 <th class="p-6">Customer</th>
                                 <th class="p-6">Doll / Sculpt</th>
                                 <th class="p-6">Status</th>
-                                <th class="p-6">Invoiced</th>
                                 <th class="p-6 text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="mainTableBody" class="text-sm">
-                            <tr>
-                                <td colspan="5" class="p-20 text-center">
-                                    <span class="animate-pulse font-bold text-pink-300">Loading commissions...</span>
-                                </td>
-                            </tr>
+                        <tbody id="mainTableBody" class="text-sm italic text-gray-400">
+                            <tr><td colspan="4" class="p-10 text-center">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -86,17 +76,14 @@
     </div>
 
     <div id="detailDrawer" class="fixed inset-y-0 right-0 w-full md:w-[550px] bg-white z-[100] transform translate-x-full transition-transform duration-300 ease-in-out border-l border-pink-100 flex flex-col">
-        <div class="p-6 border-b border-pink-50 flex justify-between items-center bg-pink-50/10">
-            <h2 class="font-black text-xl tracking-tighter text-pink-500">Commission Profile</h2>
-            <button onclick="closeDrawer()" class="text-3xl font-light hover:text-pink-500">&times;</button>
+        <div class="p-6 border-b border-pink-50 flex justify-between items-center">
+            <h2 class="font-black text-xl tracking-tighter text-pink-500">Commission Details</h2>
+            <button onclick="closeDrawer()" class="text-3xl font-light">&times;</button>
         </div>
-        
-        <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-8">
-            </div>
-
+        <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-8"></div>
         <div class="p-6 bg-gray-50/50 border-t border-pink-50">
-            <button id="saveBtn" class="w-full bg-[var(--accent-pink)] text-white py-4 rounded-2xl font-bold shadow-lg hover:brightness-110 transition-all flex justify-center items-center gap-2">
-                Save All Changes ♡
+            <button id="saveBtn" class="w-full bg-[var(--accent-pink)] text-white py-4 rounded-2xl font-bold shadow-lg hover:brightness-110">
+                Save Changes ♡
             </button>
         </div>
     </div>
@@ -109,75 +96,69 @@
 
         let activeJobId = null;
 
-        // 1. Fetch all data
+        // 1. GATEKEEPER: Check if Dani or Jas is here
+        async function checkAccess() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            
+            if (!session) {
+                window.location.href = 'login.html';
+            } else {
+                document.getElementById('adminLayout').style.display = 'flex';
+                document.getElementById('userIdent').innerText = `Logged in: ${session.user.email.split('@')[0]}`;
+                fetchCommissions();
+            }
+        }
+
+        async function handleLogout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'login.html';
+        }
+
+        // 2. DATA FETCHING
         async function fetchCommissions() {
             const { data, error } = await _supabase
                 .from('commissions')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('Fetch error:', error.message);
-                return;
-            }
+            if (error) return console.error(error.message);
             renderTable(data);
         }
 
-        // 2. Render Main Table
         function renderTable(commissions) {
             const tbody = document.getElementById('mainTableBody');
-            if (commissions.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center opacity-50">No commissions found yet.</td></tr>`;
+            if (!commissions.length) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center opacity-50">No inquiries yet.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = commissions.map(job => `
-                <tr class="row-hover border-b border-pink-50/50">
+                <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
                     <td class="p-6">
                         <span class="font-bold text-gray-800">${job.social_handle || 'N/A'}</span>
                         <span class="block text-[10px] opacity-50 uppercase">${job.customer_name}</span>
                     </td>
-                    <td class="p-6">
-                        <span class="font-semibold text-pink-500">${job.doll_sculpt}</span>
-                    </td>
-                    <td class="p-6">
-                        <span class="status-badge bg-status-${job.status}">${job.status}</span>
-                    </td>
-                    <td class="p-6 font-mono font-bold text-gray-600">
-                        £${job.total_price || '0'}
-                    </td>
+                    <td class="p-6 font-semibold text-pink-500">${job.doll_sculpt}</td>
+                    <td class="p-6"><span class="status-badge bg-status-${job.status}">${job.status}</span></td>
                     <td class="p-6 text-right">
-                        <button onclick="openDrawer('${job.id}')" class="px-4 py-2 bg-white border border-pink-100 rounded-lg font-bold text-xs hover:shadow-sm hover:border-pink-300 transition-all">View Details ♡</button>
+                        <button onclick="openDrawer('${job.id}')" class="px-4 py-2 bg-white border border-pink-100 rounded-lg font-bold text-xs hover:border-pink-300">View ♡</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // 3. Open Detail Drawer
+        // 3. DRAWER LOGIC
         async function openDrawer(id) {
             activeJobId = id;
-            const { data: job, error } = await _supabase
-                .from('commissions')
-                .select('*')
-                .eq('id', id)
-                .single();
-
-            if (error) return;
+            const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
 
             const content = document.getElementById('drawerContent');
             content.innerHTML = `
-                <div class="space-y-8 animate-fadeIn">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-2xl font-black">${job.social_handle}</h3>
-                            <p class="text-sm opacity-50">${job.customer_name} • ${new Date(job.created_at).toLocaleDateString()}</p>
-                        </div>
-                    </div>
-
+                <div class="space-y-6">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase tracking-widest opacity-40">Status</label>
-                            <select id="updateStatus" class="w-full p-3 bg-pink-50/30 rounded-xl border border-pink-100 font-bold text-sm focus:ring-2 ring-pink-200 outline-none">
+                            <label class="text-[10px] font-black uppercase opacity-40 tracking-widest">Status</label>
+                            <select id="updateStatus" class="w-full p-3 bg-pink-50/30 rounded-xl border border-pink-100 font-bold text-sm outline-none">
                                 <option value="inquiry" ${job.status === 'inquiry' ? 'selected' : ''}>Inquiry</option>
                                 <option value="queued" ${job.status === 'queued' ? 'selected' : ''}>Queued</option>
                                 <option value="painting" ${job.status === 'painting' ? 'selected' : ''}>Painting</option>
@@ -185,27 +166,24 @@
                             </select>
                         </div>
                         <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase tracking-widest opacity-40">Total Quote (£)</label>
-                            <input id="updatePrice" type="number" value="${job.total_price}" class="w-full p-3 bg-white rounded-xl border border-pink-100 font-bold outline-none focus:ring-2 ring-pink-200">
+                            <label class="text-[10px] font-black uppercase opacity-40 tracking-widest">Quote (£)</label>
+                            <input id="updatePrice" type="number" value="${job.total_price}" class="w-full p-3 bg-white rounded-xl border border-pink-100 font-bold outline-none">
                         </div>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-[10px] font-black uppercase tracking-widest opacity-40">Internal Notes / Character Vision</label>
-                        <textarea id="updateNotes" class="w-full p-4 bg-white rounded-xl border border-pink-100 text-sm h-40 leading-relaxed outline-none focus:ring-2 ring-pink-200">${job.notes || ''}</textarea>
+                        <label class="text-[10px] font-black uppercase opacity-40 tracking-widest">Design Notes</label>
+                        <textarea id="updateNotes" class="w-full p-4 bg-white rounded-xl border border-pink-100 text-sm h-40 leading-relaxed outline-none">${job.notes || ''}</textarea>
                     </div>
 
                     <div class="space-y-4">
-                        <label class="text-[10px] font-black uppercase tracking-widest opacity-40">Reference Images</label>
+                        <label class="text-[10px] font-black uppercase opacity-40 tracking-widest">References</label>
                         <div class="grid grid-cols-2 gap-3">
-                            ${job.image_urls && job.image_urls.length > 0 
-                                ? job.image_urls.map(url => `<a href="${url}" target="_blank"><img src="${url}" class="rounded-2xl border border-pink-50 w-full aspect-square object-cover hover:opacity-80 transition-opacity cursor-zoom-in"></a>`).join('') 
-                                : '<div class="col-span-2 p-8 border-2 border-dashed border-pink-100 rounded-2xl text-center text-xs opacity-40">No reference images provided</div>'}
+                            ${job.image_urls?.map(url => `<a href="${url}" target="_blank"><img src="${url}" class="rounded-2xl border border-pink-50 w-full aspect-square object-cover hover:opacity-80"></a>`).join('') || 'None'}
                         </div>
                     </div>
                 </div>
             `;
-
             document.getElementById('detailDrawer').classList.remove('translate-x-full');
         }
 
@@ -213,7 +191,6 @@
             document.getElementById('detailDrawer').classList.add('translate-x-full');
         }
 
-        // 4. Update Functionality
         document.getElementById('saveBtn').addEventListener('click', async () => {
             const btn = document.getElementById('saveBtn');
             btn.innerText = "Saving... ✨";
@@ -224,26 +201,15 @@
                 notes: document.getElementById('updateNotes').value
             };
 
-            const { error } = await _supabase
-                .from('commissions')
-                .update(updates)
-                .eq('id', activeJobId);
+            const { error } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
 
             if (!error) {
                 btn.innerText = "Saved! ♡";
-                setTimeout(() => {
-                    btn.innerText = "Save All Changes ♡";
-                    closeDrawer();
-                    fetchCommissions();
-                }, 800);
-            } else {
-                alert("Error saving: " + error.message);
-                btn.innerText = "Save All Changes ♡";
+                setTimeout(() => { btn.innerText = "Save Changes ♡"; closeDrawer(); fetchCommissions(); }, 800);
             }
         });
 
-        // Initialize
-        window.onload = fetchCommissions;
+        window.onload = checkAccess;
     </script>
 </body>
 </html>
