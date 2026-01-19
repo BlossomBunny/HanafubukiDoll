@@ -13,102 +13,63 @@
         .bg-status-painting { background-color: #fce7f3; color: #9d174d; }
         .bg-status-shipped { background-color: #d1fae5; color: #065f46; }
         .bg-status-rejected { background-color: #f3f4f6; color: #374151; }
-        
-        .pay-paid { background-color: #dcfce7; color: #166534; }
-        .pay-unpaid { background-color: #fee2e2; color: #991b1b; }
-        .pay-layaway { background-color: #f3e8ff; color: #6b21a8; }
-
-        .status-badge { 
-            padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; display: inline-block;
-        }
-
+        .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; display: inline-block; }
         #adminLayout { display: none; }
-        #detailDrawer { box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body class="bg-[#fdfbfb] min-h-screen">
     <div class="mesh-bg"></div>
 
     <div id="adminLayout" class="flex min-h-screen">
-        <aside class="w-64 bg-white/80 backdrop-blur-lg border-r border-pink-50 p-6 hidden lg:flex flex-col sticky top-0 h-screen">
-            <div class="text-xl font-black mb-10 tracking-tighter">
-                <span class="bounce-bunny">🐰</span> Studio Manager
-            </div>
-            
+        <aside class="w-64 bg-white/80 backdrop-blur-lg border-r border-pink-50 p-6 flex flex-col sticky top-0 h-screen">
+            <div class="text-xl font-black mb-10 tracking-tighter">🐰 Studio Manager</div>
             <nav class="space-y-2 flex-1">
-                <a href="#" class="block p-3 bg-[var(--accent-pink)] text-white rounded-xl font-bold text-sm shadow-md">Commissions</a>
-                <a href="index.html" class="block p-3 hover:bg-pink-50 rounded-xl font-bold text-sm text-[var(--text-muted)] transition-all">← Back to Site</a>
+                <a href="#" class="block p-3 bg-pink-500 text-white rounded-xl font-bold text-sm">Commissions</a>
+                <a href="index.html" class="block p-3 hover:bg-pink-50 rounded-xl font-bold text-sm text-gray-400">← Back to Site</a>
             </nav>
-
-            <div class="pt-6 border-t border-pink-50 space-y-4">
-                <div class="px-3">
-                    <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Artist Active</p>
-                    <p id="userIdent" class="text-xs font-bold text-pink-400 italic">Dani / Jas</p>
-                </div>
-                <button onclick="handleLogout()" class="w-full text-left p-3 hover:bg-red-50 text-red-400 rounded-xl font-bold text-xs transition-colors">🚪 Sign Out</button>
+            <div class="pt-6 border-t border-pink-50">
+                <button onclick="handleLogout()" class="w-full text-left p-3 text-red-400 font-bold text-xs">🚪 Sign Out</button>
             </div>
         </aside>
 
-        <main class="flex-1 p-6 md:p-10">
-            <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <main class="flex-1 p-10">
+            <header class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-4xl font-black tracking-tighter">Studio Dashboard</h1>
-                    <p class="text-sm text-[var(--text-muted)]">Management for Dani & Jas ♡</p>
-                </div>
-                
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-2 bg-white/80 px-4 py-2 rounded-xl border border-pink-100 shadow-sm">
-                        <input type="checkbox" id="filterRejected" onchange="fetchData()" class="w-4 h-4 accent-pink-400 cursor-pointer">
-                        <label for="filterRejected" class="text-[10px] font-black uppercase opacity-60 cursor-pointer">Hide Rejected</label>
+                    <h1 class="text-4xl font-black tracking-tighter">Workbench</h1>
+                    <div class="flex gap-4 mt-2">
+                         <div class="flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-pink-100 shadow-sm">
+                            <input type="checkbox" id="filterRejected" onchange="fetchData()" class="accent-pink-400">
+                            <label for="filterRejected" class="text-[9px] font-black uppercase opacity-50">Hide Rejected</label>
+                        </div>
                     </div>
-                    <button onclick="fetchData()" class="nav-btn-mint text-xs px-6 py-2">Refresh ↻</button>
                 </div>
+                <button onclick="fetchData()" class="bg-emerald-400 text-white px-6 py-2 rounded-xl font-bold text-xs shadow-lg">Refresh ↻</button>
             </header>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <div class="glass-card p-6 border-l-4 border-pink-400">
-                    <p class="text-[10px] font-black uppercase opacity-40">Total Project Value</p>
-                    <p id="statTotal" class="text-2xl font-black">£0</p>
-                </div>
-                <div class="glass-card p-6 border-l-4 border-purple-400">
-                    <p class="text-[10px] font-black uppercase opacity-40">Pending Balances</p>
-                    <p id="statPending" class="text-2xl font-black text-purple-600">£0</p>
-                </div>
-                <div class="glass-card p-6 border-l-4 border-green-400">
-                    <p class="text-[10px] font-black uppercase opacity-40">Active Projects</p>
-                    <p id="statActive" class="text-2xl font-black">0</p>
-                </div>
-            </div>
-
             <div class="glass-card overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] bg-pink-50/30">
-                            <tr>
-                                <th class="p-6">Customer & Email</th>
-                                <th class="p-6">Doll / Sculpt</th>
-                                <th class="p-6">Status</th>
-                                <th class="p-6">Payment</th>
-                                <th class="p-6 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mainTableBody" class="text-sm italic text-gray-400">
-                            <tr><td colspan="5" class="p-10 text-center">Loading Studio Data...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+                <table class="w-full text-left border-collapse">
+                    <thead class="text-[10px] font-black uppercase tracking-widest text-gray-400 bg-pink-50/30">
+                        <tr>
+                            <th class="p-6">Client</th>
+                            <th class="p-6">Doll & Services</th>
+                            <th class="p-6">Status</th>
+                            <th class="p-6 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mainTableBody" class="text-sm"></tbody>
+                </table>
             </div>
         </main>
     </div>
 
-    <div id="detailDrawer" class="fixed inset-y-0 right-0 w-full md:w-[550px] bg-white z-[100] transform translate-x-full transition-transform duration-300 ease-in-out border-l border-pink-100 flex flex-col">
-        <div class="p-6 border-b border-pink-50 flex justify-between items-center bg-white">
-            <h2 class="font-black text-xl tracking-tighter text-pink-500">Commission Profile</h2>
-            <button onclick="closeDrawer()" class="text-3xl font-light hover:text-pink-500">&times;</button>
+    <div id="detailDrawer" class="fixed inset-y-0 right-0 w-full md:w-[600px] bg-white z-[100] transform translate-x-full transition-transform duration-300 border-l border-pink-100 flex flex-col">
+        <div class="p-6 border-b flex justify-between items-center">
+            <h2 class="font-black text-xl text-pink-500">Project Details</h2>
+            <button onclick="closeDrawer()" class="text-3xl">&times;</button>
         </div>
         <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-8"></div>
-        <div class="p-6 bg-gray-50/50 border-t border-pink-50">
-            <button id="saveBtn" class="w-full bg-[var(--accent-pink)] text-white py-4 rounded-2xl font-bold shadow-lg hover:brightness-110">Save Changes ♡</button>
+        <div class="p-6 bg-gray-50 border-t">
+            <button id="saveBtn" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-bold shadow-lg">Save Changes ♡</button>
         </div>
     </div>
 
@@ -122,57 +83,34 @@
 
         async function checkAccess() {
             const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) {
-                window.location.href = 'login.html';
-            } else {
-                document.getElementById('adminLayout').style.display = 'flex';
-                document.getElementById('userIdent').innerText = session.user.email.split('@')[0].toUpperCase();
-                fetchData();
-            }
+            if (!session) window.location.href = 'login.html';
+            else { document.getElementById('adminLayout').style.display = 'flex'; fetchData(); }
         }
 
-        async function handleLogout() {
-            await _supabase.auth.signOut();
-            window.location.href = 'login.html';
-        }
+        async function handleLogout() { await _supabase.auth.signOut(); window.location.href = 'login.html'; }
 
         async function fetchData() {
             let query = _supabase.from('commissions').select('*').order('created_at', { ascending: false });
-            
-            if (document.getElementById('filterRejected').checked) {
-                query = query.neq('status', 'rejected');
-            }
-
-            const { data, error } = await query;
-            if (error) return console.error(error);
+            if (document.getElementById('filterRejected').checked) query = query.neq('status', 'rejected');
+            const { data } = await query;
             renderTable(data);
-            updateStats(data);
         }
 
-        function updateStats(data) {
-            const total = data.reduce((sum, job) => sum + (Number(job.total_price) || 0), 0);
-            const pending = data.reduce((sum, job) => sum + (Number(job.balance_remaining) || 0), 0);
-            const active = data.filter(j => j.status !== 'shipped' && j.status !== 'inquiry' && j.status !== 'rejected').length;
-
-            document.getElementById('statTotal').innerText = `£${total}`;
-            document.getElementById('statPending').innerText = `£${pending}`;
-            document.getElementById('statActive').innerText = active;
-        }
-
-        function renderTable(commissions) {
+        function renderTable(data) {
             const tbody = document.getElementById('mainTableBody');
-            tbody.innerHTML = commissions.map(job => `
-                <tr class="border-b border-pink-50/50 hover:bg-white/60 transition-colors">
+            tbody.innerHTML = data.map(job => `
+                <tr class="border-b border-pink-50/50 hover:bg-white/60">
                     <td class="p-6">
                         <span class="font-bold text-gray-800">${job.social_handle || 'N/A'}</span>
-                        <span class="block text-[10px] opacity-60 font-medium">${job.customer_email || 'No Email'}</span>
-                        <span class="block text-[9px] opacity-40 uppercase font-black tracking-tighter">${job.customer_name}</span>
+                        <span class="block text-[10px] opacity-60">${job.customer_email}</span>
                     </td>
-                    <td class="p-6 font-semibold text-pink-500">${job.doll_sculpt}</td>
+                    <td class="p-6">
+                        <span class="font-semibold text-pink-500">${job.doll_sculpt}</span>
+                        <span class="block text-[9px] text-emerald-600 font-bold uppercase">${job.services_list?.join(' • ') || 'General Inquiry'}</span>
+                    </td>
                     <td class="p-6"><span class="status-badge bg-status-${job.status}">${job.status}</span></td>
-                    <td class="p-6"><span class="status-badge pay-${job.payment_status || 'unpaid'}">${job.payment_status || 'unpaid'}</span></td>
                     <td class="p-6 text-right">
-                        <button onclick="openDrawer('${job.id}')" class="px-4 py-2 bg-white border border-pink-100 rounded-lg font-bold text-xs hover:border-pink-300 transition-all">Edit ♡</button>
+                        <button onclick="openDrawer('${job.id}')" class="px-4 py-2 bg-white border border-pink-100 rounded-lg font-bold text-xs">View ♡</button>
                     </td>
                 </tr>
             `).join('');
@@ -185,10 +123,17 @@
 
             content.innerHTML = `
                 <div class="space-y-6">
+                    <div class="p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+                        <h4 class="text-[10px] font-black uppercase text-emerald-700 mb-2">Requested Services</h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${job.services_list?.map(s => `<span class="px-3 py-1 bg-white rounded-full text-[10px] font-bold border border-emerald-200">${s}</span>`).join('') || 'No specific services selected'}
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase opacity-40">Status</label>
-                            <select id="updateStatus" class="w-full p-3 bg-pink-50/30 rounded-xl border border-pink-100 font-bold text-sm">
+                            <label class="text-[10px] font-black uppercase opacity-40">Job Status</label>
+                            <select id="updateStatus" class="w-full p-3 bg-pink-50/30 rounded-xl border border-pink-100 font-bold text-sm outline-none">
                                 <option value="inquiry" ${job.status === 'inquiry' ? 'selected' : ''}>Inquiry</option>
                                 <option value="queued" ${job.status === 'queued' ? 'selected' : ''}>Queued</option>
                                 <option value="painting" ${job.status === 'painting' ? 'selected' : ''}>Painting</option>
@@ -197,43 +142,20 @@
                             </select>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase opacity-40">Total Quote (£)</label>
-                            <input id="updatePrice" type="number" value="${job.total_price}" class="w-full p-3 bg-white rounded-xl border border-pink-100 font-bold">
-                        </div>
-                    </div>
-
-                    <div class="p-5 bg-pink-50/30 rounded-2xl border border-pink-100 space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[9px] font-bold mb-1 uppercase opacity-60">Payment</label>
-                                <select id="updatePaymentStatus" class="w-full p-2 bg-white rounded-lg border border-pink-100 text-xs font-bold">
-                                    <option value="unpaid" ${job.payment_status === 'unpaid' ? 'selected' : ''}>Unpaid</option>
-                                    <option value="layaway" ${job.payment_status === 'layaway' ? 'selected' : ''}>Layaway</option>
-                                    <option value="paid" ${job.payment_status === 'paid' ? 'selected' : ''}>Paid</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[9px] font-bold mb-1 uppercase opacity-60">Balance Remaining (£)</label>
-                                <input id="updateBalance" type="number" value="${job.balance_remaining || 0}" class="w-full p-2 bg-white rounded-lg border border-pink-100 text-xs font-bold">
-                            </div>
+                            <label class="text-[10px] font-black uppercase opacity-40">Quote (£)</label>
+                            <input id="updatePrice" type="number" value="${job.total_price}" class="w-full p-3 border border-pink-100 rounded-xl font-bold">
                         </div>
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase opacity-40">Notes</label>
-                        <textarea id="updateNotes" class="w-full p-4 bg-white rounded-xl border border-pink-100 text-sm h-32">${job.notes || ''}</textarea>
+                        <label class="text-[10px] font-black uppercase opacity-40">Client Notes</label>
+                        <div class="p-4 bg-gray-50 rounded-xl text-sm italic">"${job.notes}"</div>
                     </div>
 
-                    <div class="p-5 bg-red-50/30 rounded-2xl border border-red-100 space-y-3">
-                        <h4 class="text-[10px] font-black uppercase opacity-50 tracking-widest text-red-600">Rejection Details</h4>
-                        <textarea id="updateRejectionReason" placeholder="Why was this rejected? (Internal note)" class="w-full p-3 bg-white rounded-xl border border-red-100 text-xs h-20">${job.rejection_reason || ''}</textarea>
-                        <button onclick="quickReject()" class="text-[10px] font-bold text-red-500 hover:text-red-700 uppercase underline">Mark as Rejected & Archive</button>
-                    </div>
-
-                    <div class="space-y-3">
+                    <div class="space-y-2">
                         <label class="text-[10px] font-black uppercase opacity-40">References</label>
                         <div class="grid grid-cols-2 gap-2">
-                            ${job.image_urls?.map(url => `<a href="${url}" target="_blank"><img src="${url}" class="rounded-xl border border-pink-50 w-full aspect-square object-cover hover:opacity-80"></a>`).join('') || 'None'}
+                            ${job.image_urls?.map(url => `<a href="${url}" target="_blank"><img src="${url}" class="rounded-xl w-full aspect-square object-cover"></a>`).join('')}
                         </div>
                     </div>
                 </div>
@@ -241,36 +163,18 @@
             document.getElementById('detailDrawer').classList.remove('translate-x-full');
         }
 
-        async function quickReject() {
-            if (!confirm("Archive this inquiry as rejected?")) return;
-            document.getElementById('updateStatus').value = 'rejected';
-            await saveChanges();
-        }
-
-        async function saveChanges() {
+        document.getElementById('saveBtn').addEventListener('click', async () => {
             const btn = document.getElementById('saveBtn');
-            btn.innerText = "Saving... ✨";
-            
-            const updates = {
+            btn.innerText = "Saving...";
+            await _supabase.from('commissions').update({
                 status: document.getElementById('updateStatus').value,
-                total_price: Number(document.getElementById('updatePrice').value),
-                payment_status: document.getElementById('updatePaymentStatus').value,
-                balance_remaining: Number(document.getElementById('updateBalance').value),
-                notes: document.getElementById('updateNotes').value,
-                rejection_reason: document.getElementById('updateRejectionReason').value
-            };
+                total_price: document.getElementById('updatePrice').value
+            }).eq('id', activeJobId);
+            btn.innerText = "Save Changes ♡";
+            closeDrawer(); fetchData();
+        });
 
-            const { error } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
-
-            if (!error) {
-                btn.innerText = "Saved! ♡";
-                setTimeout(() => { btn.innerText = "Save Changes ♡"; closeDrawer(); fetchData(); }, 800);
-            }
-        }
-
-        document.getElementById('saveBtn').addEventListener('click', saveChanges);
         function closeDrawer() { document.getElementById('detailDrawer').classList.add('translate-x-full'); }
-
         window.onload = checkAccess;
     </script>
 </body>
