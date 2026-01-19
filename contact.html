@@ -168,11 +168,18 @@
             document.getElementById('fileCount').innerText = `${e.target.files.length} files selected`;
         });
 
-        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.innerText = "Sending to Dani & Jas... ✨";
-            btn.disabled = true;
+       document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Safety check: Is ToS checked?
+    if (!document.getElementById('tosCheck').checked) {
+        alert("Please agree to the Terms of Service to continue.");
+        return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.innerText = "Processing Agreement... ✨";
+    btn.disabled = true;
 
             // 1. Collect all selected services into one array
             const selectedServices = [];
@@ -199,27 +206,28 @@
                 }
             }
 
-            // 3. Send to Supabase
-            const { error } = await _supabase.from('commissions').insert([{
-                customer_name: document.getElementById('custName').value,
-                customer_email: document.getElementById('custEmail').value,
-                social_handle: document.getElementById('socialHandle').value,
-                doll_sculpt: document.getElementById('dollSculpt').value,
-                services_list: selectedServices,
-                notes: document.getElementById('designNotes').value,
-                image_urls: imageUrls,
-                status: 'inquiry'
-            }]);
+            // 3. Send to Supabase (Including ToS)
+    const { error } = await _supabase.from('commissions').insert([{
+        customer_name: document.getElementById('custName').value,
+        customer_email: document.getElementById('custEmail').value,
+        social_handle: document.getElementById('socialHandle').value,
+        doll_sculpt: document.getElementById('dollSculpt').value,
+        services_list: selectedServices,
+        notes: document.getElementById('designNotes').value,
+        image_urls: imageUrls,
+        tos_agreed: true, // Mark that they agreed
+        status: 'inquiry'
+    }]);
 
-            if (!error) {
-                alert("Request Sent! Dani & Jas will review it shortly. ♡");
-                window.location.reload();
-            } else {
-                alert("Error: " + error.message);
-                btn.disabled = false;
-                btn.innerText = "Submit Commission Request ✨";
-            }
-        });
+    if (!error) {
+        alert("Success! Your request and agreement have been logged. ♡");
+        window.location.reload();
+    } else {
+        alert("Error: " + error.message);
+        btn.disabled = false;
+        btn.innerText = "Submit Commission Request ✨";
+    }
+});
     </script>
 </body>
 </html>
