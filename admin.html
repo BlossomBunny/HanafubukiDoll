@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - HanafubukiDoll</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        .auth-hidden { display: none !important; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-radius: 2rem; border: 1px solid rgba(255, 192, 203, 0.2); }
+    </style>
 </head>
 <body class="bg-[#fdfbfb]">
 
@@ -14,16 +19,26 @@
             <div class="text-xl md:text-2xl font-black tracking-tighter">
                 <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
             </div>
-            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+            <div id="adminNav" class="auth-hidden flex flex-wrap justify-center gap-2 md:gap-4">
                 <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
                 <button onclick="switchTab('workbench')" class="nav-btn nav-btn-mint">Commissions ♡</button>
                 <button onclick="switchTab('planner')" class="nav-btn nav-btn-pink">Planner ♡</button>
                 <button onclick="switchTab('settings')" class="nav-btn nav-btn-mint">Settings ♡</button>
+                <button onclick="handleLogout()" class="nav-btn bg-gray-100 text-gray-500 border-none hover:bg-red-50 hover:text-red-400 transition-colors">Logout ⏻</button>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto p-6 md:p-10">
+    <div id="loginGate" class="max-w-md mx-auto mt-20 p-10 glass-card text-center space-y-6 animate-fadeIn">
+        <h2 class="text-2xl font-black italic">Artist Entrance</h2>
+        <div class="space-y-4">
+            <input type="email" id="adminEmail" placeholder="Studio Email" class="w-full p-4 rounded-2xl border border-pink-100 outline-none focus:ring-2 ring-pink-200">
+            <input type="password" id="adminPass" placeholder="Secret Key" class="w-full p-4 rounded-2xl border border-pink-100 outline-none focus:ring-2 ring-pink-200">
+        </div>
+        <button onclick="handleLogin()" id="loginBtn" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:scale-[1.02] transition-all">Unlock Studio ♡</button>
+    </div>
+
+    <main id="adminMain" class="max-w-6xl mx-auto p-6 md:p-10 auth-hidden">
         
         <div id="view-settings" class="hidden animate-fadeIn space-y-6">
             <h2 class="text-3xl font-black italic mb-8">Studio Status Controls</h2>
@@ -32,8 +47,7 @@
 
         <div id="view-workbench" class="space-y-6">
             <h2 class="text-3xl font-black italic mb-8">Client Inbox</h2>
-            <div id="commissionList" class="space-y-6">
-                </div>
+            <div id="commissionList" class="space-y-6"></div>
         </div>
 
         <div id="view-planner" class="hidden space-y-6">
@@ -43,13 +57,13 @@
     </main>
 
     <div id="detailDrawer" class="fixed inset-y-0 right-0 w-full md:w-[600px] bg-white z-[100] transform translate-x-full transition-transform duration-500 border-l border-pink-100 flex flex-col shadow-2xl">
-        <div class="p-6 border-b flex justify-between items-center">
+        <div class="p-6 border-b flex justify-between items-center bg-white">
             <h2 class="font-black text-xl italic">Update Order</h2>
-            <button onclick="closeDrawer()" class="text-3xl">&times;</button>
+            <button onclick="closeDrawer()" class="text-3xl text-gray-400 hover:text-pink-500">&times;</button>
         </div>
         <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-6"></div>
         <div class="p-6 border-t bg-gray-50 flex gap-4">
-            <button onclick="handleDelete()" class="text-[10px] font-black uppercase text-red-400">Delete/Reject</button>
+            <button onclick="handleDelete()" class="text-[10px] font-black uppercase text-red-400 hover:text-red-600">Archive / Reject</button>
             <button id="saveBtn" class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg">Save Changes ♡</button>
         </div>
     </div>
@@ -61,79 +75,113 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let activeJobId = null;
 
+        // AUTHENTICATION LOGIC
+        window.onload = async () => {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session) {
+                showAdmin();
+            }
+        };
+
+        async function handleLogin() {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPass').value;
+            const btn = document.getElementById('loginBtn');
+
+            btn.innerText = "Checking... ✨";
+            
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                alert("Access Denied: " + error.message);
+                btn.innerText = "Unlock Studio ♡";
+            } else {
+                showAdmin();
+            }
+        }
+
+        async function handleLogout() {
+            await _supabase.auth.signOut();
+            window.location.reload();
+        }
+
+        function showAdmin() {
+            document.getElementById('loginGate').classList.add('hidden');
+            document.getElementById('adminNav').classList.remove('auth-hidden');
+            document.getElementById('adminMain').classList.remove('auth-hidden');
+            renderWorkbench();
+        }
+
+        // TAB NAVIGATION
         async function switchTab(tab) {
-            ['view-workbench', 'view-planner', 'view-settings'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['view-workbench', 'view-planner', 'view-settings'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
             document.getElementById(`view-${tab}`).classList.remove('hidden');
+            
             if(tab === 'settings') renderSettings();
             if(tab === 'workbench') renderWorkbench();
             if(tab === 'planner') renderPlanner();
         }
 
+        // RENDER WORKBENCH (CLIENT INBOX)
         async function renderWorkbench() {
-            const { data } = await _supabase.from('commissions').select('*').eq('archived', false).order('created_at', { ascending: false });
-            const container = document.getElementById('commissionList');
+            const { data, error } = await _supabase.from('commissions')
+                .select('*')
+                .eq('archived', false)
+                .order('created_at', { ascending: false });
             
+            const container = document.getElementById('commissionList');
             if (!data || data.length === 0) {
-                container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100">
-                    <h3 class="font-black text-xl">Inbox is empty! 🕊️</h3>
-                </div>`;
+                container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100">No requests yet! 🕊️</div>`;
                 return;
             }
 
-            // Inside renderWorkbench() mapping:
-container.innerHTML = data.map(job => `
-    <div class="bg-white border-2 border-pink-50 rounded-[2rem] p-8 hover:border-pink-200 transition-all">
-        <div class="flex flex-col md:flex-row gap-8">
-            <div class="w-32 h-32 bg-pink-50 rounded-2xl overflow-hidden shrink-0 border border-pink-100">
-                ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '<div class="h-full flex items-center justify-center text-2xl">🎨</div>'}
-            </div>
-            <div class="flex-1 space-y-4">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h3 class="text-2xl font-black">${job.social_handle || 'No Handle'}</h3>
-                        <p class="text-[10px] font-black text-pink-400 uppercase tracking-widest">
-                            ${job.doll_company} ${job.doll_sculpt} (${job.doll_skintone})
-                        </p>
+            container.innerHTML = data.map(job => `
+                <div class="bg-white border-2 border-pink-50 rounded-[2rem] p-8 hover:border-pink-200 transition-all shadow-sm">
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="w-32 h-32 bg-pink-50 rounded-2xl overflow-hidden shrink-0 border border-pink-100">
+                            ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '<div class="h-full flex items-center justify-center text-2xl">🎨</div>'}
+                        </div>
+                        <div class="flex-1 space-y-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-2xl font-black">${job.social_handle || 'No Handle'}</h3>
+                                    <p class="text-[10px] font-black text-pink-400 uppercase tracking-widest">
+                                        ${job.doll_company || 'Generic'} ${job.doll_sculpt} • ${job.doll_skintone || 'Standard'}
+                                    </p>
+                                </div>
+                                <span class="bg-pink-100 text-pink-600 px-4 py-1 rounded-full text-[10px] font-black uppercase">${job.status}</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px] border-t border-b border-pink-50 py-4">
+                                <p><strong>Email:</strong> ${job.customer_email}</p>
+                                <p><strong>Origin:</strong> 📍 ${job.country || 'Not Set'}</p>
+                                <p><strong>Payment:</strong> ${job.is_fully_paid ? '✅ Paid' : '⏳ Pending'}</p>
+                            </div>
+
+                            <div class="text-xs text-gray-500 italic bg-gray-50 p-4 rounded-xl">
+                                "Notes: ${job.faceup_details?.notes || 'No notes'}"
+                            </div>
+                            
+                            <button onclick="openDrawer('${job.id}')" class="text-[10px] font-black uppercase text-pink-500 underline">Manage Order →</button>
+                        </div>
                     </div>
-                    <span class="bg-pink-100 text-pink-600 px-4 py-1 rounded-full text-[10px] font-black uppercase">${job.status}</span>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px] border-t border-b border-pink-50 py-4">
-                    <p><strong>Email:</strong> ${job.customer_email}</p>
-                    <p><strong>Country:</strong> ${job.country || 'Not Set'}</p>
-                    <p><strong>Paid:</strong> ${job.is_fully_paid ? '✅ Full' : '⏳ Deposit'}</p>
-                </div>
-
-                <div class="text-xs text-gray-500 italic bg-gray-50 p-4 rounded-xl">
-                    "Faceup: ${job.faceup_details?.notes || 'No notes'}"
-                </div>
-                
-                <button onclick="openDrawer('${job.id}')" class="text-[10px] font-black uppercase text-pink-500 underline">Update Status & Artist Notes →</button>
-            </div>
-        </div>
-    </div>
-`).join('');
-
-        async function renderPlanner() {
-            const { data: jobs } = await _supabase.from('commissions').select('*').in('status', ['arrived', 'painting']).eq('archived', false);
-            const container = document.getElementById('plannerContainer');
-
-            if (!jobs || jobs.length === 0) {
-                container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100">
-                    <h3 class="font-black text-xl italic">Yay! Your diary is all clear! ✨</h3>
-                </div>`;
-                return;
-            }
-            // Sorting/Mapping logic here...
+            `).join('');
         }
 
+        // RENDER SETTINGS (WAITLIST)
         async function renderSettings() {
             const { data } = await _supabase.from('studio_settings').select('*');
             document.getElementById('services-list').innerHTML = data.map(s => `
                 <div class="bg-white p-8 rounded-[2rem] border-2 border-pink-50 flex justify-between items-center">
                     <div>
                         <h4 class="font-black text-xl capitalize">${s.id}</h4>
-                        <p class="text-xs font-bold ${s.is_live ? 'text-emerald-500' : 'text-amber-500'} uppercase">${s.is_live ? 'Open' : 'Waitlist Only'}</p>
+                        <p class="text-xs font-bold ${s.is_live ? 'text-emerald-500' : 'text-amber-500'} uppercase">${s.is_live ? 'Open' : 'Full'}</p>
                     </div>
                     <button onclick="toggleService('${s.id}', ${!s.is_live})" class="nav-btn ${s.is_live ? 'nav-btn-pink' : 'nav-btn-mint'}">Toggle Status</button>
                 </div>
@@ -145,21 +193,39 @@ container.innerHTML = data.map(job => `
             renderSettings();
         }
 
+        // DRAWER CONTROLS
         async function openDrawer(id) {
             activeJobId = id;
             const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
             const content = document.getElementById('drawerContent');
+            
             content.innerHTML = `
                 <div class="space-y-6">
-                    <select id="updateStatus" class="w-full p-4 bg-pink-50 rounded-2xl border-none font-bold">
-                        <option value="inquiry">Inquiry</option>
-                        <option value="queued">Queued</option>
-                        <option value="arrived">Arrived 📦</option>
-                        <option value="painting">Painting 🎨</option>
-                        <option value="shipped">Shipped ✈️</option>
-                    </select>
-                    <textarea id="updateInv" placeholder="Inventory (Caps, wigs, etc)" class="w-full p-4 border rounded-2xl h-24">${job.admin_inventory || ''}</textarea>
-                    <textarea id="updateNotes" placeholder="Internal Artist Notes" class="w-full p-4 border rounded-2xl h-24">${job.internal_notes || ''}</textarea>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-gray-400 px-2">Current Status</label>
+                        <select id="updateStatus" class="w-full p-4 bg-pink-50 rounded-2xl border-none font-bold mt-1 outline-none">
+                            <option value="inquiry">Inquiry</option>
+                            <option value="queued">Queued</option>
+                            <option value="arrived">Arrived 📦</option>
+                            <option value="painting">Painting 🎨</option>
+                            <option value="shipped">Shipped ✈️</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-2 p-4 bg-gray-50 rounded-2xl">
+                         <input type="checkbox" id="updatePaid" ${job.is_fully_paid ? 'checked' : ''} class="w-5 h-5 accent-pink-500">
+                         <label class="text-xs font-bold uppercase tracking-wider cursor-pointer">Mark as Fully Paid</label>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-gray-400 px-2">Inventory Log</label>
+                        <textarea id="updateInv" placeholder="Headcaps, eyes, wigs, etc..." class="w-full p-4 border border-pink-50 rounded-2xl h-24 mt-1 outline-none focus:ring-1 ring-pink-100">${job.admin_inventory || ''}</textarea>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-gray-400 px-2">Internal Notes</label>
+                        <textarea id="updateNotes" placeholder="Personal project reminders..." class="w-full p-4 border border-pink-50 rounded-2xl h-24 mt-1 outline-none focus:ring-1 ring-pink-100">${job.internal_notes || ''}</textarea>
+                    </div>
                 </div>
             `;
             document.getElementById('updateStatus').value = job.status;
@@ -167,18 +233,32 @@ container.innerHTML = data.map(job => `
         }
 
         document.getElementById('saveBtn').onclick = async () => {
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "Saving... ♡";
+            
             await _supabase.from('commissions').update({
                 status: document.getElementById('updateStatus').value,
+                is_fully_paid: document.getElementById('updatePaid').checked,
                 admin_inventory: document.getElementById('updateInv').value,
                 internal_notes: document.getElementById('updateNotes').value
             }).eq('id', activeJobId);
+            
+            btn.innerText = "Save Changes ♡";
             closeDrawer();
             renderWorkbench();
         };
 
-        function closeDrawer() { document.getElementById('detailDrawer').classList.add('translate-x-full'); }
-        async function handleDelete() { if(confirm("Archive this doll?")) { await _supabase.from('commissions').update({archived:true}).eq('id', activeJobId); closeDrawer(); renderWorkbench(); } }
-        window.onload = () => renderWorkbench();
+        function closeDrawer() { 
+            document.getElementById('detailDrawer').classList.add('translate-x-full'); 
+        }
+
+        async function handleDelete() { 
+            if(confirm("Archive this doll? It will no longer show in your inbox.")) { 
+                await _supabase.from('commissions').update({archived:true}).eq('id', activeJobId); 
+                closeDrawer(); 
+                renderWorkbench(); 
+            } 
+        }
     </script>
 </body>
 </html>
