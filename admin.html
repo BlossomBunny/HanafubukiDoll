@@ -157,6 +157,12 @@
                         <div class="grid grid-cols-2 gap-2">
                             ${job.image_urls?.map(url => `<a href="${url}" target="_blank"><img src="${url}" class="rounded-xl w-full aspect-square object-cover"></a>`).join('')}
                         </div>
+                `
+<div class="flex items-center gap-2 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+    <span class="text-blue-500">✅</span>
+    <span class="text-[10px] font-black uppercase text-blue-700">Client has agreed to Terms of Service</span>
+</div>
+`
                     </div>
                 </div>
             `;
