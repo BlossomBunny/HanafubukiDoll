@@ -143,16 +143,48 @@ content.innerHTML = `
     </div>
 `;
 
-        document.getElementById('saveBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('saveBtn');
-            btn.innerText = "Saving...";
-            await _supabase.from('commissions').update({
-                status: document.getElementById('updateStatus').value,
-                total_price: document.getElementById('updatePrice').value
-            }).eq('id', activeJobId);
-            btn.innerText = "Save Changes ♡";
-            closeDrawer(); fetchData();
-        });
+       document.getElementById('saveBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('saveBtn');
+    const originalText = btn.innerText;
+    
+    // UI Feedback
+    btn.innerText = "Syncing... ✨";
+    btn.disabled = true;
+
+    // 1. Prepare the data from the drawer inputs
+    const updatedData = {
+        status: document.getElementById('updateStatus').value,
+        total_price: Number(document.getElementById('updatePrice').value) || 0,
+        // If you added balance_remaining to your table, include it here:
+        // balance_remaining: Number(document.getElementById('updateBalance').value) || 0
+    };
+
+    // 2. Update Supabase
+    const { error } = await _supabase
+        .from('commissions')
+        .update(updatedData)
+        .eq('id', activeJobId);
+
+    if (!error) {
+        btn.innerText = "Saved! ♡";
+        btn.classList.add('bg-emerald-500'); // Brief color change for success
+        
+        // 3. Refresh the data and the stats bar
+        setTimeout(async () => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            btn.classList.remove('bg-emerald-500');
+            
+            closeDrawer(); 
+            await fetchData(); // This re-runs the stats calculation
+        }, 800);
+    } else {
+        console.error("Save Error:", error.message);
+        alert("Failed to save changes. Please check your connection.");
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+});
 
         function closeDrawer() { document.getElementById('detailDrawer').classList.add('translate-x-full'); }
         window.onload = checkAccess;
