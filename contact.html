@@ -5,37 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book a Slot - HanafubukiDoll</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .step-hidden { display: none; }
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border-radius: 2rem; border: 1px solid #fce7f3; }
         .service-block { transition: all 0.3s ease; }
         .animate-fadeIn { animation: fadeIn 0.5s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Global Header Helper Classes */
+        .studio-header {
+            width: 100%;
+            padding: 1.5rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #fce7f3;
+        }
+        .nav-link {
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #1f2937;
+            transition: color 0.2s;
+        }
+        .nav-link:hover { color: #f472b6; }
     </style>
 </head>
     
-<body class="bg-[#fdfbfb] min-h-screen p-4 md:p-10">
+<body class="bg-[#fdfbfb] min-h-screen">
     <div class="mesh-bg"></div>
 
-    <div class="max-w-3xl mx-auto relative z-10">
-
-        <header class="w-full py-6 px-4 md:px-10 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-[100] border-b border-pink-50">
-    <a href="index.html" class="flex items-center gap-3">
-        <span class="text-2xl">🐰</span>
-        <h1 class="font-black text-xl tracking-tighter uppercase italic text-gray-800">HanafubukiDoll</h1>
-    </a>
-    
-    <nav class="flex gap-4 md:gap-8">
-        <a href="index.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors">Home</a>
-        <a href="contact.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors">Book a Slot</a>
-        <a href="admin.html" class="text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-colors opacity-30 hover:opacity-100">Admin</a>
-    </nav>
-</header>
+    <header class="studio-header">
+        <a href="index.html" class="flex items-center gap-3">
+            <span class="text-2xl bounce-bunny">🐰</span>
+            <h1 class="font-black text-xl tracking-tighter uppercase italic text-gray-800">HanafubukiDoll</h1>
+        </a>
         
+        <nav class="flex items-center gap-6">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="contact.html" class="nav-link text-pink-500">Book a Slot</a>
+            <a href="admin.html" class="nav-link opacity-20 hover:opacity-100 transition-opacity">Staff 🔒</a>
+        </nav>
+    </header>
+        
+    <main class="max-w-3xl mx-auto relative z-10 p-6 md:p-10">
+
         <div id="entryChoice" class="glass-card p-10 text-center space-y-8 animate-fadeIn">
             <h1 class="text-4xl font-black tracking-tighter text-gray-800">Connect with the Studio</h1>
-            <p class="italic text-pink-400">How can we help today? ♡</p>
+            <p class="italic text-pink-400 font-medium">How can we help today? ♡</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <a href="mailto:Admin@hanafubukidoll.co.uk" class="p-8 border-2 border-pink-50 rounded-3xl hover:bg-pink-50 transition-all group">
@@ -51,7 +77,7 @@
             </div>
         </div>
 
-        <form id="bookingForm" class="step-hidden space-y-8 pb-20">
+        <form id="bookingForm" class="step-hidden space-y-8 pb-20 animate-fadeIn">
             
             <div class="glass-card p-8 space-y-6">
                 <h2 class="text-2xl font-black tracking-tighter">1. Artist Details</h2>
@@ -76,9 +102,9 @@
                     </select>
                     <div class="space-y-4">
                         <div class="flex gap-4 flex-wrap text-xs font-bold">
-                            <label><input type="checkbox" class="faceup-addon" value="Eyelashes"> Eyelashes</label>
-                            <label><input type="checkbox" class="faceup-addon" value="Piercings"> Piercings</label>
-                            <label><input type="checkbox" class="faceup-addon" value="Modifications"> Modifications</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" class="faceup-addon w-4 h-4 accent-pink-400" value="Eyelashes"> Eyelashes</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" class="faceup-addon w-4 h-4 accent-pink-400" value="Piercings"> Piercings</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" class="faceup-addon w-4 h-4 accent-pink-400" value="Modifications"> Modifications</label>
                         </div>
                         <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
                         <input type="file" id="faceupFiles" multiple class="text-[10px]">
@@ -95,7 +121,7 @@
                         <option value="Dollfie Dream Decora Hands">Dollfie Dream Decora Hands</option>
                     </select>
                     <div class="space-y-4">
-                        <label class="text-xs font-bold"><input type="checkbox" id="pediAddon" value="Pedicure"> Include Pedicure?</label>
+                        <label class="text-xs font-bold flex items-center gap-2"><input type="checkbox" id="pediAddon" value="Pedicure" class="w-4 h-4 accent-emerald-400"> Include Pedicure?</label>
                         <textarea id="maniNotes" placeholder="Nail colors/themes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
                         <input type="file" id="maniFiles" multiple class="text-[10px]">
                     </div>
@@ -115,20 +141,25 @@
             </div>
 
             <div class="glass-card p-8 space-y-6">
-                <div class="p-4 bg-pink-50 rounded-xl border border-pink-100 text-[11px] h-32 overflow-y-auto text-gray-500">
-                    <p class="font-bold mb-2">Terms of Service:</p>
-                    <p>All deposits are non-refundable. Shipping is the responsibility of the client. Artist has creative freedom within the discussed concept...</p>
+                <div class="p-4 bg-pink-50 rounded-xl border border-pink-100 text-[11px] h-32 overflow-y-auto text-gray-500 leading-relaxed">
+                    <p class="font-bold mb-2 uppercase tracking-tighter text-pink-500">Terms of Service:</p>
+                    <p>All deposits are non-refundable. Shipping is the responsibility of the client. Artist has creative freedom within the discussed concept. Items left in studio for over 6 months without communication become studio property.</p>
                 </div>
                 <label class="flex items-start gap-3 cursor-pointer">
                     <input type="checkbox" id="tosCheck" required class="mt-1 w-5 h-5 accent-pink-500">
-                    <span class="text-xs font-bold">I agree to the Terms of Service and understand the non-refundable deposit. ♡</span>
+                    <span class="text-xs font-bold text-gray-700">I agree to the Terms of Service and understand the non-refundable deposit. ♡</span>
                 </label>
-                <button type="submit" id="submitBtn" class="w-full bg-pink-500 text-white py-5 rounded-3xl font-black shadow-xl hover:scale-[1.02] transition-transform">
+                <button type="submit" id="submitBtn" class="w-full bg-pink-500 text-white py-5 rounded-3xl font-black shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
                     Submit Commission Request ✨
                 </button>
             </div>
         </form>
-    </div>
+    </main>
+
+    <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
+        <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Aesthetic Studio</p>
+        <p class="text-gray-400 text-sm italic">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -136,18 +167,19 @@
         const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 1. Initial Load: Check what services are live
         async function checkServiceAvailability() {
             const { data: settings } = await _supabase.from('studio_settings').select('*');
+            if (!settings) return;
+            
             settings.forEach(service => {
                 const container = document.getElementById(`${service.id}-section`);
                 if (!service.is_live && container) {
                     container.innerHTML = `
                         <div class="p-6 bg-pink-50/50 rounded-2xl border-2 border-dashed border-pink-200 text-center animate-fadeIn">
                             <p class="text-[10px] font-black uppercase text-pink-400 mb-2">🌸 ${service.id} is currently full</p>
-                            <p class="text-xs mb-4 text-gray-600">Dani & Jas are not taking new orders for this service right now. Join the waitlist to be notified!</p>
+                            <p class="text-xs mb-4 text-gray-600 font-medium">Dani & Jas are not taking new orders for this service right now. Join the waitlist to be notified!</p>
                             <div class="flex gap-2 max-w-sm mx-auto">
-                                <input type="email" id="wait-email-${service.id}" placeholder="your@email.com" class="flex-1 p-3 rounded-xl border border-pink-100 text-sm outline-none">
+                                <input type="email" id="wait-email-${service.id}" placeholder="your@email.com" class="flex-1 p-3 rounded-xl border border-pink-100 text-sm outline-none focus:ring-2 ring-pink-100">
                                 <button type="button" onclick="joinWaitlist('${service.id}')" class="bg-pink-400 text-white px-4 rounded-xl font-bold text-xs hover:bg-pink-500 transition-colors">Join</button>
                             </div>
                         </div>
@@ -157,26 +189,29 @@
         }
 
         async function joinWaitlist(serviceName) {
-            const email = document.getElementById(`wait-email-${serviceName}`).value;
+            const emailInput = document.getElementById(`wait-email-${serviceName}`);
+            const email = emailInput.value;
             if (!email || !email.includes('@')) return alert("Please enter a valid email! ♡");
             
             const { error } = await _supabase.from('waitlist').insert([{ email, service_requested: serviceName }]);
-            if (!error) alert("You've been added to the waitlist! We'll be in touch. ♡");
+            if (!error) {
+                alert("You've been added to the waitlist! We'll be in touch. ♡");
+                emailInput.value = "";
+            }
         }
 
         function startBooking() {
             document.getElementById('entryChoice').classList.add('step-hidden');
             document.getElementById('bookingForm').classList.remove('step-hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 2. Submit Logic
         document.getElementById('bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             btn.innerText = "Sending... ✨";
             btn.disabled = true;
 
-            // Helper for Image Uploads (Simplified for the example)
             const uploadSet = async (fileInputId) => {
                 const files = document.getElementById(fileInputId)?.files;
                 if (!files || files.length === 0) return [];
@@ -192,7 +227,6 @@
                 return urls;
             };
 
-            // Gather Data
             const faceupDetails = {
                 base: document.getElementById('faceupBase')?.value || 'Waitlist',
                 addons: Array.from(document.querySelectorAll('.faceup-addon:checked')).map(el => el.value),
@@ -227,7 +261,7 @@
 
             if (!error) {
                 alert("Request Sent Successfully! ♡");
-                window.location.reload();
+                window.location.href = "index.html";
             } else {
                 alert("Error: " + error.message);
                 btn.disabled = false;
@@ -237,14 +271,5 @@
 
         window.onload = checkServiceAvailability;
     </script>
-         <footer class="py-20 text-center border-t border-pink-50">
-        <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
-        <p class="text-[var(--text-muted)] text-sm">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
-         
-    </p>
-    <a href="login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors duration-300 uppercase tracking-widest font-bold">
-        Staff Access 🔒
-    </a>
-    </footer>
 </body>
 </html>
