@@ -8,9 +8,10 @@
     <link rel="stylesheet" href="style.css">
     <style>
         .step-hidden { display: none; }
-        .option-card { transition: all 0.3s ease; border: 2px solid #fdf2f8; }
-        .option-card:hover { border-color: #f472b6; background: #fff1f2; }
-        .addon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border-radius: 2rem; border: 1px solid #fce7f3; }
+        .service-block { transition: all 0.3s ease; }
+        .animate-fadeIn { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-[#fdfbfb] min-h-screen p-4 md:p-10">
@@ -19,100 +20,96 @@
     <div class="max-w-3xl mx-auto relative z-10">
         
         <div id="entryChoice" class="glass-card p-10 text-center space-y-8 animate-fadeIn">
-            <h1 class="text-4xl font-black tracking-tighter">Connect with the Studio</h1>
-            <p class="text-[var(--text-muted)] italic">How can Dani & Jas help you today?</p>
+            <h1 class="text-4xl font-black tracking-tighter text-gray-800">Connect with the Studio</h1>
+            <p class="italic text-pink-400">How can Dani & Jas help you today? ♡</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <a href="mailto:Admin@hanafubukidoll.co.uk" class="option-card p-8 rounded-3xl text-center">
+                <a href="mailto:Admin@hanafubukidoll.co.uk" class="p-8 border-2 border-pink-50 rounded-3xl hover:bg-pink-50 transition-all group">
                     <span class="text-4xl">✉️</span>
                     <h3 class="font-bold mt-4">General Inquiry</h3>
-                    <p class="text-[10px] uppercase tracking-widest opacity-50 mt-2">Questions / Collabs</p>
+                    <p class="text-[10px] uppercase tracking-widest opacity-50 mt-2">Questions or Collabs</p>
                 </a>
-                <button onclick="startBooking()" class="option-card p-8 rounded-3xl text-center">
+                <button onclick="startBooking()" class="p-8 border-2 border-pink-100 rounded-3xl hover:bg-pink-100 transition-all group shadow-sm">
                     <span class="text-4xl">🎨</span>
                     <h3 class="font-bold mt-4">Book a Slot</h3>
-                    <p class="text-[10px] uppercase tracking-widest opacity-50 mt-2">Full Questionnaire</p>
+                    <p class="text-[10px] uppercase tracking-widest opacity-50 mt-2">Questionnaire & Refs</p>
                 </button>
             </div>
         </div>
 
-        <form id="bookingForm" class="step-hidden space-y-8">
+        <form id="bookingForm" class="step-hidden space-y-8 pb-20">
             
             <div class="glass-card p-8 space-y-6">
                 <h2 class="text-2xl font-black tracking-tighter">1. Artist Details</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input type="text" id="custName" placeholder="Full Name" required class="w-full p-4 rounded-xl border border-pink-100 outline-none focus:ring-2 ring-pink-200">
-                    <input type="text" id="socialHandle" placeholder="Social Media Handle (@...)" class="w-full p-4 rounded-xl border border-pink-100 outline-none">
+                    <input type="text" id="socialHandle" placeholder="Social Handle (@...)" class="w-full p-4 rounded-xl border border-pink-100 outline-none">
                     <input type="email" id="custEmail" placeholder="Email Address (Required)" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
-                    <input type="text" id="dollSculpt" placeholder="Doll Company & Sculpt (e.g. Smartdoll Mirai)" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
+                    <input type="text" id="dollSculpt" placeholder="Doll Company & Sculpt" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
                 </div>
             </div>
 
-            <div class="glass-card p-8 space-y-10">
-                <h2 class="text-2xl font-black tracking-tighter">2. Service Selection</h2>
+            <div class="space-y-6">
+                <h2 class="text-2xl font-black tracking-tighter px-4">2. Service Details</h2>
 
-                <div class="glass-card p-6 space-y-4 border-l-4 border-pink-400">
-    <h3 class="font-black text-pink-500 uppercase text-xs tracking-widest">1. Face-Up Details</h3>
-    <select id="faceupBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white" onchange="toggleCategory('faceupFields', this.value)">
-        <option value="None">No Faceup Needed</option>
-        <option value="Standard Face-Up">Standard Face-Up</option>
-        <option value="Face-Up + Smartdoll Head">Face-Up + Smartdoll Head</option>
-        <option value="Face-Up + Dollfie Dream Head">Face-Up + Dollfie Dream Head</option>
-    </select>
-    
-    <div id="faceupFields" class="hidden space-y-4 pt-4 animate-fadeIn">
-        <div class="addon-grid">
-            <label class="text-xs flex items-center gap-2"><input type="checkbox" class="faceup-addon" value="Eyelashes"> Eyelashes</label>
-            <label class="text-xs flex items-center gap-2"><input type="checkbox" class="faceup-addon" value="Piercings"> Piercings</label>
-            <label class="text-xs flex items-center gap-2"><input type="checkbox" class="faceup-addon" value="Modifications"> Modifications</label>
-        </div>
-        <textarea id="faceupNotes" placeholder="Face-up specific notes (expression, colors, etc.)" class="w-full p-3 text-sm rounded-xl border border-pink-50 h-24"></textarea>
-        <input type="file" id="faceupFiles" multiple class="text-[10px]">
-    </div>
-</div>
+                <div id="faceups-section" class="glass-card p-6 service-block border-l-4 border-pink-400">
+                    <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest mb-4">Face-Up</h3>
+                    <select id="faceupBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
+                        <option value="None">No Faceup Needed</option>
+                        <option value="Standard Face-Up">Standard Face-Up</option>
+                        <option value="Face-Up + Smartdoll Head">Face-Up + Smartdoll Head</option>
+                        <option value="Face-Up + Dollfie Dream Head">Face-Up + Dollfie Dream Head</option>
+                    </select>
+                    <div class="space-y-4">
+                        <div class="flex gap-4 flex-wrap text-xs font-bold">
+                            <label><input type="checkbox" class="faceup-addon" value="Eyelashes"> Eyelashes</label>
+                            <label><input type="checkbox" class="faceup-addon" value="Piercings"> Piercings</label>
+                            <label><input type="checkbox" class="faceup-addon" value="Modifications"> Modifications</label>
+                        </div>
+                        <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
+                        <input type="file" id="faceupFiles" multiple class="text-[10px]">
+                    </div>
+                </div>
 
-<div class="glass-card p-6 space-y-4 border-l-4 border-emerald-400">
-    <h3 class="font-black text-emerald-500 uppercase text-xs tracking-widest">2. Manicure/Pedicure Details</h3>
-    <select id="maniBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white" onchange="toggleCategory('maniFields', this.value)">
-        <option value="None">No Manicure Needed</option>
-        <option value="Standard Manicure">Standard Manicure</option>
-        <option value="Acrylic Manicure">Acrylic Manicure</option>
-        <option value="Smartdoll Decora Hands">Smartdoll Decora Hands</option>
-        <option value="Dollfie Dream Decora Hands">Dollfie Dream Decora Hands</option>
-    </select>
-    
-    <div id="maniFields" class="hidden space-y-4 pt-4 animate-fadeIn">
-        <label class="text-xs flex items-center gap-2"><input type="checkbox" id="pediAddon" value="Pedicure"> Include Pedicure?</label>
-        <textarea id="maniNotes" placeholder="Nail colors, patterns, or decora themes..." class="w-full p-3 text-sm rounded-xl border border-pink-50 h-24"></textarea>
-        <input type="file" id="maniFiles" multiple class="text-[10px]">
-    </div>
-</div>
-                <div class="glass-card p-8 border-2 border-pink-200 bg-pink-50/20 space-y-4">
-    <h2 class="text-xl font-black tracking-tighter flex items-center gap-2">
-        <span>📜</span> Terms of Service
-    </h2>
-    
-    <div class="h-48 overflow-y-auto p-4 bg-white/80 rounded-xl border border-pink-100 text-[11px] leading-relaxed text-gray-600 shadow-inner">
-        <p class="font-bold mb-2">Please read carefully before booking:</p>
-        <ul class="list-disc pl-4 space-y-2">
-            <li><strong>Payment:</strong> Full payment or the first installment of layaway must be made within 48 hours of invoice No work can commennce without payment.</li>
-            <li><strong>Refunds:</strong> No refunds are provided once work has commenced on the doll.</li>
-            <li><strong>Shipping:</strong> Clients are responsible for all shipping costs and customs fees. Studio is not liable for loss or damage during transit.</li>
-            <li><strong>Artist Creative Freedom:</strong> By booking, you acknowledge the HanafubukiDoll style. Major changes requested after the face-up is complete may incur extra fees.</li>
-            <li><strong>Materials:</strong> We use high-quality and professional pastels/paints and seal with MSC UV Cut to help with the longevity of your doll. We are not responsible for natural colour changes due to aging or stains from dark clothing.</li>
-            <li><strong>Communication:</strong> Updates are provided via email or social media at major milestones (Base, Detail, Finish).</li>
-        </ul>
-    </div>
+                <div id="manicures-section" class="glass-card p-6 service-block border-l-4 border-emerald-400">
+                    <h3 class="font-black text-emerald-500 uppercase text-[10px] tracking-widest mb-4">Manicures</h3>
+                    <select id="maniBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
+                        <option value="None">No Manicure Needed</option>
+                        <option value="Standard Manicure">Standard Manicure</option>
+                        <option value="Acrylic Manicure">Acrylic Manicure</option>
+                        <option value="Smartdoll Decora Hands">Smartdoll Decora Hands</option>
+                        <option value="Dollfie Dream Decora Hands">Dollfie Dream Decora Hands</option>
+                    </select>
+                    <div class="space-y-4">
+                        <label class="text-xs font-bold"><input type="checkbox" id="pediAddon" value="Pedicure"> Include Pedicure?</label>
+                        <textarea id="maniNotes" placeholder="Nail colors/themes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
+                        <input type="file" id="maniFiles" multiple class="text-[10px]">
+                    </div>
+                </div>
 
-    <label class="flex items-start gap-3 cursor-pointer group">
-        <input type="checkbox" id="tosCheck" required class="mt-1 w-5 h-5 accent-pink-500 rounded border-pink-300">
-        <span class="text-xs font-bold text-gray-700 group-hover:text-pink-600 transition-colors">
-            I have read and agree to the HanafubukiDoll Terms of Service. ♡
-        </span>
-    </label>
-</div>
+                <div id="eyes-section" class="glass-card p-6 service-block border-l-4 border-blue-400">
+                    <h3 class="font-black text-blue-500 uppercase text-[10px] tracking-widest mb-4">Follow-Me Eyes</h3>
+                    <select id="eyeBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
+                        <option value="None">No Eyes Needed</option>
+                        <option value="Follow-Me Eyes">Follow-Me Eyes</option>
+                        <option value="Glitter Follow-Me Eyes">Glitter Follow-Me Eyes</option>
+                        <option value="Custom Follow-Me Eyes">Custom Follow-Me Eyes</option>
+                    </select>
+                    <textarea id="eyeNotes" placeholder="Eye color/detail requests..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
+                    <input type="file" id="eyeFiles" multiple class="text-[10px]">
+                </div>
+            </div>
 
-                <button type="submit" id="submitBtn" class="w-full bg-[var(--accent-pink)] text-white py-5 rounded-3xl font-black text-lg shadow-xl hover:brightness-110 active:scale-95 transition-all">
+            <div class="glass-card p-8 space-y-6">
+                <div class="p-4 bg-pink-50 rounded-xl border border-pink-100 text-[11px] h-32 overflow-y-auto text-gray-500">
+                    <p class="font-bold mb-2">Terms of Service:</p>
+                    <p>All deposits are non-refundable. Shipping is the responsibility of the client. Artist has creative freedom within the discussed concept...</p>
+                </div>
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" id="tosCheck" required class="mt-1 w-5 h-5 accent-pink-500">
+                    <span class="text-xs font-bold">I agree to the Terms of Service and understand the non-refundable deposit. ♡</span>
+                </label>
+                <button type="submit" id="submitBtn" class="w-full bg-pink-500 text-white py-5 rounded-3xl font-black shadow-xl hover:scale-[1.02] transition-transform">
                     Submit Commission Request ✨
                 </button>
             </div>
@@ -125,81 +122,106 @@
         const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // 1. Initial Load: Check what services are live
+        async function checkServiceAvailability() {
+            const { data: settings } = await _supabase.from('studio_settings').select('*');
+            settings.forEach(service => {
+                const container = document.getElementById(`${service.id}-section`);
+                if (!service.is_live && container) {
+                    container.innerHTML = `
+                        <div class="p-6 bg-pink-50/50 rounded-2xl border-2 border-dashed border-pink-200 text-center animate-fadeIn">
+                            <p class="text-[10px] font-black uppercase text-pink-400 mb-2">🌸 ${service.id} is currently full</p>
+                            <p class="text-xs mb-4 text-gray-600">Dani & Jas are not taking new orders for this service right now. Join the waitlist to be notified!</p>
+                            <div class="flex gap-2 max-w-sm mx-auto">
+                                <input type="email" id="wait-email-${service.id}" placeholder="your@email.com" class="flex-1 p-3 rounded-xl border border-pink-100 text-sm outline-none">
+                                <button type="button" onclick="joinWaitlist('${service.id}')" class="bg-pink-400 text-white px-4 rounded-xl font-bold text-xs hover:bg-pink-500 transition-colors">Join</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        async function joinWaitlist(serviceName) {
+            const email = document.getElementById(`wait-email-${serviceName}`).value;
+            if (!email || !email.includes('@')) return alert("Please enter a valid email! ♡");
+            
+            const { error } = await _supabase.from('waitlist').insert([{ email, service_requested: serviceName }]);
+            if (!error) alert("You've been added to the waitlist! We'll be in touch. ♡");
+        }
+
         function startBooking() {
             document.getElementById('entryChoice').classList.add('step-hidden');
             document.getElementById('bookingForm').classList.remove('step-hidden');
         }
 
-        function toggleAddons(id, value) {
-            const el = document.getElementById(id);
-            if (value !== 'None') el.classList.remove('step-hidden');
-            else el.classList.add('step-hidden');
-        }
+        // 2. Submit Logic
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Sending... ✨";
+            btn.disabled = true;
 
-        document.getElementById('fileUpload').addEventListener('change', (e) => {
-            document.getElementById('fileCount').innerText = `${e.target.files.length} files selected`;
+            // Helper for Image Uploads (Simplified for the example)
+            const uploadSet = async (fileInputId) => {
+                const files = document.getElementById(fileInputId)?.files;
+                if (!files || files.length === 0) return [];
+                const urls = [];
+                for (const file of files) {
+                    const path = `refs/${Date.now()}-${file.name}`;
+                    const { data } = await _supabase.storage.from('references').upload(path, file);
+                    if (data) {
+                        const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
+                        urls.push(pUrl.publicUrl);
+                    }
+                }
+                return urls;
+            };
+
+            // Gather Data
+            const faceupDetails = {
+                base: document.getElementById('faceupBase')?.value || 'Waitlist',
+                addons: Array.from(document.querySelectorAll('.faceup-addon:checked')).map(el => el.value),
+                notes: document.getElementById('faceupNotes')?.value || '',
+                images: await uploadSet('faceupFiles')
+            };
+
+            const maniDetails = {
+                base: document.getElementById('maniBase')?.value || 'Waitlist',
+                addons: document.getElementById('pediAddon')?.checked ? ['Pedicure'] : [],
+                notes: document.getElementById('maniNotes')?.value || '',
+                images: await uploadSet('maniFiles')
+            };
+
+            const eyeDetails = {
+                base: document.getElementById('eyeBase')?.value || 'Waitlist',
+                notes: document.getElementById('eyeNotes')?.value || '',
+                images: await uploadSet('eyeFiles')
+            };
+
+            const { error } = await _supabase.from('commissions').insert([{
+                customer_name: document.getElementById('custName').value,
+                customer_email: document.getElementById('custEmail').value,
+                social_handle: document.getElementById('socialHandle').value,
+                doll_sculpt: document.getElementById('dollSculpt').value,
+                faceup_details: faceupDetails,
+                manicure_details: maniDetails,
+                eye_details: eyeDetails,
+                tos_agreed: true,
+                status: 'inquiry'
+            }]);
+
+            if (!error) {
+                alert("Request Sent Successfully! ♡");
+                window.location.reload();
+            } else {
+                alert("Error: " + error.message);
+                btn.disabled = false;
+                btn.innerText = "Submit Commission Request ✨";
+            }
         });
 
-       document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // Safety check: Is ToS checked?
-    if (!document.getElementById('tosCheck').checked) {
-        alert("Please agree to the Terms of Service to continue.");
-        return;
-    }
-
-    const btn = document.getElementById('submitBtn');
-    btn.innerText = "Processing Agreement... ✨";
-    btn.disabled = true;
-
-            // 1. Collect all selected services into one array
-            const selectedServices = [];
-            
-            // Add Base choices if not None
-            if(document.getElementById('faceupBase').value !== 'None') selectedServices.push(document.getElementById('faceupBase').value);
-            if(document.getElementById('maniBase').value !== 'None') selectedServices.push(document.getElementById('maniBase').value);
-            if(document.getElementById('eyeBase').value !== 'None') selectedServices.push(document.getElementById('eyeBase').value);
-
-            // Add Checkbox choices
-            document.querySelectorAll('.service-check:checked').forEach(check => {
-                selectedServices.push(check.value);
-            });
-
-            // 2. Handle Image Uploads (Simplified for brevity, assuming existing bucket logic)
-            const files = document.getElementById('fileUpload').files;
-            const imageUrls = [];
-            for (const file of files) {
-                const fileName = `${Date.now()}-${file.name}`;
-                const { data } = await _supabase.storage.from('references').upload(fileName, file);
-                if (data) {
-                    const { data: urlData } = _supabase.storage.from('references').getPublicUrl(fileName);
-                    imageUrls.push(urlData.publicUrl);
-                }
-            }
-
-            // 3. Send to Supabase (Including ToS)
-    const { error } = await _supabase.from('commissions').insert([{
-        customer_name: document.getElementById('custName').value,
-        customer_email: document.getElementById('custEmail').value,
-        social_handle: document.getElementById('socialHandle').value,
-        doll_sculpt: document.getElementById('dollSculpt').value,
-        services_list: selectedServices,
-        notes: document.getElementById('designNotes').value,
-        image_urls: imageUrls,
-        tos_agreed: true, // Mark that they agreed
-        status: 'inquiry'
-    }]);
-
-    if (!error) {
-        alert("Success! Your request and agreement have been logged. ♡");
-        window.location.reload();
-    } else {
-        alert("Error: " + error.message);
-        btn.disabled = false;
-        btn.innerText = "Submit Commission Request ✨";
-    }
-});
+        window.onload = checkServiceAvailability;
     </script>
 </body>
 </html>
