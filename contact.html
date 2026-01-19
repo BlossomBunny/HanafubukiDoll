@@ -14,48 +14,23 @@
         .service-block { transition: all 0.3s ease; }
         .animate-fadeIn { animation: fadeIn 0.5s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Global Header Helper Classes */
-        .studio-header {
-            width: 100%;
-            padding: 1.5rem 2.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid #fce7f3;
-        }
-        .nav-link {
-            font-size: 10px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #1f2937;
-            transition: color 0.2s;
-        }
-        .nav-link:hover { color: #f472b6; }
-    </style>
-</head>
+             
     
 <body class="bg-[#fdfbfb] min-h-screen">
     <div class="mesh-bg"></div>
 
-    <header class="studio-header">
-        <a href="index.html" class="flex items-center gap-3">
-            <span class="text-2xl bounce-bunny">🐰</span>
-            <h1 class="font-black text-xl tracking-tighter uppercase italic text-gray-800">HanafubukiDoll</h1>
-        </a>
-        
-        <nav class="flex items-center gap-6">
-            <a href="index.html" class="nav-link">Home</a>
-            <a href="contact.html" class="nav-link text-pink-500">Book a Slot</a>
-            <a href="admin.html" class="nav-link opacity-20 hover:opacity-100 transition-opacity">Staff 🔒</a>
-        </nav>
-    </header>
+   <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="text-xl md:text-2xl font-black tracking-tighter">
+            <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
+        </div>
+        <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+            <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
+            <a href="services.html" class="nav-btn nav-btn-mint">Services ♡</a>
+            <a href="contact.html" class="nav-btn nav-btn-pink">Contact ♡</a>
+        </div>
+    </div>
+</nav>
         
     <main class="max-w-3xl mx-auto relative z-10 p-6 md:p-10">
 
