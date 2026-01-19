@@ -117,6 +117,7 @@
         <div id="calculator" class="tab-content animate-fadeIn">
             <div class="glass-card p-6 md:p-12 shadow-2xl">
                 <div class="space-y-10">
+                    
                     <section>
                         <h4 class="text-xs font-bold uppercase tracking-widest mb-4 text-[var(--accent-pink)]">1. Core Face-Up Service</h4>
                         <div class="grid grid-cols-1 gap-3">
@@ -140,19 +141,22 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/10"><span>Ear Piercings</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="5" onchange="calculateTotal()"> +£5</span></label>
                             <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/10"><span>Lash Installation</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="15" onchange="calculateTotal()"> +£15</span></label>
-                            <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/10"><span>Face Mods (Starting)</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="30" onchange="calculateTotal()"> +£30</span></label>
+                            <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/10 sm:col-span-2"><span>Face Mods (Starting)</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="30" onchange="calculateTotal()"> +£30</span></label>
                         </div>
                     </section>
 
                     <section>
-                        <h4 class="text-xs font-bold uppercase tracking-widest mb-4 text-[var(--accent-pink)]">3. Hands, Eyes & Body</h4>
+                        <h4 class="text-xs font-bold uppercase tracking-widest mb-4 text-[var(--accent-pink)]">3. Hands & Eyes</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20"><span>Manicure (You provide hands)</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="30" onchange="calculateTotal()"> £30</span></label>
-                            <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20"><span>Matching Pedicure</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="15" onchange="calculateTotal()"> +£15</span></label>
-                            <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20"><span>SmartDoll Manicure (Hands Incl)</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="50" onchange="calculateTotal()"> £50</span></label>
-                            <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20"><span>Matching Pedicure</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="15" onchange="calculateTotal()"> +£15</span></label>
-                            <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20"><span>Dollfie Dream Manicure (Hands Incl)</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="60" onchange="calculateTotal()"> £60</span></label>
-                            <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20"><span>Matching Pedicure</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="15" onchange="calculateTotal()"> +£15</span></label>
+                            <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20"><span>Manicure (You provide hands)</span><span class="font-bold"><input type="checkbox" class="mani-option addon-price ml-2" value="30" onchange="togglePedi(); calculateTotal()"> £30</span></label>
+                            <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20"><span>SmartDoll Manicure (Hands Incl)</span><span class="font-bold"><input type="checkbox" class="mani-option addon-price ml-2" value="50" onchange="togglePedi(); calculateTotal()"> £50</span></label>
+                            <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20"><span>Dollfie Dream Manicure (Hands Incl)</span><span class="font-bold"><input type="checkbox" class="mani-option addon-price ml-2" value="60" onchange="togglePedi(); calculateTotal()"> £60</span></label>
+                            
+                            <label id="pediContainer" class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20 disabled-section">
+                                <span class="flex flex-col"><span class="text-sm font-bold">Add Matching Pedicure</span><span class="text-[10px] opacity-60">Requires Manicure</span></span>
+                                <span class="font-bold"><input type="checkbox" id="pediCheckbox" class="addon-price ml-2" value="15" onchange="calculateTotal()"> +£15</span>
+                            </label>
+
                             <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20"><span>Standard Follow-me Eyes</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="10" onchange="calculateTotal()"> £10</span></label>
                             <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20"><span>Glitter Follow-me eyes</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="15" onchange="calculateTotal()"> £15</span></label>
                             <label class="flex justify-between p-4 border border-pink-50 rounded-xl bg-white/20 sm:col-span-2"><span>Custom Follow-me Eyes</span><span class="font-bold"><input type="checkbox" class="addon-price ml-2" value="20" onchange="calculateTotal()"> £20</span></label>
@@ -172,7 +176,6 @@
                 </div>
             </div>
         </div>
-    </main>
 
     <script>
         function openTab(tabName) {
@@ -182,13 +185,29 @@
             event.currentTarget.classList.add('active');
         }
 
+        // Logic for Head Extras
         function toggleAddons() {
             const addonSection = document.getElementById('addonSection');
             const anyChecked = Array.from(document.querySelectorAll('.primary-service')).some(c => c.checked);
-            if (anyChecked) addonSection.classList.remove('disabled-section');
-            else { 
-                addonSection.classList.add('disabled-section'); 
+            if (anyChecked) {
+                addonSection.classList.remove('disabled-section');
+            } else {
+                addonSection.classList.add('disabled-section');
                 addonSection.querySelectorAll('input').forEach(s => s.checked = false);
+            }
+        }
+
+        // Logic for Pedicure
+        function togglePedi() {
+            const pediContainer = document.getElementById('pediContainer');
+            const pediCheckbox = document.getElementById('pediCheckbox');
+            const anyManiChecked = Array.from(document.querySelectorAll('.mani-option')).some(c => c.checked);
+            
+            if (anyManiChecked) {
+                pediContainer.classList.remove('disabled-section');
+            } else {
+                pediContainer.classList.add('disabled-section');
+                pediCheckbox.checked = false;
             }
         }
 
@@ -200,8 +219,13 @@
 
         function resetCalc() {
             document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-            toggleAddons(); calculateTotal();
+            toggleAddons();
+            togglePedi();
+            calculateTotal();
         }
+
+        // Blossom script remains the same...
+    </script>
 
         const container = document.getElementById('petals');
         for (let i = 0; i < 15; i++) {
