@@ -3,71 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact & Quotes - HanafubukiDoll</title>
+    <title>Contact - HanafubukiDoll</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        .form-step { display: none; }
+        .form-step.active { display: block; }
+        .progress-bar { transition: width 0.4s ease; }
+    </style>
 </head>
 <body>
     <div class="mesh-bg"></div>
     <div class="petals-container" id="petals"></div>
 
     <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="text-xl md:text-2xl font-black tracking-tighter">
-    <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
-</div>
-        
-        <div class="flex flex-wrap justify-center gap-2 md:gap-4">
-            <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
-            <a href="services.html" class="nav-btn nav-btn-mint">Services ♡</a>
-            <a href="contact.html" class="nav-btn nav-btn-pink">Contact ♡</a>
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-xl md:text-2xl font-black tracking-tighter">
+                <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
+                <a href="services.html" class="nav-btn nav-btn-mint">Services ♡</a>
+                <a href="contact.html" class="nav-btn nav-btn-pink">Contact ♡</a>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-    <main class="max-w-4xl mx-auto px-6 py-20">
-        <section class="text-center mb-16">
-            <h1 class="text-5xl font-extrabold mb-6">Contact & Quotes</h1>
-            <p class="text-xl text-[var(--text-muted)]">We would love to help bring your dream doll to life! ♡</p>
-        </section>
+    <main class="max-w-3xl mx-auto px-6 py-16">
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-extrabold mb-4 tracking-tighter">Commission Inquiry</h1>
+            <p class="text-[var(--text-muted)]">Let's bring your character to life ♡</p>
+        </div>
 
-        <section class="glass-card p-10 md:p-16">
-            <div class="text-center mb-12">
-                <p class="text-lg text-[var(--text-main)] font-bold mb-4">Currently: Commissions Closed ♡</p>
-                <p class="text-[var(--text-muted)]">While we are not currently taking new work, feel free to reach out with any general enquiries or to be notified when we reopen!</p>
-            </div>
+        <div class="w-full bg-white/30 h-2 rounded-full mb-12 overflow-hidden">
+            <div id="progress" class="bg-[var(--accent-pink)] h-full progress-bar" style="width: 25%;"></div>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-center">
-                <div class="p-8 border-2 border-[var(--accent-mint)] rounded-3xl">
-                    <h3 class="text-2xl font-bold mb-4">Email Us</h3>
-                    <p class="text-[var(--text-muted)] mb-4">Direct enquiries and quote requests</p>
-                    <a href="mailto:hello@hanafubukidoll.com" class="text-[var(--accent-pink)] font-bold underline">hello@hanafubukidoll.com</a>
+        <div class="glass-card p-8 md:p-12 shadow-2xl relative">
+            <form id="commissionForm">
+                
+                <div class="form-step active" id="step1">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><span>1.</span> Personal Info ♡</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-2">Name / Nickname</label>
+                            <input type="text" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="Your name">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-2">Email Address</label>
+                            <input type="email" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="hello@example.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-2">Social Media Handle (IG/Twitter)</label>
+                            <input type="text" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="@yourhandle">
+                        </div>
+                    </div>
                 </div>
-                <div class="p-8 border-2 border-[var(--accent-pink)] rounded-3xl">
-                    <h3 class="text-2xl font-bold mb-4">Instagram</h3>
-                    <p class="text-[var(--text-muted)] mb-4">Follow for updates and DMs</p>
-                    <a href="#" class="text-[var(--accent-pink)] font-bold underline">@HanafubukiDoll</a>
+
+                <div class="form-step" id="step2">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><span>2.</span> The Doll ♡</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-2">Doll Sculpt & Company</label>
+                            <input type="text" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="e.g. Smartdoll Mirai">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-2">Skintone</label>
+                            <select class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300">
+                                <option>Cinnamon / Tea</option>
+                                <option>Milk / White</option>
+                                <option>Cocoa / Tan</option>
+                                <option>Other (Please specify in notes)</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </section>
+
+                <div class="form-step" id="step3">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><span>3.</span> Aesthetic & Vision ♡</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-2">Character Personality / Vibe</label>
+                            <textarea class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300 h-32" placeholder="Shy, grumpy, energetic, etc..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-2">Reference Links (Pinterest/Imgur)</label>
+                            <input type="text" class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300" placeholder="Link to moodboard">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-step" id="step4">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><span>4.</span> Final Details ♡</h2>
+                    <div class="space-y-4">
+                        <p class="text-sm text-[var(--text-muted)] mb-4">Are there any specific "Must-Haves" or "Don'ts"? (e.g. No heavy blushing, specific glitter placement, etc.)</p>
+                        <textarea class="w-full p-4 rounded-xl border border-pink-100 bg-white/50 focus:outline-pink-300 h-32" placeholder="Your specific requests..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-12 pt-8 border-t border-pink-50">
+                    <button type="button" id="prevBtn" onclick="changeStep(-1)" class="nav-btn nav-btn-mint opacity-0 pointer-events-none transition-opacity">Back</button>
+                    <button type="button" id="nextBtn" onclick="changeStep(1)" class="nav-btn nav-btn-pink">Next Step</button>
+                </div>
+            </form>
+        </div>
     </main>
 
-    <footer class="py-20 text-center border-t border-pink-50">
-        <p class="text-[var(--text-muted)] text-sm">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
-    </footer>
-
     <script>
-        const container = document.getElementById('petals');
-        for (let i = 0; i < 15; i++) {
-            const p = document.createElement('div');
-            p.className = 'petal';
-            p.innerText = '🌸';
-            p.style.left = Math.random() * 100 + 'vw';
-            p.style.fontSize = (Math.random() * 20 + 15) + 'px';
-            p.style.animationDuration = (Math.random() * 10 + 15) + 's';
-            p.style.animationDelay = (Math.random() * -20) + 's';
-            container.appendChild(p);
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        function changeStep(n) {
+            const steps = document.querySelectorAll(".form-step");
+            
+            // Hide current step
+            steps[currentStep - 1].classList.remove("active");
+            
+            // Update step number
+            currentStep += n;
+
+            // Show new step
+            steps[currentStep - 1].classList.add("active");
+
+            // Update Progress Bar
+            document.getElementById("progress").style.width = (currentStep / totalSteps) * 100 + "%";
+
+            // Button visibility logic
+            document.getElementById("prevBtn").style.opacity = currentStep === 1 ? "0" : "1";
+            document.getElementById("prevBtn").style.pointerEvents = currentStep === 1 ? "none" : "auto";
+            
+            if (currentStep === totalSteps) {
+                document.getElementById("nextBtn").innerText = "Submit Inquiry ♡";
+                document.getElementById("nextBtn").classList.add("nav-btn-mint");
+                document.getElementById("nextBtn").classList.remove("nav-btn-pink");
+            } else {
+                document.getElementById("nextBtn").innerText = "Next Step";
+                document.getElementById("nextBtn").classList.add("nav-btn-pink");
+                document.getElementById("nextBtn").classList.remove("nav-btn-mint");
+            }
         }
     </script>
 </body>
