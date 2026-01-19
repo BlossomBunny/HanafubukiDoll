@@ -178,7 +178,7 @@
                     container.innerHTML = `
                         <div class="p-6 bg-pink-50/50 rounded-2xl border-2 border-dashed border-pink-200 text-center animate-fadeIn">
                             <p class="text-[10px] font-black uppercase text-pink-400 mb-2">🌸 ${service.id} is currently full</p>
-                            <p class="text-xs mb-4 text-gray-600 font-medium">Dani & Jas are not taking new orders for this service right now. Join the waitlist to be notified!</p>
+                            <p class="text-xs mb-4 text-gray-600 font-medium">Sorry, We are not taking new orders for this service right now. Join the waitlist to be notified!</p>
                             <div class="flex gap-2 max-w-sm mx-auto">
                                 <input type="email" id="wait-email-${service.id}" placeholder="your@email.com" class="flex-1 p-3 rounded-xl border border-pink-100 text-sm outline-none focus:ring-2 ring-pink-100">
                                 <button type="button" onclick="joinWaitlist('${service.id}')" class="bg-pink-400 text-white px-4 rounded-xl font-bold text-xs hover:bg-pink-500 transition-colors">Join</button>
@@ -243,16 +243,19 @@
             };
 
             const { error } = await _supabase.from('commissions').insert([{
-                customer_name: document.getElementById('custName').value,
-                customer_email: document.getElementById('custEmail').value,
-                social_handle: document.getElementById('socialHandle').value,
-                doll_sculpt: document.getElementById('dollSculpt').value,
-                faceup_details: faceupDetails,
-                manicure_details: maniDetails,
-                eye_details: eyeDetails,
-                tos_agreed: true,
-                status: 'inquiry'
-            }]);
+    customer_name: document.getElementById('custName').value,
+    customer_email: document.getElementById('custEmail').value,
+    social_handle: document.getElementById('socialHandle').value,
+    country: document.getElementById('Country').value, // NEW
+    doll_company: document.getElementById('dollCompany').value, // NEW
+    doll_sculpt: document.getElementById('dollSculpt').value,
+    doll_skintone: document.getElementById('dollSkintone').value, // NEW
+    faceup_details: faceupDetails,
+    manicure_details: maniDetails,
+    eye_details: eyeDetails,
+    tos_agreed: true,
+    status: 'inquiry'
+}]);
 
             if (!error) {
                 alert("Request Sent Successfully! ♡");
