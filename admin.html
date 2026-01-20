@@ -38,9 +38,23 @@
         <button onclick="handleLogin()" id="loginBtn" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:scale-[1.02] transition-all">Unlock Studio ♡</button>
     </div>
 
-    <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
+   <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
     <div id="view-workbench" class="space-y-4">
-        <h2 class="text-3xl font-black italic mb-8">Client Inbox</h2>
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+            <h2 class="text-3xl font-black italic">Client Inbox</h2>
+            
+            <div class="flex bg-gray-100 p-1 rounded-2xl border border-gray-200">
+                <button onclick="renderWorkbench(false)" id="tab-live" 
+                    class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500">
+                    Live
+                </button>
+                <button onclick="renderWorkbench(true)" id="tab-archived" 
+                    class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400">
+                    Archived
+                </button>
+            </div>
+        </div>
+
         <div id="commissionList" class="space-y-2"></div>
     </div>
 
@@ -62,7 +76,7 @@
     </div>
     <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-8 bg-[#fafafa]"></div>
     <div class="p-6 border-t bg-white flex gap-4">
-        <button onclick="handleDelete()" class="text-[10px] font-black uppercase text-red-400 hover:text-red-600">Archive Order</button>
+        <button onclick="handleArchive()" class="text-[10px] font-black uppercase text-red-400 hover:text-red-600">Archive Order</button>
         <button id="saveBtn" class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-colors">Save All Changes ♡</button>
     </div>
 </div>
@@ -129,10 +143,25 @@ async function handleLogin() {
     }
 
     // --- WORKBENCH (MINIMIZED SCROLL) ---
-    async function renderWorkbench() {
-    const { data } = await _supabase.from('commissions').select('*').eq('archived', false).order('created_at', { ascending: false });
-    const container = document.getElementById('commissionList');
+   async function renderWorkbench(showArchived = false) {
+    // 1. Update the button colors so you know which tab is active
+    const liveBtn = document.getElementById('tab-live');
+    const archBtn = document.getElementById('tab-archived');
     
+    if (showArchived) {
+        archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
+        liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
+    } else {
+        liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
+        archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
+    }
+
+    // 2. Fetch data based on the tab
+    const { data } = await _supabase.from('commissions')
+        .select('*')
+        .eq('archived', showArchived)
+        .order('created_at', { ascending: false });
+       
     // Status Color Map
  const statusColors = {
     'Enquiry': 'bg-blue-50 text-blue-500',
@@ -241,32 +270,40 @@ async function handleLogin() {
             </section>
 
             <section class="bg-pink-50/50 p-6 rounded-[2rem] border border-pink-100 space-y-4">
-                <h3 class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Financial Records</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                        <label class="text-[9px] font-bold">Method</label>
-                        <select id="payMethod" class="w-full p-2 bg-white border border-pink-100 rounded-lg text-xs">
-                            <option value="Paid" ${job.payment_method === 'Paid' ? 'selected' : ''}>Paid</option>
-                            <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
-                            <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
-                            <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-bold">Total Price</label>
-                        <input type="number" id="totalPrice" value="${job.total_price || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs">
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-bold">Amount Paid</label>
-                        <input type="number" id="amountPaid" value="${job.amount_paid || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs">
-                    </div>
-                    <div class="flex flex-col justify-center items-center">
-                        <label class="text-[9px] font-bold uppercase">Shipping</label>
-                        <input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-5 h-5 accent-pink-500 mt-1">
-                    </div>
-                </div>
-            </section>
-
+    <div class="flex justify-between items-center mb-2">
+        <h3 class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Financial Records</h3>
+        <div class="text-right">
+            <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Balance Due</p>
+            <p class="text-lg font-black ${ (job.total_price - job.amount_paid) > 0 ? 'text-rose-500' : 'text-emerald-500' }">
+                $${ Math.max(0, (job.total_price || 0) - (job.amount_paid || 0)).toFixed(2) }
+            </p>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div>
+            <label class="text-[9px] font-bold">Method</label>
+            <select id="payMethod" class="w-full p-2 bg-white border border-pink-100 rounded-lg text-xs font-bold">
+                <option value="Paid" ${job.payment_method === 'Paid' ? 'selected' : ''}>Paid</option>
+                <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
+                <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
+                <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
+            </select>
+        </div>
+        <div>
+            <label class="text-[9px] font-bold">Total Price</label>
+            <input type="number" id="totalPrice" value="${job.total_price || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs font-bold">
+        </div>
+        <div>
+            <label class="text-[9px] font-bold">Amount Paid</label>
+            <input type="number" id="amountPaid" value="${job.amount_paid || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs font-bold">
+        </div>
+        <div class="flex flex-col justify-center items-center bg-white/50 rounded-xl border border-pink-100/50">
+            <label class="text-[9px] font-black uppercase text-pink-300">Shipping</label>
+            <input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-5 h-5 accent-pink-500 mt-1">
+        </div>
+    </div>
+</section>
            ${(job.faceup_details && job.faceup_details.base !== "None") ? 
     renderServiceBlock('Faceup', job.faceup_details, ['To be Cleaned', 'Blank', 'Sealed', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
 
@@ -469,6 +506,67 @@ if (current.eye_details && current.eye_details.base !== "None") {
     const img = document.getElementById('lightboxImg');
     img.src = url;
     lightbox.classList.remove('hidden');
+}
+    async function handleArchive() {
+    if (!confirm("Archive this order? This will permanently delete all reference images to save studio space. The records will move to your 'Archived' tab. ♡")) return;
+
+    try {
+        // 1. Fetch the full job data one last time to get image URLs
+        const { data: job, error: fetchError } = await _supabase
+            .from('commissions')
+            .select('*')
+            .eq('id', activeJobId)
+            .single();
+
+        if (fetchError) throw fetchError;
+
+        // 2. Identify all image URLs stored in the JSON fields
+        const allImages = [
+            ...(job.faceup_details?.images || []),
+            ...(job.manicure_details?.images || []),
+            ...(job.eye_details?.images || [])
+        ];
+
+        // 3. Delete those files from the Supabase Storage Bucket
+        if (allImages.length > 0) {
+            const pathsToDelete = allImages.map(url => {
+                // This extracts the specific filename from your public URL
+                // It assumes your files are in a folder called 'refs' inside the 'references' bucket
+                return url.split('references/')[1];
+            }).filter(path => path); // Safety check to ensure path exists
+
+            if (pathsToDelete.length > 0) {
+                const { error: storageError } = await _supabase.storage
+                    .from('references')
+                    .remove(pathsToDelete);
+                
+                if (storageError) console.warn("Storage cleanup failed, but proceeding with archive:", storageError);
+            }
+        }
+
+        // 4. Move the record to the Archive Tab & Wipe the image arrays
+        const { error: updateError } = await _supabase
+            .from('commissions')
+            .update({ 
+                archived: true,
+                // We keep the notes/status, but set images to empty array to save UI space
+                faceup_details: job.faceup_details ? { ...job.faceup_details, images: [] } : null,
+                manicure_details: job.manicure_details ? { ...job.manicure_details, images: [] } : null,
+                eye_details: job.eye_details ? { ...job.eye_details, images: [] } : null
+            })
+            .eq('id', activeJobId);
+
+        if (updateError) throw updateError;
+
+        // 5. Success UI Update
+        closeDrawer();
+        renderWorkbench(false); // Refresh the 'Live' inbox
+        alert("Studio space cleared! Order has been moved to Archives. ✨");
+
+    } catch (err) {
+        console.error("Archive Error:", err);
+        alert("Error: " + err.message);
+    }
 }
 </script>
     <div id="lightbox" onclick="this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 cursor-zoom-out">
