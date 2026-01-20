@@ -210,71 +210,80 @@
         }
 
         document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.innerText = "Sending... ✨";
-            btn.disabled = true;
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.innerText = "Sending... ✨";
+    btn.disabled = true;
 
-            const uploadSet = async (fileInputId) => {
-                const files = document.getElementById(fileInputId)?.files;
-                if (!files || files.length === 0) return [];
-                const urls = [];
-                for (const file of files) {
-                    const path = `refs/${Date.now()}-${file.name}`;
-                    const { data } = await _supabase.storage.from('references').upload(path, file);
-                    if (data) {
-                        const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
-                        urls.push(pUrl.publicUrl);
-                    }
-                }
-                return urls;
-            };
-
-            const faceupDetails = {
-                base: document.getElementById('faceupBase')?.value || 'Waitlist',
-                addons: Array.from(document.querySelectorAll('.faceup-addon:checked')).map(el => el.value),
-                notes: document.getElementById('faceupNotes')?.value || '',
-                images: await uploadSet('faceupFiles')
-            };
-
-            const maniDetails = {
-                base: document.getElementById('maniBase')?.value || 'Waitlist',
-                addons: document.getElementById('pediAddon')?.checked ? ['Pedicure'] : [],
-                notes: document.getElementById('maniNotes')?.value || '',
-                images: await uploadSet('maniFiles')
-            };
-
-            const eyeDetails = {
-                base: document.getElementById('eyeBase')?.value || 'Waitlist',
-                notes: document.getElementById('eyeNotes')?.value || '',
-                images: await uploadSet('eyeFiles')
-            };
-
-            const { error } = await _supabase.from('commissions').insert([{
-    customer_name: document.getElementById('custName').value,
-    customer_email: document.getElementById('custEmail').value,
-    social_handle: document.getElementById('socialHandle').value,
-    country: document.getElementById('Country').value, // NEW
-    doll_company: document.getElementById('dollCompany').value, // NEW
-    doll_sculpt: document.getElementById('dollSculpt').value,
-    doll_skintone: document.getElementById('dollSkintone').value, // NEW
-    faceup_details: faceupDetails,
-    manicure_details: maniDetails,
-    eye_details: eyeDetails,
-    tos_agreed: true,
-    status: 'inquiry'
-}]);
-
-            if (!error) {
-                alert("Request Sent Successfully! ♡");
-                window.location.href = "index.html";
-            } else {
-                alert("Error: " + error.message);
-                btn.disabled = false;
-                btn.innerText = "Submit Commission Request ✨";
+    // Helper function for uploads
+    const uploadSet = async (fileInputId) => {
+        const files = document.getElementById(fileInputId)?.files;
+        if (!files || files.length === 0) return [];
+        const urls = [];
+        for (const file of files) {
+            const path = `refs/${Date.now()}-${file.name}`;
+            const { data } = await _supabase.storage.from('references').upload(path, file);
+            if (data) {
+                const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
+                urls.push(pUrl.publicUrl);
             }
-        });
+        }
+        return urls;
+    };
 
+    // --- CLEAN DATA LOGIC ---
+
+    // 1. Faceup: Only create object if base is not 'None'
+    const fBase = document.getElementById('faceupBase')?.value;
+    const faceupDetails = (fBase && fBase !== "None") ? {
+        base: fBase,
+        addons: Array.from(document.querySelectorAll('.faceup-addon:checked')).map(el => el.value),
+        notes: document.getElementById('faceupNotes')?.value || '',
+        images: await uploadSet('faceupFiles')
+    } : null;
+
+    // 2. Manicure: Only create object if base is not 'None'
+    const mBase = document.getElementById('maniBase')?.value;
+    const maniDetails = (mBase && mBase !== "None") ? {
+        base: mBase,
+        addons: document.getElementById('pediAddon')?.checked ? ['Pedicure'] : [],
+        notes: document.getElementById('maniNotes')?.value || '',
+        images: await uploadSet('maniFiles')
+    } : null;
+
+    // 3. Eyes: Only create object if base is not 'None'
+    const eBase = document.getElementById('eyeBase')?.value;
+    const eyeDetails = (eBase && eBase !== "None") ? {
+        base: eBase,
+        notes: document.getElementById('eyeNotes')?.value || '',
+        images: await uploadSet('eyeFiles')
+    } : null;
+
+    // --- DATABASE INSERT ---
+    const { error } = await _supabase.from('commissions').insert([{
+        customer_name: document.getElementById('custName').value,
+        customer_email: document.getElementById('custEmail').value,
+        social_handle: document.getElementById('socialHandle').value,
+        country: document.getElementById('Country').value,
+        doll_company: document.getElementById('dollCompany').value,
+        doll_sculpt: document.getElementById('dollSculpt').value,
+        doll_skintone: document.getElementById('dollSkintone').value,
+        faceup_details: faceupDetails, // This will now be null if 'None' was selected
+        manicure_details: maniDetails, // This will now be null if 'None' was selected
+        eye_details: eyeDetails,       // This will now be null if 'None' was selected
+        tos_agreed: true,
+        status: 'enquiry' // Changed from 'inquiry' to match your admin color-coded pills
+    }]);
+
+    if (!error) {
+        alert("Request Sent Successfully! ♡");
+        window.location.href = "index.html";
+    } else {
+        alert("Error: " + error.message);
+        btn.disabled = false;
+        btn.innerText = "Submit Commission Request ✨";
+    }
+});
         window.onload = checkServiceAvailability;
     </script>
 </body>
