@@ -117,13 +117,13 @@
     const container = document.getElementById('commissionList');
     
     // Status Color Map
-    const statusColors = {
-        'enquiry': 'bg-blue-50 text-blue-500',
-        'quote': 'bg-purple-50 text-purple-500',
-        'arrived': 'bg-amber-50 text-amber-600',
-        'working': 'bg-emerald-50 text-emerald-600',
-        'shipped': 'bg-gray-100 text-gray-500'
-    };
+   const statusColors = {
+    'enquiry': 'bg-sky-50 text-sky-500 border border-sky-100',      // Soft Blue
+    'quote': 'bg-purple-50 text-purple-500 border border-purple-100', // Lavender
+    'arrived': 'bg-amber-50 text-amber-600 border border-amber-100', // Honey
+    'working': 'bg-emerald-50 text-emerald-600 border border-emerald-100', // Mint
+    'shipped': 'bg-rose-50 text-rose-400 border border-rose-100'     // Soft Pink
+};
 
     if (!data || data.length === 0) {
         container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">No requests yet! 🕊️</div>`;
