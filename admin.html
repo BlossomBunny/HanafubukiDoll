@@ -113,115 +113,136 @@
 
     // --- WORKBENCH (MINIMIZED SCROLL) ---
     async function renderWorkbench() {
-        const { data } = await _supabase.from('commissions').select('*').eq('archived', false).order('created_at', { ascending: false });
-        const container = document.getElementById('commissionList');
-        if (!data || data.length === 0) {
-            container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100">No requests yet! 🕊️</div>`;
-            return;
-        }
+    const { data } = await _supabase.from('commissions').select('*').eq('archived', false).order('created_at', { ascending: false });
+    const container = document.getElementById('commissionList');
+    
+    // Status Color Map
+    const statusColors = {
+        'enquiry': 'bg-blue-50 text-blue-500',
+        'quote': 'bg-purple-50 text-purple-500',
+        'arrived': 'bg-amber-50 text-amber-600',
+        'working': 'bg-emerald-50 text-emerald-600',
+        'shipped': 'bg-gray-100 text-gray-500'
+    };
 
-        container.innerHTML = data.map(job => `
-            <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
-                <div class="w-12 h-12 bg-pink-50 rounded-full flex-shrink-0 flex items-center justify-center text-lg overflow-hidden border border-pink-100">
-                    ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '🎨'}
+    if (!data || data.length === 0) {
+        container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">No requests yet! 🕊️</div>`;
+        return;
+    }
+
+    container.innerHTML = data.map(job => `
+        <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
+            <div class="w-12 h-12 bg-pink-50 rounded-full shrink-0 flex items-center justify-center text-lg overflow-hidden border border-pink-100">
+                ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '🎨'}
+            </div>
+            <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
+                <div>
+                    <h4 class="font-black text-sm truncate">${job.social_handle || 'Unknown'}</h4>
+                    <p class="text-[9px] font-bold text-pink-400 uppercase tracking-tighter">${job.doll_company} ${job.doll_sculpt}</p>
                 </div>
-                <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
-                    <div>
-                        <h4 class="font-black text-sm truncate">${job.social_handle || 'Unknown'}</h4>
-                        <p class="text-[9px] font-bold text-pink-400 uppercase tracking-tighter">${job.doll_company} ${job.doll_sculpt}</p>
-                    </div>
-                    <div class="hidden md:block">
-                        <p class="text-[9px] font-black text-gray-300 uppercase">Services</p>
-                        <p class="text-[10px] text-gray-500 truncate">
-                            ${job.faceup_details ? 'Faceup ' : ''}${job.eye_details ? '• Eyes ' : ''}${job.manicure_details ? '• Mani' : ''}
-                        </p>
-                    </div>
-                    <div>
-                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${job.status === 'working' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'}">
-                            ${job.status}
-                        </span>
-                    </div>
-                    <div class="text-right">
-                        <button onclick="openDrawer('${job.id}')" class="text-[10px] font-black uppercase text-pink-500 hover:underline">Open Order →</button>
-                    </div>
+                <div class="hidden md:block">
+                    <p class="text-[9px] font-black text-gray-300 uppercase">Requested</p>
+                    <p class="text-[10px] text-gray-500 truncate">
+                        ${job.faceup_details ? 'Faceup ' : ''}${job.eye_details ? '• Eyes ' : ''}${job.manicure_details ? '• Mani' : ''}
+                    </p>
+                </div>
+                <div>
+                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColors[job.status] || 'bg-gray-50 text-gray-400'}">
+                        ${job.status}
+                    </span>
+                </div>
+                <div class="text-right">
+                    <button onclick="openDrawer('${job.id}')" class="text-[10px] font-black uppercase text-pink-500 hover:underline">Open Order →</button>
                 </div>
             </div>
-        `).join('');
-    }
+        </div>
+    `).join('');
+}
 
     // --- DRAWER POPUP LOGIC ---
     async function openDrawer(id) {
-        activeJobId = id;
-        const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
-        const content = document.getElementById('drawerContent');
+    activeJobId = id;
+    const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
+    const content = document.getElementById('drawerContent');
 
-        content.innerHTML = `
-            <div class="space-y-10 pb-10">
-                <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="space-y-3">
-                        <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Client Details</h3>
-                        <div class="text-sm space-y-1">
-                            <p><strong>Name:</strong> ${job.customer_name || 'N/A'}</p>
-                            <p><strong>Handle:</strong> ${job.social_handle || 'N/A'}</p>
-                            <p><strong>Email:</strong> ${job.customer_email || 'N/A'}</p>
-                            <p><strong>Location:</strong> ${job.country || 'N/A'}</p>
-                        </div>
+    // Check if parts are in-house (Eyes or specific bundles)
+    const needsArrivalDate = job.faceup_details || (job.manicure_details && !job.eye_details);
+
+    content.innerHTML = `
+        <div class="space-y-10 pb-10">
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-3">
+                    <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Client Details</h3>
+                    <div class="text-sm space-y-1">
+                        <p><strong>Handle:</strong> ${job.social_handle || 'N/A'}</p>
+                        <p><strong>Location:</strong> ${job.country || 'N/A'}</p>
                     </div>
-                    <div class="space-y-4">
-                        <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Status & Logistics</h3>
-                        <div>
-                            <label class="text-[9px] font-black uppercase text-pink-300">Overall Status</label>
-                            <select id="updateStatus" onchange="toggleTracking(this.value)" class="w-full p-2 bg-white border border-pink-100 rounded-xl text-sm font-bold mt-1">
-                                <option value="enquiry" ${job.status === 'enquiry' ? 'selected' : ''}>Enquiry</option>
-                                <option value="quote" ${job.status === 'quote' ? 'selected' : ''}>Quote</option>
-                                <option value="working" ${job.status === 'working' ? 'selected' : ''}>Working</option>
-                                <option value="shipped" ${job.status === 'shipped' ? 'selected' : ''}>Shipped ✈️</option>
-                            </select>
-                        </div>
-                        <div id="trackingBox" class="${job.status === 'shipped' ? '' : 'hidden'}">
-                             <input type="text" id="trackingNum" placeholder="Tracking Number" value="${job.tracking_number || ''}" class="w-full p-2 border-2 border-pink-100 rounded-xl text-xs font-mono">
-                        </div>
+                </div>
+                <div class="space-y-4">
+                    <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Order Tracking</h3>
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-pink-300">Job Status</label>
+                        <select id="updateStatus" onchange="toggleTracking(this.value)" class="w-full p-2 bg-white border border-pink-100 rounded-xl text-sm font-bold mt-1">
+                            <option value="enquiry" ${job.status === 'enquiry' ? 'selected' : ''}>Enquiry</option>
+                            <option value="quote" ${job.status === 'quote' ? 'selected' : ''}>Quote</option>
+                            <option value="working" ${job.status === 'working' ? 'selected' : ''}>Working</option>
+                            <option value="shipped" ${job.status === 'shipped' ? 'selected' : ''}>Shipped ✈️</option>
+                        </select>
+                    </div>
+                    
+                    ${needsArrivalDate ? `
                         <div>
                             <label class="text-[9px] font-black uppercase text-pink-300">Arrival Date</label>
                             <input type="date" id="arrivalDate" value="${job.arrival_date || ''}" class="w-full p-2 border border-pink-100 rounded-xl text-xs mt-1">
                         </div>
-                    </div>
-                </section>
+                    ` : `
+                        <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                            <p class="text-[10px] font-black text-blue-500 uppercase">✨ Materials In-House</p>
+                            <p class="text-[9px] text-blue-400">Arrival date not required for this service mix.</p>
+                            <input type="hidden" id="arrivalDate" value="">
+                        </div>
+                    `}
 
-                <section class="bg-pink-50/50 p-6 rounded-[2rem] border border-pink-100 space-y-4">
-                    <h3 class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Financial Records</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                            <label class="text-[9px] font-bold">Method</label>
-                            <select id="payMethod" class="w-full p-2 bg-white border border-pink-100 rounded-lg text-xs">
-                                <option value="Paid" ${job.payment_method === 'Paid' ? 'selected' : ''}>Paid</option>
-                                <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
-                                <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
-                                <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[9px] font-bold">Total Price</label>
-                            <input type="number" id="totalPrice" value="${job.total_price || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs">
-                        </div>
-                        <div>
-                            <label class="text-[9px] font-bold">Amount Paid</label>
-                            <input type="number" id="amountPaid" value="${job.amount_paid || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs">
-                        </div>
-                        <div class="flex flex-col justify-center items-center">
-                            <label class="text-[9px] font-bold uppercase">Shipping Paid</label>
-                            <input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-5 h-5 accent-pink-500 mt-1">
-                        </div>
+                    <div id="trackingBox" class="${job.status === 'shipped' ? '' : 'hidden'}">
+                         <input type="text" id="trackingNum" placeholder="Tracking Number" value="${job.tracking_number || ''}" class="w-full p-2 border-2 border-pink-100 rounded-xl text-xs font-mono">
                     </div>
-                </section>
+                </div>
+            </section>
 
-                ${renderServiceBlock('Faceup', job.faceup_details, ['To be Cleaned', 'Blank', 'Sealed', 'In progress', 'Approval', 'Photos', 'Packed'])}
-                ${renderServiceBlock('Manicure', job.manicure_details, ['To be Cleaned', 'Blank', 'In progress', 'Approval', 'Photos', 'Packed'])}
-                ${renderServiceBlock('Eyes', job.eye_details, ['Designing', 'Printing', 'Assembling', 'Approval', 'Photos', 'Packed'])}
-            </div>
-        `;
-        document.getElementById('detailDrawer').classList.remove('translate-x-full');
-    }
+            <section class="bg-pink-50/50 p-6 rounded-[2rem] border border-pink-100 space-y-4">
+                <h3 class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Financial Records</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="text-[9px] font-bold">Method</label>
+                        <select id="payMethod" class="w-full p-2 bg-white border border-pink-100 rounded-lg text-xs">
+                            <option value="Paid" ${job.payment_method === 'Paid' ? 'selected' : ''}>Paid</option>
+                            <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
+                            <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
+                            <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold">Total Price</label>
+                        <input type="number" id="totalPrice" value="${job.total_price || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold">Amount Paid</label>
+                        <input type="number" id="amountPaid" value="${job.amount_paid || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs">
+                    </div>
+                    <div class="flex flex-col justify-center items-center">
+                        <label class="text-[9px] font-bold uppercase">Shipping</label>
+                        <input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-5 h-5 accent-pink-500 mt-1">
+                    </div>
+                </div>
+            </section>
+
+            ${job.faceup_details ? renderServiceBlock('Faceup', job.faceup_details, ['To be Cleaned', 'Blank', 'Sealed', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
+            ${job.manicure_details ? renderServiceBlock('Manicure', job.manicure_details, ['To be Cleaned', 'Blank', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
+            ${job.eye_details ? renderServiceBlock('Eyes', job.eye_details, ['Designing', 'Printing', 'Assembling', 'Approval', 'Photos', 'Packed']) : ''}
+        </div>
+    `;
+    document.getElementById('detailDrawer').classList.remove('translate-x-full');
+}
 
     function renderServiceBlock(title, details, options) {
         if (!details) return '';
