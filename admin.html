@@ -236,9 +236,14 @@
                 </div>
             </section>
 
-            ${job.faceup_details ? renderServiceBlock('Faceup', job.faceup_details, ['To be Cleaned', 'Blank', 'Sealed', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
-            ${job.manicure_details ? renderServiceBlock('Manicure', job.manicure_details, ['To be Cleaned', 'Blank', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
-            ${job.eye_details ? renderServiceBlock('Eyes', job.eye_details, ['Designing', 'Printing', 'Assembling', 'Approval', 'Photos', 'Packed']) : ''}
+           ${(job.faceup_details && Object.keys(job.faceup_details).length > 2) ? 
+                renderServiceBlock('Faceup', job.faceup_details, ['To be Cleaned', 'Blank', 'Sealed', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
+            
+            ${(job.manicure_details && Object.keys(job.manicure_details).length > 2) ? 
+                renderServiceBlock('Manicure', job.manicure_details, ['To be Cleaned', 'Blank', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
+            
+            ${(job.eye_details && Object.keys(job.eye_details).length > 2) ? 
+                renderServiceBlock('Eyes', job.eye_details, ['Designing', 'Printing', 'Assembling', 'Approval', 'Photos', 'Packed']) : ''}
         </div>
     `;
     document.getElementById('detailDrawer').classList.remove('translate-x-full');
@@ -277,53 +282,83 @@
 
     // --- SAVE LOGIC ---
     document.getElementById('saveBtn').onclick = async () => {
-        const btn = document.getElementById('saveBtn');
-        btn.innerText = "Saving Studio Records... ✨";
-        
-        // Fetch current data to preserve existing JSON structure for services
-        const { data: current } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+    const btn = document.getElementById('saveBtn');
+    const originalText = btn.innerText;
+    btn.innerText = "Saving Studio Records... ✨";
+    btn.disabled = true;
 
+    try {
+        // 1. Fetch current data to preserve original JSON keys
+        const { data: current, error: fetchError } = await _supabase
+            .from('commissions')
+            .select('*')
+            .eq('id', activeJobId)
+            .single();
+
+        if (fetchError) throw fetchError;
+
+        // 2. Build the update object
+        // The ?. ensures that if an element is hidden/missing, the code doesn't crash
         const updates = {
-            status: document.getElementById('updateStatus').value,
-            tracking_number: document.getElementById('trackingNum').value,
-            arrival_date: document.getElementById('arrivalDate').value,
-            payment_method: document.getElementById('payMethod').value,
-            total_price: parseFloat(document.getElementById('totalPrice').value) || 0,
-            amount_paid: parseFloat(document.getElementById('amountPaid').value) || 0,
-            shipping_paid: document.getElementById('shippingPaid').checked,
+            status: document.getElementById('updateStatus')?.value,
+            tracking_number: document.getElementById('trackingNum')?.value || null,
+            arrival_date: document.getElementById('arrivalDate')?.value || null,
+            payment_method: document.getElementById('payMethod')?.value,
+            total_price: parseFloat(document.getElementById('totalPrice')?.value) || 0,
+            amount_paid: parseFloat(document.getElementById('amountPaid')?.value) || 0,
+            shipping_paid: document.getElementById('shippingPaid')?.checked || false,
         };
 
-        // Handle Service JSON updates
-        if(current.faceup_details) {
-            updates.faceup_details = { ...current.faceup_details, 
-                status: document.getElementById('faceupStatus').value,
-                inventory: document.getElementById('faceupInv').value,
-                admin_notes: document.getElementById('faceupAdmin').value 
+        // 3. Update Service JSONs only if they exist in the database
+        if (current.faceup_details) {
+            updates.faceup_details = { 
+                ...current.faceup_details, 
+                status: document.getElementById('faceupStatus')?.value,
+                inventory: document.getElementById('faceupInv')?.value,
+                admin_notes: document.getElementById('faceupAdmin')?.value 
             };
         }
-        if(current.manicure_details) {
-            updates.manicure_details = { ...current.manicure_details, 
-                status: document.getElementById('manicureStatus').value,
-                inventory: document.getElementById('manicureInv').value,
-                admin_notes: document.getElementById('manicureAdmin').value 
+        if (current.manicure_details) {
+            updates.manicure_details = { 
+                ...current.manicure_details, 
+                status: document.getElementById('manicureStatus')?.value,
+                inventory: document.getElementById('manicureInv')?.value,
+                admin_notes: document.getElementById('manicureAdmin')?.value 
             };
         }
-        if(current.eye_details) {
-            updates.eye_details = { ...current.eye_details, 
-                status: document.getElementById('eyeStatus').value,
-                inventory: document.getElementById('eyeInv').value,
-                admin_notes: document.getElementById('eyeAdmin').value 
+        if (current.eye_details) {
+            updates.eye_details = { 
+                ...current.eye_details, 
+                status: document.getElementById('eyeStatus')?.value,
+                inventory: document.getElementById('eyeInv')?.value,
+                admin_notes: document.getElementById('eyeAdmin')?.value 
             };
         }
 
-        const { error } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
-        
-        if (error) alert("Error saving: " + error.message);
-        btn.innerText = "Save All Changes ♡";
-        closeDrawer();
-        renderWorkbench();
-    };
+        // 4. Send to Supabase
+        const { error: saveError } = await _supabase
+            .from('commissions')
+            .update(updates)
+            .eq('id', activeJobId);
 
+        if (saveError) throw saveError;
+
+        // Success Feedback
+        btn.innerText = "Saved! ♡";
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            closeDrawer();
+            renderWorkbench(); 
+        }, 1000);
+
+    } catch (err) {
+        console.error("Save Error:", err);
+        alert("Save failed: " + err.message);
+        btn.innerText = "Try Again ♡";
+        btn.disabled = false;
+    }
+};
     function closeDrawer() { document.getElementById('detailDrawer').classList.add('translate-x-full'); }
     
     // --- PLANNER & SETTINGS --- (Keep existing logic or use prev simplified ones)
