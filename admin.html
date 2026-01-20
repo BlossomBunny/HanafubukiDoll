@@ -194,6 +194,15 @@
     <option value="Shipped" ${job.status === 'Shipped' ? 'selected' : ''}>Shipped ✈️</option>
 </select>
                     </div>
+                    <div class="mt-4 p-3 bg-red-50 rounded-2xl border border-red-100 flex items-center justify-between">
+    <div>
+        <p class="text-[10px] font-black uppercase text-red-500">Urgent Priority</p>
+        <p class="text-[9px] text-red-400 leading-tight">Force this doll to the top of the planner.</p>
+    </div>
+    <label class="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" id="isUrgent" ${job.is_urgent ? 'checked' : ''} class="sr-only peer">
+        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+    </label>
                     
                     ${needsArrivalDate ? `
                         <div>
@@ -272,9 +281,14 @@ ${(job.eye_details && job.eye_details.base !== "None") ?
                     <textarea id="${id}Inv" placeholder="Inventory Log (Headcaps, wigs etc)" class="w-full p-3 text-xs border rounded-xl h-20">${details.inventory || ''}</textarea>
                     <textarea id="${id}Admin" placeholder="Admin/Artist Notes" class="w-full p-3 text-xs border rounded-xl h-20">${details.admin_notes || ''}</textarea>
                 </div>
-                ${details.images?.length > 0 ? `
-                    <div class="flex gap-2 overflow-x-auto py-2">
-                        ${details.images.map(img => `<img src="${img}" class="w-20 h-20 object-cover rounded-lg border">`).join('')}
+              ${details.images?.length > 0 ? `
+                    <div class="flex gap-2 overflow-x-auto py-2 scrollbar-hide">
+                        ${details.images.map(img => `
+                            <img src="${img}" 
+                                 onclick="zoomImage('${img}')" 
+                                 class="w-20 h-20 object-cover rounded-lg border border-pink-100 cursor-zoom-in hover:border-pink-400 transition-all active:scale-95"
+                            >
+                        `).join('')}
                     </div>
                 ` : ''}
             </div>
@@ -312,6 +326,7 @@ ${(job.eye_details && job.eye_details.base !== "None") ?
             total_price: parseFloat(document.getElementById('totalPrice')?.value) || 0,
             amount_paid: parseFloat(document.getElementById('amountPaid')?.value) || 0,
             shipping_paid: document.getElementById('shippingPaid')?.checked || false,
+            is_urgent: document.getElementById('isUrgent')?.checked || false,
         };
 
         // 3. Update Service JSONs only if they exist in the database
@@ -382,43 +397,54 @@ if (current.eye_details && current.eye_details.base !== "None") {
     }
 
     async function renderPlanner() {
-    // 1. Fetch jobs that are physically in the studio
-    // We include Arrived, Working, Approved, and Photo
     const inStudioStatuses = ['Arrived', 'Working', 'Approved', 'Photo'];
-    
-    const { data: jobs } = await _supabase.from('commissions')
-        .select('*')
-        .in('status', inStudioStatuses)
-        .eq('archived', false);
-
+    const { data: jobs } = await _supabase.from('commissions').select('*').in('status', inStudioStatuses).eq('archived', false);
     const container = document.getElementById('plannerContainer');
     const today = new Date();
 
-    // 2. Updated Stats Calculation
-    const totalInStudio = jobs ? jobs.length : 0;
-    const waitingToStart = jobs ? jobs.filter(j => j.status === 'Arrived').length : 0;
-    const inProgress = jobs ? jobs.filter(j => j.status === 'Working' || j.status === 'Approved').length : 0;
+    if (!jobs || jobs.length === 0) {
+        container.innerHTML = `<div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">Studio is clear! ✨</div>`;
+        return;
+    }
 
-    const statsBar = `
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Total Dolls</p>
-                <h3 class="text-3xl font-black">${totalInStudio}</h3>
+    const prioritizedJobs = jobs.map(job => {
+        let score = 0;
+        const arrival = job.arrival_date ? new Date(job.arrival_date) : today;
+        const diffDays = Math.ceil(Math.abs(today - arrival) / (1000 * 60 * 60 * 24));
+        
+        // Base Score: Days in Studio
+        score += diffDays;
+
+        // Payment Boost (+100)
+        const isPaid = job.amount_paid >= job.total_price && job.total_price > 0;
+        const isTrade = job.payment_method === 'Trade';
+        if (isPaid || isTrade) score += 100;
+
+        // URGENT BOOST (+500) - This ensures they almost always hit Rank #1
+        if (job.is_urgent) score += 500;
+
+        return { ...job, score, diffDays, isPaid, isTrade };
+    });
+
+    prioritizedJobs.sort((a, b) => b.score - a.score);
+
+    container.innerHTML = prioritizedJobs.map((job, index) => `
+        <div class="flex items-center gap-6 p-5 rounded-[2rem] border ${job.is_urgent ? 'border-red-200 bg-red-50/30' : 'border-pink-50 bg-white'} shadow-sm transition-all">
+            <div class="w-12 h-12 flex flex-col items-center justify-center rounded-2xl ${job.is_urgent ? 'bg-red-500' : 'bg-pink-300'} text-white shrink-0">
+                <span class="text-[10px] font-black uppercase">Rank</span>
+                <span class="text-lg font-black">${index + 1}</span>
             </div>
-            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-amber-400 tracking-widest">Waiting</p>
-                <h3 class="text-3xl font-black">${waitingToStart}</h3>
+            <div class="flex-1">
+                <div class="flex items-center gap-2">
+                    <h4 class="font-black text-gray-800">${job.social_handle || 'Client'}</h4>
+                    ${job.is_urgent ? '<span class="px-2 py-0.5 rounded-md bg-red-500 text-white text-[8px] font-black uppercase animate-pulse">Urgent</span>' : ''}
+                </div>
+                <p class="text-[10px] uppercase tracking-widest text-gray-400">${job.diffDays} Days • ${job.status}</p>
             </div>
-            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-emerald-400 tracking-widest">Active</p>
-                <h3 class="text-3xl font-black">${inProgress}</h3>
-            </div>
-            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest">Priority</p>
-                <h3 class="text-3xl font-black text-gray-200">🔥</h3>
-            </div>
+            <button onclick="openDrawer('${job.id}')" class="p-3 bg-white border border-gray-100 rounded-xl">⚙️</button>
         </div>
-    `;
+    `).join('');
+}
 
     if (!jobs || jobs.length === 0) {
         container.innerHTML = statsBar + `<div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">No dolls currently in the studio! ✨</div>`;
@@ -463,6 +489,16 @@ if (current.eye_details && current.eye_details.base !== "None") {
         </div>
     `;
 }
+    function zoomImage(url) {
+    const lightbox = document.getElementById('lightbox');
+    const img = document.getElementById('lightboxImg');
+    img.src = url;
+    lightbox.classList.remove('hidden');
+}
 </script>
+    <div id="lightbox" onclick="this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 cursor-zoom-out">
+    <img id="lightboxImg" src="" class="max-w-full max-h-full rounded-lg shadow-2xl border-4 border-white/10">
+    <p class="absolute bottom-6 text-white/50 text-[10px] uppercase font-black tracking-widest">Click anywhere to close</p>
+</div>
 </body>
 </html>
