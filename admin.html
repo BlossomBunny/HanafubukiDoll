@@ -117,12 +117,14 @@
     const container = document.getElementById('commissionList');
     
     // Status Color Map
-   const statusColors = {
-    'enquiry': 'bg-sky-50 text-sky-500 border border-sky-100',      // Soft Blue
-    'quote': 'bg-purple-50 text-purple-500 border border-purple-100', // Lavender
-    'arrived': 'bg-amber-50 text-amber-600 border border-amber-100', // Honey
-    'working': 'bg-emerald-50 text-emerald-600 border border-emerald-100', // Mint
-    'shipped': 'bg-rose-50 text-rose-400 border border-rose-100'     // Soft Pink
+ const statusColors = {
+    'Enquiry': 'bg-blue-50 text-blue-500',
+    'Quote': 'bg-purple-50 text-purple-500',
+    'Arrived': 'bg-amber-50 text-amber-600',
+    'Working': 'bg-emerald-50 text-emerald-600',
+    'Approved': 'bg-cyan-50 text-cyan-600',
+    'Photo': 'bg-indigo-50 text-indigo-500',
+    'Shipped': 'bg-gray-100 text-gray-500'
 };
 
     if (!data || data.length === 0) {
@@ -182,12 +184,15 @@
                     <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Order Tracking</h3>
                     <div>
                         <label class="text-[9px] font-black uppercase text-pink-300">Job Status</label>
-                        <select id="updateStatus" onchange="toggleTracking(this.value)" class="w-full p-2 bg-white border border-pink-100 rounded-xl text-sm font-bold mt-1">
-                            <option value="enquiry" ${job.status === 'enquiry' ? 'selected' : ''}>Enquiry</option>
-                            <option value="quote" ${job.status === 'quote' ? 'selected' : ''}>Quote</option>
-                            <option value="working" ${job.status === 'working' ? 'selected' : ''}>Working</option>
-                            <option value="shipped" ${job.status === 'shipped' ? 'selected' : ''}>Shipped ✈️</option>
-                        </select>
+                       <select id="updateStatus" onchange="toggleTracking(this.value)" class="w-full p-2 bg-white border border-pink-100 rounded-xl text-sm font-bold mt-1">
+    <option value="Enquiry" ${job.status === 'Enquiry' ? 'selected' : ''}>Enquiry</option>
+    <option value="Quote" ${job.status === 'Quote' ? 'selected' : ''}>Quote</option>
+    <option value="Arrived" ${job.status === 'Arrived' ? 'selected' : ''}>Arrived 📦</option>
+    <option value="Working" ${job.status === 'Working' ? 'selected' : ''}>Working 🎨</option>
+    <option value="Approved" ${job.status === 'Approved' ? 'selected' : ''}>Approved ✅</option>
+    <option value="Photo" ${job.status === 'Photo' ? 'selected' : ''}>Photo Shoot 📸</option>
+    <option value="Shipped" ${job.status === 'Shipped' ? 'selected' : ''}>Shipped ✈️</option>
+</select>
                     </div>
                     
                     ${needsArrivalDate ? `
@@ -377,78 +382,81 @@ if (current.eye_details && current.eye_details.base !== "None") {
     }
 
     async function renderPlanner() {
-    // 1. Fetch only active jobs in the studio
+    // 1. Fetch jobs that are physically in the studio
+    // We include Arrived, Working, Approved, and Photo
+    const inStudioStatuses = ['Arrived', 'Working', 'Approved', 'Photo'];
+    
     const { data: jobs } = await _supabase.from('commissions')
         .select('*')
-        .in('status', ['arrived', 'painting'])
+        .in('status', inStudioStatuses)
         .eq('archived', false);
 
     const container = document.getElementById('plannerContainer');
     const today = new Date();
 
-    // 2. Stats Calculation
-    const arrivedCount = jobs ? jobs.filter(j => j.status === 'arrived').length : 0;
-    const paintingCount = jobs ? jobs.filter(j => j.status === 'painting').length : 0;
+    // 2. Updated Stats Calculation
+    const totalInStudio = jobs ? jobs.length : 0;
+    const waitingToStart = jobs ? jobs.filter(j => j.status === 'Arrived').length : 0;
+    const inProgress = jobs ? jobs.filter(j => j.status === 'Working' || j.status === 'Approved').length : 0;
 
     const statsBar = `
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
             <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-pink-400 tracking-widest">In Studio</p>
-                <h3 class="text-3xl font-black">${arrivedCount + paintingCount}</h3>
+                <p class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Total Dolls</p>
+                <h3 class="text-3xl font-black">${totalInStudio}</h3>
             </div>
             <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
                 <p class="text-[10px] font-black uppercase text-amber-400 tracking-widest">Waiting</p>
-                <h3 class="text-3xl font-black">${arrivedCount}</h3>
+                <h3 class="text-3xl font-black">${waitingToStart}</h3>
             </div>
             <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-emerald-400 tracking-widest">On Easel</p>
-                <h3 class="text-3xl font-black">${paintingCount}</h3>
+                <p class="text-[10px] font-black uppercase text-emerald-400 tracking-widest">Active</p>
+                <h3 class="text-3xl font-black">${inProgress}</h3>
             </div>
             <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest">Efficiency</p>
-                <h3 class="text-3xl font-black text-gray-200">✨</h3>
+                <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest">Priority</p>
+                <h3 class="text-3xl font-black text-gray-200">🔥</h3>
             </div>
         </div>
     `;
 
     if (!jobs || jobs.length === 0) {
-        container.innerHTML = statsBar + `<div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">The studio is currently empty! ✨</div>`;
+        container.innerHTML = statsBar + `<div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">No dolls currently in the studio! ✨</div>`;
         return;
     }
 
-    // 3. Render List with "Days in Studio"
+    // 3. Sort by Arrival Date (Oldest first = Highest Priority)
+    const sortedJobs = jobs.sort((a, b) => new Date(a.arrival_date) - new Date(b.arrival_date));
+
     container.innerHTML = statsBar + `
         <div class="space-y-3">
-            ${jobs.map(job => {
-                // Calculate Days in Studio
-                let daysDisplay = "Date not set";
+            ${sortedJobs.map((job, index) => {
+                let daysDisplay = "No Date Set";
                 let alertClass = "text-gray-400";
                 
                 if (job.arrival_date) {
                     const arrival = new Date(job.arrival_date);
-                    const diffTime = Math.abs(today - arrival);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const diffDays = Math.ceil(Math.abs(today - arrival) / (1000 * 60 * 60 * 24));
                     daysDisplay = `${diffDays} Days in Studio`;
-                    // Visual alert if doll has been there more than 30 days
                     if (diffDays > 30) alertClass = "text-red-400 font-bold";
                 }
 
                 return `
                 <div class="flex items-center gap-6 bg-white p-5 rounded-[2rem] border border-pink-50 shadow-sm hover:border-pink-200 transition-all">
-                    <div class="w-14 h-14 rounded-2xl bg-pink-50 shrink-0 overflow-hidden border border-pink-100">
-                        ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '🎨'}
+                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-pink-50 font-black text-pink-300 text-sm">
+                        #${index + 1}
                     </div>
                     <div class="flex-1">
                         <h4 class="font-black text-gray-800">${job.social_handle || 'Client'}</h4>
                         <p class="text-[10px] uppercase tracking-widest ${alertClass}">${daysDisplay}</p>
                     </div>
                     <div class="text-right flex flex-col items-end gap-1">
-                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${job.status === 'painting' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">
+                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase bg-pink-50 text-pink-500">
                             ${job.status}
                         </span>
                         <p class="text-[9px] font-bold text-gray-300 uppercase">${job.doll_company} ${job.doll_sculpt}</p>
                     </div>
-                    <button onclick="openDrawer('${job.id}')" class="p-3 bg-gray-50 rounded-xl hover:bg-pink-50 transition-colors">⚙️</button>
+                    <button onclick="openDrawer('${job.id}')" class="p-3 bg-gray-50 rounded-xl hover:bg-pink-50">⚙️</button>
                 </div>
                 `;
             }).join('')}
