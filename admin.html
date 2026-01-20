@@ -38,302 +38,290 @@
         <button onclick="handleLogin()" id="loginBtn" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:scale-[1.02] transition-all">Unlock Studio ♡</button>
     </div>
 
-    <main id="adminMain" class="max-w-6xl mx-auto p-6 md:p-10 auth-hidden">
-        
-        <div id="view-settings" class="hidden animate-fadeIn space-y-6">
-            <h2 class="text-3xl font-black italic mb-8">Studio Status Controls</h2>
-            <div id="services-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-        </div>
-
-        <div id="view-workbench" class="space-y-6">
-            <h2 class="text-3xl font-black italic mb-8">Client Inbox</h2>
-            <div id="commissionList" class="space-y-6"></div>
-        </div>
-
-        <div id="view-planner" class="hidden space-y-6">
-            <h2 class="text-3xl font-black italic mb-8">Priority Planner</h2>
-            <div id="plannerContainer" class="space-y-4"></div>
-        </div>
-    </main>
-
-    <div id="detailDrawer" class="fixed inset-y-0 right-0 w-full md:w-[600px] bg-white z-[100] transform translate-x-full transition-transform duration-500 border-l border-pink-100 flex flex-col shadow-2xl">
-        <div class="p-6 border-b flex justify-between items-center bg-white">
-            <h2 class="font-black text-xl italic">Update Order</h2>
-            <button onclick="closeDrawer()" class="text-3xl text-gray-400 hover:text-pink-500">&times;</button>
-        </div>
-        <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-6"></div>
-        <div class="p-6 border-t bg-gray-50 flex gap-4">
-            <button onclick="handleDelete()" class="text-[10px] font-black uppercase text-red-400 hover:text-red-600">Archive / Reject</button>
-            <button id="saveBtn" class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg">Save Changes ♡</button>
-        </div>
+    <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
+    <div id="view-workbench" class="space-y-4">
+        <h2 class="text-3xl font-black italic mb-8">Client Inbox</h2>
+        <div id="commissionList" class="space-y-2"></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        let activeJobId = null;
+    <div id="view-planner" class="hidden space-y-6">
+        <h2 class="text-3xl font-black italic mb-8">Priority Planner</h2>
+        <div id="plannerContainer" class="space-y-4"></div>
+    </div>
 
-        // AUTHENTICATION LOGIC
-        window.onload = async () => {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (session) {
-                showAdmin();
-            }
-        };
+    <div id="view-settings" class="hidden animate-fadeIn space-y-6">
+        <h2 class="text-3xl font-black italic mb-8">Studio Status Controls</h2>
+        <div id="services-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+    </div>
+</main>
 
-        async function handleLogin() {
-            const email = document.getElementById('adminEmail').value;
-            const password = document.getElementById('adminPass').value;
-            const btn = document.getElementById('loginBtn');
+<div id="detailDrawer" class="fixed inset-y-0 right-0 w-full md:w-[650px] bg-white z-[100] transform translate-x-full transition-transform duration-500 border-l border-pink-100 flex flex-col shadow-2xl">
+    <div class="p-6 border-b flex justify-between items-center bg-white">
+        <h2 class="font-black text-xl italic">Order Details</h2>
+        <button onclick="closeDrawer()" class="text-3xl text-gray-400 hover:text-pink-500">&times;</button>
+    </div>
+    <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-8 bg-[#fafafa]"></div>
+    <div class="p-6 border-t bg-white flex gap-4">
+        <button onclick="handleDelete()" class="text-[10px] font-black uppercase text-red-400 hover:text-red-600">Archive Order</button>
+        <button id="saveBtn" class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-colors">Save All Changes ♡</button>
+    </div>
+</div>
 
-            btn.innerText = "Checking... ✨";
-            
-            const { data, error } = await _supabase.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let activeJobId = null;
 
-            if (error) {
-                alert("Access Denied: " + error.message);
-                btn.innerText = "Unlock Studio ♡";
-            } else {
-                showAdmin();
-            }
-        }
+    // --- AUTH & INITIALIZATION ---
+    window.onload = async () => {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (session) showAdmin();
+    };
 
-    async function handleLogout() {
-    await _supabase.auth.signOut();
-    // Redirect to home instead of reloading the admin page
-    window.location.href = 'index.html'; 
-}
-
-        function showAdmin() {
-            document.getElementById('loginGate').classList.add('hidden');
-            document.getElementById('adminNav').classList.remove('auth-hidden');
-            document.getElementById('adminMain').classList.remove('auth-hidden');
-            renderWorkbench();
-        }
-
-        // TAB NAVIGATION
-        async function switchTab(tab) {
-            ['view-workbench', 'view-planner', 'view-settings'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById(`view-${tab}`).classList.remove('hidden');
-            
-            if(tab === 'settings') renderSettings();
-            if(tab === 'workbench') renderWorkbench();
-            if(tab === 'planner') renderPlanner();
-        }
-
-        // RENDER WORKBENCH (CLIENT INBOX)
-        async function renderWorkbench() {
-            const { data, error } = await _supabase.from('commissions')
-                .select('*')
-                .eq('archived', false)
-                .order('created_at', { ascending: false });
-            
-            const container = document.getElementById('commissionList');
-            if (!data || data.length === 0) {
-                container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100">No requests yet! 🕊️</div>`;
-                return;
-            }
-
-            container.innerHTML = data.map(job => `
-                <div class="bg-white border-2 border-pink-50 rounded-[2rem] p-8 hover:border-pink-200 transition-all shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-8">
-                        <div class="w-32 h-32 bg-pink-50 rounded-2xl overflow-hidden shrink-0 border border-pink-100">
-                            ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '<div class="h-full flex items-center justify-center text-2xl">🎨</div>'}
-                        </div>
-                        <div class="flex-1 space-y-4">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-2xl font-black">${job.social_handle || 'No Handle'}</h3>
-                                    <p class="text-[10px] font-black text-pink-400 uppercase tracking-widest">
-                                        ${job.doll_company || 'Generic'} ${job.doll_sculpt} • ${job.doll_skintone || 'Standard'}
-                                    </p>
-                                </div>
-                                <span class="bg-pink-100 text-pink-600 px-4 py-1 rounded-full text-[10px] font-black uppercase">${job.status}</span>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px] border-t border-b border-pink-50 py-4">
-                                <p><strong>Email:</strong> ${job.customer_email}</p>
-                                <p><strong>Origin:</strong> 📍 ${job.country || 'Not Set'}</p>
-                                <p><strong>Payment:</strong> ${job.is_fully_paid ? '✅ Paid' : '⏳ Pending'}</p>
-                            </div>
-
-                            <div class="text-xs text-gray-500 italic bg-gray-50 p-4 rounded-xl">
-                                "Notes: ${job.faceup_details?.notes || 'No notes'}"
-                            </div>
-                            
-                            <button onclick="openDrawer('${job.id}')" class="text-[10px] font-black uppercase text-pink-500 underline">Manage Order →</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // RENDER SETTINGS (WAITLIST)
-        async function renderSettings() {
-            const { data } = await _supabase.from('studio_settings').select('*');
-            document.getElementById('services-list').innerHTML = data.map(s => `
-                <div class="bg-white p-8 rounded-[2rem] border-2 border-pink-50 flex justify-between items-center">
-                    <div>
-                        <h4 class="font-black text-xl capitalize">${s.id}</h4>
-                        <p class="text-xs font-bold ${s.is_live ? 'text-emerald-500' : 'text-amber-500'} uppercase">${s.is_live ? 'Open' : 'Full'}</p>
-                    </div>
-                    <button onclick="toggleService('${s.id}', ${!s.is_live})" class="nav-btn ${s.is_live ? 'nav-btn-pink' : 'nav-btn-mint'}">Toggle Status</button>
-                </div>
-            `).join('');
-        }
-
-        async function toggleService(id, status) {
-            await _supabase.from('studio_settings').update({ is_live: status }).eq('id', id);
-            renderSettings();
-        }
-
-        // RENDER PLANNER
-        async function renderPlanner() {
-    // 1. Fetch only active jobs (Arrived or Painting)
-    const { data: jobs } = await _supabase.from('commissions')
-        .select('*')
-        .in('status', ['arrived', 'painting'])
-        .eq('archived', false);
-
-    const container = document.getElementById('plannerContainer');
-
-    // 2. Create the Stats Bar
-    const arrivedCount = jobs ? jobs.filter(j => j.status === 'arrived').length : 0;
-    const paintingCount = jobs ? jobs.filter(j => j.status === 'painting').length : 0;
-
-    const statsBar = `
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-pink-400 tracking-widest">In Studio</p>
-                <h3 class="text-3xl font-black">${arrivedCount + paintingCount}</h3>
-            </div>
-            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-amber-400 tracking-widest">Waiting</p>
-                <h3 class="text-3xl font-black">${arrivedCount}</h3>
-            </div>
-            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-emerald-400 tracking-widest">On Easel</p>
-                <h3 class="text-3xl font-black">${paintingCount}</h3>
-            </div>
-            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest">Capacity</p>
-                <h3 class="text-3xl font-black text-gray-200">∞</h3>
-            </div>
-        </div>
-    `;
-
-    // 3. Handle Empty State vs List
-    if (!jobs || jobs.length === 0) {
-        container.innerHTML = statsBar + `
-            <div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 animate-fadeIn">
-                <span class="text-5xl mb-4 block">✨</span>
-                <h3 class="font-black text-xl italic text-gray-700">The studio is tidy!</h3>
-                <p class="text-gray-400 text-sm mt-2">No dolls are currently in the "Arrived" or "Painting" stage.</p>
-                <button onclick="switchTab('workbench')" class="mt-6 text-[10px] font-black uppercase bg-pink-50 text-pink-500 px-6 py-3 rounded-full hover:bg-pink-100 transition-all">Check New Inquiries →</button>
-            </div>`;
-        return;
+    async function handleLogin() {
+        const email = document.getElementById('adminEmail').value;
+        const password = document.getElementById('adminPass').value;
+        const btn = document.getElementById('loginBtn');
+        btn.innerText = "Checking... ✨";
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) { alert("Access Denied: " + error.message); btn.innerText = "Unlock Studio ♡"; } 
+        else { showAdmin(); }
     }
 
-    // 4. Render the Active List
-    container.innerHTML = statsBar + `
-        <div class="space-y-4">
-            ${jobs.map(job => `
-                <div class="flex items-center gap-6 bg-white p-6 rounded-[2rem] border border-pink-50 shadow-sm hover:border-pink-200 transition-all">
-                    <div class="w-16 h-16 rounded-2xl bg-pink-50 flex-shrink-0 overflow-hidden">
-                        ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '<div class="h-full flex items-center justify-center text-xl">🎨</div>'}
+    function showAdmin() {
+        document.getElementById('loginGate').classList.add('hidden');
+        document.getElementById('adminNav').classList.remove('auth-hidden');
+        document.getElementById('adminMain').classList.remove('auth-hidden');
+        renderWorkbench();
+    }
+
+    async function handleLogout() {
+        await _supabase.auth.signOut();
+        window.location.href = 'index.html';
+    }
+
+    // --- NAVIGATION ---
+    async function switchTab(tab) {
+        ['view-workbench', 'view-planner', 'view-settings'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        document.getElementById(`view-${tab}`).classList.remove('hidden');
+        if(tab === 'settings') renderSettings();
+        if(tab === 'workbench') renderWorkbench();
+        if(tab === 'planner') renderPlanner();
+    }
+
+    // --- WORKBENCH (MINIMIZED SCROLL) ---
+    async function renderWorkbench() {
+        const { data } = await _supabase.from('commissions').select('*').eq('archived', false).order('created_at', { ascending: false });
+        const container = document.getElementById('commissionList');
+        if (!data || data.length === 0) {
+            container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100">No requests yet! 🕊️</div>`;
+            return;
+        }
+
+        container.innerHTML = data.map(job => `
+            <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
+                <div class="w-12 h-12 bg-pink-50 rounded-full flex-shrink-0 flex items-center justify-center text-lg overflow-hidden border border-pink-100">
+                    ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '🎨'}
+                </div>
+                <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
+                    <div>
+                        <h4 class="font-black text-sm truncate">${job.social_handle || 'Unknown'}</h4>
+                        <p class="text-[9px] font-bold text-pink-400 uppercase tracking-tighter">${job.doll_company} ${job.doll_sculpt}</p>
                     </div>
-                    <div class="flex-1">
-                        <h4 class="font-black text-lg">${job.social_handle || 'Client'}</h4>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${job.doll_company} ${job.doll_sculpt}</p>
+                    <div class="hidden md:block">
+                        <p class="text-[9px] font-black text-gray-300 uppercase">Services</p>
+                        <p class="text-[10px] text-gray-500 truncate">
+                            ${job.faceup_details ? 'Faceup ' : ''}${job.eye_details ? '• Eyes ' : ''}${job.manicure_details ? '• Mani' : ''}
+                        </p>
                     </div>
-                    <div class="text-right">
-                        <span class="px-4 py-1 rounded-full text-[10px] font-black uppercase ${job.status === 'painting' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">
+                    <div>
+                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${job.status === 'working' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'}">
                             ${job.status}
                         </span>
-                        <p class="text-[9px] text-gray-300 mt-1">Paid: ${job.is_fully_paid ? 'YES' : 'DEP ONLY'}</p>
                     </div>
-                    <button onclick="openDrawer('${job.id}')" class="p-4 bg-gray-50 rounded-2xl hover:bg-pink-50 transition-colors">
-                        ⚙️
-                    </button>
-                </div>
-            `).join('')}
-        </div>
-    `;
-}
-
-        // DRAWER CONTROLS
-        async function openDrawer(id) {
-            activeJobId = id;
-            const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
-            const content = document.getElementById('drawerContent');
-            
-            content.innerHTML = `
-                <div class="space-y-6">
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-gray-400 px-2">Current Status</label>
-                        <select id="updateStatus" class="w-full p-4 bg-pink-50 rounded-2xl border-none font-bold mt-1 outline-none">
-                            <option value="inquiry">Inquiry</option>
-                            <option value="queued">Queued</option>
-                            <option value="arrived">Arrived 📦</option>
-                            <option value="painting">Painting 🎨</option>
-                            <option value="shipped">Shipped ✈️</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-center gap-2 p-4 bg-gray-50 rounded-2xl">
-                         <input type="checkbox" id="updatePaid" ${job.is_fully_paid ? 'checked' : ''} class="w-5 h-5 accent-pink-500">
-                         <label class="text-xs font-bold uppercase tracking-wider cursor-pointer">Mark as Fully Paid</label>
-                    </div>
-
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-gray-400 px-2">Inventory Log</label>
-                        <textarea id="updateInv" placeholder="Headcaps, eyes, wigs, etc..." class="w-full p-4 border border-pink-50 rounded-2xl h-24 mt-1 outline-none focus:ring-1 ring-pink-100">${job.admin_inventory || ''}</textarea>
-                    </div>
-
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-gray-400 px-2">Internal Notes</label>
-                        <textarea id="updateNotes" placeholder="Personal project reminders..." class="w-full p-4 border border-pink-50 rounded-2xl h-24 mt-1 outline-none focus:ring-1 ring-pink-100">${job.internal_notes || ''}</textarea>
+                    <div class="text-right">
+                        <button onclick="openDrawer('${job.id}')" class="text-[10px] font-black uppercase text-pink-500 hover:underline">Open Order →</button>
                     </div>
                 </div>
-            `;
-            document.getElementById('updateStatus').value = job.status;
-            document.getElementById('detailDrawer').classList.remove('translate-x-full');
-        }
+            </div>
+        `).join('');
+    }
 
-        document.getElementById('saveBtn').onclick = async () => {
-            const btn = document.getElementById('saveBtn');
-            btn.innerText = "Saving... ♡";
-            
-            await _supabase.from('commissions').update({
-                status: document.getElementById('updateStatus').value,
-                is_fully_paid: document.getElementById('updatePaid').checked,
-                admin_inventory: document.getElementById('updateInv').value,
-                internal_notes: document.getElementById('updateNotes').value
-            }).eq('id', activeJobId);
-            
-            btn.innerText = "Save Changes ♡";
-            closeDrawer();
-            renderWorkbench();
+    // --- DRAWER POPUP LOGIC ---
+    async function openDrawer(id) {
+        activeJobId = id;
+        const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
+        const content = document.getElementById('drawerContent');
+
+        content.innerHTML = `
+            <div class="space-y-10 pb-10">
+                <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-3">
+                        <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Client Details</h3>
+                        <div class="text-sm space-y-1">
+                            <p><strong>Name:</strong> ${job.customer_name || 'N/A'}</p>
+                            <p><strong>Handle:</strong> ${job.social_handle || 'N/A'}</p>
+                            <p><strong>Email:</strong> ${job.customer_email || 'N/A'}</p>
+                            <p><strong>Location:</strong> ${job.country || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Status & Logistics</h3>
+                        <div>
+                            <label class="text-[9px] font-black uppercase text-pink-300">Overall Status</label>
+                            <select id="updateStatus" onchange="toggleTracking(this.value)" class="w-full p-2 bg-white border border-pink-100 rounded-xl text-sm font-bold mt-1">
+                                <option value="enquiry" ${job.status === 'enquiry' ? 'selected' : ''}>Enquiry</option>
+                                <option value="quote" ${job.status === 'quote' ? 'selected' : ''}>Quote</option>
+                                <option value="working" ${job.status === 'working' ? 'selected' : ''}>Working</option>
+                                <option value="shipped" ${job.status === 'shipped' ? 'selected' : ''}>Shipped ✈️</option>
+                            </select>
+                        </div>
+                        <div id="trackingBox" class="${job.status === 'shipped' ? '' : 'hidden'}">
+                             <input type="text" id="trackingNum" placeholder="Tracking Number" value="${job.tracking_number || ''}" class="w-full p-2 border-2 border-pink-100 rounded-xl text-xs font-mono">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black uppercase text-pink-300">Arrival Date</label>
+                            <input type="date" id="arrivalDate" value="${job.arrival_date || ''}" class="w-full p-2 border border-pink-100 rounded-xl text-xs mt-1">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="bg-pink-50/50 p-6 rounded-[2rem] border border-pink-100 space-y-4">
+                    <h3 class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Financial Records</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="text-[9px] font-bold">Method</label>
+                            <select id="payMethod" class="w-full p-2 bg-white border border-pink-100 rounded-lg text-xs">
+                                <option value="Paid" ${job.payment_method === 'Paid' ? 'selected' : ''}>Paid</option>
+                                <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
+                                <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
+                                <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold">Total Price</label>
+                            <input type="number" id="totalPrice" value="${job.total_price || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold">Amount Paid</label>
+                            <input type="number" id="amountPaid" value="${job.amount_paid || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs">
+                        </div>
+                        <div class="flex flex-col justify-center items-center">
+                            <label class="text-[9px] font-bold uppercase">Shipping Paid</label>
+                            <input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-5 h-5 accent-pink-500 mt-1">
+                        </div>
+                    </div>
+                </section>
+
+                ${renderServiceBlock('Faceup', job.faceup_details, ['To be Cleaned', 'Blank', 'Sealed', 'In progress', 'Approval', 'Photos', 'Packed'])}
+                ${renderServiceBlock('Manicure', job.manicure_details, ['To be Cleaned', 'Blank', 'In progress', 'Approval', 'Photos', 'Packed'])}
+                ${renderServiceBlock('Eyes', job.eye_details, ['Designing', 'Printing', 'Assembling', 'Approval', 'Photos', 'Packed'])}
+            </div>
+        `;
+        document.getElementById('detailDrawer').classList.remove('translate-x-full');
+    }
+
+    function renderServiceBlock(title, details, options) {
+        if (!details) return '';
+        const id = title.toLowerCase();
+        return `
+            <div class="space-y-4 border-l-4 border-pink-100 pl-6 py-2">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-black text-pink-500 uppercase tracking-widest text-sm">${title}</h4>
+                    <select id="${id}Status" class="text-[10px] font-black border-2 border-pink-50 rounded-full px-3 py-1 outline-none">
+                        ${options.map(opt => `<option value="${opt}" ${(details.status || '') === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="text-[11px] text-gray-500 bg-white border border-pink-50 p-3 rounded-xl italic font-medium">
+                    "Client: ${details.notes || 'No specific notes'}"
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <textarea id="${id}Inv" placeholder="Inventory Log (Headcaps, wigs etc)" class="w-full p-3 text-xs border rounded-xl h-20">${details.inventory || ''}</textarea>
+                    <textarea id="${id}Admin" placeholder="Admin/Artist Notes" class="w-full p-3 text-xs border rounded-xl h-20">${details.admin_notes || ''}</textarea>
+                </div>
+                ${details.images?.length > 0 ? `
+                    <div class="flex gap-2 overflow-x-auto py-2">
+                        ${details.images.map(img => `<img src="${img}" class="w-20 h-20 object-cover rounded-lg border">`).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    function toggleTracking(val) {
+        document.getElementById('trackingBox').classList.toggle('hidden', val !== 'shipped');
+    }
+
+    // --- SAVE LOGIC ---
+    document.getElementById('saveBtn').onclick = async () => {
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = "Saving Studio Records... ✨";
+        
+        // Fetch current data to preserve existing JSON structure for services
+        const { data: current } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+
+        const updates = {
+            status: document.getElementById('updateStatus').value,
+            tracking_number: document.getElementById('trackingNum').value,
+            arrival_date: document.getElementById('arrivalDate').value,
+            payment_method: document.getElementById('payMethod').value,
+            total_price: parseFloat(document.getElementById('totalPrice').value) || 0,
+            amount_paid: parseFloat(document.getElementById('amountPaid').value) || 0,
+            shipping_paid: document.getElementById('shippingPaid').checked,
         };
 
-        function closeDrawer() { 
-            document.getElementById('detailDrawer').classList.add('translate-x-full'); 
+        // Handle Service JSON updates
+        if(current.faceup_details) {
+            updates.faceup_details = { ...current.faceup_details, 
+                status: document.getElementById('faceupStatus').value,
+                inventory: document.getElementById('faceupInv').value,
+                admin_notes: document.getElementById('faceupAdmin').value 
+            };
+        }
+        if(current.manicure_details) {
+            updates.manicure_details = { ...current.manicure_details, 
+                status: document.getElementById('manicureStatus').value,
+                inventory: document.getElementById('manicureInv').value,
+                admin_notes: document.getElementById('manicureAdmin').value 
+            };
+        }
+        if(current.eye_details) {
+            updates.eye_details = { ...current.eye_details, 
+                status: document.getElementById('eyeStatus').value,
+                inventory: document.getElementById('eyeInv').value,
+                admin_notes: document.getElementById('eyeAdmin').value 
+            };
         }
 
-        async function handleDelete() { 
-            if(confirm("Archive this doll? It will no longer show in your inbox.")) { 
-                await _supabase.from('commissions').update({archived:true}).eq('id', activeJobId); 
-                closeDrawer(); 
-                renderWorkbench(); 
-            } 
-        }
-    </script>
+        const { error } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
+        
+        if (error) alert("Error saving: " + error.message);
+        btn.innerText = "Save All Changes ♡";
+        closeDrawer();
+        renderWorkbench();
+    };
+
+    function closeDrawer() { document.getElementById('detailDrawer').classList.add('translate-x-full'); }
+    
+    // --- PLANNER & SETTINGS --- (Keep existing logic or use prev simplified ones)
+    async function renderSettings() {
+        const { data } = await _supabase.from('studio_settings').select('*');
+        document.getElementById('services-list').innerHTML = data.map(s => `
+            <div class="bg-white p-6 rounded-[2rem] border border-pink-50 flex justify-between items-center shadow-sm">
+                <div><h4 class="font-black text-lg capitalize">${s.id}</h4><p class="text-[10px] font-bold ${s.is_live ? 'text-emerald-500' : 'text-amber-500'} uppercase">${s.is_live ? 'Open' : 'Full'}</p></div>
+                <button onclick="toggleService('${s.id}', ${!s.is_live})" class="nav-btn ${s.is_live ? 'nav-btn-pink' : 'nav-btn-mint'}">Toggle Status</button>
+            </div>
+        `).join('');
+    }
+
+    async function toggleService(id, status) {
+        await _supabase.from('studio_settings').update({ is_live: status }).eq('id', id);
+        renderSettings();
+    }
+
+    // Reuse your previous Planner logic here...
+</script>
 </body>
 </html>
