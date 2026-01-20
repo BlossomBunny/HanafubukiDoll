@@ -143,8 +143,11 @@ async function handleLogin() {
     }
 
     // --- WORKBENCH (MINIMIZED SCROLL) ---
-   async function renderWorkbench(showArchived = false) {
-    // 1. Update the button colors so you know which tab is active
+  async function renderWorkbench(showArchived = false) {
+    // 1. Identify the container (This was likely what was missing!)
+    const container = document.getElementById('commissionList');
+    
+    // 2. Update the button colors so you know which tab is active
     const liveBtn = document.getElementById('tab-live');
     const archBtn = document.getElementById('tab-archived');
     
@@ -156,28 +159,37 @@ async function handleLogin() {
         archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
     }
 
-    // 2. Fetch data based on the tab
-    const { data } = await _supabase.from('commissions')
+    // 3. Fetch data based on the tab
+    const { data, error } = await _supabase.from('commissions')
         .select('*')
         .eq('archived', showArchived)
         .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Fetch error:", error);
+        return;
+    }
        
     // Status Color Map
- const statusColors = {
-    'Enquiry': 'bg-blue-50 text-blue-500',
-    'Quote': 'bg-purple-50 text-purple-500',
-    'Arrived': 'bg-amber-50 text-amber-600',
-    'Working': 'bg-emerald-50 text-emerald-600',
-    'Approved': 'bg-cyan-50 text-cyan-600',
-    'Photo': 'bg-indigo-50 text-indigo-500',
-    'Shipped': 'bg-gray-100 text-gray-500'
-};
+    const statusColors = {
+        'Enquiry': 'bg-blue-50 text-blue-500',
+        'Quote': 'bg-purple-50 text-purple-500',
+        'Arrived': 'bg-amber-50 text-amber-600',
+        'Working': 'bg-emerald-50 text-emerald-600',
+        'Approved': 'bg-cyan-50 text-cyan-600',
+        'Photo': 'bg-indigo-50 text-indigo-500',
+        'Shipped': 'bg-gray-100 text-gray-500'
+    };
 
+    // 4. Handle Empty State
     if (!data || data.length === 0) {
-        container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">No requests yet! 🕊️</div>`;
+        container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">
+            ${showArchived ? 'No archived dolls yet! 🌸' : 'No active requests! 🕊️'}
+        </div>`;
         return;
     }
 
+    // 5. Render the List
     container.innerHTML = data.map(job => `
         <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
             <div class="w-12 h-12 bg-pink-50 rounded-full shrink-0 flex items-center justify-center text-lg overflow-hidden border border-pink-100">
