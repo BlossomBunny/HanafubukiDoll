@@ -75,27 +75,44 @@
     let activeJobId = null;
 
     // --- AUTH & INITIALIZATION ---
-    window.onload = async () => {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (session) showAdmin();
-    };
+_supabase.auth.onAuthStateChange((event, session) => {
+    const loginGate = document.getElementById('loginGate');
+    const adminNav = document.getElementById('adminNav');
+    const adminMain = document.getElementById('adminMain');
 
-    async function handleLogin() {
-        const email = document.getElementById('adminEmail').value;
-        const password = document.getElementById('adminPass').value;
-        const btn = document.getElementById('loginBtn');
-        btn.innerText = "Checking... ✨";
-        const { error } = await _supabase.auth.signInWithPassword({ email, password });
-        if (error) { alert("Access Denied: " + error.message); btn.innerText = "Unlock Studio ♡"; } 
-        else { showAdmin(); }
-    }
-
-    function showAdmin() {
-        document.getElementById('loginGate').classList.add('hidden');
-        document.getElementById('adminNav').classList.remove('auth-hidden');
-        document.getElementById('adminMain').classList.remove('auth-hidden');
+    if (session) {
+        // User is logged in! Hide the gate and show the studio content
+        loginGate.classList.add('hidden');
+        adminNav.classList.remove('auth-hidden');
+        adminMain.classList.remove('auth-hidden');
+        
+        // Load your studio data
         renderWorkbench();
+        renderPlanner();
+    } else {
+        // User is logged out! Ensure the gate is visible
+        loginGate.classList.remove('hidden');
+        adminNav.classList.add('auth-hidden');
+        adminMain.classList.add('auth-hidden');
     }
+});
+
+// This handles the login button specifically on the admin page gate
+async function handleLogin() {
+    const email = document.getElementById('adminEmail').value;
+    const password = document.getElementById('adminPass').value;
+    const btn = document.getElementById('loginBtn');
+    
+    btn.innerText = "Checking... ✨";
+    
+    const { error } = await _supabase.auth.signInWithPassword({ email, password });
+    
+    if (error) { 
+        alert("Access Denied: " + error.message); 
+        btn.innerText = "Unlock Studio ♡"; 
+    } 
+ 
+}
 
     async function handleLogout() {
         await _supabase.auth.signOut();
@@ -446,49 +463,7 @@ if (current.eye_details && current.eye_details.base !== "None") {
     `).join('');
 }
 
-    if (!jobs || jobs.length === 0) {
-        container.innerHTML = statsBar + `<div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">No dolls currently in the studio! ✨</div>`;
-        return;
-    }
-
-    // 3. Sort by Arrival Date (Oldest first = Highest Priority)
-    const sortedJobs = jobs.sort((a, b) => new Date(a.arrival_date) - new Date(b.arrival_date));
-
-    container.innerHTML = statsBar + `
-        <div class="space-y-3">
-            ${sortedJobs.map((job, index) => {
-                let daysDisplay = "No Date Set";
-                let alertClass = "text-gray-400";
-                
-                if (job.arrival_date) {
-                    const arrival = new Date(job.arrival_date);
-                    const diffDays = Math.ceil(Math.abs(today - arrival) / (1000 * 60 * 60 * 24));
-                    daysDisplay = `${diffDays} Days in Studio`;
-                    if (diffDays > 30) alertClass = "text-red-400 font-bold";
-                }
-
-                return `
-                <div class="flex items-center gap-6 bg-white p-5 rounded-[2rem] border border-pink-50 shadow-sm hover:border-pink-200 transition-all">
-                    <div class="w-12 h-12 flex items-center justify-center rounded-full bg-pink-50 font-black text-pink-300 text-sm">
-                        #${index + 1}
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-black text-gray-800">${job.social_handle || 'Client'}</h4>
-                        <p class="text-[10px] uppercase tracking-widest ${alertClass}">${daysDisplay}</p>
-                    </div>
-                    <div class="text-right flex flex-col items-end gap-1">
-                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase bg-pink-50 text-pink-500">
-                            ${job.status}
-                        </span>
-                        <p class="text-[9px] font-bold text-gray-300 uppercase">${job.doll_company} ${job.doll_sculpt}</p>
-                    </div>
-                    <button onclick="openDrawer('${job.id}')" class="p-3 bg-gray-50 rounded-xl hover:bg-pink-50">⚙️</button>
-                </div>
-                `;
-            }).join('')}
-        </div>
-    `;
-}
+   
     function zoomImage(url) {
     const lightbox = document.getElementById('lightbox');
     const img = document.getElementById('lightboxImg');
