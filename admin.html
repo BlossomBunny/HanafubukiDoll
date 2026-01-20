@@ -193,6 +193,80 @@
             renderSettings();
         }
 
+        // RENDER PLANNER
+        async function renderPlanner() {
+    // 1. Fetch only active jobs (Arrived or Painting)
+    const { data: jobs } = await _supabase.from('commissions')
+        .select('*')
+        .in('status', ['arrived', 'painting'])
+        .eq('archived', false);
+
+    const container = document.getElementById('plannerContainer');
+
+    // 2. Create the Stats Bar
+    const arrivedCount = jobs ? jobs.filter(j => j.status === 'arrived').length : 0;
+    const paintingCount = jobs ? jobs.filter(j => j.status === 'painting').length : 0;
+
+    const statsBar = `
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
+                <p class="text-[10px] font-black uppercase text-pink-400 tracking-widest">In Studio</p>
+                <h3 class="text-3xl font-black">${arrivedCount + paintingCount}</h3>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
+                <p class="text-[10px] font-black uppercase text-amber-400 tracking-widest">Waiting</p>
+                <h3 class="text-3xl font-black">${arrivedCount}</h3>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
+                <p class="text-[10px] font-black uppercase text-emerald-400 tracking-widest">On Easel</p>
+                <h3 class="text-3xl font-black">${paintingCount}</h3>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border border-pink-50 shadow-sm">
+                <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest">Capacity</p>
+                <h3 class="text-3xl font-black text-gray-200">∞</h3>
+            </div>
+        </div>
+    `;
+
+    // 3. Handle Empty State vs List
+    if (!jobs || jobs.length === 0) {
+        container.innerHTML = statsBar + `
+            <div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 animate-fadeIn">
+                <span class="text-5xl mb-4 block">✨</span>
+                <h3 class="font-black text-xl italic text-gray-700">The studio is tidy!</h3>
+                <p class="text-gray-400 text-sm mt-2">No dolls are currently in the "Arrived" or "Painting" stage.</p>
+                <button onclick="switchTab('workbench')" class="mt-6 text-[10px] font-black uppercase bg-pink-50 text-pink-500 px-6 py-3 rounded-full hover:bg-pink-100 transition-all">Check New Inquiries →</button>
+            </div>`;
+        return;
+    }
+
+    // 4. Render the Active List
+    container.innerHTML = statsBar + `
+        <div class="space-y-4">
+            ${jobs.map(job => `
+                <div class="flex items-center gap-6 bg-white p-6 rounded-[2rem] border border-pink-50 shadow-sm hover:border-pink-200 transition-all">
+                    <div class="w-16 h-16 rounded-2xl bg-pink-50 flex-shrink-0 overflow-hidden">
+                        ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '<div class="h-full flex items-center justify-center text-xl">🎨</div>'}
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-black text-lg">${job.social_handle || 'Client'}</h4>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${job.doll_company} ${job.doll_sculpt}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="px-4 py-1 rounded-full text-[10px] font-black uppercase ${job.status === 'painting' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">
+                            ${job.status}
+                        </span>
+                        <p class="text-[9px] text-gray-300 mt-1">Paid: ${job.is_fully_paid ? 'YES' : 'DEP ONLY'}</p>
+                    </div>
+                    <button onclick="openDrawer('${job.id}')" class="p-4 bg-gray-50 rounded-2xl hover:bg-pink-50 transition-colors">
+                        ⚙️
+                    </button>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
         // DRAWER CONTROLS
         async function openDrawer(id) {
             activeJobId = id;
