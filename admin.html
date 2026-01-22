@@ -670,6 +670,10 @@ function togglePaidStatus() {
         updateBalanceLive(); // Revert to actual math
     }
 }
+    function closeDrawer() {
+    // This adds the 'translate-x-full' class which slides the drawer off-screen to the right
+    document.getElementById('detailDrawer').classList.add('translate-x-full');
+}
 </script>
     <div id="lightbox" onclick="this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 cursor-zoom-out">
     <img id="lightboxImg" src="" class="max-w-full max-h-full rounded-lg shadow-2xl border-4 border-white/10">
