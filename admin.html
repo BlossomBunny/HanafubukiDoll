@@ -295,6 +295,7 @@ async function handleLogin() {
 
 // Helper to keep the Drawer clean
 function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
+    // Determine which view to show based on the method
     if (job.payment_method === 'Paid' || job.payment_method === 'Layaway') {
         return `
             <div class="space-y-3">
@@ -321,7 +322,7 @@ function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
                 <div>
                     <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Balance Due</p>
                     <p id="balanceDisplay" class="text-2xl font-black ${balanceDue > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${balanceDue.toFixed(2)}</p>
-                    <p data-paid-amount="${totalPaidSoFar}" class="text-[8px] text-gray-400 uppercase mt-1">Total Paid: £${totalPaidSoFar.toFixed(2)}</p>
+                    <p id="paidLabel" data-paid-amount="${totalPaidSoFar}" class="text-[8px] text-gray-400 uppercase mt-1">Total Paid: £${totalPaidSoFar.toFixed(2)}</p>
                 </div>
                 <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50">
                     <input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-4 h-4 accent-pink-500">
@@ -343,8 +344,10 @@ function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
             </div>
         `;
     }
+    // Gift View
     return `<div class="col-span-2 p-10 text-center italic text-gray-400 text-sm">Gifted commission: No financial tracking required. ♡</div>`;
 }
+    
     function renderServiceBlock(title, details, options) {
         if (!details) return '';
         const id = title.toLowerCase();
@@ -630,30 +633,35 @@ function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
     await _supabase.from('commissions').update({ payments: [...history, newPayment] }).eq('id', jobId);
     openDrawer(jobId); // Refresh to show new balance
 }
-
+    
 async function saveAndRefreshDrawer() {
-    // Quickly save the method change and reload the UI
     const method = document.getElementById('payMethod').value;
-    await _supabase.from('commissions').update({ payment_method: method }).eq('id', activeJobId);
-    openDrawer(activeJobId);
+    // We update the method in the database immediately so the refresh knows what to show
+    const { error } = await _supabase
+        .from('commissions')
+        .update({ payment_method: method })
+        .eq('id', activeJobId);
+
+    if (!error) {
+        openDrawer(activeJobId);
+    }
 }
-    function updateBalanceLive() {
+
+    
+function updateBalanceLive() {
     const totalInput = document.getElementById('totalPrice');
-    if (!totalInput) return;
+    const balanceDisplay = document.getElementById('balanceDisplay');
+    const paidLabel = document.getElementById('paidLabel');
+    
+    if (!totalInput || !balanceDisplay || !paidLabel) return;
     
     const total = parseFloat(totalInput.value) || 0;
-    
-    // Get the amount already paid from our hidden data attribute
-    const paidLabel = document.querySelector('[data-paid-amount]');
-    const totalPaidSoFar = paidLabel ? parseFloat(paidLabel.getAttribute('data-paid-amount')) : 0;
+    const totalPaidSoFar = parseFloat(paidLabel.getAttribute('data-paid-amount')) || 0;
     
     const newBalance = Math.max(0, total - totalPaidSoFar);
-    const balanceDisplay = document.getElementById('balanceDisplay');
     
-    if (balanceDisplay) {
-        balanceDisplay.innerText = `£${newBalance.toFixed(2)}`;
-        balanceDisplay.className = `text-2xl font-black ${newBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}`;
-    }
+    balanceDisplay.innerText = `£${newBalance.toFixed(2)}`;
+    balanceDisplay.className = `text-2xl font-black ${newBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}`;
 }
 
 function togglePaidStatus() {
