@@ -307,12 +307,12 @@ function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
                         <label class="text-[9px] font-bold uppercase text-pink-400">Add Payment (£)</label>
                         <div class="flex gap-2 mt-1">
                             <input type="number" id="newPayment" placeholder="0.00" class="flex-1 p-2 bg-pink-50/30 rounded-lg text-sm">
-                            <button onclick="addPaymentRecord('${job.id}')" class="bg-pink-500 text-white px-3 rounded-lg text-[10px] font-black">ADD</button>
+                            <button onclick="addPaymentRecord('${job.id}')" class="bg-pink-500 text-white px-3 rounded-lg text-[10px] font-black hover:bg-pink-600 transition-colors">ADD</button>
                         </div>
                     </div>
                 ` : `
                     <div class="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                        <input type="checkbox" id="markAsPaid" ${balanceDue <= 0 ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
+                        <input type="checkbox" id="markAsPaid" onchange="togglePaidStatus()" ${balanceDue <= 0 ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
                         <label class="text-[10px] font-black uppercase text-emerald-600">Mark as Paid</label>
                     </div>
                 `}
@@ -320,8 +320,8 @@ function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
             <div class="flex flex-col justify-between p-4 bg-white rounded-2xl border border-pink-100">
                 <div>
                     <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Balance Due</p>
-                    <p class="text-2xl font-black ${balanceDue > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${balanceDue.toFixed(2)}</p>
-                    <p class="text-[8px] text-gray-400 uppercase mt-1">Total Paid: £${totalPaidSoFar.toFixed(2)}</p>
+                    <p id="balanceDisplay" class="text-2xl font-black ${balanceDue > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${balanceDue.toFixed(2)}</p>
+                    <p data-paid-amount="${totalPaidSoFar}" class="text-[8px] text-gray-400 uppercase mt-1">Total Paid: £${totalPaidSoFar.toFixed(2)}</p>
                 </div>
                 <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50">
                     <input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-4 h-4 accent-pink-500">
@@ -382,14 +382,14 @@ function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
     }
 
     // --- SAVE LOGIC ---
-    document.getElementById('saveBtn').onclick = async () => {
+     document.getElementById('saveBtn').onclick = async () => {
     const btn = document.getElementById('saveBtn');
     const originalText = btn.innerText;
     btn.innerText = "Saving Studio Records... ✨";
     btn.disabled = true;
 
     try {
-        // 1. Fetch current data to preserve original JSON keys
+        // 1. Fetch current data to preserve original JSON keys and payment history
         const { data: current, error: fetchError } = await _supabase
             .from('commissions')
             .select('*')
@@ -398,44 +398,67 @@ function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
 
         if (fetchError) throw fetchError;
 
-        // 2. Build the update object
-  const updates = {
-    status: document.getElementById('updateStatus')?.value,
-    tracking_number: document.getElementById('trackingNum')?.value || null,
-    payment_method: document.getElementById('payMethod')?.value,
-    total_price: parseFloat(document.getElementById('totalPrice')?.value) || 0,
-    shipping_paid: document.getElementById('shippingPaid')?.checked || false,
-    is_urgent: document.getElementById('isUrgent')?.checked || false,
-    partner_shipped: document.getElementById('partnerShipped')?.checked || false,
-    we_shipped: document.getElementById('weShipped')?.checked || false
-};
+        // 2. Prepare Payment History Logic
+        let updatedPayments = current.payments || [];
+        const method = document.getElementById('payMethod')?.value;
+        const total = parseFloat(document.getElementById('totalPrice')?.value) || 0;
+        const markAsPaid = document.getElementById('markAsPaid')?.checked || false;
 
-        // 3. Update Service JSONs only if they exist in the database
+        // If "Mark as Paid" is checked and there is still a balance, add a closing payment
+        if (method === 'Paid' && markAsPaid) {
+            const currentlyPaid = updatedPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+            const remaining = total - currentlyPaid;
+            
+            if (remaining > 0) {
+                updatedPayments.push({
+                    amount: remaining,
+                    date: new Date().toISOString(),
+                    id: crypto.randomUUID(),
+                    note: "Auto-cleared via Mark as Paid"
+                });
+            }
+        }
+
+        // 3. Build the update object
+        const updates = {
+            status: document.getElementById('updateStatus')?.value,
+            tracking_number: document.getElementById('trackingNum')?.value || null,
+            payment_method: method,
+            total_price: total,
+            payments: updatedPayments, // Save the updated history
+            shipping_paid: document.getElementById('shippingPaid')?.checked || false,
+            is_urgent: document.getElementById('isUrgent')?.checked || false,
+            partner_shipped: document.getElementById('partnerShipped')?.checked || false,
+            we_shipped: document.getElementById('weShipped')?.checked || false
+        };
+
+        // 4. Update Service JSONs only if they exist in the database
         if (current.faceup_details && current.faceup_details.base !== "None") {
-    updates.faceup_details = { 
-        ...current.faceup_details, 
-        status: document.getElementById('faceupStatus')?.value,
-        inventory: document.getElementById('faceupInv')?.value,
-        admin_notes: document.getElementById('faceupAdmin')?.value 
-    };
-}
-if (current.manicure_details && current.manicure_details.base !== "None") {
-    updates.manicure_details = { 
-        ...current.manicure_details, 
-        status: document.getElementById('manicureStatus')?.value,
-        inventory: document.getElementById('manicureInv')?.value,
-        admin_notes: document.getElementById('manicureAdmin')?.value 
-    };
-}
-if (current.eye_details && current.eye_details.base !== "None") {
-    updates.eye_details = { 
-        ...current.eye_details, 
-        status: document.getElementById('eyeStatus')?.value,
-        inventory: document.getElementById('eyeInv')?.value,
-        admin_notes: document.getElementById('eyeAdmin')?.value 
-    };
-}
-        // 4. Send to Supabase
+            updates.faceup_details = { 
+                ...current.faceup_details, 
+                status: document.getElementById('faceupStatus')?.value,
+                inventory: document.getElementById('faceupInv')?.value,
+                admin_notes: document.getElementById('faceupAdmin')?.value 
+            };
+        }
+        if (current.manicure_details && current.manicure_details.base !== "None") {
+            updates.manicure_details = { 
+                ...current.manicure_details, 
+                status: document.getElementById('manicureStatus')?.value,
+                inventory: document.getElementById('manicureInv')?.value,
+                admin_notes: document.getElementById('manicureAdmin')?.value 
+            };
+        }
+        if (current.eye_details && current.eye_details.base !== "None") {
+            updates.eye_details = { 
+                ...current.eye_details, 
+                status: document.getElementById('eyeStatus')?.value,
+                inventory: document.getElementById('eyeInv')?.value,
+                admin_notes: document.getElementById('eyeAdmin')?.value 
+            };
+        }
+
+        // 5. Send to Supabase
         const { error: saveError } = await _supabase
             .from('commissions')
             .update(updates)
@@ -450,6 +473,7 @@ if (current.eye_details && current.eye_details.base !== "None") {
             btn.disabled = false;
             closeDrawer();
             renderWorkbench(); 
+            renderPlanner(); // Refresh planner too in case status/priority changed
         }, 1000);
 
     } catch (err) {
@@ -459,8 +483,6 @@ if (current.eye_details && current.eye_details.base !== "None") {
         btn.disabled = false;
     }
 };
-    function closeDrawer() { document.getElementById('detailDrawer').classList.add('translate-x-full'); }
-    
     // --- PLANNER & SETTINGS --- (Keep existing logic or use prev simplified ones)
     async function renderSettings() {
         const { data } = await _supabase.from('studio_settings').select('*');
@@ -616,10 +638,12 @@ async function saveAndRefreshDrawer() {
     openDrawer(activeJobId);
 }
     function updateBalanceLive() {
-    const total = parseFloat(document.getElementById('totalPrice').value) || 0;
+    const totalInput = document.getElementById('totalPrice');
+    if (!totalInput) return;
     
-    // Calculate what has already been paid from the history
-    // We store the total paid so far in a data attribute or recalculate it
+    const total = parseFloat(totalInput.value) || 0;
+    
+    // Get the amount already paid from our hidden data attribute
     const paidLabel = document.querySelector('[data-paid-amount]');
     const totalPaidSoFar = paidLabel ? parseFloat(paidLabel.getAttribute('data-paid-amount')) : 0;
     
@@ -628,8 +652,20 @@ async function saveAndRefreshDrawer() {
     
     if (balanceDisplay) {
         balanceDisplay.innerText = `£${newBalance.toFixed(2)}`;
-        // Update color: Rose if > 0, Emerald if 0
         balanceDisplay.className = `text-2xl font-black ${newBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}`;
+    }
+}
+
+function togglePaidStatus() {
+    const isChecked = document.getElementById('markAsPaid').checked;
+    const balanceDisplay = document.getElementById('balanceDisplay');
+    const total = parseFloat(document.getElementById('totalPrice').value) || 0;
+
+    if (isChecked) {
+        balanceDisplay.innerText = "£0.00";
+        balanceDisplay.className = "text-2xl font-black text-emerald-500";
+    } else {
+        updateBalanceLive(); // Revert to actual math
     }
 }
 </script>
