@@ -292,29 +292,87 @@ async function handleLogin() {
         </div>
     </div>
     
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div>
-            <label class="text-[9px] font-bold">Method</label>
-            <select id="payMethod" class="w-full p-2 bg-white border border-pink-100 rounded-lg text-xs font-bold">
-                <option value="Paid" ${job.payment_method === 'Paid' ? 'selected' : ''}>Paid</option>
-                <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
-                <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
-                <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
-            </select>
-        </div>
-        <div>
-            <label class="text-[9px] font-bold">Total Price</label>
-            <input type="number" id="totalPrice" value="${job.total_price || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs font-bold">
-        </div>
-        <div>
-            <label class="text-[9px] font-bold">Amount Paid</label>
-            <input type="number" id="amountPaid" value="${job.amount_paid || 0}" class="w-full p-2 border border-pink-100 rounded-lg text-xs font-bold">
-        </div>
-        <div class="flex flex-col justify-center items-center bg-white/50 rounded-xl border border-pink-100/50">
-            <label class="text-[9px] font-black uppercase text-pink-300">Shipping</label>
-            <input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-5 h-5 accent-pink-500 mt-1">
-        </div>
+  // Calculate total already paid from the history array
+const paymentHistory = job.payments || [];
+const totalPaidSoFar = paymentHistory.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+const balanceDue = Math.max(0, (job.total_price || 0) - totalPaidSoFar);
+
+// Update the section HTML
+let financialHTML = `
+<section class="bg-pink-50/50 p-6 rounded-[2rem] border border-pink-100 space-y-4">
+    <div class="flex justify-between items-center">
+        <h3 class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Payment & Shipping</h3>
+        <select id="payMethod" onchange="refreshDrawerFinancials()" class="p-2 bg-white border border-pink-100 rounded-lg text-[10px] font-black uppercase">
+            <option value="Paid" ${job.payment_method === 'Paid' ? 'selected' : ''}>Paid in Full</option>
+            <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
+            <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
+            <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
+        </select>
     </div>
+
+    <div id="financialInputs" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+`;
+
+if (job.payment_method === 'Paid' || job.payment_method === 'Layaway') {
+    financialHTML += `
+        <div class="space-y-3">
+            <div>
+                <label class="text-[9px] font-bold uppercase text-gray-400">Total Price (£)</label>
+                <input type="number" id="totalPrice" value="${job.total_price || 0}" class="w-full p-3 bg-white border border-pink-100 rounded-xl font-bold">
+            </div>
+            ${job.payment_method === 'Layaway' ? `
+                <div class="p-3 bg-white rounded-xl border border-pink-100">
+                    <label class="text-[9px] font-bold uppercase text-pink-400">Add New Payment (£)</label>
+                    <div class="flex gap-2 mt-1">
+                        <input type="number" id="newPayment" placeholder="0.00" class="flex-1 p-2 bg-pink-50/30 rounded-lg text-sm">
+                        <button onclick="addPaymentRecord('${job.id}')" class="bg-pink-500 text-white px-4 rounded-lg text-xs font-black">ADD</button>
+                    </div>
+                </div>
+            ` : `
+                <div class="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <input type="checkbox" id="markAsPaid" ${balanceDue <= 0 ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
+                    <label class="text-[10px] font-black uppercase text-emerald-600">Mark as Fully Paid</label>
+                </div>
+            `}
+        </div>
+
+        <div class="flex flex-col justify-between p-4 bg-white rounded-2xl border border-pink-100">
+            <div>
+                <p class="text-[9px] font-black text-gray-400 uppercase">Balance Due</p>
+                <p class="text-2xl font-black ${balanceDue > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${balanceDue.toFixed(2)}</p>
+                <p class="text-[9px] text-gray-300 uppercase mt-1">Total Paid: £${totalPaidSoFar.toFixed(2)}</p>
+            </div>
+            <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50">
+                <input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-4 h-4 accent-pink-500">
+                <label class="text-[10px] font-black uppercase text-gray-500">Shipping Paid?</label>
+            </div>
+        </div>
+    `;
+} else if (job.payment_method === 'Trade') {
+    financialHTML += `
+        <div class="space-y-3">
+            <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-pink-100">
+                <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-5 h-5 accent-pink-500">
+                <label class="text-[10px] font-black uppercase text-gray-600">Partner Item Shipped?</label>
+            </div>
+            <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-pink-100">
+                <input type="checkbox" id="weShipped" ${job.we_shipped ? 'checked' : ''} class="w-5 h-5 accent-pink-500">
+                <label class="text-[10px] font-black uppercase text-gray-600">We Have Shipped?</label>
+            </div>
+        </div>
+    `;
+} else {
+    financialHTML += `<p class="text-xs italic text-gray-400 p-4">Gifted commission: No financial tracking required. ♡</p>`;
+}
+
+financialHTML += `
+    </div>
+    <div class="pt-4 border-t border-pink-100/50">
+        <label class="text-[9px] font-black uppercase text-gray-400">Shipping Tracking Number</label>
+        <input type="text" id="trackingNum" value="${job.tracking_number || ''}" placeholder="Enter tracking..." class="w-full p-3 bg-white border border-pink-100 rounded-xl mt-1 text-xs">
+    </div>
+</section>
+`;
 </section>
            ${(job.faceup_details && job.faceup_details.base !== "None") ? 
     renderServiceBlock('Faceup', job.faceup_details, ['To be Cleaned', 'Blank', 'Sealed', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
