@@ -269,15 +269,9 @@ async function handleLogin() {
                     </select>
                 </div>
 
-                <div>
-    <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Balance Due</p>
-    <p id="balanceDisplay" class="text-2xl font-black ${balanceDue > 0 ? 'text-rose-500' : 'text-emerald-500'}">
-        £${balanceDue.toFixed(2)}
-    </p>
-    <p data-paid-amount="${totalPaidSoFar}" class="text-[8px] text-gray-400 uppercase mt-1">
-        Total Paid: £${totalPaidSoFar.toFixed(2)}
-    </p>
-</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    ${renderFinancialInputs(job, balanceDue, totalPaidSoFar)}
+                </div>
 
                 <div class="pt-4 border-t border-pink-100/50">
                     <label class="text-[9px] font-black uppercase text-gray-400">Shipping Tracking Number</label>
