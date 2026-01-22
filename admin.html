@@ -225,7 +225,7 @@ async function handleLogin() {
     const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
     const content = document.getElementById('drawerContent');
 
-    // Financial Calculations
+    // Calculate Financials
     const paymentHistory = job.payments || [];
     const totalPaidSoFar = paymentHistory.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
     const balanceDue = Math.max(0, (job.total_price || 0) - totalPaidSoFar);
@@ -241,8 +241,8 @@ async function handleLogin() {
                     </div>
                 </div>
                 <div class="space-y-4">
-                    <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Priority & Status</h3>
-                    <select id="updateStatus" class="w-full p-2 bg-white border border-pink-100 rounded-xl text-sm font-bold">
+                    <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Order Tracking</h3>
+                    <select id="updateStatus" class="w-full p-2 bg-white border border-pink-100 rounded-xl text-sm font-bold mt-1">
                         <option value="Enquiry" ${job.status === 'Enquiry' ? 'selected' : ''}>Enquiry</option>
                         <option value="Quote" ${job.status === 'Quote' ? 'selected' : ''}>Quote</option>
                         <option value="Arrived" ${job.status === 'Arrived' ? 'selected' : ''}>Arrived 📦</option>
@@ -274,7 +274,7 @@ async function handleLogin() {
                 </div>
 
                 <div class="pt-4 border-t border-pink-100/50">
-                    <label class="text-[9px] font-black uppercase text-gray-400">Tracking Number</label>
+                    <label class="text-[9px] font-black uppercase text-gray-400">Shipping Tracking Number</label>
                     <input type="text" id="trackingNum" value="${job.tracking_number || ''}" placeholder="Enter tracking..." class="w-full p-3 bg-white border border-pink-100 rounded-xl mt-1 text-xs font-mono">
                 </div>
             </section>
@@ -298,23 +298,24 @@ function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
                 </div>
                 ${job.payment_method === 'Layaway' ? `
                     <div class="p-3 bg-white rounded-xl border border-pink-100">
-                        <label class="text-[9px] font-bold uppercase text-pink-400">Add New Payment (£)</label>
+                        <label class="text-[9px] font-bold uppercase text-pink-400">Add Payment (£)</label>
                         <div class="flex gap-2 mt-1">
                             <input type="number" id="newPayment" placeholder="0.00" class="flex-1 p-2 bg-pink-50/30 rounded-lg text-sm">
-                            <button onclick="addPaymentRecord('${job.id}')" class="bg-pink-500 text-white px-4 rounded-lg text-xs font-black">ADD</button>
+                            <button onclick="addPaymentRecord('${job.id}')" class="bg-pink-500 text-white px-3 rounded-lg text-[10px] font-black">ADD</button>
                         </div>
                     </div>
                 ` : `
                     <div class="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
                         <input type="checkbox" id="markAsPaid" ${balanceDue <= 0 ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
-                        <label class="text-[10px] font-black uppercase text-emerald-600">Marked as Paid</label>
+                        <label class="text-[10px] font-black uppercase text-emerald-600">Mark as Paid</label>
                     </div>
                 `}
             </div>
             <div class="flex flex-col justify-between p-4 bg-white rounded-2xl border border-pink-100">
                 <div>
-                    <p class="text-[9px] font-black text-gray-400 uppercase">Balance Due</p>
+                    <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Balance Due</p>
                     <p class="text-2xl font-black ${balanceDue > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${balanceDue.toFixed(2)}</p>
+                    <p class="text-[8px] text-gray-400 uppercase mt-1">Total Paid: £${totalPaidSoFar.toFixed(2)}</p>
                 </div>
                 <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50">
                     <input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-4 h-4 accent-pink-500">
@@ -324,21 +325,20 @@ function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
         `;
     } else if (job.payment_method === 'Trade') {
         return `
-            <div class="space-y-3">
-                <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-pink-100">
-                    <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-5 h-5 accent-pink-500">
-                    <label class="text-[10px] font-black uppercase text-gray-600">Partner Item Shipped?</label>
+            <div class="space-y-3 col-span-2">
+                <div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-pink-100">
+                    <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-6 h-6 accent-pink-500">
+                    <label class="text-[11px] font-black uppercase text-gray-600">Partner Item Shipped?</label>
                 </div>
-                <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-pink-100">
-                    <input type="checkbox" id="weShipped" ${job.we_shipped ? 'checked' : ''} class="w-5 h-5 accent-pink-500">
-                    <label class="text-[10px] font-black uppercase text-gray-600">We Have Shipped?</label>
+                <div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-pink-100">
+                    <input type="checkbox" id="weShipped" ${job.we_shipped ? 'checked' : ''} class="w-6 h-6 accent-pink-500">
+                    <label class="text-[11px] font-black uppercase text-gray-600">We Have Shipped Swap Item?</label>
                 </div>
             </div>
         `;
     }
-    return `<p class="text-xs italic text-gray-400 p-4">Gifted commission: No financial tracking required. ♡</p>`;
+    return `<div class="col-span-2 p-10 text-center italic text-gray-400 text-sm">Gifted commission: No financial tracking required. ♡</div>`;
 }
-
     function renderServiceBlock(title, details, options) {
         if (!details) return '';
         const id = title.toLowerCase();
