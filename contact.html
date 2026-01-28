@@ -67,10 +67,7 @@
         <input type="text" id="socialHandle" placeholder="Social Handle (@...)" class="w-full p-4 rounded-xl border border-pink-100 outline-none">
         <input type="text" id="Country" placeholder="Country (e.g. USA)" required class="w-full p-4 rounded-xl border border-pink-100 outline-none">
         <input type="email" id="custEmail" placeholder="Email Address*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
-        <input type="text" id="dollCompany" placeholder="Doll Company (e.g. SmartDoll)*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
-        <input type="text" id="dollSculpt" placeholder="Doll Sculpt (e.g. Mirai)*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none">
-        <input type="text" id="dollSkintone" placeholder="Skintone (e.g. Cinnamon)*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none">
-    </div>
+        </div>
 </div>
             </div>
 
@@ -78,24 +75,26 @@
                 <h2 class="text-2xl font-black tracking-tighter px-4">2. Service Details</h2>
 
                 <div id="faceups-section" class="glass-card p-6 service-block border-l-4 border-pink-400">
-                    <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest mb-4">Face-Up</h3>
-                    <select id="faceupBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
-                        <option value="None">No Faceup Needed</option>
-                        <option value="Standard Face-Up">Standard Face-Up</option>
-                        <option value="Face-Up + Smartdoll Head">Face-Up + Smartdoll Head</option>
-                        <option value="Face-Up + Dollfie Dream Head">Face-Up + Dollfie Dream Head</option>
-                    </select>
-                    <div class="space-y-4">
-                        <div class="flex gap-4 flex-wrap text-xs font-bold">
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="faceup-addon w-4 h-4 accent-pink-400" value="Eyelashes"> Eyelashes</label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="faceup-addon w-4 h-4 accent-pink-400" value="Piercings"> Piercings</label>
-                            <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="faceup-addon w-4 h-4 accent-pink-400" value="Modifications"> Modifications</label>
-                        </div>
-                        <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
-                        <input type="file" id="faceupFiles" multiple class="text-[10px]">
-                    </div>
-                </div>
+    <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest mb-4">Face-Up & Doll Info</h3>
+    
+    <select id="faceupBase" onchange="toggleDollDetails()" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
+        <option value="None">No Faceup Needed</option>
+        <option value="Standard Face-Up">Standard Face-Up</option>
+        <option value="Face-Up + Smartdoll Head">Face-Up + Smartdoll Head (Bundle)</option>
+        <option value="Face-Up + Dollfie Dream Head">Face-Up + Dollfie Dream Head (Bundle)</option>
+    </select>
 
+    <div id="dollDetails" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-fadeIn">
+        <input type="text" id="dollCompany" placeholder="Doll Company (e.g. SmartDoll)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none md:col-span-2 bg-pink-50/20">
+        <input type="text" id="dollSculpt" placeholder="Doll Sculpt (e.g. Mirai)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none bg-pink-50/20">
+        <input type="text" id="dollSkintone" placeholder="Skintone (e.g. Cinnamon)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none bg-pink-50/20">
+    </div>
+
+    <div class="space-y-4">
+        <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
+    </div>
+</div>
+                
                 <div id="manicures-section" class="glass-card p-6 service-block border-l-4 border-emerald-400">
                     <h3 class="font-black text-emerald-500 uppercase text-[10px] tracking-widest mb-4">Manicures</h3>
                     <select id="maniBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
@@ -285,6 +284,26 @@
     }
 });
         window.onload = checkServiceAvailability;
+
+        function toggleDollDetails() {
+    const selection = document.getElementById('faceupBase').value;
+    const dollDetailsBox = document.getElementById('dollDetails');
+    const inputs = dollDetailsBox.querySelectorAll('input');
+
+    if (selection === 'Standard Face-Up') {
+        // Show the box
+        dollDetailsBox.classList.remove('hidden');
+        // Make fields required so they can't be skipped
+        inputs.forEach(input => input.setAttribute('required', ''));
+    } else {
+        // Hide the box
+        dollDetailsBox.classList.add('hidden');
+        // Remove required attribute so the form can still submit
+        inputs.forEach(input => input.removeAttribute('required'));
+        // Optional: Clear the values so no old data is sent accidentally
+        inputs.forEach(input => input.value = '');
+    }
+}
     </script>
 </body>
 </html>
