@@ -304,6 +304,47 @@
         inputs.forEach(input => input.value = '');
     }
 }
+        // Add this to your contact form script
+async function syncFormWithStock() {
+    const { data: stock } = await _supabase.from('inventory').select('*');
+    
+    // 1. Handle Faceup Bundles (Heads)
+    const smartdollHeads = stock.filter(i => i.category === 'Smartdoll Head' && i.quantity > 0);
+    const dollfieHeads = stock.filter(i => i.category === 'Dollfie Head' && i.quantity > 0);
+
+    // Update Smartdoll Bundle
+    const smBundle = document.getElementById('bundle-sm-head'); // Ensure your HTML IDs match
+    if (smartdollHeads.length === 0) {
+        smBundle.classList.add('hidden'); // Hide bundle if no heads
+    } else {
+        const select = document.getElementById('sm-head-sculpt-select');
+        select.innerHTML = smartdollHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
+    }
+
+    // Update Dollfie Bundle
+    const ddBundle = document.getElementById('bundle-dd-head');
+    if (dollfieHeads.length === 0) {
+        ddBundle.classList.add('hidden');
+    } else {
+        const select = document.getElementById('dd-head-sculpt-select');
+        select.innerHTML = dollfieHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
+    }
+
+    // 2. Handle Manicure Options (Hands)
+    const smHands = stock.filter(i => i.category === 'Smartdoll Hands' && i.quantity > 0);
+    const ddHands = stock.filter(i => i.category === 'Dollfie Hands' && i.quantity > 0);
+
+    // Hide Manicure sections if no hand stock
+    if (smHands.length === 0) {
+        document.getElementById('manicure-sm-section').classList.add('hidden');
+    }
+    if (ddHands.length === 0) {
+        document.getElementById('manicure-dd-section').classList.add('hidden');
+    }
+}
+
+// Run this when the page loads
+window.addEventListener('DOMContentLoaded', syncFormWithStock);
     </script>
 </body>
 </html>
