@@ -239,7 +239,7 @@
         if(tab === 'inventory') renderInventory();
     }
 
-    // --- SETTINGS (Restored) ---
+    // --- SETTINGS ---
     async function renderSettings() {
         const { data } = await _supabase.from('studio_settings').select('*');
         if(!data) return;
@@ -373,7 +373,6 @@
             </div>`).join('');
     }
 
-    // --- DRAWER POPUP LOGIC ---
     async function openDrawer(id) {
         activeJobId = id;
         const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
@@ -398,11 +397,6 @@
                             ${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped'].map(s => `<option value="${s}" ${job.status===s?'selected':''}>${s}</option>`).join('')}
                         </select>
                     </div>
-                </section>
-
-                <section class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <h3 class="text-[9px] font-black uppercase text-gray-400 mb-2">Initial Contact Notes</h3>
-                    <p class="text-xs text-gray-600 italic">"${job.commission_notes || 'No notes provided at booking.'}"</p>
                 </section>
 
                 <div class="bg-pink-50/50 p-6 rounded-[3rem] border border-pink-100 space-y-4">
@@ -473,28 +467,37 @@
                             <p class="bg-gray-50 p-3 rounded-xl"><strong>Lashes:</strong> ${job.faceup_details.lashes || 'N/A'}</p>
                         </div>
                         <div class="p-4 bg-pink-50/20 rounded-2xl border border-pink-50 text-[11px] italic text-gray-600"><strong>Form Notes:</strong> "${job.faceup_details.notes || 'No notes.'}"</div>
-                        <textarea id="fAdmin" class="w-full p-4 text-xs border border-pink-100 rounded-2xl h-24 outline-none focus:ring-2 ring-pink-100" placeholder="Internal Artist Notes...">${job.faceup_details.admin_notes || ''}</textarea>
+                        <textarea id="fAdmin" class="w-full p-4 text-xs border border-pink-100 rounded-2xl h-24 outline-none focus:ring-2 ring-pink-100" placeholder="Internal Artist Notes (Faceup)...">${job.faceup_details.admin_notes || ''}</textarea>
                     </div>` : ''}
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        ${job.eye_details ? `
-                        <div class="p-6 bg-white rounded-[2rem] border border-blue-50 space-y-3 shadow-sm">
-                            <div class="flex justify-between items-center">
-                                <h4 class="text-[10px] font-black uppercase text-blue-500">👁️ Eyes</h4>
-                                <select id="eyeStatus" class="text-[9px] font-black uppercase bg-blue-50 p-1 rounded-md">
-                                    ${['Pending','Working','Completed'].map(s => `<option value="${s}" ${job.eye_details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
-                                </select>
-                        </div>` : ''}
+                    ${job.eye_details ? `
+                    <div class="p-6 bg-white rounded-[2rem] border border-blue-50 space-y-4 shadow-sm">
+                        <div class="flex justify-between items-center border-b border-blue-50 pb-2">
+                            <h4 class="text-xs font-black uppercase text-blue-500">👁️ Eyes</h4>
+                            <select id="eyeStatus" class="text-[9px] font-black uppercase bg-blue-50 p-1 rounded-md">
+                                ${['Pending','Working','Completed'].map(s => `<option value="${s}" ${job.eye_details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-[10px]">
+                            <p class="bg-gray-50 p-3 rounded-xl"><strong>Style:</strong> ${job.eye_details.style}</p>
+                            <p class="bg-gray-50 p-3 rounded-xl"><strong>Size:</strong> ${job.eye_details.size}</p>
+                        </div>
+                        <textarea id="eAdmin" class="w-full p-4 text-xs border border-blue-100 rounded-2xl h-24 outline-none focus:ring-2 ring-blue-100" placeholder="Internal Artist Notes (Eyes)...">${job.eye_details.admin_notes || ''}</textarea>
+                    </div>` : ''}
 
-                        ${job.manicure_details ? `
-                        <div class="p-6 bg-white rounded-[2rem] border border-emerald-50 space-y-3 shadow-sm">
-                            <div class="flex justify-between items-center">
-                                <h4 class="text-[10px] font-black uppercase text-emerald-500">💅 Manicure</h4>
-                                <select id="maniStatus" class="text-[9px] font-black uppercase bg-emerald-50 p-1 rounded-md">
-                                    ${['Pending','Working','Completed'].map(s => `<option value="${s}" ${job.manicure_details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
-                                </select>
-                        </div>` : ''}
-                    </div>
+                    ${job.manicure_details ? `
+                    <div class="p-6 bg-white rounded-[2rem] border border-emerald-50 space-y-4 shadow-sm">
+                        <div class="flex justify-between items-center border-b border-emerald-50 pb-2">
+                            <h4 class="text-xs font-black uppercase text-emerald-500">💅 Manicure</h4>
+                            <select id="maniStatus" class="text-[9px] font-black uppercase bg-emerald-50 p-1 rounded-md">
+                                ${['Pending','Working','Completed'].map(s => `<option value="${s}" ${job.manicure_details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="text-[10px]">
+                            <p class="bg-gray-50 p-3 rounded-xl"><strong>Type:</strong> ${job.manicure_details.type}</p>
+                        </div>
+                        <textarea id="mAdmin" class="w-full p-4 text-xs border border-emerald-100 rounded-2xl h-24 outline-none focus:ring-2 ring-emerald-100" placeholder="Internal Artist Notes (Manicure)...">${job.manicure_details.admin_notes || ''}</textarea>
+                    </div>` : ''}
                 </div>
             </div>`;
         document.getElementById('detailDrawer').classList.remove('translate-x-full');
@@ -504,18 +507,14 @@
     function togglePayUI() {
         const type = document.getElementById('payType').value;
         const isPaid = document.getElementById('isPaidCheck')?.checked;
-        
         document.getElementById('moneyRow').classList.toggle('hidden', ['Trade', 'Gift'].includes(type));
         document.getElementById('pifUI').classList.toggle('hidden', type !== 'Paid in Full');
         document.getElementById('layawayUI').classList.toggle('hidden', type !== 'Layaway');
         document.getElementById('tradeUI').classList.toggle('hidden', type !== 'Trade');
-
         if (type === 'Paid in Full' && isPaid) {
             document.getElementById('balanceLabel').innerText = "£0.00";
             document.getElementById('balanceLabel').className = "text-xl font-black text-emerald-500";
-        } else {
-            updateBalanceLive(); 
-        }
+        } else { updateBalanceLive(); }
     }
 
     function updateBalanceLive(paid = 0) {
@@ -523,7 +522,6 @@
         const isPaid = document.getElementById('isPaidCheck')?.checked;
         const total = parseFloat(document.getElementById('tPrice')?.value) || 0;
         const label = document.getElementById('balanceLabel');
-        
         if (type === 'Paid in Full' && isPaid) {
             label.innerText = "£0.00";
             label.className = "text-xl font-black text-emerald-500";
@@ -543,7 +541,6 @@
         openDrawer(activeJobId); 
     }
 
-    // --- HELPERS ---
     function closeDrawer() { document.getElementById('detailDrawer').classList.add('translate-x-full'); }
 
     async function handleArchive() {
@@ -557,7 +554,6 @@
     document.getElementById('saveBtn').onclick = async () => {
         const btn = document.getElementById('saveBtn');
         btn.innerText = "Saving... ✨";
-        
         const type = document.getElementById('payType').value;
         const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
 
@@ -572,17 +568,13 @@
         };
 
         if (job.faceup_details) {
-            updates.faceup_details = { 
-                ...job.faceup_details, 
-                status: document.getElementById('faceupStatus').value,
-                admin_notes: document.getElementById('fAdmin').value 
-            };
+            updates.faceup_details = { ...job.faceup_details, status: document.getElementById('faceupStatus').value, admin_notes: document.getElementById('fAdmin').value };
         }
         if (job.eye_details) {
-            updates.eye_details = { ...job.eye_details, status: document.getElementById('eyeStatus').value };
+            updates.eye_details = { ...job.eye_details, status: document.getElementById('eyeStatus').value, admin_notes: document.getElementById('eAdmin')?.value || '' };
         }
         if (job.manicure_details) {
-            updates.manicure_details = { ...job.manicure_details, status: document.getElementById('maniStatus').value };
+            updates.manicure_details = { ...job.manicure_details, status: document.getElementById('maniStatus').value, admin_notes: document.getElementById('mAdmin')?.value || '' };
         }
 
         await _supabase.from('commissions').update(updates).eq('id', activeJobId);
