@@ -358,107 +358,136 @@
         activeJobId = id;
         const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
         const content = document.getElementById('drawerContent');
-
-        // Calculate Financials
-        const paymentHistory = job.payments || [];
-        const totalPaidSoFar = paymentHistory.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-        const balanceDue = Math.max(0, (job.total_price || 0) - totalPaidSoFar);
+        
+        const payments = job.payments || [];
+        const paidTotal = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+        const balance = Math.max(0, (job.total_price || 0) - paidTotal);
 
         content.innerHTML = `
-            <div class="space-y-10 pb-10">
-                <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="space-y-3">
-                        <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Client Details</h3>
-                        <div class="text-sm space-y-1">
-                            <p><strong>Handle:</strong> ${job.social_handle || 'N/A'}</p>
-                            <p><strong>Email:</strong> ${job.email || 'N/A'}</p>
-                            <p><strong>Doll:</strong> ${job.doll_company} ${job.doll_sculpt}</p>
-                        </div>
+            <div class="space-y-8 pb-10">
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Order Info</h3>
+                        <p class="text-sm font-bold">${job.social_handle}</p>
+                        <p class="text-[10px] text-pink-400 font-black uppercase">${job.doll_company} ${job.doll_sculpt}</p>
                     </div>
-                    <div class="space-y-4">
-                        <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Workflow Status</h3>
-                        <select id="upStatus" class="w-full p-4 border border-pink-100 rounded-2xl text-xs font-bold focus:ring-2 ring-pink-200 outline-none">
-                            ${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped'].map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                    <div>
+                        <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Status</h3>
+                        <select id="upStatus" class="w-full p-2 border border-pink-100 rounded-xl text-xs font-bold">
+                            ${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped'].map(s => `<option value="${s}" ${job.status===s?'selected':''}>${s}</option>`).join('')}
                         </select>
                     </div>
-                </section>
-
-                <div class="bg-pink-50/50 p-6 rounded-[2rem] border border-pink-100 space-y-6">
-                    <div class="flex justify-between items-center border-b border-pink-100 pb-4">
-                        <h3 class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Financials & Priority</h3>
-                        <div class="flex items-center gap-3">
-                            <input type="checkbox" id="isUrg" ${job.is_urgent ? 'checked' : ''} class="w-5 h-5 accent-red-500 rounded-lg">
-                            <label class="text-[10px] font-black uppercase text-red-500">Urgent Priority</label>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-6">
-                        <div>
-                            <label class="text-[9px] font-black uppercase text-gray-400 block mb-1">Total Quote (£)</label>
-                            <input type="number" id="tPrice" value="${job.total_price || 0}" class="w-full p-4 border border-white rounded-2xl font-black text-lg focus:ring-2 ring-pink-200 outline-none shadow-inner">
-                        </div>
-                        <div class="p-4 bg-white rounded-2xl border border-pink-100">
-                            <p class="text-[9px] font-black text-gray-400 uppercase">Balance Due</p>
-                            <p class="text-2xl font-black ${balanceDue > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${balanceDue.toFixed(2)}</p>
-                        </div>
-                    </div>
                 </div>
 
-                ${job.faceup_details?.images?.length ? `
-                <section class="space-y-4">
-                    <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Client Photos</h3>
-                    <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                        ${job.faceup_details.images.map(img => `
-                            <img src="${img}" onclick="window.open('${img}', '_blank')" class="w-32 h-32 object-cover rounded-2xl border-2 border-white shadow-sm cursor-zoom-in hover:scale-105 transition-transform">
-                        `).join('')}
+                <div class="bg-pink-50/50 p-6 rounded-[3rem] border border-pink-100 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <select id="payType" onchange="togglePayUI()" class="bg-white border border-pink-100 rounded-lg text-[10px] font-black uppercase p-2">
+                            <option value="Paid in Full" ${job.payment_method === 'Paid in Full' ? 'selected' : ''}>Paid in Full</option>
+                            <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
+                            <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
+                            <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
+                        </select>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="isUrg" ${job.is_urgent ? 'checked' : ''} class="w-4 h-4 accent-red-500">
+                            <label class="text-[10px] font-black uppercase text-red-500">Urgent</label>
+                        </div>
                     </div>
-                </section>
-                ` : ''}
+
+                    <div id="moneyRow" class="${['Trade','Gift'].includes(job.payment_method) ? 'hidden' : ''} space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-2xl border border-pink-100">
+                                <label class="text-[9px] font-black uppercase text-gray-400">Total Price</label>
+                                <input type="number" id="tPrice" oninput="updateBalanceLive(${paidTotal})" value="${job.total_price || 0}" class="w-full font-black text-lg outline-none">
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl border border-pink-100">
+                                <p class="text-[9px] font-black text-gray-400 uppercase">Balance Due</p>
+                                <p id="balanceLabel" class="text-xl font-black ${balance > 0 ? 'text-rose-500' : 'text-emerald-500'}">
+                                    £${job.payment_method === 'Paid in Full' && job.is_paid ? '0.00' : balance.toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div id="pifUI" class="${job.payment_method === 'Paid in Full' ? '' : 'hidden'} flex items-center gap-2 px-2">
+                            <input type="checkbox" id="isPaidCheck" onchange="togglePayUI()" ${job.is_paid ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
+                            <label class="text-[10px] font-black uppercase text-emerald-600">Mark as Paid in Full</label>
+                        </div>
+                    </div>
+
+                    <div id="layawayUI" class="${job.payment_method === 'Layaway' ? '' : 'hidden'} space-y-3 border-t border-pink-100 pt-3">
+                        <div id="paymentHistory" class="space-y-1">
+                            ${payments.map(p => `<div class="flex justify-between text-[10px] bg-white/60 p-2 rounded-lg border border-pink-50"><span>${p.date}</span><span class="font-bold">£${p.amount}</span></div>`).join('')}
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="number" id="newPayAmt" placeholder="£ Amount" class="flex-1 p-2 rounded-xl text-xs border border-white">
+                            <button onclick="saveNewPayment()" class="bg-pink-500 text-white px-4 rounded-xl text-[10px] font-black uppercase">Add</button>
+                        </div>
+                    </div>
+
+                    <div id="tradeUI" class="${job.payment_method === 'Trade' ? '' : 'hidden'} grid grid-cols-2 gap-3 border-t border-pink-100 pt-3">
+                        <label class="flex items-center gap-2 p-3 bg-white rounded-xl border border-pink-100 cursor-pointer">
+                            <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-4 h-4 accent-blue-500">
+                            <span class="text-[9px] font-black uppercase text-gray-500">Partner Shipped</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-3 bg-white rounded-xl border border-pink-100 cursor-pointer">
+                            <input type="checkbox" id="artistShipped" ${job.artist_shipped ? 'checked' : ''} class="w-4 h-4 accent-indigo-500">
+                            <span class="text-[9px] font-black uppercase text-gray-500">Artist Shipped</span>
+                        </label>
+                    </div>
+                </div>
 
                 ${job.faceup_details ? `
-                <section class="p-6 bg-white rounded-[2rem] border border-pink-50 space-y-4">
-                    <h4 class="text-xs font-black uppercase text-pink-500">Faceup Requests</h4>
-                    <div class="grid grid-cols-2 gap-4 text-xs">
-                        <p class="bg-gray-50 p-3 rounded-xl"><strong>Brows:</strong> ${job.faceup_details.brows || 'Natural'}</p>
-                        <p class="bg-gray-50 p-3 rounded-xl"><strong>Lashes:</strong> ${job.faceup_details.lashes || 'None'}</p>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase text-gray-400">Client Notes</label>
-                        <p class="text-xs p-4 bg-pink-50/20 rounded-2xl border border-pink-50 italic text-gray-600">"${job.faceup_details.notes || 'No specific notes provided.'}"</p>
-                    </div>
-                    <div class="space-y-1 pt-4">
-                        <label class="text-[10px] font-black uppercase text-gray-400">Internal Artist Notes</label>
-                        <textarea id="fAdmin" class="w-full p-4 text-xs border border-pink-100 rounded-2xl h-32 focus:ring-2 ring-pink-200 outline-none" placeholder="Add your private notes here...">${job.faceup_details.admin_notes || ''}</textarea>
-                    </div>
-                </section>
-                ` : ''}
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    ${job.eye_details ? `
-                    <div class="p-6 bg-white rounded-[2rem] border border-pink-50">
-                        <h4 class="text-xs font-black uppercase text-blue-500 mb-2">Custom Eyes</h4>
-                        <p class="text-[11px] text-gray-500">Style: ${job.eye_details.style || 'N/A'}</p>
-                        <p class="text-[11px] text-gray-500">Size: ${job.eye_details.size || 'N/A'}</p>
-                    </div>
-                    ` : ''}
-                    ${job.manicure_details ? `
-                    <div class="p-6 bg-white rounded-[2rem] border border-pink-50">
-                        <h4 class="text-xs font-black uppercase text-emerald-500 mb-2">Manicure</h4>
-                        <p class="text-[11px] text-gray-500">Type: ${job.manicure_details.type || 'N/A'}</p>
-                    </div>
-                    ` : ''}
+                <div class="space-y-4">
+                    <h4 class="text-xs font-black uppercase text-pink-500">Faceup Details</h4>
+                    <textarea id="fAdmin" class="w-full p-4 text-xs border border-pink-100 rounded-2xl h-24" placeholder="Internal Artist Notes...">${job.faceup_details.admin_notes || ''}</textarea>
                 </div>
+                ` : ''}
             </div>`;
         document.getElementById('detailDrawer').classList.remove('translate-x-full');
     }
+
+    function togglePayUI() {
+        const type = document.getElementById('payType').value;
+        const isPaid = document.getElementById('isPaidCheck')?.checked;
+        
+        document.getElementById('moneyRow').classList.toggle('hidden', ['Trade', 'Gift'].includes(type));
+        document.getElementById('pifUI').classList.toggle('hidden', type !== 'Paid in Full');
+        document.getElementById('layawayUI').classList.toggle('hidden', type !== 'Layaway');
+        document.getElementById('tradeUI').classList.toggle('hidden', type !== 'Trade');
+
+        if (type === 'Paid in Full' && isPaid) {
+            document.getElementById('balanceLabel').innerText = "£0.00";
+            document.getElementById('balanceLabel').className = "text-xl font-black text-emerald-500";
+        } else {
+            updateBalanceLive(); 
+        }
+    }
+
+    // Update Save Logic to capture new Trade fields
     document.getElementById('saveBtn').onclick = async () => {
         const btn = document.getElementById('saveBtn');
         btn.innerText = "Saving... ✨";
-        const upd = { status: document.getElementById('upStatus').value, total_price: parseFloat(document.getElementById('tPrice').value), is_urgent: document.getElementById('isUrg').checked };
-        await _supabase.from('commissions').update(upd).eq('id', activeJobId);
+        
+        const type = document.getElementById('payType').value;
+        const { data: job } = await _supabase.from('commissions').select('faceup_details').eq('id', activeJobId).single();
+
+        const updates = {
+            status: document.getElementById('upStatus').value,
+            payment_method: type,
+            total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
+            is_urgent: document.getElementById('isUrg').checked,
+            is_paid: type === 'Paid in Full' ? document.getElementById('isPaidCheck').checked : false,
+            partner_shipped: type === 'Trade' ? document.getElementById('partnerShipped').checked : false,
+            artist_shipped: type === 'Trade' ? document.getElementById('artistShipped').checked : false
+        };
+
+        if (job.faceup_details) {
+            updates.faceup_details = { ...job.faceup_details, admin_notes: document.getElementById('fAdmin').value };
+        }
+
+        await _supabase.from('commissions').update(updates).eq('id', activeJobId);
         btn.innerText = "Saved! ♡";
         setTimeout(() => { closeDrawer(); renderWorkbench(); renderPlanner(); }, 800);
     };
-
     async function renderSettings() {
         const { data } = await _supabase.from('studio_settings').select('*');
         if(!data) return;
