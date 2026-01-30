@@ -373,6 +373,7 @@
             </div>`).join('');
     }
 
+    // --- UPDATED DRAWER CONTENT (Relevant Section) ---
     async function openDrawer(id) {
         activeJobId = id;
         const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
@@ -397,6 +398,11 @@
                             ${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped'].map(s => `<option value="${s}" ${job.status===s?'selected':''}>${s}</option>`).join('')}
                         </select>
                     </div>
+                </section>
+
+                <section class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <h3 class="text-[9px] font-black uppercase text-gray-400 mb-2">Initial Contact Notes</h3>
+                    <p class="text-xs text-gray-600 italic">"${job.commission_notes || 'No notes provided at booking.'}"</p>
                 </section>
 
                 <div class="bg-pink-50/50 p-6 rounded-[3rem] border border-pink-100 space-y-4">
@@ -478,10 +484,6 @@
                                 ${['Pending','Working','Completed'].map(s => `<option value="${s}" ${job.eye_details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
                             </select>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 text-[10px]">
-                            <p class="bg-gray-50 p-3 rounded-xl"><strong>Style:</strong> ${job.eye_details.style}</p>
-                            <p class="bg-gray-50 p-3 rounded-xl"><strong>Size:</strong> ${job.eye_details.size}</p>
-                        </div>
                         <textarea id="eAdmin" class="w-full p-4 text-xs border border-blue-100 rounded-2xl h-24 outline-none focus:ring-2 ring-blue-100" placeholder="Internal Artist Notes (Eyes)...">${job.eye_details.admin_notes || ''}</textarea>
                     </div>` : ''}
 
@@ -493,16 +495,12 @@
                                 ${['Pending','Working','Completed'].map(s => `<option value="${s}" ${job.manicure_details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
                             </select>
                         </div>
-                        <div class="text-[10px]">
-                            <p class="bg-gray-50 p-3 rounded-xl"><strong>Type:</strong> ${job.manicure_details.type}</p>
-                        </div>
                         <textarea id="mAdmin" class="w-full p-4 text-xs border border-emerald-100 rounded-2xl h-24 outline-none focus:ring-2 ring-emerald-100" placeholder="Internal Artist Notes (Manicure)...">${job.manicure_details.admin_notes || ''}</textarea>
                     </div>` : ''}
                 </div>
             </div>`;
         document.getElementById('detailDrawer').classList.remove('translate-x-full');
     }
-
     // --- FINANCIAL HELPERS ---
     function togglePayUI() {
         const type = document.getElementById('payType').value;
