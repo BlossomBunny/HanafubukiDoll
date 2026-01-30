@@ -23,8 +23,8 @@
                 <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
                 <button onclick="switchTab('workbench')" class="nav-btn nav-btn-mint">Commissions ♡</button>
                 <button onclick="switchTab('planner')" class="nav-btn nav-btn-pink">Planner ♡</button>
-                <button onclick="switchTab('inventory')" class="nav-btn nav-btn-mint">Stock ♡</button>
-                <button onclick="switchTab('settings')" class="nav-btn nav-btn-pink">Settings ♡</button>
+                <button onclick="switchTab('settings')" class="nav-btn nav-btn-mint">Settings ♡</button>
+                <button onclick="switchTab('inventory')" class="nav-btn nav-btn-pink">Stock ♡</button>
                 <button onclick="handleLogout()" class="nav-btn bg-gray-100 text-gray-500 border-none hover:bg-red-50 hover:text-red-400 transition-colors">Logout ⏻</button>
             </div>
         </div>
@@ -57,75 +57,27 @@
     </div>
 
     <div id="view-inventory" class="hidden space-y-12 animate-fadeIn pb-20">
-    <div class="glass-card p-8 flex justify-between items-center">
-        <div>
-            <h2 class="text-3xl font-black italic">Studio Stock</h2>
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Type into the bottom row to add new stock ♡</p>
+        <div class="glass-card p-8 flex justify-between items-center">
+            <div>
+                <h2 class="text-3xl font-black italic">Studio Stock</h2>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Instant Table Updates ♡</p>
+            </div>
         </div>
-    </div>
 
-    <div class="space-y-4">
-        <h3 class="text-xs font-black uppercase tracking-widest text-pink-500 px-4">Smartdoll Heads</h3>
-        <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-pink-50/50 text-[10px] font-black uppercase text-pink-400">
-                    <tr>
-                        <th class="p-4">Sculpt</th>
-                        <th class="p-4">Skintone</th>
-                        <th class="p-4 w-32 text-center">Quantity</th>
-                        <th class="p-4 w-20"></th>
-                    </tr>
-                </thead>
-                <tbody id="table-smartdoll-head"></tbody>
-                <tfoot class="bg-pink-50/20">
-                    <tr>
-                        <td class="p-2"><input type="text" id="new-sm-head-sculpt" placeholder="e.g. Mirai" class="w-full p-2 bg-transparent border-b border-pink-100 outline-none text-sm"></td>
-                        <td class="p-2"><input type="text" id="new-sm-head-tone" placeholder="Cinnamon" class="w-full p-2 bg-transparent border-b border-pink-100 outline-none text-sm"></td>
-                        <td class="p-2 text-center"><button onclick="quickAdd('Smartdoll Head', 'sm-head')" class="bg-pink-500 text-white p-2 rounded-lg text-xs">OK</button></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-    </div>
-
-    <div class="space-y-4">
-        <h3 class="text-xs font-black uppercase tracking-widest text-purple-500 px-4">Dollfie Dream Heads</h3>
-        <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-purple-50/50 text-[10px] font-black uppercase text-purple-400">
-                    <tr>
-                        <th class="p-4">Sculpt</th>
-                        <th class="p-4">Skintone</th>
-                        <th class="p-4 w-32 text-center">Quantity</th>
-                        <th class="p-4 w-20"></th>
-                    </tr>
-                </thead>
-                <tbody id="table-dollfie-head"></tbody>
-                <tfoot class="bg-purple-50/20">
-                    <tr>
-                        <td class="p-2"><input type="text" id="new-dd-head-sculpt" placeholder="e.g. DDH-10" class="w-full p-2 bg-transparent border-b border-purple-100 outline-none text-sm"></td>
-                        <td class="p-2"><input type="text" id="new-dd-head-tone" placeholder="Semi-White" class="w-full p-2 bg-transparent border-b border-purple-100 outline-none text-sm"></td>
-                        <td class="p-2 text-center"><button onclick="quickAdd('Dollfie Head', 'dd-head')" class="bg-purple-500 text-white p-2 rounded-lg text-xs">OK</button></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="space-y-4">
-            <h3 class="text-xs font-black uppercase tracking-widest text-emerald-500 px-4">Smartdoll Hands</h3>
-            <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm text-sm">
-                <table class="w-full border-collapse">
-                    <thead class="bg-emerald-50 text-[10px] font-black uppercase text-emerald-600">
-                        <tr><th class="p-4 text-left">Skintone</th><th class="p-4 w-24 text-center">Qty (Pairs)</th><th class="p-4 w-16"></th></tr>
+            <h3 class="text-xs font-black uppercase tracking-widest text-pink-500 px-4">Smartdoll Heads</h3>
+            <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-pink-50/50 text-[10px] font-black uppercase text-pink-400">
+                        <tr><th class="p-4">Sculpt</th><th class="p-4">Skintone</th><th class="p-4 w-32 text-center">Qty</th><th class="p-4 w-20"></th></tr>
                     </thead>
-                    <tbody id="table-smartdoll-hands"></tbody>
-                    <tfoot class="bg-emerald-50/50">
+                    <tbody id="table-smartdoll-head"></tbody>
+                    <tfoot class="bg-pink-50/10">
                         <tr>
-                            <td class="p-2"><input type="text" id="new-sm-hands-tone" placeholder="Cinnamon" class="w-full bg-transparent outline-none text-xs"></td>
-                            <td class="p-2"></td>
-                            <td class="p-2"><button onclick="quickAdd('Smartdoll Hands', 'sm-hands')" class="text-emerald-600 font-bold">+</button></td>
+                            <td class="p-2"><input type="text" id="new-sm-head-sculpt" placeholder="Sculpt" class="w-full p-2 bg-transparent outline-none text-sm border-b"></td>
+                            <td class="p-2"><input type="text" id="new-sm-head-tone" placeholder="Tone" class="w-full p-2 bg-transparent outline-none text-sm border-b"></td>
+                            <td class="p-2"><input type="number" id="new-sm-head-qty" placeholder="0" class="w-full p-2 bg-transparent outline-none text-sm text-center border-b"></td>
+                            <td class="p-2 text-center"><button onclick="quickAdd('Smartdoll Head', 'sm-head')" class="bg-pink-500 text-white px-3 py-1 rounded-lg text-xs">ADD</button></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -133,18 +85,77 @@
         </div>
 
         <div class="space-y-4">
-            <h3 class="text-xs font-black uppercase tracking-widest text-teal-500 px-4">Dollfie Hands</h3>
-            <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm text-sm">
-                <table class="w-full border-collapse">
-                    <thead class="bg-teal-50 text-[10px] font-black uppercase text-teal-600">
-                        <tr><th class="p-4 text-left">Skintone</th><th class="p-4 w-24 text-center">Qty (Pairs)</th><th class="p-4 w-16"></th></tr>
+            <h3 class="text-xs font-black uppercase tracking-widest text-purple-500 px-4">Dollfie Dream Heads</h3>
+            <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-purple-50/50 text-[10px] font-black uppercase text-purple-400">
+                        <tr><th class="p-4">Sculpt</th><th class="p-4">Skintone</th><th class="p-4 w-32 text-center">Qty</th><th class="p-4 w-20"></th></tr>
                     </thead>
-                    <tbody id="table-dollfie-hands"></tbody>
-                    <tfoot class="bg-teal-50/50">
+                    <tbody id="table-dollfie-head"></tbody>
+                    <tfoot class="bg-purple-50/10">
                         <tr>
-                            <td class="p-2"><input type="text" id="new-dd-hands-tone" placeholder="Semi-White" class="w-full bg-transparent outline-none text-xs"></td>
-                            <td class="p-2"></td>
-                            <td class="p-2"><button onclick="quickAdd('Dollfie Hands', 'dd-hands')" class="text-teal-600 font-bold">+</button></td>
+                            <td class="p-2"><input type="text" id="new-dd-head-sculpt" placeholder="Sculpt" class="w-full p-2 bg-transparent outline-none text-sm border-b"></td>
+                            <td class="p-2"><input type="text" id="new-dd-head-tone" placeholder="Tone" class="w-full p-2 bg-transparent outline-none text-sm border-b"></td>
+                            <td class="p-2"><input type="number" id="new-dd-head-qty" placeholder="0" class="w-full p-2 bg-transparent outline-none text-sm text-center border-b"></td>
+                            <td class="p-2 text-center"><button onclick="quickAdd('Dollfie Head', 'dd-head')" class="bg-purple-500 text-white px-3 py-1 rounded-lg text-xs">ADD</button></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+                <h3 class="text-xs font-black uppercase tracking-widest text-emerald-500 px-4">Smartdoll Hands (Pairs)</h3>
+                <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
+                    <table class="w-full border-collapse">
+                        <thead class="bg-emerald-50 text-[10px] font-black uppercase text-emerald-600">
+                            <tr><th class="p-4 text-left">Skintone</th><th class="p-4 w-24 text-center">Qty</th><th class="p-4 w-16"></th></tr>
+                        </thead>
+                        <tbody id="table-smartdoll-hands"></tbody>
+                        <tfoot class="bg-emerald-50/20">
+                            <tr>
+                                <td class="p-2"><input type="text" id="new-sm-hands-tone" placeholder="Skintone" class="w-full bg-transparent outline-none text-xs p-1 border-b"></td>
+                                <td class="p-2"><input type="number" id="new-sm-hands-qty" placeholder="0" class="w-full bg-transparent outline-none text-xs text-center p-1 border-b"></td>
+                                <td class="p-2 text-center"><button onclick="quickAdd('Smartdoll Hands', 'sm-hands')" class="text-emerald-600 font-bold">+</button></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <h3 class="text-xs font-black uppercase tracking-widest text-teal-500 px-4">Dollfie Hands (Pairs)</h3>
+                <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
+                    <table class="w-full border-collapse">
+                        <thead class="bg-teal-50 text-[10px] font-black uppercase text-teal-600">
+                            <tr><th class="p-4 text-left">Skintone</th><th class="p-4 w-24 text-center">Qty</th><th class="p-4 w-16"></th></tr>
+                        </thead>
+                        <tbody id="table-dollfie-hands"></tbody>
+                        <tfoot class="bg-teal-50/20">
+                            <tr>
+                                <td class="p-2"><input type="text" id="new-dd-hands-tone" placeholder="Skintone" class="w-full bg-transparent outline-none text-xs p-1 border-b"></td>
+                                <td class="p-2"><input type="number" id="new-dd-hands-qty" placeholder="0" class="w-full bg-transparent outline-none text-xs text-center p-1 border-b"></td>
+                                <td class="p-2 text-center"><button onclick="quickAdd('Dollfie Hands', 'dd-hands')" class="text-teal-600 font-bold">+</button></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4 max-w-md">
+            <h3 class="text-xs font-black uppercase tracking-widest text-blue-500 px-4">Eye Bases</h3>
+            <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
+                <table class="w-full border-collapse">
+                    <thead class="bg-blue-50 text-[10px] font-black uppercase text-blue-600">
+                        <tr><th class="p-4 text-left">Size (mm)</th><th class="p-4 w-24 text-center">Qty</th><th class="p-4 w-16"></th></tr>
+                    </thead>
+                    <tbody id="table-eyes"></tbody>
+                    <tfoot class="bg-blue-50/20">
+                        <tr>
+                            <td class="p-2"><input type="text" id="new-eyes-size" placeholder="Size" class="w-full bg-transparent outline-none text-xs p-1 border-b"></td>
+                            <td class="p-2"><input type="number" id="new-eyes-qty" placeholder="0" class="w-full bg-transparent outline-none text-xs text-center p-1 border-b"></td>
+                            <td class="p-2 text-center"><button onclick="quickAdd('Eyes', 'eyes')" class="text-blue-600 font-bold">+</button></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -152,26 +163,7 @@
         </div>
     </div>
 
-    <div class="space-y-4 max-w-md">
-        <h3 class="text-xs font-black uppercase tracking-widest text-blue-500 px-4">Eye Bases</h3>
-        <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm text-sm">
-            <table class="w-full border-collapse">
-                <thead class="bg-blue-50 text-[10px] font-black uppercase text-blue-600">
-                    <tr><th class="p-4 text-left">Size (mm)</th><th class="p-4 w-24 text-center">Pairs</th><th class="p-4 w-16"></th></tr>
-                </thead>
-                <tbody id="table-eyes"></tbody>
-                <tfoot class="bg-blue-50/50">
-                    <tr>
-                        <td class="p-2"><input type="text" id="new-eyes-size" placeholder="e.g. 16mm" class="w-full bg-transparent outline-none text-xs"></td>
-                        <td class="p-2"></td>
-                        <td class="p-2"><button onclick="quickAdd('Eyes', 'eyes')" class="text-blue-600 font-bold">+</button></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-    </div>
-</div>
-       <div id="view-settings" class="hidden animate-fadeIn space-y-6">
+    <div id="view-settings" class="hidden animate-fadeIn space-y-6">
         <h2 class="text-3xl font-black italic mb-8">Studio Status Controls</h2>
         <div id="services-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </div>
@@ -196,7 +188,7 @@
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let activeJobId = null;
 
-    // --- AUTH & INITIALIZATION ---
+    // --- AUTH & TAB PERSISTENCE ---
     _supabase.auth.onAuthStateChange((event, session) => {
         const loginGate = document.getElementById('loginGate');
         const adminNav = document.getElementById('adminNav');
@@ -205,8 +197,9 @@
             loginGate.classList.add('hidden');
             adminNav.classList.remove('auth-hidden');
             adminMain.classList.remove('auth-hidden');
-            renderWorkbench();
-            renderPlanner();
+            // Remember tab
+            const lastTab = localStorage.getItem('hana_active_tab') || 'workbench';
+            switchTab(lastTab);
         } else {
             loginGate.classList.remove('hidden');
             adminNav.classList.add('auth-hidden');
@@ -224,18 +217,98 @@
     }
 
     async function handleLogout() {
+        localStorage.removeItem('hana_active_tab');
         await _supabase.auth.signOut();
         window.location.href = 'index.html';
     }
 
-    // --- NAVIGATION ---
     async function switchTab(tab) {
-        ['view-workbench', 'view-planner', 'view-settings', 'view-inventory'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        localStorage.setItem('hana_active_tab', tab);
+        ['view-workbench', 'view-planner', 'view-settings', 'view-inventory'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.classList.add('hidden');
+        });
         document.getElementById(`view-${tab}`).classList.remove('hidden');
         if(tab === 'settings') renderSettings();
         if(tab === 'workbench') renderWorkbench();
         if(tab === 'planner') renderPlanner();
         if(tab === 'inventory') renderInventory();
+    }
+
+    // --- INVENTORY LOGIC ---
+    async function renderInventory() {
+        const { data: items } = await _supabase.from('inventory').select('*').order('sculpt_size');
+        const tables = {
+            'Smartdoll Head': document.getElementById('table-smartdoll-head'),
+            'Dollfie Head': document.getElementById('table-dollfie-head'),
+            'Smartdoll Hands': document.getElementById('table-smartdoll-hands'),
+            'Dollfie Hands': document.getElementById('table-dollfie-hands'),
+            'Eyes': document.getElementById('table-eyes')
+        };
+        Object.values(tables).forEach(t => { if(t) t.innerHTML = ""; });
+
+        items.forEach(item => {
+            const t = tables[item.category];
+            if (!t) return;
+            const row = document.createElement('tr');
+            row.className = "border-t border-pink-50 group hover:bg-pink-50/30 transition-colors";
+            
+            if (item.category.includes('Head')) {
+                row.innerHTML = `
+                    <td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td>
+                    <td class="p-4 text-xs font-medium text-gray-400 uppercase tracking-widest">${item.skintone}</td>
+                `;
+            } else {
+                row.innerHTML = `<td class="p-4 font-bold text-sm text-gray-700">${item.skintone || item.sculpt_size}</td>`;
+            }
+
+            row.innerHTML += `
+                <td class="p-4 text-center">
+                    <div class="flex items-center justify-center gap-3">
+                        <button onclick="updateStock('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-pink-100 font-bold">-</button>
+                        <span class="font-black text-sm w-4">${item.quantity}</span>
+                        <button onclick="updateStock('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-emerald-100 font-bold">+</button>
+                    </div>
+                </td>
+                <td class="p-4 text-right">
+                    <button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-xs">🗑️</button>
+                </td>
+            `;
+            t.appendChild(row);
+        });
+    }
+
+    async function quickAdd(category, prefix) {
+        const sculptInput = document.getElementById(`new-${prefix}-sculpt`);
+        const toneInput = document.getElementById(`new-${prefix}-tone`);
+        const sizeInput = document.getElementById(`new-${prefix}-size`);
+        const qtyInput = document.getElementById(`new-${prefix}-qty`);
+
+        const sculpt = sculptInput ? sculptInput.value : (sizeInput ? sizeInput.value : 'N/A');
+        const tone = toneInput ? toneInput.value : 'N/A';
+        const quantity = parseInt(qtyInput ? qtyInput.value : 0) || 0;
+
+        if (sculpt === 'N/A' && tone === 'N/A') return alert("Enter details first!");
+
+        await _supabase.from('inventory').insert([{ category, sculpt_size: sculpt, skintone: tone, quantity }]);
+        
+        // Clear inputs
+        if(sculptInput) sculptInput.value = '';
+        if(toneInput) toneInput.value = '';
+        if(sizeInput) sizeInput.value = '';
+        if(qtyInput) qtyInput.value = '';
+        
+        renderInventory();
+    }
+
+    async function updateStock(id, change) {
+        const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
+        await _supabase.from('inventory').update({ quantity: Math.max(0, (data.quantity || 0) + change) }).eq('id', id);
+        renderInventory();
+    }
+
+    async function deleteInventoryItem(id) {
+        if (confirm("Delete this item?")) { await _supabase.from('inventory').delete().eq('id', id); renderInventory(); }
     }
 
     // --- WORKBENCH ---
@@ -258,7 +331,7 @@
         const statusColors = { 'Enquiry': 'bg-blue-50 text-blue-500', 'Quote': 'bg-purple-50 text-purple-500', 'Arrived': 'bg-amber-50 text-amber-600', 'Working': 'bg-emerald-50 text-emerald-600', 'Approved': 'bg-cyan-50 text-cyan-600', 'Photo': 'bg-indigo-50 text-indigo-500', 'Shipped': 'bg-gray-100 text-gray-500' };
 
         if (!data || data.length === 0) {
-            container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">${showArchived ? 'No archived dolls yet! 🌸' : 'No active requests! 🕊️'}</div>`;
+            container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">${showArchived ? 'Empty archives! 🌸' : 'No active requests! 🕊️'}</div>`;
             return;
         }
 
@@ -285,100 +358,7 @@
         `).join('');
     }
 
-   async function renderInventory() {
-    const { data: items } = await _supabase.from('inventory').select('*').order('sculpt_size');
-    
-    const tables = {
-        'Smartdoll Head': document.getElementById('table-smartdoll-head'),
-        'Dollfie Head': document.getElementById('table-dollfie-head'),
-        'Smartdoll Hands': document.getElementById('table-smartdoll-hands'),
-        'Dollfie Hands': document.getElementById('table-dollfie-hands'),
-        'Eyes': document.getElementById('table-eyes')
-    };
-    
-    // Clear current tables
-    Object.values(tables).forEach(t => t.innerHTML = "");
-
-    items.forEach(item => {
-        const t = tables[item.category];
-        if (!t) return;
-
-        const row = document.createElement('tr');
-        row.className = "border-t border-pink-50 group hover:bg-pink-50/30 transition-colors";
-        
-        // Heads use two columns for Sculpt/Tone
-        if (item.category.includes('Head')) {
-            row.innerHTML = `
-                <td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td>
-                <td class="p-4 text-xs font-medium text-gray-400 uppercase tracking-widest">${item.skintone}</td>
-            `;
-        } else {
-            // Hands/Eyes use one combined column
-            row.innerHTML = `<td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size} ${item.skintone !== 'N/A' ? `<span class="text-[10px] text-gray-300 ml-2">${item.skintone}</span>` : ''}</td>`;
-        }
-
-        // Common quantity and delete buttons
-        row.innerHTML += `
-            <td class="p-4 text-center">
-                <div class="flex items-center justify-center gap-3">
-                    <button onclick="updateStock('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-pink-100 font-bold">-</button>
-                    <span class="font-black text-sm w-4">${item.quantity}</span>
-                    <button onclick="updateStock('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-emerald-100 font-bold">+</button>
-                </div>
-            </td>
-            <td class="p-4 text-right">
-                <button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-xs">🗑️</button>
-            </td>
-        `;
-        t.appendChild(row);
-    });
-}
-
-// Inline row creation - NO POPUPS!
-async function quickAdd(category, prefix) {
-    let sculpt, tone;
-    
-    if (category.includes('Head')) {
-        sculpt = document.getElementById(`new-${prefix}-sculpt`).value;
-        tone = document.getElementById(`new-${prefix}-tone`).value;
-    } else if (category.includes('Hands')) {
-        sculpt = category.split(' ')[0]; // Smartdoll or Dollfie
-        tone = document.getElementById(`new-${prefix}-tone`).value;
-    } else {
-        sculpt = document.getElementById(`new-${prefix}-size`).value;
-        tone = 'N/A';
-    }
-
-    if (!sculpt) return alert("Please enter details first!");
-
-    await _supabase.from('inventory').insert([{
-        category: category,
-        sculpt_size: sculpt,
-        skintone: tone || 'N/A',
-        quantity: 0
-    }]);
-
-    // Clear inputs
-    if (document.getElementById(`new-${prefix}-sculpt`)) document.getElementById(`new-${prefix}-sculpt`).value = '';
-    if (document.getElementById(`new-${prefix}-tone`)) document.getElementById(`new-${prefix}-tone`).value = '';
-    if (document.getElementById(`new-${prefix}-size`)) document.getElementById(`new-${prefix}-size`).value = '';
-    
-    renderInventory();
-}
-
-async function updateStock(id, change) {
-    const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
-    await _supabase.from('inventory').update({ quantity: Math.max(0, (data.quantity || 0) + change) }).eq('id', id);
-    renderInventory();
-}
-
-async function deleteInventoryItem(id) {
-    if (confirm("Delete this stock line?")) {
-        await _supabase.from('inventory').delete().eq('id', id);
-        renderInventory();
-    }
-}
-    // --- DRAWER POPUP LOGIC ---
+    // --- DRAWER ---
     async function openDrawer(id) {
         activeJobId = id;
         const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
@@ -394,7 +374,7 @@ async function deleteInventoryItem(id) {
                         <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Client Details</h3>
                         <div class="text-sm space-y-1">
                             <p><strong>Handle:</strong> ${job.social_handle || 'N/A'}</p>
-                            <p><strong>Doll:</strong> ${job.doll_company} ${job.doll_sculpt} (${job.doll_skintone})</p>
+                            <p><strong>Doll:</strong> ${job.doll_company} ${job.doll_sculpt}</p>
                         </div>
                     </div>
                     <div class="space-y-4">
@@ -446,15 +426,15 @@ async function deleteInventoryItem(id) {
         } else if (job.payment_method === 'Trade') {
             return `<div class="space-y-3 col-span-2"><div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-pink-100"><input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-6 h-6 accent-pink-500"><label class="text-[11px] font-black uppercase text-gray-600">Partner Item Shipped?</label></div><div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-pink-100"><input type="checkbox" id="weShipped" ${job.we_shipped ? 'checked' : ''} class="w-6 h-6 accent-pink-500"><label class="text-[11px] font-black uppercase text-gray-600">We Have Shipped Swap Item?</label></div></div>`;
         }
-        return `<div class="col-span-2 p-10 text-center italic text-gray-400 text-sm">Gifted commission: No financial tracking required. ♡</div>`;
+        return `<div class="col-span-2 p-10 text-center italic text-gray-400 text-sm">Gifted commission: No tracking needed. ♡</div>`;
     }
     
     function renderServiceBlock(title, details, options) {
         const id = title.toLowerCase();
-        return `<div class="space-y-4 border-l-4 border-pink-100 pl-6 py-2"><div class="flex justify-between items-center"><h4 class="font-black text-pink-500 uppercase tracking-widest text-sm">${title}</h4><select id="${id}Status" class="text-[10px] font-black border-2 border-pink-50 rounded-full px-3 py-1 outline-none">${options.map(opt => `<option value="${opt}" ${(details.status || '') === opt ? 'selected' : ''}>${opt}</option>`).join('')}</select></div><div class="text-[11px] text-gray-500 bg-white border border-pink-50 p-3 rounded-xl italic font-medium">"Client: ${details.notes || 'No specific notes'}"</div><div class="grid grid-cols-2 gap-4"><textarea id="${id}Inv" placeholder="Inventory Log" class="w-full p-3 text-xs border rounded-xl h-20">${details.inventory || ''}</textarea><textarea id="${id}Admin" placeholder="Artist Notes" class="w-full p-3 text-xs border rounded-xl h-20">${details.admin_notes || ''}</textarea></div>${details.images?.length > 0 ? `<div class="flex gap-2 overflow-x-auto py-2 scrollbar-hide">${details.images.map(img => `<img src="${img}" onclick="zoomImage('${img}')" class="w-20 h-20 object-cover rounded-lg border border-pink-100 cursor-zoom-in hover:border-pink-400 transition-all active:scale-95">`).join('')}</div>` : ''}</div>`;
+        return `<div class="space-y-4 border-l-4 border-pink-100 pl-6 py-2"><div class="flex justify-between items-center"><h4 class="font-black text-pink-500 uppercase tracking-widest text-sm">${title}</h4><select id="${id}Status" class="text-[10px] font-black border-2 border-pink-50 rounded-full px-3 py-1 outline-none">${options.map(opt => `<option value="${opt}" ${(details.status || '') === opt ? 'selected' : ''}>${opt}</option>`).join('')}</select></div><div class="text-[11px] text-gray-500 bg-white border border-pink-50 p-3 rounded-xl italic font-medium">"Client: ${details.notes || 'No notes'}"</div><div class="grid grid-cols-2 gap-4"><textarea id="${id}Inv" placeholder="Inventory Log" class="w-full p-3 text-xs border rounded-xl h-20">${details.inventory || ''}</textarea><textarea id="${id}Admin" placeholder="Artist Notes" class="w-full p-3 text-xs border rounded-xl h-20">${details.admin_notes || ''}</textarea></div>${details.images?.length > 0 ? `<div class="flex gap-2 overflow-x-auto py-2 scrollbar-hide">${details.images.map(img => `<img src="${img}" onclick="zoomImage('${img}')" class="w-20 h-20 object-cover rounded-lg border border-pink-100 cursor-zoom-in hover:border-pink-400 transition-all active:scale-95">`).join('')}</div>` : ''}</div>`;
     }
 
-    // --- UPDATED SAVE LOGIC ---
+    // --- SAVE LOGIC ---
     document.getElementById('saveBtn').onclick = async () => {
         const btn = document.getElementById('saveBtn');
         const originalText = btn.innerText;
@@ -464,13 +444,6 @@ async function deleteInventoryItem(id) {
         try {
             const { data: current, error: fetchError } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
             if (fetchError) throw fetchError;
-
-            const newStatus = document.getElementById('updateStatus')?.value;
-            
-            // Trigger Auto-Deduct
-            if (newStatus === 'Working' && current.status !== 'Working') {
-                await deductStockForJob(current);
-            }
 
             let updatedPayments = current.payments || [];
             const method = document.getElementById('payMethod')?.value;
@@ -484,7 +457,7 @@ async function deleteInventoryItem(id) {
             }
 
             const updates = {
-                status: newStatus,
+                status: document.getElementById('updateStatus')?.value,
                 tracking_number: document.getElementById('trackingNum')?.value || null,
                 payment_method: method,
                 total_price: total,
@@ -525,7 +498,7 @@ async function deleteInventoryItem(id) {
         const { data: jobs } = await _supabase.from('commissions').select('*').in('status', inStudioStatuses).eq('archived', false);
         const container = document.getElementById('plannerContainer');
         const today = new Date();
-        if (!jobs || jobs.length === 0) { container.innerHTML = `<div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">Studio is clear! ✨</div>`; return; }
+        if (!jobs || jobs.length === 0) { container.innerHTML = `<div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">Clear studio! ✨</div>`; return; }
         const prioritizedJobs = jobs.map(job => {
             let score = 0;
             const arrival = job.arrival_date ? new Date(job.arrival_date) : today;
@@ -542,7 +515,7 @@ async function deleteInventoryItem(id) {
     function zoomImage(url) { const img = document.getElementById('lightboxImg'); img.src = url; document.getElementById('lightbox').classList.remove('hidden'); }
     
     async function handleArchive() {
-        if (!confirm("Archive this order? reference images will be deleted.")) return;
+        if (!confirm("Archive? Images will be deleted.")) return;
         const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
         const allImages = [...(job.faceup_details?.images || []), ...(job.manicure_details?.images || []), ...(job.eye_details?.images || [])];
         if (allImages.length > 0) {
@@ -587,7 +560,7 @@ async function deleteInventoryItem(id) {
 
 <div id="lightbox" onclick="this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 cursor-zoom-out">
     <img id="lightboxImg" src="" class="max-w-full max-h-full rounded-lg shadow-2xl border-4 border-white/10">
-    <p class="absolute bottom-6 text-white/50 text-[10px] uppercase font-black tracking-widest">Click anywhere to close</p>
+    <p class="absolute bottom-6 text-white/50 text-[10px] uppercase font-black tracking-widest">Click to close</p>
 </div>
 </body>
 </html>
