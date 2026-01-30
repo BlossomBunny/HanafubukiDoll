@@ -56,24 +56,94 @@
         <div id="plannerContainer" class="space-y-4"></div>
     </div>
 
-    <div id="view-inventory" class="hidden space-y-8 animate-fadeIn">
-        <div class="glass-card p-8 flex justify-between items-center">
-            <div>
-                <h2 class="text-3xl font-black italic">Studio Stock</h2>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Heads, Hands, & Eyes</p>
-            </div>
-            <button onclick="openAddStockModal()" class="bg-pink-500 text-white px-8 py-4 rounded-2xl font-black uppercase text-xs shadow-lg hover:scale-105 transition-all">New Item +</button>
-        </div>
-        <div class="space-y-4">
-            <h3 class="text-xs font-black uppercase tracking-widest text-pink-400 px-4">Vinyl Stock (Heads & Hands)</h3>
-            <div id="headsStock" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-        </div>
-        <div class="space-y-4">
-            <h3 class="text-xs font-black uppercase tracking-widest text-blue-400 px-4">Eye Base Stock</h3>
-            <div id="eyesStock" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+    <div id="view-inventory" class="hidden space-y-12 animate-fadeIn pb-20">
+    <div class="glass-card p-8 flex justify-between items-center">
+        <div>
+            <h2 class="text-3xl font-black italic">Studio Stock</h2>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Manage inventory via inline tables</p>
         </div>
     </div>
 
+    <div class="space-y-4">
+        <div class="flex justify-between items-end px-4">
+            <h3 class="text-xs font-black uppercase tracking-widest text-pink-500">Smartdoll Heads</h3>
+            <button onclick="addInventoryRow('Smartdoll Head')" class="text-[10px] font-black uppercase bg-pink-50 text-pink-500 px-3 py-1 rounded-lg hover:bg-pink-500 hover:text-white transition-all">+ Add New Sculpt</button>
+        </div>
+        <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-pink-50/50 text-[10px] font-black uppercase text-pink-400">
+                    <tr>
+                        <th class="p-4">Sculpt</th>
+                        <th class="p-4">Skintone</th>
+                        <th class="p-4 w-32 text-center">Quantity</th>
+                        <th class="p-4 w-20"></th>
+                    </tr>
+                </thead>
+                <tbody id="table-smartdoll-head"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="space-y-4">
+        <div class="flex justify-between items-end px-4">
+            <h3 class="text-xs font-black uppercase tracking-widest text-purple-500">Dollfie Dream Heads</h3>
+            <button onclick="addInventoryRow('Dollfie Head')" class="text-[10px] font-black uppercase bg-purple-50 text-purple-500 px-3 py-1 rounded-lg hover:bg-purple-500 hover:text-white transition-all">+ Add New Sculpt</button>
+        </div>
+        <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-purple-50/50 text-[10px] font-black uppercase text-purple-400">
+                    <tr>
+                        <th class="p-4">Sculpt</th>
+                        <th class="p-4">Skintone</th>
+                        <th class="p-4 w-32 text-center">Quantity</th>
+                        <th class="p-4 w-20"></th>
+                    </tr>
+                </thead>
+                <tbody id="table-dollfie-head"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-4">
+            <div class="flex justify-between items-end px-4">
+                <h3 class="text-xs font-black uppercase tracking-widest text-emerald-500">Hands (Pairs)</h3>
+            </div>
+            <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm text-sm">
+                <table class="w-full border-collapse">
+                    <thead class="bg-emerald-50 text-[10px] font-black uppercase text-emerald-600">
+                        <tr>
+                            <th class="p-4 text-left">Company/Tone</th>
+                            <th class="p-4 w-24 text-center">Pairs</th>
+                            <th class="p-4 w-16"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-hands"></tbody>
+                </table>
+                <button onclick="addInventoryRow('Hands')" class="w-full py-3 text-[9px] font-black uppercase text-emerald-400 hover:bg-emerald-50">+ Add Hand Stock</button>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="flex justify-between items-end px-4">
+                <h3 class="text-xs font-black uppercase tracking-widest text-blue-500">Eye Bases (Pairs)</h3>
+            </div>
+            <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm text-sm">
+                <table class="w-full border-collapse">
+                    <thead class="bg-blue-50 text-[10px] font-black uppercase text-blue-600">
+                        <tr>
+                            <th class="p-4 text-left">Size (mm)</th>
+                            <th class="p-4 w-24 text-center">Pairs</th>
+                            <th class="p-4 w-16"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-eyes"></tbody>
+                </table>
+                <button onclick="addInventoryRow('Eyes')" class="w-full py-3 text-[9px] font-black uppercase text-blue-400 hover:bg-blue-50">+ Add Eye Size</button>
+            </div>
+        </div>
+    </div>
+</div>
     <div id="view-settings" class="hidden animate-fadeIn space-y-6">
         <h2 class="text-3xl font-black italic mb-8">Studio Status Controls</h2>
         <div id="services-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
@@ -188,72 +258,83 @@
         `).join('');
     }
 
-    // --- INVENTORY LOGIC ---
-    async function renderInventory() {
-        const { data: items } = await _supabase.from('inventory').select('*').order('category');
-        const headsContainer = document.getElementById('headsStock');
-        const eyesContainer = document.getElementById('eyesStock');
+   async function renderInventory() {
+    const { data: items } = await _supabase.from('inventory').select('*').order('sculpt_size');
+    
+    // Clear all tables
+    const tables = {
+        'Smartdoll Head': document.getElementById('table-smartdoll-head'),
+        'Dollfie Head': document.getElementById('table-dollfie-head'),
+        'Hands': document.getElementById('table-hands'),
+        'Eyes': document.getElementById('table-eyes')
+    };
+    Object.values(tables).forEach(t => t.innerHTML = "");
 
-        const heads = items.filter(i => i.category.includes('Head') || i.category.includes('Hands'));
-        const eyes = items.filter(i => i.category === 'Eyes');
+    items.forEach(item => {
+        let targetTable = tables[item.category];
+        if (item.category.includes('Hands')) targetTable = tables['Hands'];
 
-        headsContainer.innerHTML = heads.map(item => `
-            <div class="bg-white p-6 rounded-[2.5rem] border border-pink-50 shadow-sm flex justify-between items-center transition-all hover:border-pink-200">
-                <div>
-                    <p class="text-[9px] font-black text-pink-400 uppercase tracking-widest">${item.category}</p>
-                    <h4 class="font-black text-lg">${item.sculpt_size}</h4>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase">${item.skintone || ''}</p>
-                </div>
-                <div class="flex items-center gap-3 bg-pink-50/50 p-2 rounded-2xl">
-                    <button onclick="updateStock('${item.id}', -1)" class="w-10 h-10 font-black text-pink-500 hover:bg-white rounded-xl transition-all">-</button>
-                    <span class="font-black text-xl w-6 text-center">${item.quantity}</span>
-                    <button onclick="updateStock('${item.id}', 1)" class="w-10 h-10 font-black text-pink-500 hover:bg-white rounded-xl transition-all">+</button>
-                </div>
-            </div>
-        `).join('');
-
-        eyesContainer.innerHTML = eyes.map(item => `
-            <div class="bg-blue-50/30 p-4 rounded-3xl border border-blue-100 flex flex-col items-center">
-                <p class="text-[10px] font-black text-blue-500 uppercase">${item.sculpt_size}</p>
-                <div class="flex items-center gap-3 mt-2">
-                    <button onclick="updateStock('${item.id}', -1)" class="font-black text-blue-300">-</button>
-                    <span class="font-black text-blue-600">${item.quantity}</span>
-                    <button onclick="updateStock('${item.id}', 1)" class="font-black text-blue-300">+</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    async function updateStock(id, change) {
-        const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
-        const newQty = Math.max(0, (data.quantity || 0) + change);
-        await _supabase.from('inventory').update({ quantity: newQty }).eq('id', id);
-        renderInventory();
-    }
-
-    async function openAddStockModal() {
-        const cat = prompt("Category (Smartdoll Head, Dollfie Head, Smartdoll Hands, Dollfie Hands, Eyes):");
-        if (!cat) return;
-        const sculpt = prompt("Sculpt or Eye Size (e.g. Mirai or 16mm):");
-        const tone = prompt("Skintone (e.g. Cinnamon or N/A):");
-        const qty = parseInt(prompt("Starting Quantity:")) || 0;
-        await _supabase.from('inventory').insert([{ category: cat, sculpt_size: sculpt, skintone: tone, quantity: qty }]);
-        renderInventory();
-    }
-
-    // --- AUTO-DEDUCT LOGIC ---
-    async function deductStockForJob(job) {
-        let stockType = null;
-        if (job.faceup_details?.base === "Face-Up + Smartdoll Head") stockType = "Smartdoll Head";
-        if (job.faceup_details?.base === "Face-Up + Dollfie Dream Head") stockType = "Dollfie Head";
-        if (stockType) {
-            const { data: item } = await _supabase.from('inventory').select('id, quantity').eq('category', stockType).eq('sculpt_size', job.doll_sculpt).eq('skintone', job.doll_skintone).single();
-            if (item && item.quantity > 0) {
-                await _supabase.from('inventory').update({ quantity: item.quantity - 1 }).eq('id', item.id);
-            }
+        const row = document.createElement('tr');
+        row.className = "border-t border-pink-50 group hover:bg-pink-50/20 transition-colors";
+        
+        if (item.category.includes('Head')) {
+            row.innerHTML = `
+                <td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td>
+                <td class="p-4 text-xs font-medium text-gray-400 uppercase tracking-widest">${item.skintone}</td>
+                <td class="p-4 text-center">
+                    <div class="flex items-center justify-center gap-3">
+                        <button onclick="updateStock('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-gray-100 hover:bg-pink-200">-</button>
+                        <span class="font-black text-sm w-4">${item.quantity}</span>
+                        <button onclick="updateStock('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-gray-100 hover:bg-emerald-200">+</button>
+                    </div>
+                </td>
+                <td class="p-4 text-right">
+                    <button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-xs">🗑️</button>
+                </td>
+            `;
+        } else {
+            // Layout for Hands & Eyes
+            row.innerHTML = `
+                <td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size} <span class="text-[10px] text-gray-300 ml-2">${item.skintone !== 'N/A' ? item.skintone : ''}</span></td>
+                <td class="p-4 text-center">
+                    <div class="flex items-center justify-center gap-3">
+                        <button onclick="updateStock('${item.id}', -1)" class="w-5 h-5 rounded-md bg-gray-50 text-[10px]">-</button>
+                        <span class="font-black text-sm">${item.quantity}</span>
+                        <button onclick="updateStock('${item.id}', 1)" class="w-5 h-5 rounded-md bg-gray-50 text-[10px]">+</button>
+                    </div>
+                </td>
+                <td class="p-4 text-right">
+                    <button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 text-xs">🗑️</button>
+                </td>
+            `;
         }
-    }
+        targetTable.appendChild(row);
+    });
+}
 
+// Add a row using a simple one-line text entry instead of 4 popups
+async function addInventoryRow(category) {
+    const val = prompt(`Enter ${category} details (e.g. "Mirai, Cinnamon" or "16mm")`);
+    if (!val) return;
+
+    const parts = val.split(',').map(p => p.trim());
+    const updates = {
+        category: category,
+        sculpt_size: parts[0],
+        skintone: parts[1] || 'N/A',
+        quantity: 0
+    };
+
+    await _supabase.from('inventory').insert([updates]);
+    renderInventory();
+}
+
+async function deleteInventoryItem(id) {
+    if (confirm("Permanently delete this stock line?")) {
+        await _supabase.from('inventory').delete().eq('id', id);
+        renderInventory();
+    }
+}
     // --- DRAWER POPUP LOGIC ---
     async function openDrawer(id) {
         activeJobId = id;
