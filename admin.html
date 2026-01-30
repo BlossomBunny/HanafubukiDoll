@@ -199,8 +199,6 @@
             loginGate.classList.add('hidden');
             adminNav.classList.remove('auth-hidden');
             adminMain.classList.remove('auth-hidden');
-            
-            // Fix: Check for saved tab or default to workbench
             const lastTab = localStorage.getItem('hana_active_tab') || 'workbench';
             switchTab(lastTab);
         } else {
@@ -232,7 +230,6 @@
             const el = document.getElementById(id);
             if(el) el.classList.add('hidden');
         });
-        
         const targetView = document.getElementById(`view-${tab}`);
         if(targetView) targetView.classList.remove('hidden');
 
@@ -242,22 +239,12 @@
         if(tab === 'inventory') renderInventory();
     }
 
-    // --- PLANNER (FIXED RENDERING) ---
+    // --- PLANNER ---
     async function renderPlanner() {
         const container = document.getElementById('plannerContainer');
         if (!container) return;
-
         const inStudioStatuses = ['Arrived', 'Working', 'Approved', 'Photo'];
-        const { data: jobs, error } = await _supabase.from('commissions')
-            .select('*')
-            .in('status', inStudioStatuses)
-            .eq('archived', false);
-
-        if (error) {
-            console.error("Planner Error:", error);
-            return;
-        }
-
+        const { data: jobs } = await _supabase.from('commissions').select('*').in('status', inStudioStatuses).eq('archived', false);
         const today = new Date();
         if (!jobs || jobs.length === 0) { 
             container.innerHTML = `<div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">Studio is clear! ✨</div>`; 
@@ -266,20 +253,14 @@
 
         const prioritizedJobs = jobs.map(job => {
             let score = 0;
-            // Use arrival date, or fallback to creation date if arrival is null
             const referenceDate = job.arrival_date ? new Date(job.arrival_date) : new Date(job.created_at);
             const diffDays = Math.ceil(Math.abs(today - referenceDate) / (1000 * 60 * 60 * 24));
-            
-            score += diffDays; // Older orders get higher priority
-
+            score += diffDays;
             const totalPaid = (job.payments || []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-            if ((totalPaid >= job.total_price && job.total_price > 0) || job.payment_method === 'Trade') score += 100;
+            if ((totalPaid >= (job.total_price || 0) && job.total_price > 0) || job.payment_method === 'Trade') score += 100;
             if (job.is_urgent) score += 500;
-
             return { ...job, score, diffDays };
-        });
-
-        prioritizedJobs.sort((a, b) => b.score - a.score);
+        }).sort((a, b) => b.score - a.score);
 
         container.innerHTML = prioritizedJobs.map((job, index) => `
             <div class="flex items-center gap-6 p-5 rounded-[2rem] border ${job.is_urgent ? 'border-red-200 bg-red-50/30' : 'border-pink-50 bg-white'} shadow-sm transition-all">
@@ -293,52 +274,27 @@
                         ${job.is_urgent ? '<span class="px-2 py-0.5 rounded-md bg-red-500 text-white text-[8px] font-black uppercase animate-pulse">Urgent</span>' : ''}
                     </div>
                     <p class="text-[10px] uppercase tracking-widest text-gray-400">${job.diffDays} Days in Studio • ${job.status}</p>
-                    <p class="text-[9px] font-bold text-pink-400 uppercase mt-1">${job.doll_company} ${job.doll_sculpt}</p>
                 </div>
-                <button onclick="openDrawer('${job.id}')" class="p-3 bg-white border border-gray-100 rounded-xl hover:bg-pink-50 transition-colors">⚙️</button>
-            </div>
-        `).join('');
+                <button onclick="openDrawer('${job.id}')" class="px-6 py-2 bg-pink-50 text-pink-500 rounded-xl text-[10px] font-black uppercase hover:bg-pink-100 transition-all">Job Details ♡</button>
+            </div>`).join('');
     }
 
-    // --- INVENTORY LOGIC (ALPHABETIZED) ---
+    // --- INVENTORY ---
     async function renderInventory() {
         const { data: items } = await _supabase.from('inventory').select('*');
         if (!items) return;
-
-        // Sorting: Alphabetical by sculpt_size
         items.sort((a, b) => (a.sculpt_size || "").localeCompare(b.sculpt_size || "", undefined, {numeric: true, sensitivity: 'base'}));
-
-        const tables = {
-            'Smartdoll Head': document.getElementById('table-smartdoll-head'),
-            'Dollfie Head': document.getElementById('table-dollfie-head'),
-            'Smartdoll Hands': document.getElementById('table-smartdoll-hands'),
-            'Dollfie Hands': document.getElementById('table-dollfie-hands'),
-            'Eyes': document.getElementById('table-eyes')
-        };
-        
-        Object.values(tables).forEach(t => { if(t) t.innerHTML = ""; });
+        const tables = { 'Smartdoll Head': 'table-smartdoll-head', 'Dollfie Head': 'table-dollfie-head', 'Smartdoll Hands': 'table-smartdoll-hands', 'Dollfie Hands': 'table-dollfie-hands', 'Eyes': 'table-eyes' };
+        Object.values(tables).forEach(id => { const t = document.getElementById(id); if(t) t.innerHTML = ""; });
 
         items.forEach(item => {
-            const t = tables[item.category];
+            const tableId = tables[item.category];
+            const t = document.getElementById(tableId);
             if (!t) return;
-
             const row = document.createElement('tr');
             row.className = "border-t border-pink-50 group hover:bg-pink-50/30 transition-colors";
-            
-            if (item.category.includes('Head')) {
-                row.innerHTML = `
-                    <td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td>
-                    <td class="p-4 text-xs font-medium text-gray-400 uppercase tracking-widest">${item.skintone}</td>
-                `;
-            } else if (item.category === 'Eyes') {
-                // Fixed Eye Size display
-                row.innerHTML = `<td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td>`;
-            } else {
-                // Hands display skintone
-                row.innerHTML = `<td class="p-4 font-bold text-sm text-gray-700">${item.skintone}</td>`;
-            }
-
-            row.innerHTML += `
+            let labelHTML = item.category.includes('Head') ? `<td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td><td class="p-4 text-xs font-medium text-gray-400 uppercase tracking-widest">${item.skintone}</td>` : `<td class="p-4 font-bold text-sm text-gray-700">${item.category === 'Eyes' ? item.sculpt_size : item.skintone}</td>`;
+            row.innerHTML = labelHTML + `
                 <td class="p-4 text-center">
                     <div class="flex items-center justify-center gap-3">
                         <button onclick="updateStock('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-pink-100 font-bold">-</button>
@@ -346,10 +302,7 @@
                         <button onclick="updateStock('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-emerald-100 font-bold">+</button>
                     </div>
                 </td>
-                <td class="p-4 text-right">
-                    <button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-xs">🗑️</button>
-                </td>
-            `;
+                <td class="p-4 text-right"><button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-xs">🗑️</button></td>`;
             t.appendChild(row);
         });
     }
@@ -358,32 +311,17 @@
         const sculptInput = document.getElementById(`new-${prefix}-sculpt`);
         const toneInput = document.getElementById(`new-${prefix}-tone`);
         const sizeInput = document.getElementById(`new-${prefix}-size`);
+        const qtyInput = document.getElementById(`new-${prefix}-qty`);
         
-        let sculpt = 'N/A';
-        let tone = 'N/A';
+        let sculpt = category.includes('Head') ? (sculptInput?.value || 'N/A') : (sizeInput?.value || 'N/A');
+        let tone = category.includes('Head') || category.includes('Hands') ? (toneInput?.value || 'N/A') : 'N/A';
+        const quantity = parseInt(qtyInput?.value) || 0;
 
-        if (category.includes('Head')) {
-            sculpt = sculptInput.value;
-            tone = toneInput.value;
-        } else if (category === 'Eyes') {
-            sculpt = sizeInput.value;
-        } else if (category.includes('Hands')) {
-            tone = toneInput.value;
-        }
+        if ((category.includes('Head') && (!sculptInput.value || !toneInput.value)) || (category === 'Eyes' && !sizeInput.value) || (category.includes('Hands') && !toneInput.value)) return alert("Please fill in details!");
 
-        if (sculpt === '' || tone === '') return alert("Please enter details!");
-
-        await _supabase.from('inventory').insert([{ 
-            category, 
-            sculpt_size: sculpt, 
-            skintone: tone, 
-            quantity: 0 
-        }]);
+        await _supabase.from('inventory').insert([{ category, sculpt_size: sculpt, skintone: tone, quantity }]);
         
-        // Clear inputs
-        if(sculptInput) sculptInput.value = '';
-        if(toneInput) toneInput.value = '';
-        if(sizeInput) sizeInput.value = '';
+        [sculptInput, toneInput, sizeInput, qtyInput].forEach(i => { if(i) i.value = ""; });
         renderInventory();
     }
 
@@ -394,31 +332,62 @@
     }
 
     async function deleteInventoryItem(id) {
-        if (confirm("Delete this stock line?")) {
-            await _supabase.from('inventory').delete().eq('id', id);
-            renderInventory();
-        }
+        if (confirm("Delete this stock line?")) { await _supabase.from('inventory').delete().eq('id', id); renderInventory(); }
     }
 
-    // --- WORKBENCH & OTHER FUNCTIONS (KEEP AS IS) ---
+    // --- WORKBENCH & DRAWER ---
     async function renderWorkbench(showArchived = false) {
         const container = document.getElementById('commissionList');
-        const { data, error } = await _supabase.from('commissions').select('*').eq('archived', showArchived).order('created_at', { ascending: false });
-        if (error || !data) return;
+        const { data } = await _supabase.from('commissions').select('*').eq('archived', showArchived).order('created_at', { ascending: false });
+        if (!data) return;
         const statusColors = { 'Enquiry': 'bg-blue-50 text-blue-500', 'Quote': 'bg-purple-50 text-purple-500', 'Arrived': 'bg-amber-50 text-amber-600', 'Working': 'bg-emerald-50 text-emerald-600', 'Approved': 'bg-cyan-50 text-cyan-600', 'Photo': 'bg-indigo-50 text-indigo-500', 'Shipped': 'bg-gray-100 text-gray-500' };
         container.innerHTML = data.map(job => `
             <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
-                <div class="w-12 h-12 bg-pink-50 rounded-full shrink-0 flex items-center justify-center overflow-hidden border border-pink-100">
-                    ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '🎨'}
-                </div>
+                <div class="w-12 h-12 bg-pink-50 rounded-full shrink-0 flex items-center justify-center overflow-hidden border border-pink-100">${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '🎨'}</div>
                 <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
                     <div><h4 class="font-black text-sm truncate">${job.social_handle || 'Unknown'}</h4><p class="text-[9px] font-bold text-pink-400 uppercase tracking-tighter">${job.doll_company} ${job.doll_sculpt}</p></div>
-                    <div class="hidden md:block"><p class="text-[9px] font-black text-gray-300 uppercase">Requested</p><p class="text-[10px] text-gray-500 truncate">${job.faceup_details ? 'Faceup ' : ''}${job.eye_details ? '• Eyes ' : ''}${job.manicure_details ? '• Mani' : ''}</p></div>
+                    <div class="hidden md:block"><p class="text-[9px] font-black text-gray-300 uppercase">Requested</p><p class="text-[10px] text-gray-500 truncate">${job.faceup_details ? 'Faceup ' : ''}${job.eye_details ? '• Eyes ' : ''}</p></div>
                     <div><span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColors[job.status] || 'bg-gray-50 text-gray-400'}">${job.status}</span></div>
-                    <div class="text-right"><button onclick="openDrawer('${job.id}')" class="text-[10px] font-black uppercase text-pink-500 hover:underline">Open Order →</button></div>
+                    <div class="text-right"><button onclick="openDrawer('${job.id}')" class="px-4 py-2 bg-pink-50 text-pink-500 rounded-xl text-[10px] font-black uppercase">Open Order ♡</button></div>
                 </div>
             </div>`).join('');
     }
+
+    async function openDrawer(id) {
+        activeJobId = id;
+        const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
+        const content = document.getElementById('drawerContent');
+        const paid = (job.payments || []).reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+        const balance = Math.max(0, (job.total_price || 0) - paid);
+
+        content.innerHTML = `
+            <div class="space-y-8 pb-10">
+                <div class="grid grid-cols-2 gap-6">
+                    <div><h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Client</h3><p class="text-sm font-bold">${job.social_handle}</p><p class="text-[10px] text-pink-400 uppercase font-black">${job.doll_company} ${job.doll_sculpt}</p></div>
+                    <div><h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Status</h3>
+                        <select id="upStatus" class="w-full p-2 border border-pink-100 rounded-xl text-xs font-bold">${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped'].map(s => `<option value="${s}" ${job.status===s?'selected':''}>${s}</option>`).join('')}</select>
+                    </div>
+                </div>
+                <div class="bg-pink-50/50 p-6 rounded-[2rem] border border-pink-100">
+                    <div class="flex justify-between items-center mb-4"><h3 class="text-[10px] font-black uppercase text-pink-400">Financials</h3><div class="flex items-center gap-2"><input type="checkbox" id="isUrg" ${job.is_urgent?'checked':''} class="w-4 h-4 accent-red-500"><label class="text-[10px] font-black uppercase text-red-500">Urgent</label></div></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-[9px] font-black uppercase text-gray-400">Price (£)</label><input type="number" id="tPrice" value="${job.total_price||0}" class="w-full p-2 border rounded-xl font-bold text-sm"></div>
+                        <div class="p-3 bg-white rounded-xl border border-pink-100"><p class="text-[9px] font-black text-gray-400 uppercase">Balance</p><p class="text-lg font-black ${balance>0?'text-rose-500':'text-emerald-500'}">£${balance.toFixed(2)}</p></div>
+                    </div>
+                </div>
+                ${job.faceup_details ? `<div class="space-y-2 border-l-4 border-pink-100 pl-4"><h4 class="text-xs font-black uppercase text-pink-500">Faceup Notes</h4><textarea id="fAdmin" class="w-full p-3 text-xs border rounded-xl h-24">${job.faceup_details.admin_notes || ''}</textarea></div>` : ''}
+            </div>`;
+        document.getElementById('detailDrawer').classList.remove('translate-x-full');
+    }
+
+    document.getElementById('saveBtn').onclick = async () => {
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = "Saving... ✨";
+        const upd = { status: document.getElementById('upStatus').value, total_price: parseFloat(document.getElementById('tPrice').value), is_urgent: document.getElementById('isUrg').checked };
+        await _supabase.from('commissions').update(upd).eq('id', activeJobId);
+        btn.innerText = "Saved! ♡";
+        setTimeout(() => { closeDrawer(); renderWorkbench(); renderPlanner(); }, 800);
+    };
 
     async function renderSettings() {
         const { data } = await _supabase.from('studio_settings').select('*');
@@ -428,7 +397,6 @@
 
     async function toggleService(id, status) { await _supabase.from('studio_settings').update({ is_live: status }).eq('id', id); renderSettings(); }
     function closeDrawer() { document.getElementById('detailDrawer').classList.add('translate-x-full'); }
-    // (Include other drawer helper functions like openDrawer, renderFinancialInputs, etc. from your original file here)
 </script>
 </body>
 </html>
