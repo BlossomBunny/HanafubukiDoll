@@ -235,82 +235,87 @@
         if(tab === 'inventory') renderInventory();
     }
 
-    // --- INVENTORY LOGIC ---
-    async function renderInventory() {
-        const { data: items } = await _supabase.from('inventory').select('*').order('sculpt_size');
-        const tables = {
-            'Smartdoll Head': document.getElementById('table-smartdoll-head'),
-            'Dollfie Head': document.getElementById('table-dollfie-head'),
-            'Smartdoll Hands': document.getElementById('table-smartdoll-hands'),
-            'Dollfie Hands': document.getElementById('table-dollfie-hands'),
-            'Eyes': document.getElementById('table-eyes')
-        };
-        Object.values(tables).forEach(t => { if(t) t.innerHTML = ""; });
+    // --- FIXED INVENTORY LOGIC ---
+async function renderInventory() {
+    const { data: items } = await _supabase.from('inventory').select('*').order('sculpt_size');
+    const tables = {
+        'Smartdoll Head': document.getElementById('table-smartdoll-head'),
+        'Dollfie Head': document.getElementById('table-dollfie-head'),
+        'Smartdoll Hands': document.getElementById('table-smartdoll-hands'),
+        'Dollfie Hands': document.getElementById('table-dollfie-hands'),
+        'Eyes': document.getElementById('table-eyes')
+    };
+    Object.values(tables).forEach(t => { if(t) t.innerHTML = ""; });
 
-        items.forEach(item => {
-            const t = tables[item.category];
-            if (!t) return;
-            const row = document.createElement('tr');
-            row.className = "border-t border-pink-50 group hover:bg-pink-50/30 transition-colors";
-            
-            if (item.category.includes('Head')) {
-                row.innerHTML = `
-                    <td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td>
-                    <td class="p-4 text-xs font-medium text-gray-400 uppercase tracking-widest">${item.skintone}</td>
-                `;
-            } else {
-                row.innerHTML = `<td class="p-4 font-bold text-sm text-gray-700">${item.skintone || item.sculpt_size}</td>`;
-            }
-
-            row.innerHTML += `
-                <td class="p-4 text-center">
-                    <div class="flex items-center justify-center gap-3">
-                        <button onclick="updateStock('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-pink-100 font-bold">-</button>
-                        <span class="font-black text-sm w-4">${item.quantity}</span>
-                        <button onclick="updateStock('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-emerald-100 font-bold">+</button>
-                    </div>
-                </td>
-                <td class="p-4 text-right">
-                    <button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-xs">🗑️</button>
-                </td>
+    items.forEach(item => {
+        const t = tables[item.category];
+        if (!t) return;
+        const row = document.createElement('tr');
+        row.className = "border-t border-pink-50 group hover:bg-pink-50/30 transition-colors";
+        
+        // DISPLAY LOGIC
+        if (item.category.includes('Head')) {
+            // Heads: Show Sculpt and Tone
+            row.innerHTML = `
+                <td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td>
+                <td class="p-4 text-xs font-medium text-gray-400 uppercase tracking-widest">${item.skintone}</td>
             `;
-            t.appendChild(row);
-        });
+        } else if (item.category === 'Eyes') {
+            // Eyes: Show the Size (stored in sculpt_size)
+            row.innerHTML = `<td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td>`;
+        } else {
+            // Hands: Show the Skintone
+            row.innerHTML = `<td class="p-4 font-bold text-sm text-gray-700">${item.skintone}</td>`;
+        }
+
+        row.innerHTML += `
+            <td class="p-4 text-center">
+                <div class="flex items-center justify-center gap-3">
+                    <button onclick="updateStock('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-pink-100 font-bold">-</button>
+                    <span class="font-black text-sm w-4 text-center">${item.quantity}</span>
+                    <button onclick="updateStock('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-emerald-100 font-bold">+</button>
+                </div>
+            </td>
+            <td class="p-4 text-right">
+                <button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-xs">🗑️</button>
+            </td>
+        `;
+        t.appendChild(row);
+    });
+}
+
+async function quickAdd(category, prefix) {
+    const sculptInput = document.getElementById(`new-${prefix}-sculpt`);
+    const toneInput = document.getElementById(`new-${prefix}-tone`);
+    const sizeInput = document.getElementById(`new-${prefix}-size`); // This was the missing link for eyes!
+    const qtyInput = document.getElementById(`new-${prefix}-qty`);
+
+    let sculpt = 'N/A';
+    let tone = 'N/A';
+    const quantity = parseInt(qtyInput ? qtyInput.value : 0) || 0;
+
+    // Route the data based on the category
+    if (category.includes('Head')) {
+        sculpt = sculptInput.value;
+        tone = toneInput.value;
+    } else if (category === 'Eyes') {
+        sculpt = sizeInput.value; // Size goes into sculpt_size column
+    } else if (category.includes('Hands')) {
+        tone = toneInput.value; // Tone goes into skintone column
     }
 
-    async function quickAdd(category, prefix) {
-        const sculptInput = document.getElementById(`new-${prefix}-sculpt`);
-        const toneInput = document.getElementById(`new-${prefix}-tone`);
-        const sizeInput = document.getElementById(`new-${prefix}-size`);
-        const qtyInput = document.getElementById(`new-${prefix}-qty`);
+    if (sculpt === '' || tone === '') return alert("Please enter details!");
 
-        const sculpt = sculptInput ? sculptInput.value : (sizeInput ? sizeInput.value : 'N/A');
-        const tone = toneInput ? toneInput.value : 'N/A';
-        const quantity = parseInt(qtyInput ? qtyInput.value : 0) || 0;
-
-        if (sculpt === 'N/A' && tone === 'N/A') return alert("Enter details first!");
-
-        await _supabase.from('inventory').insert([{ category, sculpt_size: sculpt, skintone: tone, quantity }]);
-        
-        // Clear inputs
-        if(sculptInput) sculptInput.value = '';
-        if(toneInput) toneInput.value = '';
-        if(sizeInput) sizeInput.value = '';
-        if(qtyInput) qtyInput.value = '';
-        
-        renderInventory();
-    }
-
-    async function updateStock(id, change) {
-        const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
-        await _supabase.from('inventory').update({ quantity: Math.max(0, (data.quantity || 0) + change) }).eq('id', id);
-        renderInventory();
-    }
-
-    async function deleteInventoryItem(id) {
-        if (confirm("Delete this item?")) { await _supabase.from('inventory').delete().eq('id', id); renderInventory(); }
-    }
-
+    await _supabase.from('inventory').insert([{ category, sculpt_size: sculpt, skintone: tone, quantity }]);
+    
+    // Clear all possible inputs
+    if(sculptInput) sculptInput.value = '';
+    if(toneInput) toneInput.value = '';
+    if(sizeInput) sizeInput.value = '';
+    if(qtyInput) qtyInput.value = '';
+    
+    renderInventory();
+}
     // --- WORKBENCH ---
     async function renderWorkbench(showArchived = false) {
         const container = document.getElementById('commissionList');
