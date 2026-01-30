@@ -484,9 +484,6 @@
                                 <select id="eyeStatus" class="text-[9px] font-black uppercase bg-blue-50 p-1 rounded-md">
                                     ${['Pending','Working','Completed'].map(s => `<option value="${s}" ${job.eye_details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
                                 </select>
-                            </div>
-                            <p class="text-[11px]"><strong>Style:</strong> ${job.eye_details.style}</p>
-                            <p class="text-[11px]"><strong>Size:</strong> ${job.eye_details.size}</p>
                         </div>` : ''}
 
                         ${job.manicure_details ? `
@@ -496,8 +493,6 @@
                                 <select id="maniStatus" class="text-[9px] font-black uppercase bg-emerald-50 p-1 rounded-md">
                                     ${['Pending','Working','Completed'].map(s => `<option value="${s}" ${job.manicure_details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
                                 </select>
-                            </div>
-                            <p class="text-[11px]"><strong>Type:</strong> ${job.manicure_details.type}</p>
                         </div>` : ''}
                     </div>
                 </div>
