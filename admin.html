@@ -11,9 +11,6 @@
         .auth-hidden { display: none !important; }
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-radius: 2rem; border: 1px solid rgba(255, 192, 203, 0.2); }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #fce7f3; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-[#fdfbfb]">
@@ -21,7 +18,7 @@
     <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="text-xl md:text-2xl font-black tracking-tighter">
-                <span class="bounce-bunny">🐰</span> HanafubukiDoll <span class="text-pink-400 font-extrabold italic uppercase text-xs tracking-widest ml-1">Admin</span>
+                <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
             </div>
             <div id="adminNav" class="auth-hidden flex flex-wrap justify-center gap-2 md:gap-4">
                 <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
@@ -29,115 +26,162 @@
                 <button onclick="switchTab('planner')" class="nav-btn nav-btn-pink">Planner ♡</button>
                 <button onclick="switchTab('inventory')" class="nav-btn nav-btn-mint">Stock ♡</button>
                 <button onclick="switchTab('settings')" class="nav-btn nav-btn-pink">Settings ♡</button>
-                <button onclick="_supabase.auth.signOut()" class="nav-btn bg-gray-100 text-gray-500 border-none hover:bg-red-50 hover:text-red-400 transition-colors">Logout ⏻</button>
+                <button onclick="handleLogout()" class="nav-btn bg-gray-100 text-gray-500 border-none hover:bg-red-50 hover:text-red-400 transition-colors">Logout ⏻</button>
             </div>
         </div>
     </nav>
 
-    <div id="loginGate" class="max-w-md mx-auto mt-20 p-10 glass-card text-center space-y-6">
+    <div id="loginGate" class="max-w-md mx-auto mt-20 p-10 glass-card text-center space-y-6 animate-fadeIn">
         <h2 class="text-2xl font-black italic">Artist Entrance</h2>
         <div class="space-y-4">
-            <input type="email" id="adminEmail" placeholder="Studio Email" class="w-full p-4 rounded-2xl border border-pink-100 outline-none">
-            <input type="password" id="adminPass" placeholder="Secret Key" class="w-full p-4 rounded-2xl border border-pink-100 outline-none">
+            <input type="email" id="adminEmail" placeholder="Studio Email" class="w-full p-4 rounded-2xl border border-pink-100 outline-none focus:ring-2 ring-pink-200">
+            <input type="password" id="adminPass" placeholder="Secret Key" class="w-full p-4 rounded-2xl border border-pink-100 outline-none focus:ring-2 ring-pink-200">
         </div>
-        <button onclick="handleLogin()" id="loginBtn" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-black">Unlock Studio ♡</button>
+        <button onclick="handleLogin()" id="loginBtn" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:scale-[1.02] transition-all">Unlock Studio ♡</button>
     </div>
 
-    <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
-        
-        <div id="view-workbench" class="space-y-4">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
-                <h2 class="text-3xl font-black italic">Client Inbox</h2>
-                <div class="flex bg-gray-100 p-1 rounded-2xl border border-gray-200">
-                    <button onclick="renderWorkbench(false)" id="tab-live" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500">Live</button>
-                    <button onclick="renderWorkbench(true)" id="tab-archived" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400">Archived</button>
-                </div>
+   <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
+    
+    <div id="view-workbench" class="space-y-4">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+            <h2 class="text-3xl font-black italic">Client Inbox</h2>
+            <div class="flex bg-gray-100 p-1 rounded-2xl border border-gray-200">
+                <button onclick="renderWorkbench(false)" id="tab-live" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500">Live</button>
+                <button onclick="renderWorkbench(true)" id="tab-archived" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400">Archived</button>
             </div>
-            <div id="commissionList" class="space-y-2"></div>
+        </div>
+        <div id="commissionList" class="space-y-2"></div>
+    </div>
+
+    <div id="view-planner" class="hidden space-y-6">
+        <h2 class="text-3xl font-black italic mb-8">Priority Planner</h2>
+        <div id="plannerContainer" class="space-y-4"></div>
+    </div>
+
+    <div id="view-inventory" class="hidden space-y-12 animate-fadeIn pb-20">
+        <div class="glass-card p-8 flex justify-between items-center">
+            <div>
+                <h2 class="text-3xl font-black italic">Studio Stock</h2>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tables auto-sort by name/size ♡</p>
+            </div>
         </div>
 
-        <div id="view-planner" class="hidden space-y-6">
-            <h2 class="text-3xl font-black italic mb-8">Priority Planner</h2>
-            <div id="plannerContainer" class="space-y-4"></div>
+        <div class="space-y-4">
+            <h3 class="text-xs font-black uppercase tracking-widest text-pink-500 px-4">Smartdoll Heads</h3>
+            <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-pink-50/50 text-[10px] font-black uppercase text-pink-400">
+                        <tr><th class="p-4">Sculpt</th><th class="p-4">Skintone</th><th class="p-4 w-32 text-center">Qty</th><th class="p-4 w-20"></th></tr>
+                    </thead>
+                    <tbody id="table-smartdoll-head"></tbody>
+                    <tfoot class="bg-pink-50/10">
+                        <tr>
+                            <td class="p-2"><input type="text" id="new-sm-head-sculpt" placeholder="Sculpt Name" class="w-full p-2 bg-transparent outline-none text-sm border-b border-pink-100"></td>
+                            <td class="p-2"><input type="text" id="new-sm-head-tone" placeholder="Tone" class="w-full p-2 bg-transparent outline-none text-sm border-b border-pink-100"></td>
+                            <td class="p-2"><input type="number" id="new-sm-head-qty" placeholder="0" class="w-full p-2 bg-transparent outline-none text-sm text-center border-b border-pink-100"></td>
+                            <td class="p-2 text-center"><button onclick="quickAdd('Smartdoll Head', 'sm-head')" class="bg-pink-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase">ADD</button></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
 
-        <div id="view-inventory" class="hidden space-y-12 pb-20">
-            <div class="glass-card p-8 flex justify-between items-center">
-                <div>
-                    <h2 class="text-3xl font-black italic">Studio Stock</h2>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tables auto-sort by name/size ♡</p>
-                </div>
+        <div class="space-y-4">
+            <h3 class="text-xs font-black uppercase tracking-widest text-purple-500 px-4">Dollfie Dream Heads</h3>
+            <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-purple-50/50 text-[10px] font-black uppercase text-purple-400">
+                        <tr><th class="p-4">Sculpt</th><th class="p-4">Skintone</th><th class="p-4 w-32 text-center">Qty</th><th class="p-4 w-20"></th></tr>
+                    </thead>
+                    <tbody id="table-dollfie-head"></tbody>
+                    <tfoot class="bg-purple-50/10">
+                        <tr>
+                            <td class="p-2"><input type="text" id="new-dd-head-sculpt" placeholder="Sculpt Name" class="w-full p-2 bg-transparent outline-none text-sm border-b border-purple-100"></td>
+                            <td class="p-2"><input type="text" id="new-dd-head-tone" placeholder="Tone" class="w-full p-2 bg-transparent outline-none text-sm border-b border-purple-100"></td>
+                            <td class="p-2"><input type="number" id="new-dd-head-qty" placeholder="0" class="w-full p-2 bg-transparent outline-none text-sm text-center border-b border-purple-100"></td>
+                            <td class="p-2 text-center"><button onclick="quickAdd('Dollfie Head', 'dd-head')" class="bg-purple-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase">ADD</button></td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
+        </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-4">
-                <h3 class="text-xs font-black uppercase tracking-widest text-pink-500 px-4">Smartdoll Heads</h3>
+                <h3 class="text-xs font-black uppercase tracking-widest text-emerald-500 px-4">Smartdoll Hands (Pairs)</h3>
                 <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-pink-50/50 text-[10px] font-black uppercase text-pink-400">
-                            <tr><th class="p-4">Sculpt</th><th class="p-4">Skintone</th><th class="p-4 w-32 text-center">Qty</th><th class="p-4 w-20"></th></tr>
+                    <table class="w-full border-collapse">
+                        <thead class="bg-emerald-50 text-[10px] font-black uppercase text-emerald-600">
+                            <tr><th class="p-4 text-left">Skintone</th><th class="p-4 w-24 text-center">Qty</th><th class="p-4 w-16"></th></tr>
                         </thead>
-                        <tbody id="table-smartdoll-head"></tbody>
-                        <tfoot class="bg-pink-50/10">
+                        <tbody id="table-smartdoll-hands"></tbody>
+                        <tfoot class="bg-emerald-50/20">
                             <tr>
-                                <td class="p-2"><input type="text" id="new-sm-head-sculpt" placeholder="Sculpt Name" class="w-full p-2 bg-transparent outline-none text-sm border-b border-pink-100"></td>
-                                <td class="p-2"><input type="text" id="new-sm-head-tone" placeholder="Tone" class="w-full p-2 bg-transparent outline-none text-sm border-b border-pink-100"></td>
-                                <td class="p-2"><input type="number" id="new-sm-head-qty" placeholder="0" class="w-full p-2 bg-transparent outline-none text-sm text-center border-b border-pink-100"></td>
-                                <td class="p-2 text-center"><button onclick="quickAdd('Smartdoll Head', 'sm-head')" class="bg-pink-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase">ADD</button></td>
+                                <td class="p-2"><input type="text" id="new-sm-hands-tone" placeholder="Skintone" class="w-full bg-transparent outline-none text-xs p-1 border-b border-emerald-100"></td>
+                                <td class="p-2"><input type="number" id="new-sm-hands-qty" placeholder="0" class="w-full bg-transparent outline-none text-xs text-center p-1 border-b border-emerald-100"></td>
+                                <td class="p-2 text-center"><button onclick="quickAdd('Smartdoll Hands', 'sm-hands')" class="text-emerald-600 font-bold">+</button></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
             </div>
-
             <div class="space-y-4">
-                <h3 class="text-xs font-black uppercase tracking-widest text-purple-500 px-4">Dollfie Dream Heads</h3>
+                <h3 class="text-xs font-black uppercase tracking-widest text-teal-500 px-4">Dollfie Hands (Pairs)</h3>
                 <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-purple-50/50 text-[10px] font-black uppercase text-purple-400">
-                            <tr><th class="p-4">Sculpt</th><th class="p-4">Skintone</th><th class="p-4 w-32 text-center">Qty</th><th class="p-4 w-20"></th></tr>
+                    <table class="w-full border-collapse">
+                        <thead class="bg-teal-50 text-[10px] font-black uppercase text-teal-600">
+                            <tr><th class="p-4 text-left">Skintone</th><th class="p-4 w-24 text-center">Qty</th><th class="p-4 w-16"></th></tr>
                         </thead>
-                        <tbody id="table-dollfie-head"></tbody>
-                        <tfoot class="bg-purple-50/10">
+                        <tbody id="table-dollfie-hands"></tbody>
+                        <tfoot class="bg-teal-50/20">
                             <tr>
-                                <td class="p-2"><input type="text" id="new-dd-head-sculpt" placeholder="Sculpt Name" class="w-full p-2 bg-transparent outline-none text-sm border-b border-purple-100"></td>
-                                <td class="p-2"><input type="text" id="new-dd-head-tone" placeholder="Tone" class="w-full p-2 bg-transparent outline-none text-sm border-b border-purple-100"></td>
-                                <td class="p-2"><input type="number" id="new-dd-head-qty" placeholder="0" class="w-full p-2 bg-transparent outline-none text-sm text-center border-b border-purple-100"></td>
-                                <td class="p-2 text-center"><button onclick="quickAdd('Dollfie Head', 'dd-head')" class="bg-purple-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase">ADD</button></td>
+                                <td class="p-2"><input type="text" id="new-dd-hands-tone" placeholder="Skintone" class="w-full bg-transparent outline-none text-xs p-1 border-b border-teal-100"></td>
+                                <td class="p-2"><input type="number" id="new-dd-hands-qty" placeholder="0" class="w-full bg-transparent outline-none text-xs text-center p-1 border-b border-teal-100"></td>
+                                <td class="p-2 text-center"><button onclick="quickAdd('Dollfie Hands', 'dd-hands')" class="text-teal-600 font-bold">+</button></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
             </div>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="space-y-4">
-                    <h3 class="text-xs font-black uppercase tracking-widest text-emerald-500 px-4">Smartdoll Hands</h3>
-                    <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm"><table class="w-full border-collapse"><tbody id="table-smartdoll-hands"></tbody></table></div>
-                </div>
-                <div class="space-y-4">
-                    <h3 class="text-xs font-black uppercase tracking-widest text-blue-500 px-4">Eye Bases</h3>
-                    <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm"><table class="w-full border-collapse"><tbody id="table-eyes"></tbody></table></div>
-                </div>
+        <div class="space-y-4 max-w-md">
+            <h3 class="text-xs font-black uppercase tracking-widest text-blue-500 px-4">Eye Bases (Pairs)</h3>
+            <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
+                <table class="w-full border-collapse">
+                    <thead class="bg-blue-50 text-[10px] font-black uppercase text-blue-600">
+                        <tr><th class="p-4 text-left">Size (mm)</th><th class="p-4 w-24 text-center">Qty</th><th class="p-4 w-16"></th></tr>
+                    </thead>
+                    <tbody id="table-eyes"></tbody>
+                    <tfoot class="bg-blue-50/20">
+                        <tr>
+                            <td class="p-2"><input type="text" id="new-eyes-size" placeholder="e.g. 16mm" class="w-full bg-transparent outline-none text-xs p-1 border-b border-blue-100"></td>
+                            <td class="p-2"><input type="number" id="new-eyes-qty" placeholder="0" class="w-full bg-transparent outline-none text-xs text-center p-1 border-b border-blue-100"></td>
+                            <td class="p-2 text-center"><button onclick="quickAdd('Eyes', 'eyes')" class="text-blue-600 font-bold">+</button></td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </div>
-
-        <div id="view-settings" class="hidden space-y-6">
-            <h2 class="text-3xl font-black italic mb-8">Studio Status Controls</h2>
-            <div id="services-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-        </div>
-    </main>
-
-    <div id="detailDrawer" class="fixed inset-y-0 right-0 w-full md:w-[650px] bg-white z-[100] transform translate-x-full transition-transform duration-500 border-l border-pink-100 flex flex-col shadow-2xl">
-        <div class="p-6 border-b flex justify-between items-center bg-white">
-            <h2 class="font-black text-xl italic">Order Management</h2>
-            <button onclick="closeDrawer()" class="text-3xl text-gray-400 hover:text-pink-500">&times;</button>
-        </div>
-        <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-10 bg-[#fafafa] custom-scrollbar"></div>
-        <div class="p-6 border-t bg-white flex gap-4">
-            <button id="archiveBtn" class="text-[10px] font-black uppercase text-red-400 hover:text-red-600">Archive Order</button>
-            <button id="saveBtn" class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg">Save All Changes ♡</button>
-        </div>
     </div>
+
+    <div id="view-settings" class="hidden animate-fadeIn space-y-6">
+        <h2 class="text-3xl font-black italic mb-8">Studio Status Controls</h2>
+        <div id="services-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+    </div>
+</main>
+
+<div id="detailDrawer" class="fixed inset-y-0 right-0 w-full md:w-[650px] bg-white z-[100] transform translate-x-full transition-transform duration-500 border-l border-pink-100 flex flex-col shadow-2xl">
+    <div class="p-6 border-b flex justify-between items-center bg-white">
+        <h2 class="font-black text-xl italic">Order Details</h2>
+        <button onclick="closeDrawer()" class="text-3xl text-gray-400 hover:text-pink-500">&times;</button>
+    </div>
+    <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-8 bg-[#fafafa]"></div>
+    <div class="p-6 border-t bg-white flex gap-4">
+        <button onclick="handleArchive()" class="text-[10px] font-black uppercase text-red-400 hover:text-red-600">Archive Order</button>
+        <button id="saveBtn" class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-colors">Save All Changes ♡</button>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -146,133 +190,219 @@
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let activeJobId = null;
 
-    // --- AUTH ---
+    // --- AUTH & INITIALIZATION ---
     _supabase.auth.onAuthStateChange((event, session) => {
+        const loginGate = document.getElementById('loginGate');
+        const adminNav = document.getElementById('adminNav');
+        const adminMain = document.getElementById('adminMain');
         if (session) {
-            document.getElementById('loginGate').classList.add('hidden');
-            document.querySelectorAll('.auth-hidden').forEach(el => el.classList.remove('auth-hidden'));
-            switchTab(localStorage.getItem('hana_active_tab') || 'workbench');
+            loginGate.classList.add('hidden');
+            adminNav.classList.remove('auth-hidden');
+            adminMain.classList.remove('auth-hidden');
+            const lastTab = localStorage.getItem('hana_active_tab') || 'workbench';
+            switchTab(lastTab);
         } else {
-            document.getElementById('loginGate').classList.remove('hidden');
+            loginGate.classList.remove('hidden');
+            adminNav.classList.add('auth-hidden');
+            adminMain.classList.add('auth-hidden');
         }
     });
 
     async function handleLogin() {
         const email = document.getElementById('adminEmail').value;
-        const pass = document.getElementById('adminPass').value;
-        await _supabase.auth.signInWithPassword({ email, password: pass });
+        const password = document.getElementById('adminPass').value;
+        const btn = document.getElementById('loginBtn');
+        btn.innerText = "Checking... ✨";
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) { alert("Access Denied: " + error.message); btn.innerText = "Unlock Studio ♡"; } 
+    }
+
+    async function handleLogout() {
+        localStorage.removeItem('hana_active_tab');
+        await _supabase.auth.signOut();
+        window.location.href = 'index.html';
     }
 
     // --- NAVIGATION ---
     async function switchTab(tab) {
         localStorage.setItem('hana_active_tab', tab);
-        ['view-workbench', 'view-planner', 'view-settings', 'view-inventory'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
-        document.getElementById(`view-${tab}`)?.classList.remove('hidden');
+        ['view-workbench', 'view-planner', 'view-settings', 'view-inventory'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.classList.add('hidden');
+        });
+        const targetView = document.getElementById(`view-${tab}`);
+        if(targetView) targetView.classList.remove('hidden');
+
+        if(tab === 'settings') renderSettings();
         if(tab === 'workbench') renderWorkbench();
         if(tab === 'planner') renderPlanner();
         if(tab === 'inventory') renderInventory();
-        if(tab === 'settings') renderSettings();
     }
 
-    // --- WORKBENCH (Live/Archived Toggle Restored) ---
-    async function renderWorkbench(showArchived = false) {
-        const container = document.getElementById('commissionList');
-        const { data } = await _supabase.from('commissions').select('*').eq('archived', showArchived).order('created_at', { ascending: false });
-        
-        document.getElementById('tab-live').className = !showArchived ? 'px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500' : 'px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400';
-        document.getElementById('tab-archived').className = showArchived ? 'px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500' : 'px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400';
-
-        const statusColors = { 'Enquiry': 'bg-blue-50 text-blue-500', 'Working': 'bg-emerald-50 text-emerald-600', 'Arrived': 'bg-amber-50 text-amber-600' };
-        container.innerHTML = data.map(job => `
-            <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
-                <div class="w-12 h-12 bg-pink-50 rounded-full shrink-0 flex items-center justify-center border border-pink-100 overflow-hidden">
-                    ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '🎨'}
+    // --- SETTINGS (Restored) ---
+    async function renderSettings() {
+        const { data } = await _supabase.from('studio_settings').select('*');
+        if(!data) return;
+        document.getElementById('services-list').innerHTML = data.map(s => `
+            <div class="bg-white p-6 rounded-[2rem] border border-pink-50 flex justify-between items-center shadow-sm">
+                <div>
+                    <h4 class="font-black text-lg capitalize">${s.id}</h4>
+                    <p class="text-[10px] font-bold ${s.is_live ? 'text-emerald-500' : 'text-amber-500'} uppercase">${s.is_live ? 'Open' : 'Full'}</p>
                 </div>
-                <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
-                    <div><h4 class="font-black text-sm truncate">${job.social_handle}</h4><p class="text-[9px] font-bold text-pink-400 uppercase">${job.doll_company} ${job.doll_sculpt}</p></div>
-                    <div class="hidden md:block text-[10px] text-gray-400 font-bold uppercase tracking-widest">${job.status}</div>
-                    <div class="text-right col-start-4"><button onclick="openDrawer('${job.id}')" class="px-4 py-2 bg-pink-50 text-pink-500 rounded-xl text-[10px] font-black uppercase">Open ♡</button></div>
-                </div>
-            </div>`).join('');
+                <button onclick="toggleService('${s.id}', ${!s.is_live})" class="nav-btn ${s.is_live ? 'nav-btn-pink' : 'nav-btn-mint'}">Toggle Status</button>
+            </div>
+        `).join('');
     }
 
-    // --- PLANNER (Rank Scoring Restored) ---
+    async function toggleService(id, status) {
+        await _supabase.from('studio_settings').update({ is_live: status }).eq('id', id);
+        renderSettings();
+    }
+
+    // --- PLANNER ---
     async function renderPlanner() {
         const container = document.getElementById('plannerContainer');
-        const { data: jobs } = await _supabase.from('commissions').select('*').eq('archived', false).in('status', ['Arrived', 'Working', 'Approved', 'Photo']);
+        if (!container) return;
+        const inStudioStatuses = ['Arrived', 'Working', 'Approved', 'Photo'];
+        const { data: jobs } = await _supabase.from('commissions').select('*').in('status', inStudioStatuses).eq('archived', false);
         const today = new Date();
-        
-        const prioritized = jobs.map(job => {
+        if (!jobs || jobs.length === 0) { 
+            container.innerHTML = `<div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">Studio is clear! ✨</div>`; 
+            return; 
+        }
+
+        const prioritizedJobs = jobs.map(job => {
             let score = 0;
-            const entryDate = job.arrival_date ? new Date(job.arrival_date) : new Date(job.created_at);
-            const diffDays = Math.ceil(Math.abs(today - entryDate) / (1000 * 60 * 60 * 24));
+            const referenceDate = job.arrival_date ? new Date(job.arrival_date) : new Date(job.created_at);
+            const diffDays = Math.ceil(Math.abs(today - referenceDate) / (1000 * 60 * 60 * 24));
             score += diffDays;
+            const totalPaid = (job.payments || []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+            if ((totalPaid >= (job.total_price || 0) && job.total_price > 0) || job.payment_method === 'Trade') score += 100;
             if (job.is_urgent) score += 500;
             return { ...job, score, diffDays };
         }).sort((a, b) => b.score - a.score);
 
-        container.innerHTML = prioritized.map((job, index) => `
-            <div class="flex items-center gap-6 p-5 rounded-[2rem] border ${job.is_urgent ? 'border-red-200 bg-red-50/30' : 'border-pink-50 bg-white'} shadow-sm">
+        container.innerHTML = prioritizedJobs.map((job, index) => `
+            <div class="flex items-center gap-6 p-5 rounded-[2rem] border ${job.is_urgent ? 'border-red-200 bg-red-50/30' : 'border-pink-50 bg-white'} shadow-sm transition-all">
                 <div class="w-12 h-12 flex flex-col items-center justify-center rounded-2xl ${job.is_urgent ? 'bg-red-500' : 'bg-pink-300'} text-white shrink-0">
                     <span class="text-[10px] font-black uppercase">Rank</span>
                     <span class="text-lg font-black">${index + 1}</span>
                 </div>
                 <div class="flex-1">
-                    <h4 class="font-black text-gray-800">${job.social_handle}</h4>
-                    <p class="text-[10px] uppercase tracking-widest text-gray-400">${job.diffDays} Days • ${job.status}</p>
+                    <div class="flex items-center gap-2">
+                        <h4 class="font-black text-gray-800">${job.social_handle || 'Client'}</h4>
+                        ${job.is_urgent ? '<span class="px-2 py-0.5 rounded-md bg-red-500 text-white text-[8px] font-black uppercase animate-pulse">Urgent</span>' : ''}
+                    </div>
+                    <p class="text-[10px] uppercase tracking-widest text-gray-400">${job.diffDays} Days in Studio • ${job.status}</p>
                 </div>
-                <button onclick="openDrawer('${job.id}')" class="px-6 py-2 bg-pink-50 text-pink-500 rounded-xl text-[10px] font-black uppercase">Details ♡</button>
+                <button onclick="openDrawer('${job.id}')" class="px-6 py-2 bg-pink-50 text-pink-500 rounded-xl text-[10px] font-black uppercase hover:bg-pink-100 transition-all">Job Details ♡</button>
             </div>`).join('');
     }
 
-    // --- INVENTORY (Logic Restored) ---
+    // --- INVENTORY ---
     async function renderInventory() {
         const { data: items } = await _supabase.from('inventory').select('*');
-        const tables = { 'Smartdoll Head': 'table-smartdoll-head', 'Dollfie Head': 'table-dollfie-head', 'Smartdoll Hands': 'table-smartdoll-hands', 'Eyes': 'table-eyes' };
-        Object.values(tables).forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = ""; });
+        if (!items) return;
+        items.sort((a, b) => (a.sculpt_size || "").localeCompare(b.sculpt_size || "", undefined, {numeric: true, sensitivity: 'base'}));
+        const tables = { 'Smartdoll Head': 'table-smartdoll-head', 'Dollfie Head': 'table-dollfie-head', 'Smartdoll Hands': 'table-smartdoll-hands', 'Dollfie Hands': 'table-dollfie-hands', 'Eyes': 'table-eyes' };
+        Object.values(tables).forEach(id => { const t = document.getElementById(id); if(t) t.innerHTML = ""; });
 
-        items.sort((a, b) => a.sculpt_size.localeCompare(b.sculpt_size, undefined, {numeric: true})).forEach(item => {
-            const t = document.getElementById(tables[item.category]);
+        items.forEach(item => {
+            const tableId = tables[item.category];
+            const t = document.getElementById(tableId);
             if (!t) return;
-            const row = t.insertRow();
-            row.className = "border-t border-pink-50 group";
-            let labels = item.category.includes('Head') ? `<td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td><td class="p-4 text-xs font-medium text-gray-400 uppercase">${item.skintone}</td>` : `<td class="p-4 font-bold text-sm text-gray-700">${item.category === 'Eyes' ? item.sculpt_size : item.skintone}</td>`;
-            row.innerHTML = labels + `
+            const row = document.createElement('tr');
+            row.className = "border-t border-pink-50 group hover:bg-pink-50/30 transition-colors";
+            let labelHTML = item.category.includes('Head') ? `<td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td><td class="p-4 text-xs font-medium text-gray-400 uppercase tracking-widest">${item.skintone}</td>` : `<td class="p-4 font-bold text-sm text-gray-700">${item.category === 'Eyes' ? item.sculpt_size : item.skintone}</td>`;
+            row.innerHTML = labelHTML + `
                 <td class="p-4 text-center">
                     <div class="flex items-center justify-center gap-3">
-                        <button onclick="updateStock('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-gray-50 font-bold">-</button>
-                        <span class="font-black text-sm w-4">${item.quantity}</span>
-                        <button onclick="updateStock('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-gray-50 font-bold">+</button>
+                        <button onclick="updateStock('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-pink-100 font-bold">-</button>
+                        <span class="font-black text-sm w-4 text-center">${item.quantity}</span>
+                        <button onclick="updateStock('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-emerald-100 font-bold">+</button>
                     </div>
                 </td>
-                <td class="p-4 text-right"><button onclick="deleteInventoryItem('${item.id}')" class="text-gray-300 hover:text-red-500 text-xs opacity-0 group-hover:opacity-100">🗑️</button></td>`;
+                <td class="p-4 text-right"><button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-xs">🗑️</button></td>`;
+            t.appendChild(row);
         });
     }
 
-    // --- DRAWER & SAVE FIXES ---
+    async function quickAdd(category, prefix) {
+        const sculptInput = document.getElementById(`new-${prefix}-sculpt`);
+        const toneInput = document.getElementById(`new-${prefix}-tone`);
+        const sizeInput = document.getElementById(`new-${prefix}-size`);
+        const qtyInput = document.getElementById(`new-${prefix}-qty`);
+        
+        let sculpt = category.includes('Head') ? (sculptInput?.value || 'N/A') : (sizeInput?.value || 'N/A');
+        let tone = category.includes('Head') || category.includes('Hands') ? (toneInput?.value || 'N/A') : 'N/A';
+        const quantity = parseInt(qtyInput?.value) || 0;
+
+        if ((category.includes('Head') && (!sculptInput.value || !toneInput.value)) || (category === 'Eyes' && !sizeInput.value) || (category.includes('Hands') && !toneInput.value)) return alert("Please fill in details!");
+
+        await _supabase.from('inventory').insert([{ category, sculpt_size: sculpt, skintone: tone, quantity }]);
+        
+        [sculptInput, toneInput, sizeInput, qtyInput].forEach(i => { if(i) i.value = ""; });
+        renderInventory();
+    }
+
+    async function updateStock(id, change) {
+        const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
+        await _supabase.from('inventory').update({ quantity: Math.max(0, (data.quantity || 0) + change) }).eq('id', id);
+        renderInventory();
+    }
+
+    async function deleteInventoryItem(id) {
+        if (confirm("Delete this stock line?")) { await _supabase.from('inventory').delete().eq('id', id); renderInventory(); }
+    }
+
+    // --- WORKBENCH & DRAWER ---
+    async function renderWorkbench(showArchived = false) {
+        const container = document.getElementById('commissionList');
+        const { data } = await _supabase.from('commissions').select('*').eq('archived', showArchived).order('created_at', { ascending: false });
+        if (!data) return;
+        const statusColors = { 'Enquiry': 'bg-blue-50 text-blue-500', 'Quote': 'bg-purple-50 text-purple-500', 'Arrived': 'bg-amber-50 text-amber-600', 'Working': 'bg-emerald-50 text-emerald-600', 'Approved': 'bg-cyan-50 text-cyan-600', 'Photo': 'bg-indigo-50 text-indigo-500', 'Shipped': 'bg-gray-100 text-gray-500' };
+        container.innerHTML = data.map(job => `
+            <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
+                <div class="w-12 h-12 bg-pink-50 rounded-full shrink-0 flex items-center justify-center overflow-hidden border border-pink-100">${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '🎨'}</div>
+                <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
+                    <div><h4 class="font-black text-sm truncate">${job.social_handle || 'Unknown'}</h4><p class="text-[9px] font-bold text-pink-400 uppercase tracking-tighter">${job.doll_company} ${job.doll_sculpt}</p></div>
+                    <div class="hidden md:block"><p class="text-[9px] font-black text-gray-300 uppercase">Requested</p><p class="text-[10px] text-gray-500 truncate">${job.faceup_details ? 'Faceup ' : ''}${job.eye_details ? '• Eyes ' : ''}</p></div>
+                    <div><span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColors[job.status] || 'bg-gray-50 text-gray-400'}">${job.status}</span></div>
+                    <div class="text-right"><button onclick="openDrawer('${job.id}')" class="px-4 py-2 bg-pink-50 text-pink-500 rounded-xl text-[10px] font-black uppercase">Open Order ♡</button></div>
+                </div>
+            </div>`).join('');
+    }
+
+    // --- DRAWER POPUP LOGIC ---
     async function openDrawer(id) {
         activeJobId = id;
         const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
         const content = document.getElementById('drawerContent');
+        
         const payments = job.payments || [];
         const paidTotal = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-        const calcBal = Math.max(0, (job.total_price || 0) - paidTotal);
-        const displayBal = (job.payment_method === 'Paid in Full' && job.is_paid) ? 0 : calcBal;
+        const calculatedBalance = Math.max(0, (job.total_price || 0) - paidTotal);
+        const displayBalance = (job.payment_method === 'Paid in Full' && job.is_paid) ? 0 : calculatedBalance;
 
         content.innerHTML = `
-            <div class="space-y-10">
+            <div class="space-y-10 pb-10">
                 <section class="grid grid-cols-2 gap-8">
                     <div>
                         <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Order Info</h3>
-                        <p class="text-sm font-bold">${job.social_handle}</p>
+                        <p class="text-sm font-bold">${job.social_handle || 'Client'}</p>
                         <p class="text-[10px] text-pink-400 font-black uppercase">${job.doll_company} ${job.doll_sculpt}</p>
                     </div>
                     <div>
-                        <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Status</h3>
+                        <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Global Status</h3>
                         <select id="upStatus" class="w-full p-2 border border-pink-100 rounded-xl text-xs font-bold bg-white">
                             ${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped'].map(s => `<option value="${s}" ${job.status===s?'selected':''}>${s}</option>`).join('')}
                         </select>
                     </div>
+                </section>
+
+                <section class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <h3 class="text-[9px] font-black uppercase text-gray-400 mb-2">Initial Contact Notes</h3>
+                    <p class="text-xs text-gray-600 italic">"${job.commission_notes || 'No notes provided at booking.'}"</p>
                 </section>
 
                 <div class="bg-pink-50/50 p-6 rounded-[3rem] border border-pink-100 space-y-4">
@@ -281,68 +411,160 @@
                             <option value="Paid in Full" ${job.payment_method === 'Paid in Full' ? 'selected' : ''}>Paid in Full</option>
                             <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
                             <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
+                            <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
                         </select>
                         <div class="flex items-center gap-2">
                             <input type="checkbox" id="isUrg" ${job.is_urgent ? 'checked' : ''} class="w-4 h-4 accent-red-500">
-                            <label class="text-[10px] font-black uppercase text-red-500 font-bold">Urgent</label>
+                            <label class="text-[10px] font-black uppercase text-red-500">Urgent</label>
                         </div>
                     </div>
 
-                    <div id="moneyRow" class="${job.payment_method === 'Trade' ? 'hidden' : ''} grid grid-cols-2 gap-4">
-                        <div class="bg-white p-4 rounded-2xl border border-pink-100">
-                            <label class="text-[9px] font-black uppercase text-gray-400">Total (£)</label>
-                            <input type="number" id="tPrice" oninput="updateBalanceLive(${paidTotal})" value="${job.total_price || 0}" class="w-full font-black text-lg outline-none bg-transparent">
+                    <div id="moneyRow" class="${['Trade','Gift'].includes(job.payment_method) ? 'hidden' : ''} space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-2xl border border-pink-100">
+                                <label class="text-[9px] font-black uppercase text-gray-400">Total Price (£)</label>
+                                <input type="number" id="tPrice" oninput="updateBalanceLive(${paidTotal})" value="${job.total_price || 0}" class="w-full font-black text-lg outline-none bg-transparent">
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl border border-pink-100">
+                                <p class="text-[9px] font-black text-gray-400 uppercase">Balance Due</p>
+                                <p id="balanceLabel" class="text-xl font-black ${displayBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${displayBalance.toFixed(2)}</p>
+                            </div>
                         </div>
-                        <div class="bg-white p-4 rounded-2xl border border-pink-100">
-                            <p class="text-[9px] font-black text-gray-400 uppercase">Balance Due</p>
-                            <p id="balanceLabel" class="text-xl font-black ${displayBal > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${displayBal.toFixed(2)}</p>
+                        <div id="pifUI" class="${job.payment_method === 'Paid in Full' ? '' : 'hidden'} flex items-center gap-2 px-2">
+                            <input type="checkbox" id="isPaidCheck" onchange="togglePayUI()" ${job.is_paid ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
+                            <label class="text-[10px] font-black uppercase text-emerald-600">Mark as Paid (Balance £0)</label>
                         </div>
                     </div>
 
-                    <div id="pifUI" class="${job.payment_method === 'Paid in Full' ? '' : 'hidden'} px-2">
-                        <label class="flex items-center gap-2 text-[10px] font-black uppercase text-emerald-600">
-                            <input type="checkbox" id="isPaidCheck" onchange="togglePayUI()" ${job.is_paid ? 'checked' : ''} class="w-4 h-4"> Mark Paid (Force £0)
+                    <div id="layawayUI" class="${job.payment_method === 'Layaway' ? '' : 'hidden'} space-y-3 pt-3 border-t border-pink-100">
+                        <div id="paymentHistory" class="max-h-32 overflow-y-auto space-y-1">
+                            ${payments.map(p => `<div class="flex justify-between text-[10px] bg-white/60 p-2 rounded-lg border border-pink-50"><span>${p.date}</span><span class="font-bold">£${p.amount}</span></div>`).join('')}
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="number" id="newPayAmt" placeholder="£ Amount" class="flex-1 p-2 rounded-xl text-xs border border-white">
+                            <button onclick="saveNewPayment()" class="bg-pink-500 text-white px-4 rounded-xl text-[10px] font-black uppercase">Add</button>
+                        </div>
+                    </div>
+
+                    <div id="tradeUI" class="${job.payment_method === 'Trade' ? '' : 'hidden'} grid grid-cols-2 gap-3 pt-3 border-t border-pink-100">
+                        <label class="flex items-center gap-2 p-3 bg-white rounded-xl border border-pink-100 cursor-pointer">
+                            <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-4 h-4 accent-blue-500">
+                            <span class="text-[9px] font-black uppercase text-gray-500">Partner Shipped</span>
                         </label>
-                    </div>
-
-                    <div id="tradeUI" class="${job.payment_method === 'Trade' ? '' : 'hidden'} grid grid-cols-2 gap-3 pt-2">
-                        <label class="flex items-center gap-2 p-3 bg-white rounded-xl border border-pink-100"><input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''}><span class="text-[9px] font-black uppercase text-gray-500">Partner Sent</span></label>
-                        <label class="flex items-center gap-2 p-3 bg-white rounded-xl border border-pink-100"><input type="checkbox" id="artistShipped" ${job.artist_shipped ? 'checked' : ''}><span class="text-[9px] font-black uppercase text-gray-500">Artist Sent</span></label>
+                        <label class="flex items-center gap-2 p-3 bg-white rounded-xl border border-pink-100 cursor-pointer">
+                            <input type="checkbox" id="artistShipped" ${job.artist_shipped ? 'checked' : ''} class="w-4 h-4 accent-indigo-500">
+                            <span class="text-[9px] font-black uppercase text-gray-500">Artist Shipped</span>
+                        </label>
                     </div>
                 </div>
 
                 <div class="space-y-6">
-                    ${job.faceup_details ? renderServiceSection('Faceup', job.faceup_details) : ''}
-                    ${job.eye_details ? renderServiceSection('Eye', job.eye_details) : ''}
-                    ${job.manicure_details ? renderServiceSection('Manicure', job.manicure_details) : ''}
+                    ${job.faceup_details ? `
+                    <div class="p-6 bg-white rounded-[2rem] border border-pink-50 space-y-4 shadow-sm">
+                        <div class="flex justify-between items-center border-b border-pink-50 pb-2">
+                            <h4 class="text-xs font-black uppercase text-pink-500">🎨 Faceup</h4>
+                            <select id="faceupStatus" class="text-[9px] font-black uppercase bg-pink-50 p-1 rounded-md">
+                                ${['Pending','Working','Completed'].map(s => `<option value="${s}" ${job.faceup_details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                            </select>
+                        </div>
+                        ${job.faceup_details.images?.length ? `<div class="flex gap-2 overflow-x-auto pb-2">${job.faceup_details.images.map(img => `<img src="${img}" class="w-24 h-24 object-cover rounded-2xl border-2 border-white cursor-pointer" onclick="window.open('${img}')">`).join('')}</div>` : ''}
+                        <div class="grid grid-cols-2 gap-4 text-[10px]">
+                            <p class="bg-gray-50 p-3 rounded-xl"><strong>Brows:</strong> ${job.faceup_details.brows || 'N/A'}</p>
+                            <p class="bg-gray-50 p-3 rounded-xl"><strong>Lashes:</strong> ${job.faceup_details.lashes || 'N/A'}</p>
+                        </div>
+                        <div class="p-4 bg-pink-50/20 rounded-2xl border border-pink-50 text-[11px] italic text-gray-600"><strong>Form Notes:</strong> "${job.faceup_details.notes || 'No notes.'}"</div>
+                        <textarea id="fAdmin" class="w-full p-4 text-xs border border-pink-100 rounded-2xl h-24 outline-none focus:ring-2 ring-pink-100" placeholder="Internal Artist Notes...">${job.faceup_details.admin_notes || ''}</textarea>
+                    </div>` : ''}
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        ${job.eye_details ? `
+                        <div class="p-6 bg-white rounded-[2rem] border border-blue-50 space-y-3 shadow-sm">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-[10px] font-black uppercase text-blue-500">👁️ Eyes</h4>
+                                <select id="eyeStatus" class="text-[9px] font-black uppercase bg-blue-50 p-1 rounded-md">
+                                    ${['Pending','Working','Completed'].map(s => `<option value="${s}" ${job.eye_details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                                </select>
+                            </div>
+                            <p class="text-[11px]"><strong>Style:</strong> ${job.eye_details.style}</p>
+                            <p class="text-[11px]"><strong>Size:</strong> ${job.eye_details.size}</p>
+                        </div>` : ''}
+
+                        ${job.manicure_details ? `
+                        <div class="p-6 bg-white rounded-[2rem] border border-emerald-50 space-y-3 shadow-sm">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-[10px] font-black uppercase text-emerald-500">💅 Manicure</h4>
+                                <select id="maniStatus" class="text-[9px] font-black uppercase bg-emerald-50 p-1 rounded-md">
+                                    ${['Pending','Working','Completed'].map(s => `<option value="${s}" ${job.manicure_details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                                </select>
+                            </div>
+                            <p class="text-[11px]"><strong>Type:</strong> ${job.manicure_details.type}</p>
+                        </div>` : ''}
+                    </div>
                 </div>
             </div>`;
         document.getElementById('detailDrawer').classList.remove('translate-x-full');
     }
 
-    function renderServiceSection(name, details) {
-        const id = name.toLowerCase();
-        return `
-            <div class="p-6 bg-white rounded-[2rem] border border-pink-50 space-y-4 shadow-sm">
-                <div class="flex justify-between items-center border-b border-pink-50 pb-2">
-                    <h4 class="text-xs font-black uppercase text-pink-500">${name} Work</h4>
-                    <select id="${id}Status" class="text-[9px] font-black uppercase bg-pink-50 p-1 rounded-md">
-                        ${['Pending', 'Working', 'Completed'].map(s => `<option value="${s}" ${details.status === s ? 'selected' : ''}>${s}</option>`).join('')}
-                    </select>
-                </div>
-                ${details.images?.length ? `<div class="flex gap-2 overflow-x-auto">${details.images.map(img => `<img src="${img}" class="w-20 h-20 object-cover rounded-xl border-2 border-white shadow-sm cursor-pointer" onclick="window.open('${img}')">`).join('')}</div>` : ''}
-                <textarea id="${id}Admin" class="w-full p-4 text-xs border border-pink-100 rounded-2xl h-24 outline-none" placeholder="Artist Notes...">${details.admin_notes || ''}</textarea>
-            </div>`;
+    // --- FINANCIAL HELPERS ---
+    function togglePayUI() {
+        const type = document.getElementById('payType').value;
+        const isPaid = document.getElementById('isPaidCheck')?.checked;
+        
+        document.getElementById('moneyRow').classList.toggle('hidden', ['Trade', 'Gift'].includes(type));
+        document.getElementById('pifUI').classList.toggle('hidden', type !== 'Paid in Full');
+        document.getElementById('layawayUI').classList.toggle('hidden', type !== 'Layaway');
+        document.getElementById('tradeUI').classList.toggle('hidden', type !== 'Trade');
+
+        if (type === 'Paid in Full' && isPaid) {
+            document.getElementById('balanceLabel').innerText = "£0.00";
+            document.getElementById('balanceLabel').className = "text-xl font-black text-emerald-500";
+        } else {
+            updateBalanceLive(); 
+        }
     }
 
+    function updateBalanceLive(paid = 0) {
+        const type = document.getElementById('payType').value;
+        const isPaid = document.getElementById('isPaidCheck')?.checked;
+        const total = parseFloat(document.getElementById('tPrice')?.value) || 0;
+        const label = document.getElementById('balanceLabel');
+        
+        if (type === 'Paid in Full' && isPaid) {
+            label.innerText = "£0.00";
+            label.className = "text-xl font-black text-emerald-500";
+        } else {
+            const bal = Math.max(0, total - paid);
+            label.innerText = `£${bal.toFixed(2)}`;
+            label.className = `text-xl font-black ${bal > 0 ? 'text-rose-500' : 'text-emerald-500'}`;
+        }
+    }
+
+    async function saveNewPayment() {
+        const amt = parseFloat(document.getElementById('newPayAmt').value);
+        if (!amt) return;
+        const { data } = await _supabase.from('commissions').select('payments').eq('id', activeJobId).single();
+        const updated = [...(data.payments || []), { amount: amt, date: new Date().toLocaleDateString() }];
+        await _supabase.from('commissions').update({ payments: updated }).eq('id', activeJobId);
+        openDrawer(activeJobId); 
+    }
+
+    // --- HELPERS ---
     function closeDrawer() { document.getElementById('detailDrawer').classList.add('translate-x-full'); }
 
-    // --- SAVE ACTION ---
+    async function handleArchive() {
+        if(confirm("Archive this order?")) {
+            await _supabase.from('commissions').update({ archived: true }).eq('id', activeJobId);
+            closeDrawer(); renderWorkbench();
+        }
+    }
+
+    // --- SAVE ALL CHANGES ---
     document.getElementById('saveBtn').onclick = async () => {
         const btn = document.getElementById('saveBtn');
         btn.innerText = "Saving... ✨";
-        const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+        
         const type = document.getElementById('payType').value;
+        const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
 
         const updates = {
             status: document.getElementById('upStatus').value,
@@ -354,39 +576,24 @@
             artist_shipped: type === 'Trade' ? document.getElementById('artistShipped').checked : false
         };
 
-        if(job.faceup_details) updates.faceup_details = { ...job.faceup_details, status: document.getElementById('faceupStatus')?.value, admin_notes: document.getElementById('faceupAdmin')?.value };
-        if(job.eye_details) updates.eye_details = { ...job.eye_details, status: document.getElementById('eyeStatus')?.value, admin_notes: document.getElementById('eyeAdmin')?.value };
-        if(job.manicure_details) updates.manicure_details = { ...job.manicure_details, status: document.getElementById('manicureStatus')?.value, admin_notes: document.getElementById('manicureAdmin')?.value };
+        if (job.faceup_details) {
+            updates.faceup_details = { 
+                ...job.faceup_details, 
+                status: document.getElementById('faceupStatus').value,
+                admin_notes: document.getElementById('fAdmin').value 
+            };
+        }
+        if (job.eye_details) {
+            updates.eye_details = { ...job.eye_details, status: document.getElementById('eyeStatus').value };
+        }
+        if (job.manicure_details) {
+            updates.manicure_details = { ...job.manicure_details, status: document.getElementById('maniStatus').value };
+        }
 
         await _supabase.from('commissions').update(updates).eq('id', activeJobId);
         btn.innerText = "Saved! ♡";
         setTimeout(() => { closeDrawer(); renderWorkbench(); renderPlanner(); btn.innerText="Save All Changes ♡"; }, 800);
     };
-
-    // Remaining logic for togglePayUI, updateBalanceLive, updateStock, deleteInventoryItem etc matches original file
-    function togglePayUI() {
-        const type = document.getElementById('payType').value;
-        document.getElementById('moneyRow').classList.toggle('hidden', type === 'Trade');
-        document.getElementById('pifUI').classList.toggle('hidden', type !== 'Paid in Full');
-        document.getElementById('tradeUI').classList.toggle('hidden', type !== 'Trade');
-        updateBalanceLive();
-    }
-    function updateBalanceLive(paid = 0) {
-        const type = document.getElementById('payType').value;
-        const isPaid = document.getElementById('isPaidCheck')?.checked;
-        const total = parseFloat(document.getElementById('tPrice')?.value) || 0;
-        const label = document.getElementById('balanceLabel');
-        if (type === 'Paid in Full' && isPaid) { label.innerText = "£0.00"; label.className = "text-xl font-black text-emerald-500"; }
-        else { const bal = Math.max(0, total - paid); label.innerText = `£${bal.toFixed(2)}`; label.className = `text-xl font-black ${bal > 0 ? 'text-rose-500' : 'text-emerald-500'}`; }
-    }
-    async function updateStock(id, change) {
-        const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
-        await _supabase.from('inventory').update({ quantity: Math.max(0, (data.quantity || 0) + change) }).eq('id', id);
-        renderInventory();
-    }
-    async function deleteInventoryItem(id) {
-        if (confirm("Delete this?")) { await _supabase.from('inventory').delete().eq('id', id); renderInventory(); }
-    }
 </script>
 </body>
 </html>
