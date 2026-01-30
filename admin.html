@@ -23,8 +23,8 @@
                 <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
                 <button onclick="switchTab('workbench')" class="nav-btn nav-btn-mint">Commissions ♡</button>
                 <button onclick="switchTab('planner')" class="nav-btn nav-btn-pink">Planner ♡</button>
-                <button onclick="switchTab('settings')" class="nav-btn nav-btn-mint">Settings ♡</button>
-                <button onclick="switchTab('inventory')" class="nav-btn nav-btn-pink">Stock ♡</button>
+                <button onclick="switchTab('inventory')" class="nav-btn nav-btn-mint">Stock ♡</button>
+                <button onclick="switchTab('settings')" class="nav-btn nav-btn-pink">Settings ♡</button>
                 <button onclick="handleLogout()" class="nav-btn bg-gray-100 text-gray-500 border-none hover:bg-red-50 hover:text-red-400 transition-colors">Logout ⏻</button>
             </div>
         </div>
@@ -43,25 +43,35 @@
     <div id="view-workbench" class="space-y-4">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
             <h2 class="text-3xl font-black italic">Client Inbox</h2>
-            
             <div class="flex bg-gray-100 p-1 rounded-2xl border border-gray-200">
-                <button onclick="renderWorkbench(false)" id="tab-live" 
-                    class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500">
-                    Live
-                </button>
-                <button onclick="renderWorkbench(true)" id="tab-archived" 
-                    class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400">
-                    Archived
-                </button>
+                <button onclick="renderWorkbench(false)" id="tab-live" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500">Live</button>
+                <button onclick="renderWorkbench(true)" id="tab-archived" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400">Archived</button>
             </div>
         </div>
-
         <div id="commissionList" class="space-y-2"></div>
     </div>
 
     <div id="view-planner" class="hidden space-y-6">
         <h2 class="text-3xl font-black italic mb-8">Priority Planner</h2>
         <div id="plannerContainer" class="space-y-4"></div>
+    </div>
+
+    <div id="view-inventory" class="hidden space-y-8 animate-fadeIn">
+        <div class="glass-card p-8 flex justify-between items-center">
+            <div>
+                <h2 class="text-3xl font-black italic">Studio Stock</h2>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Heads, Hands, & Eyes</p>
+            </div>
+            <button onclick="openAddStockModal()" class="bg-pink-500 text-white px-8 py-4 rounded-2xl font-black uppercase text-xs shadow-lg hover:scale-105 transition-all">New Item +</button>
+        </div>
+        <div class="space-y-4">
+            <h3 class="text-xs font-black uppercase tracking-widest text-pink-400 px-4">Vinyl Stock (Heads & Hands)</h3>
+            <div id="headsStock" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+        <div class="space-y-4">
+            <h3 class="text-xs font-black uppercase tracking-widest text-blue-400 px-4">Eye Base Stock</h3>
+            <div id="eyesStock" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+        </div>
     </div>
 
     <div id="view-settings" class="hidden animate-fadeIn space-y-6">
@@ -90,44 +100,31 @@
     let activeJobId = null;
 
     // --- AUTH & INITIALIZATION ---
-_supabase.auth.onAuthStateChange((event, session) => {
-    const loginGate = document.getElementById('loginGate');
-    const adminNav = document.getElementById('adminNav');
-    const adminMain = document.getElementById('adminMain');
+    _supabase.auth.onAuthStateChange((event, session) => {
+        const loginGate = document.getElementById('loginGate');
+        const adminNav = document.getElementById('adminNav');
+        const adminMain = document.getElementById('adminMain');
+        if (session) {
+            loginGate.classList.add('hidden');
+            adminNav.classList.remove('auth-hidden');
+            adminMain.classList.remove('auth-hidden');
+            renderWorkbench();
+            renderPlanner();
+        } else {
+            loginGate.classList.remove('hidden');
+            adminNav.classList.add('auth-hidden');
+            adminMain.classList.add('auth-hidden');
+        }
+    });
 
-    if (session) {
-        // User is logged in! Hide the gate and show the studio content
-        loginGate.classList.add('hidden');
-        adminNav.classList.remove('auth-hidden');
-        adminMain.classList.remove('auth-hidden');
-        
-        // Load your studio data
-        renderWorkbench();
-        renderPlanner();
-    } else {
-        // User is logged out! Ensure the gate is visible
-        loginGate.classList.remove('hidden');
-        adminNav.classList.add('auth-hidden');
-        adminMain.classList.add('auth-hidden');
+    async function handleLogin() {
+        const email = document.getElementById('adminEmail').value;
+        const password = document.getElementById('adminPass').value;
+        const btn = document.getElementById('loginBtn');
+        btn.innerText = "Checking... ✨";
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) { alert("Access Denied: " + error.message); btn.innerText = "Unlock Studio ♡"; } 
     }
-});
-
-// This handles the login button specifically on the admin page gate
-async function handleLogin() {
-    const email = document.getElementById('adminEmail').value;
-    const password = document.getElementById('adminPass').value;
-    const btn = document.getElementById('loginBtn');
-    
-    btn.innerText = "Checking... ✨";
-    
-    const { error } = await _supabase.auth.signInWithPassword({ email, password });
-    
-    if (error) { 
-        alert("Access Denied: " + error.message); 
-        btn.innerText = "Unlock Studio ♡"; 
-    } 
- 
-}
 
     async function handleLogout() {
         await _supabase.auth.signOut();
@@ -136,547 +133,335 @@ async function handleLogin() {
 
     // --- NAVIGATION ---
     async function switchTab(tab) {
-        ['view-workbench', 'view-planner', 'view-settings'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        ['view-workbench', 'view-planner', 'view-settings', 'view-inventory'].forEach(id => document.getElementById(id).classList.add('hidden'));
         document.getElementById(`view-${tab}`).classList.remove('hidden');
         if(tab === 'settings') renderSettings();
         if(tab === 'workbench') renderWorkbench();
         if(tab === 'planner') renderPlanner();
+        if(tab === 'inventory') renderInventory();
     }
 
-    // --- WORKBENCH (MINIMIZED SCROLL) ---
-  async function renderWorkbench(showArchived = false) {
-    // 1. Identify the container (This was likely what was missing!)
-    const container = document.getElementById('commissionList');
-    
-    // 2. Update the button colors so you know which tab is active
-    const liveBtn = document.getElementById('tab-live');
-    const archBtn = document.getElementById('tab-archived');
-    
-    if (showArchived) {
-        archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
-        liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
-    } else {
-        liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
-        archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
-    }
-
-    // 3. Fetch data based on the tab
-    const { data, error } = await _supabase.from('commissions')
-        .select('*')
-        .eq('archived', showArchived)
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error("Fetch error:", error);
-        return;
-    }
-       
-    // Status Color Map
-    const statusColors = {
-        'Enquiry': 'bg-blue-50 text-blue-500',
-        'Quote': 'bg-purple-50 text-purple-500',
-        'Arrived': 'bg-amber-50 text-amber-600',
-        'Working': 'bg-emerald-50 text-emerald-600',
-        'Approved': 'bg-cyan-50 text-cyan-600',
-        'Photo': 'bg-indigo-50 text-indigo-500',
-        'Shipped': 'bg-gray-100 text-gray-500'
-    };
-
-    // 4. Handle Empty State
-    if (!data || data.length === 0) {
-        container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">
-            ${showArchived ? 'No archived dolls yet! 🌸' : 'No active requests! 🕊️'}
-        </div>`;
-        return;
-    }
-
-    // 5. Render the List
-    container.innerHTML = data.map(job => `
-        <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
-            <div class="w-12 h-12 bg-pink-50 rounded-full shrink-0 flex items-center justify-center text-lg overflow-hidden border border-pink-100">
-                ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '🎨'}
-            </div>
-            <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
-                <div>
-                    <h4 class="font-black text-sm truncate">${job.social_handle || 'Unknown'}</h4>
-                    <p class="text-[9px] font-bold text-pink-400 uppercase tracking-tighter">${job.doll_company} ${job.doll_sculpt}</p>
-                </div>
-                <div class="hidden md:block">
-                    <p class="text-[9px] font-black text-gray-300 uppercase">Requested</p>
-                    <p class="text-[10px] text-gray-500 truncate">
-                        ${job.faceup_details ? 'Faceup ' : ''}${job.eye_details ? '• Eyes ' : ''}${job.manicure_details ? '• Mani' : ''}
-                    </p>
-                </div>
-                <div>
-                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColors[job.status] || 'bg-gray-50 text-gray-400'}">
-                        ${job.status}
-                    </span>
-                </div>
-                <div class="text-right">
-                    <button onclick="openDrawer('${job.id}')" class="text-[10px] font-black uppercase text-pink-500 hover:underline">Open Order →</button>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-    // --- DRAWER POPUP LOGIC ---
-   async function openDrawer(id) {
-    activeJobId = id;
-    const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
-    const content = document.getElementById('drawerContent');
-
-    // Calculate Financials
-    const paymentHistory = job.payments || [];
-    const totalPaidSoFar = paymentHistory.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-    const balanceDue = Math.max(0, (job.total_price || 0) - totalPaidSoFar);
-
-    content.innerHTML = `
-        <div class="space-y-10 pb-10">
-            <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="space-y-3">
-                    <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Client Details</h3>
-                    <div class="text-sm space-y-1">
-                        <p><strong>Handle:</strong> ${job.social_handle || 'N/A'}</p>
-                        <p><strong>Doll:</strong> ${job.doll_company} ${job.doll_sculpt}</p>
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Order Tracking</h3>
-                    <select id="updateStatus" class="w-full p-2 bg-white border border-pink-100 rounded-xl text-sm font-bold mt-1">
-                        <option value="Enquiry" ${job.status === 'Enquiry' ? 'selected' : ''}>Enquiry</option>
-                        <option value="Quote" ${job.status === 'Quote' ? 'selected' : ''}>Quote</option>
-                        <option value="Arrived" ${job.status === 'Arrived' ? 'selected' : ''}>Arrived 📦</option>
-                        <option value="Working" ${job.status === 'Working' ? 'selected' : ''}>Working 🎨</option>
-                        <option value="Approved" ${job.status === 'Approved' ? 'selected' : ''}>Approved ✅</option>
-                        <option value="Photo" ${job.status === 'Photo' ? 'selected' : ''}>Photo Shoot 📸</option>
-                        <option value="Shipped" ${job.status === 'Shipped' ? 'selected' : ''}>Shipped ✈️</option>
-                    </select>
-                    <div class="flex items-center justify-between p-3 bg-red-50 rounded-2xl border border-red-100">
-                        <span class="text-[10px] font-black uppercase text-red-500">Urgent Priority</span>
-                        <input type="checkbox" id="isUrgent" ${job.is_urgent ? 'checked' : ''} class="w-5 h-5 accent-red-500">
-                    </div>
-                </div>
-            </section>
-
-            <section class="bg-pink-50/50 p-6 rounded-[2rem] border border-pink-100 space-y-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Payment & Shipping</h3>
-                    <select id="payMethod" onchange="saveAndRefreshDrawer()" class="p-2 bg-white border border-pink-100 rounded-lg text-[10px] font-black uppercase">
-                        <option value="Paid" ${job.payment_method === 'Paid' ? 'selected' : ''}>Paid in Full</option>
-                        <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
-                        <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
-                        <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    ${renderFinancialInputs(job, balanceDue, totalPaidSoFar)}
-                </div>
-
-                <div class="pt-4 border-t border-pink-100/50">
-                    <label class="text-[9px] font-black uppercase text-gray-400">Shipping Tracking Number</label>
-                    <input type="text" id="trackingNum" value="${job.tracking_number || ''}" placeholder="Enter tracking..." class="w-full p-3 bg-white border border-pink-100 rounded-xl mt-1 text-xs font-mono">
-                </div>
-            </section>
-
-            ${(job.faceup_details && job.faceup_details.base !== "None") ? renderServiceBlock('Faceup', job.faceup_details, ['To be Cleaned', 'Blank', 'Sealed', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
-            ${(job.manicure_details && job.manicure_details.base !== "None") ? renderServiceBlock('Manicure', job.manicure_details, ['To be Cleaned', 'Blank', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
-            ${(job.eye_details && job.eye_details.base !== "None") ? renderServiceBlock('Eyes', job.eye_details, ['Designing', 'Printing', 'Assembling', 'Approval', 'Photos', 'Packed']) : ''}
-        </div>
-    `;
-    document.getElementById('detailDrawer').classList.remove('translate-x-full');
-}
-
-// Helper to keep the Drawer clean
-function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
-    // Determine which view to show based on the method
-    if (job.payment_method === 'Paid' || job.payment_method === 'Layaway') {
-        return `
-            <div class="space-y-3">
-                <div>
-                    <label class="text-[9px] font-bold uppercase text-gray-400">Total Price (£)</label>
-                    <input type="number" id="totalPrice" oninput="updateBalanceLive()" value="${job.total_price || 0}" class="w-full p-3 bg-white border border-pink-100 rounded-xl font-bold">
-                </div>
-                ${job.payment_method === 'Layaway' ? `
-                    <div class="p-3 bg-white rounded-xl border border-pink-100">
-                        <label class="text-[9px] font-bold uppercase text-pink-400">Add Payment (£)</label>
-                        <div class="flex gap-2 mt-1">
-                            <input type="number" id="newPayment" placeholder="0.00" class="flex-1 p-2 bg-pink-50/30 rounded-lg text-sm">
-                            <button onclick="addPaymentRecord('${job.id}')" class="bg-pink-500 text-white px-3 rounded-lg text-[10px] font-black hover:bg-pink-600 transition-colors">ADD</button>
-                        </div>
-                    </div>
-                ` : `
-                    <div class="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                        <input type="checkbox" id="markAsPaid" onchange="togglePaidStatus()" ${balanceDue <= 0 ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
-                        <label class="text-[10px] font-black uppercase text-emerald-600">Mark as Paid</label>
-                    </div>
-                `}
-            </div>
-            <div class="flex flex-col justify-between p-4 bg-white rounded-2xl border border-pink-100">
-                <div>
-                    <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Balance Due</p>
-                    <p id="balanceDisplay" class="text-2xl font-black ${balanceDue > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${balanceDue.toFixed(2)}</p>
-                    <p id="paidLabel" data-paid-amount="${totalPaidSoFar}" class="text-[8px] text-gray-400 uppercase mt-1">Total Paid: £${totalPaidSoFar.toFixed(2)}</p>
-                </div>
-                <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50">
-                    <input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-4 h-4 accent-pink-500">
-                    <label class="text-[10px] font-black uppercase text-gray-500">Shipping Paid?</label>
-                </div>
-            </div>
-        `;
-    } else if (job.payment_method === 'Trade') {
-        return `
-            <div class="space-y-3 col-span-2">
-                <div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-pink-100">
-                    <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-6 h-6 accent-pink-500">
-                    <label class="text-[11px] font-black uppercase text-gray-600">Partner Item Shipped?</label>
-                </div>
-                <div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-pink-100">
-                    <input type="checkbox" id="weShipped" ${job.we_shipped ? 'checked' : ''} class="w-6 h-6 accent-pink-500">
-                    <label class="text-[11px] font-black uppercase text-gray-600">We Have Shipped Swap Item?</label>
-                </div>
-            </div>
-        `;
-    }
-    // Gift View
-    return `<div class="col-span-2 p-10 text-center italic text-gray-400 text-sm">Gifted commission: No financial tracking required. ♡</div>`;
-}
-    
-    function renderServiceBlock(title, details, options) {
-        if (!details) return '';
-        const id = title.toLowerCase();
-        return `
-            <div class="space-y-4 border-l-4 border-pink-100 pl-6 py-2">
-                <div class="flex justify-between items-center">
-                    <h4 class="font-black text-pink-500 uppercase tracking-widest text-sm">${title}</h4>
-                    <select id="${id}Status" class="text-[10px] font-black border-2 border-pink-50 rounded-full px-3 py-1 outline-none">
-                        ${options.map(opt => `<option value="${opt}" ${(details.status || '') === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="text-[11px] text-gray-500 bg-white border border-pink-50 p-3 rounded-xl italic font-medium">
-                    "Client: ${details.notes || 'No specific notes'}"
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <textarea id="${id}Inv" placeholder="Inventory Log (Headcaps, wigs etc)" class="w-full p-3 text-xs border rounded-xl h-20">${details.inventory || ''}</textarea>
-                    <textarea id="${id}Admin" placeholder="Admin/Artist Notes" class="w-full p-3 text-xs border rounded-xl h-20">${details.admin_notes || ''}</textarea>
-                </div>
-              ${details.images?.length > 0 ? `
-                    <div class="flex gap-2 overflow-x-auto py-2 scrollbar-hide">
-                        ${details.images.map(img => `
-                            <img src="${img}" 
-                                 onclick="zoomImage('${img}')" 
-                                 class="w-20 h-20 object-cover rounded-lg border border-pink-100 cursor-zoom-in hover:border-pink-400 transition-all active:scale-95"
-                            >
-                        `).join('')}
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    }
-
-    function toggleTracking(val) {
-        document.getElementById('trackingBox').classList.toggle('hidden', val !== 'shipped');
-    }
-
-    // --- SAVE LOGIC ---
-     document.getElementById('saveBtn').onclick = async () => {
-    const btn = document.getElementById('saveBtn');
-    const originalText = btn.innerText;
-    btn.innerText = "Saving Studio Records... ✨";
-    btn.disabled = true;
-
-    try {
-        // 1. Fetch current data to preserve original JSON keys and payment history
-        const { data: current, error: fetchError } = await _supabase
-            .from('commissions')
-            .select('*')
-            .eq('id', activeJobId)
-            .single();
-
-        if (fetchError) throw fetchError;
-
-        // 2. Prepare Payment History Logic
-        let updatedPayments = current.payments || [];
-        const method = document.getElementById('payMethod')?.value;
-        const total = parseFloat(document.getElementById('totalPrice')?.value) || 0;
-        const markAsPaid = document.getElementById('markAsPaid')?.checked || false;
-
-        // If "Mark as Paid" is checked and there is still a balance, add a closing payment
-        if (method === 'Paid' && markAsPaid) {
-            const currentlyPaid = updatedPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-            const remaining = total - currentlyPaid;
-            
-            if (remaining > 0) {
-                updatedPayments.push({
-                    amount: remaining,
-                    date: new Date().toISOString(),
-                    id: crypto.randomUUID(),
-                    note: "Auto-cleared via Mark as Paid"
-                });
-            }
+    // --- WORKBENCH ---
+    async function renderWorkbench(showArchived = false) {
+        const container = document.getElementById('commissionList');
+        const liveBtn = document.getElementById('tab-live');
+        const archBtn = document.getElementById('tab-archived');
+        
+        if (showArchived) {
+            archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
+            liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
+        } else {
+            liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
+            archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
         }
 
-        // 3. Build the update object
-        const updates = {
-            status: document.getElementById('updateStatus')?.value,
-            tracking_number: document.getElementById('trackingNum')?.value || null,
-            payment_method: method,
-            total_price: total,
-            payments: updatedPayments, // Save the updated history
-            shipping_paid: document.getElementById('shippingPaid')?.checked || false,
-            is_urgent: document.getElementById('isUrgent')?.checked || false,
-            partner_shipped: document.getElementById('partnerShipped')?.checked || false,
-            we_shipped: document.getElementById('weShipped')?.checked || false
-        };
+        const { data, error } = await _supabase.from('commissions').select('*').eq('archived', showArchived).order('created_at', { ascending: false });
+        if (error) return;
+           
+        const statusColors = { 'Enquiry': 'bg-blue-50 text-blue-500', 'Quote': 'bg-purple-50 text-purple-500', 'Arrived': 'bg-amber-50 text-amber-600', 'Working': 'bg-emerald-50 text-emerald-600', 'Approved': 'bg-cyan-50 text-cyan-600', 'Photo': 'bg-indigo-50 text-indigo-500', 'Shipped': 'bg-gray-100 text-gray-500' };
 
-        // 4. Update Service JSONs only if they exist in the database
-        if (current.faceup_details && current.faceup_details.base !== "None") {
-            updates.faceup_details = { 
-                ...current.faceup_details, 
-                status: document.getElementById('faceupStatus')?.value,
-                inventory: document.getElementById('faceupInv')?.value,
-                admin_notes: document.getElementById('faceupAdmin')?.value 
-            };
-        }
-        if (current.manicure_details && current.manicure_details.base !== "None") {
-            updates.manicure_details = { 
-                ...current.manicure_details, 
-                status: document.getElementById('manicureStatus')?.value,
-                inventory: document.getElementById('manicureInv')?.value,
-                admin_notes: document.getElementById('manicureAdmin')?.value 
-            };
-        }
-        if (current.eye_details && current.eye_details.base !== "None") {
-            updates.eye_details = { 
-                ...current.eye_details, 
-                status: document.getElementById('eyeStatus')?.value,
-                inventory: document.getElementById('eyeInv')?.value,
-                admin_notes: document.getElementById('eyeAdmin')?.value 
-            };
+        if (!data || data.length === 0) {
+            container.innerHTML = `<div class="p-20 text-center bg-pink-50/30 rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">${showArchived ? 'No archived dolls yet! 🌸' : 'No active requests! 🕊️'}</div>`;
+            return;
         }
 
-        // 5. Send to Supabase
-        const { error: saveError } = await _supabase
-            .from('commissions')
-            .update(updates)
-            .eq('id', activeJobId);
-
-        if (saveError) throw saveError;
-
-        // Success Feedback
-        btn.innerText = "Saved! ♡";
-        setTimeout(() => {
-            btn.innerText = originalText;
-            btn.disabled = false;
-            closeDrawer();
-            renderWorkbench(); 
-            renderPlanner(); // Refresh planner too in case status/priority changed
-        }, 1000);
-
-    } catch (err) {
-        console.error("Save Error:", err);
-        alert("Save failed: " + err.message);
-        btn.innerText = "Try Again ♡";
-        btn.disabled = false;
-    }
-};
-    // --- PLANNER & SETTINGS --- (Keep existing logic or use prev simplified ones)
-    async function renderSettings() {
-        const { data } = await _supabase.from('studio_settings').select('*');
-        document.getElementById('services-list').innerHTML = data.map(s => `
-            <div class="bg-white p-6 rounded-[2rem] border border-pink-50 flex justify-between items-center shadow-sm">
-                <div><h4 class="font-black text-lg capitalize">${s.id}</h4><p class="text-[10px] font-bold ${s.is_live ? 'text-emerald-500' : 'text-amber-500'} uppercase">${s.is_live ? 'Open' : 'Full'}</p></div>
-                <button onclick="toggleService('${s.id}', ${!s.is_live})" class="nav-btn ${s.is_live ? 'nav-btn-pink' : 'nav-btn-mint'}">Toggle Status</button>
+        container.innerHTML = data.map(job => `
+            <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
+                <div class="w-12 h-12 bg-pink-50 rounded-full shrink-0 flex items-center justify-center text-lg overflow-hidden border border-pink-100">
+                    ${job.faceup_details?.images?.[0] ? `<img src="${job.faceup_details.images[0]}" class="w-full h-full object-cover">` : '🎨'}
+                </div>
+                <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
+                    <div>
+                        <h4 class="font-black text-sm truncate">${job.social_handle || 'Unknown'}</h4>
+                        <p class="text-[9px] font-bold text-pink-400 uppercase tracking-tighter">${job.doll_company} ${job.doll_sculpt}</p>
+                    </div>
+                    <div class="hidden md:block">
+                        <p class="text-[9px] font-black text-gray-300 uppercase">Requested</p>
+                        <p class="text-[10px] text-gray-500 truncate">
+                            ${job.faceup_details ? 'Faceup ' : ''}${job.eye_details ? '• Eyes ' : ''}${job.manicure_details ? '• Mani' : ''}
+                        </p>
+                    </div>
+                    <div><span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColors[job.status] || 'bg-gray-50 text-gray-400'}">${job.status}</span></div>
+                    <div class="text-right"><button onclick="openDrawer('${job.id}')" class="text-[10px] font-black uppercase text-pink-500 hover:underline">Open Order →</button></div>
+                </div>
             </div>
         `).join('');
     }
 
-    async function toggleService(id, status) {
-        await _supabase.from('studio_settings').update({ is_live: status }).eq('id', id);
-        renderSettings();
-    }
+    // --- INVENTORY LOGIC ---
+    async function renderInventory() {
+        const { data: items } = await _supabase.from('inventory').select('*').order('category');
+        const headsContainer = document.getElementById('headsStock');
+        const eyesContainer = document.getElementById('eyesStock');
 
-    async function renderPlanner() {
-    const inStudioStatuses = ['Arrived', 'Working', 'Approved', 'Photo'];
-    const { data: jobs } = await _supabase.from('commissions').select('*').in('status', inStudioStatuses).eq('archived', false);
-    const container = document.getElementById('plannerContainer');
-    const today = new Date();
+        const heads = items.filter(i => i.category.includes('Head') || i.category.includes('Hands'));
+        const eyes = items.filter(i => i.category === 'Eyes');
 
-    if (!jobs || jobs.length === 0) {
-        container.innerHTML = `<div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">Studio is clear! ✨</div>`;
-        return;
-    }
-
-    const prioritizedJobs = jobs.map(job => {
-        let score = 0;
-        const arrival = job.arrival_date ? new Date(job.arrival_date) : today;
-        const diffDays = Math.ceil(Math.abs(today - arrival) / (1000 * 60 * 60 * 24));
-        
-        // Base Score: Days in Studio
-        score += diffDays;
-
-        // Payment Boost (+100)
-        const isPaid = job.amount_paid >= job.total_price && job.total_price > 0;
-        const isTrade = job.payment_method === 'Trade';
-        if (isPaid || isTrade) score += 100;
-
-        // URGENT BOOST (+500) - This ensures they almost always hit Rank #1
-        if (job.is_urgent) score += 500;
-
-        return { ...job, score, diffDays, isPaid, isTrade };
-    });
-
-    prioritizedJobs.sort((a, b) => b.score - a.score);
-
-    container.innerHTML = prioritizedJobs.map((job, index) => `
-        <div class="flex items-center gap-6 p-5 rounded-[2rem] border ${job.is_urgent ? 'border-red-200 bg-red-50/30' : 'border-pink-50 bg-white'} shadow-sm transition-all">
-            <div class="w-12 h-12 flex flex-col items-center justify-center rounded-2xl ${job.is_urgent ? 'bg-red-500' : 'bg-pink-300'} text-white shrink-0">
-                <span class="text-[10px] font-black uppercase">Rank</span>
-                <span class="text-lg font-black">${index + 1}</span>
-            </div>
-            <div class="flex-1">
-                <div class="flex items-center gap-2">
-                    <h4 class="font-black text-gray-800">${job.social_handle || 'Client'}</h4>
-                    ${job.is_urgent ? '<span class="px-2 py-0.5 rounded-md bg-red-500 text-white text-[8px] font-black uppercase animate-pulse">Urgent</span>' : ''}
+        headsContainer.innerHTML = heads.map(item => `
+            <div class="bg-white p-6 rounded-[2.5rem] border border-pink-50 shadow-sm flex justify-between items-center transition-all hover:border-pink-200">
+                <div>
+                    <p class="text-[9px] font-black text-pink-400 uppercase tracking-widest">${item.category}</p>
+                    <h4 class="font-black text-lg">${item.sculpt_size}</h4>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase">${item.skintone || ''}</p>
                 </div>
-                <p class="text-[10px] uppercase tracking-widest text-gray-400">${job.diffDays} Days • ${job.status}</p>
+                <div class="flex items-center gap-3 bg-pink-50/50 p-2 rounded-2xl">
+                    <button onclick="updateStock('${item.id}', -1)" class="w-10 h-10 font-black text-pink-500 hover:bg-white rounded-xl transition-all">-</button>
+                    <span class="font-black text-xl w-6 text-center">${item.quantity}</span>
+                    <button onclick="updateStock('${item.id}', 1)" class="w-10 h-10 font-black text-pink-500 hover:bg-white rounded-xl transition-all">+</button>
+                </div>
             </div>
-            <button onclick="openDrawer('${job.id}')" class="p-3 bg-white border border-gray-100 rounded-xl">⚙️</button>
-        </div>
-    `).join('');
-}
+        `).join('');
 
-   
-    function zoomImage(url) {
-    const lightbox = document.getElementById('lightbox');
-    const img = document.getElementById('lightboxImg');
-    img.src = url;
-    lightbox.classList.remove('hidden');
-}
-    async function handleArchive() {
-    if (!confirm("Archive this order? This will permanently delete all reference images to save studio space. The records will move to your 'Archived' tab. ♡")) return;
+        eyesContainer.innerHTML = eyes.map(item => `
+            <div class="bg-blue-50/30 p-4 rounded-3xl border border-blue-100 flex flex-col items-center">
+                <p class="text-[10px] font-black text-blue-500 uppercase">${item.sculpt_size}</p>
+                <div class="flex items-center gap-3 mt-2">
+                    <button onclick="updateStock('${item.id}', -1)" class="font-black text-blue-300">-</button>
+                    <span class="font-black text-blue-600">${item.quantity}</span>
+                    <button onclick="updateStock('${item.id}', 1)" class="font-black text-blue-300">+</button>
+                </div>
+            </div>
+        `).join('');
+    }
 
-    try {
-        // 1. Fetch the full job data one last time to get image URLs
-        const { data: job, error: fetchError } = await _supabase
-            .from('commissions')
-            .select('*')
-            .eq('id', activeJobId)
-            .single();
+    async function updateStock(id, change) {
+        const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
+        const newQty = Math.max(0, (data.quantity || 0) + change);
+        await _supabase.from('inventory').update({ quantity: newQty }).eq('id', id);
+        renderInventory();
+    }
 
-        if (fetchError) throw fetchError;
+    async function openAddStockModal() {
+        const cat = prompt("Category (Smartdoll Head, Dollfie Head, Smartdoll Hands, Dollfie Hands, Eyes):");
+        if (!cat) return;
+        const sculpt = prompt("Sculpt or Eye Size (e.g. Mirai or 16mm):");
+        const tone = prompt("Skintone (e.g. Cinnamon or N/A):");
+        const qty = parseInt(prompt("Starting Quantity:")) || 0;
+        await _supabase.from('inventory').insert([{ category: cat, sculpt_size: sculpt, skintone: tone, quantity: qty }]);
+        renderInventory();
+    }
 
-        // 2. Identify all image URLs stored in the JSON fields
-        const allImages = [
-            ...(job.faceup_details?.images || []),
-            ...(job.manicure_details?.images || []),
-            ...(job.eye_details?.images || [])
-        ];
-
-        // 3. Delete those files from the Supabase Storage Bucket
-        if (allImages.length > 0) {
-            const pathsToDelete = allImages.map(url => {
-                // This extracts the specific filename from your public URL
-                // It assumes your files are in a folder called 'refs' inside the 'references' bucket
-                return url.split('references/')[1];
-            }).filter(path => path); // Safety check to ensure path exists
-
-            if (pathsToDelete.length > 0) {
-                const { error: storageError } = await _supabase.storage
-                    .from('references')
-                    .remove(pathsToDelete);
-                
-                if (storageError) console.warn("Storage cleanup failed, but proceeding with archive:", storageError);
+    // --- AUTO-DEDUCT LOGIC ---
+    async function deductStockForJob(job) {
+        let stockType = null;
+        if (job.faceup_details?.base === "Face-Up + Smartdoll Head") stockType = "Smartdoll Head";
+        if (job.faceup_details?.base === "Face-Up + Dollfie Dream Head") stockType = "Dollfie Head";
+        if (stockType) {
+            const { data: item } = await _supabase.from('inventory').select('id, quantity').eq('category', stockType).eq('sculpt_size', job.doll_sculpt).eq('skintone', job.doll_skintone).single();
+            if (item && item.quantity > 0) {
+                await _supabase.from('inventory').update({ quantity: item.quantity - 1 }).eq('id', item.id);
             }
         }
-
-        // 4. Move the record to the Archive Tab & Wipe the image arrays
-        const { error: updateError } = await _supabase
-            .from('commissions')
-            .update({ 
-                archived: true,
-                // We keep the notes/status, but set images to empty array to save UI space
-                faceup_details: job.faceup_details ? { ...job.faceup_details, images: [] } : null,
-                manicure_details: job.manicure_details ? { ...job.manicure_details, images: [] } : null,
-                eye_details: job.eye_details ? { ...job.eye_details, images: [] } : null
-            })
-            .eq('id', activeJobId);
-
-        if (updateError) throw updateError;
-
-        // 5. Success UI Update
-        closeDrawer();
-        renderWorkbench(false); // Refresh the 'Live' inbox
-        alert("Studio space cleared! Order has been moved to Archives. ✨");
-
-    } catch (err) {
-        console.error("Archive Error:", err);
-        alert("Error: " + err.message);
     }
-}
+
+    // --- DRAWER POPUP LOGIC ---
+    async function openDrawer(id) {
+        activeJobId = id;
+        const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
+        const content = document.getElementById('drawerContent');
+        const paymentHistory = job.payments || [];
+        const totalPaidSoFar = paymentHistory.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+        const balanceDue = Math.max(0, (job.total_price || 0) - totalPaidSoFar);
+
+        content.innerHTML = `
+            <div class="space-y-10 pb-10">
+                <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-3">
+                        <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Client Details</h3>
+                        <div class="text-sm space-y-1">
+                            <p><strong>Handle:</strong> ${job.social_handle || 'N/A'}</p>
+                            <p><strong>Doll:</strong> ${job.doll_company} ${job.doll_sculpt} (${job.doll_skintone})</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b pb-2">Order Tracking</h3>
+                        <select id="updateStatus" class="w-full p-2 bg-white border border-pink-100 rounded-xl text-sm font-bold mt-1">
+                            <option value="Enquiry" ${job.status === 'Enquiry' ? 'selected' : ''}>Enquiry</option>
+                            <option value="Quote" ${job.status === 'Quote' ? 'selected' : ''}>Quote</option>
+                            <option value="Arrived" ${job.status === 'Arrived' ? 'selected' : ''}>Arrived 📦</option>
+                            <option value="Working" ${job.status === 'Working' ? 'selected' : ''}>Working 🎨</option>
+                            <option value="Approved" ${job.status === 'Approved' ? 'selected' : ''}>Approved ✅</option>
+                            <option value="Photo" ${job.status === 'Photo' ? 'selected' : ''}>Photo Shoot 📸</option>
+                            <option value="Shipped" ${job.status === 'Shipped' ? 'selected' : ''}>Shipped ✈️</option>
+                        </select>
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-2xl border border-red-100">
+                            <span class="text-[10px] font-black uppercase text-red-500">Urgent Priority</span>
+                            <input type="checkbox" id="isUrgent" ${job.is_urgent ? 'checked' : ''} class="w-5 h-5 accent-red-500">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="bg-pink-50/50 p-6 rounded-[2rem] border border-pink-100 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Payment & Shipping</h3>
+                        <select id="payMethod" onchange="saveAndRefreshDrawer()" class="p-2 bg-white border border-pink-100 rounded-lg text-[10px] font-black uppercase">
+                            <option value="Paid" ${job.payment_method === 'Paid' ? 'selected' : ''}>Paid in Full</option>
+                            <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
+                            <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
+                            <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">${renderFinancialInputs(job, balanceDue, totalPaidSoFar)}</div>
+                    <div class="pt-4 border-t border-pink-100/50">
+                        <label class="text-[9px] font-black uppercase text-gray-400">Shipping Tracking Number</label>
+                        <input type="text" id="trackingNum" value="${job.tracking_number || ''}" placeholder="Enter tracking..." class="w-full p-3 bg-white border border-pink-100 rounded-xl mt-1 text-xs font-mono">
+                    </div>
+                </section>
+
+                ${(job.faceup_details && job.faceup_details.base !== "None") ? renderServiceBlock('Faceup', job.faceup_details, ['To be Cleaned', 'Blank', 'Sealed', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
+                ${(job.manicure_details && job.manicure_details.base !== "None") ? renderServiceBlock('Manicure', job.manicure_details, ['To be Cleaned', 'Blank', 'In progress', 'Approval', 'Photos', 'Packed']) : ''}
+                ${(job.eye_details && job.eye_details.base !== "None") ? renderServiceBlock('Eyes', job.eye_details, ['Designing', 'Printing', 'Assembling', 'Approval', 'Photos', 'Packed']) : ''}
+            </div>
+        `;
+        document.getElementById('detailDrawer').classList.remove('translate-x-full');
+    }
+
+    function renderFinancialInputs(job, balanceDue, totalPaidSoFar) {
+        if (job.payment_method === 'Paid' || job.payment_method === 'Layaway') {
+            return `<div class="space-y-3"><div><label class="text-[9px] font-bold uppercase text-gray-400">Total Price (£)</label><input type="number" id="totalPrice" oninput="updateBalanceLive()" value="${job.total_price || 0}" class="w-full p-3 bg-white border border-pink-100 rounded-xl font-bold"></div>${job.payment_method === 'Layaway' ? `<div class="p-3 bg-white rounded-xl border border-pink-100"><label class="text-[9px] font-bold uppercase text-pink-400">Add Payment (£)</label><div class="flex gap-2 mt-1"><input type="number" id="newPayment" placeholder="0.00" class="flex-1 p-2 bg-pink-50/30 rounded-lg text-sm"><button onclick="addPaymentRecord('${job.id}')" class="bg-pink-500 text-white px-3 rounded-lg text-[10px] font-black hover:bg-pink-600 transition-colors">ADD</button></div></div>` : `<div class="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100"><input type="checkbox" id="markAsPaid" onchange="togglePaidStatus()" ${balanceDue <= 0 ? 'checked' : ''} class="w-5 h-5 accent-emerald-500"><label class="text-[10px] font-black uppercase text-emerald-600">Mark as Paid</label></div>`}</div><div class="flex flex-col justify-between p-4 bg-white rounded-2xl border border-pink-100"><div><p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Balance Due</p><p id="balanceDisplay" class="text-2xl font-black ${balanceDue > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${balanceDue.toFixed(2)}</p><p id="paidLabel" data-paid-amount="${totalPaidSoFar}" class="text-[8px] text-gray-400 uppercase mt-1">Total Paid: £${totalPaidSoFar.toFixed(2)}</p></div><div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50"><input type="checkbox" id="shippingPaid" ${job.shipping_paid ? 'checked' : ''} class="w-4 h-4 accent-pink-500"><label class="text-[10px] font-black uppercase text-gray-500">Shipping Paid?</label></div></div>`;
+        } else if (job.payment_method === 'Trade') {
+            return `<div class="space-y-3 col-span-2"><div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-pink-100"><input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-6 h-6 accent-pink-500"><label class="text-[11px] font-black uppercase text-gray-600">Partner Item Shipped?</label></div><div class="flex items-center gap-4 p-4 bg-white rounded-xl border border-pink-100"><input type="checkbox" id="weShipped" ${job.we_shipped ? 'checked' : ''} class="w-6 h-6 accent-pink-500"><label class="text-[11px] font-black uppercase text-gray-600">We Have Shipped Swap Item?</label></div></div>`;
+        }
+        return `<div class="col-span-2 p-10 text-center italic text-gray-400 text-sm">Gifted commission: No financial tracking required. ♡</div>`;
+    }
+    
+    function renderServiceBlock(title, details, options) {
+        const id = title.toLowerCase();
+        return `<div class="space-y-4 border-l-4 border-pink-100 pl-6 py-2"><div class="flex justify-between items-center"><h4 class="font-black text-pink-500 uppercase tracking-widest text-sm">${title}</h4><select id="${id}Status" class="text-[10px] font-black border-2 border-pink-50 rounded-full px-3 py-1 outline-none">${options.map(opt => `<option value="${opt}" ${(details.status || '') === opt ? 'selected' : ''}>${opt}</option>`).join('')}</select></div><div class="text-[11px] text-gray-500 bg-white border border-pink-50 p-3 rounded-xl italic font-medium">"Client: ${details.notes || 'No specific notes'}"</div><div class="grid grid-cols-2 gap-4"><textarea id="${id}Inv" placeholder="Inventory Log" class="w-full p-3 text-xs border rounded-xl h-20">${details.inventory || ''}</textarea><textarea id="${id}Admin" placeholder="Artist Notes" class="w-full p-3 text-xs border rounded-xl h-20">${details.admin_notes || ''}</textarea></div>${details.images?.length > 0 ? `<div class="flex gap-2 overflow-x-auto py-2 scrollbar-hide">${details.images.map(img => `<img src="${img}" onclick="zoomImage('${img}')" class="w-20 h-20 object-cover rounded-lg border border-pink-100 cursor-zoom-in hover:border-pink-400 transition-all active:scale-95">`).join('')}</div>` : ''}</div>`;
+    }
+
+    // --- UPDATED SAVE LOGIC ---
+    document.getElementById('saveBtn').onclick = async () => {
+        const btn = document.getElementById('saveBtn');
+        const originalText = btn.innerText;
+        btn.innerText = "Saving Studio Records... ✨";
+        btn.disabled = true;
+
+        try {
+            const { data: current, error: fetchError } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+            if (fetchError) throw fetchError;
+
+            const newStatus = document.getElementById('updateStatus')?.value;
+            
+            // Trigger Auto-Deduct
+            if (newStatus === 'Working' && current.status !== 'Working') {
+                await deductStockForJob(current);
+            }
+
+            let updatedPayments = current.payments || [];
+            const method = document.getElementById('payMethod')?.value;
+            const total = parseFloat(document.getElementById('totalPrice')?.value) || 0;
+            const markAsPaid = document.getElementById('markAsPaid')?.checked || false;
+
+            if (method === 'Paid' && markAsPaid) {
+                const currentlyPaid = updatedPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+                const remaining = total - currentlyPaid;
+                if (remaining > 0) { updatedPayments.push({ amount: remaining, date: new Date().toISOString(), id: crypto.randomUUID(), note: "Auto-cleared via Mark as Paid" }); }
+            }
+
+            const updates = {
+                status: newStatus,
+                tracking_number: document.getElementById('trackingNum')?.value || null,
+                payment_method: method,
+                total_price: total,
+                payments: updatedPayments,
+                shipping_paid: document.getElementById('shippingPaid')?.checked || false,
+                is_urgent: document.getElementById('isUrgent')?.checked || false,
+                partner_shipped: document.getElementById('partnerShipped')?.checked || false,
+                we_shipped: document.getElementById('weShipped')?.checked || false
+            };
+
+            if (current.faceup_details && current.faceup_details.base !== "None") {
+                updates.faceup_details = { ...current.faceup_details, status: document.getElementById('faceupStatus')?.value, inventory: document.getElementById('faceupInv')?.value, admin_notes: document.getElementById('faceupAdmin')?.value };
+            }
+            if (current.manicure_details && current.manicure_details.base !== "None") {
+                updates.manicure_details = { ...current.manicure_details, status: document.getElementById('manicureStatus')?.value, inventory: document.getElementById('manicureInv')?.value, admin_notes: document.getElementById('manicureAdmin')?.value };
+            }
+            if (current.eye_details && current.eye_details.base !== "None") {
+                updates.eye_details = { ...current.eye_details, status: document.getElementById('eyeStatus')?.value, inventory: document.getElementById('eyeInv')?.value, admin_notes: document.getElementById('eyeAdmin')?.value };
+            }
+
+            const { error: saveError } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
+            if (saveError) throw saveError;
+
+            btn.innerText = "Saved! ♡";
+            setTimeout(() => { btn.innerText = originalText; btn.disabled = false; closeDrawer(); renderWorkbench(); renderPlanner(); }, 1000);
+        } catch (err) { alert("Save failed: " + err.message); btn.innerText = "Try Again ♡"; btn.disabled = false; }
+    };
+
+    async function renderSettings() {
+        const { data } = await _supabase.from('studio_settings').select('*');
+        document.getElementById('services-list').innerHTML = data.map(s => `<div class="bg-white p-6 rounded-[2rem] border border-pink-50 flex justify-between items-center shadow-sm"><div><h4 class="font-black text-lg capitalize">${s.id}</h4><p class="text-[10px] font-bold ${s.is_live ? 'text-emerald-500' : 'text-amber-500'} uppercase">${s.is_live ? 'Open' : 'Full'}</p></div><button onclick="toggleService('${s.id}', ${!s.is_live})" class="nav-btn ${s.is_live ? 'nav-btn-pink' : 'nav-btn-mint'}">Toggle Status</button></div>`).join('');
+    }
+
+    async function toggleService(id, status) { await _supabase.from('studio_settings').update({ is_live: status }).eq('id', id); renderSettings(); }
+
+    async function renderPlanner() {
+        const inStudioStatuses = ['Arrived', 'Working', 'Approved', 'Photo'];
+        const { data: jobs } = await _supabase.from('commissions').select('*').in('status', inStudioStatuses).eq('archived', false);
+        const container = document.getElementById('plannerContainer');
+        const today = new Date();
+        if (!jobs || jobs.length === 0) { container.innerHTML = `<div class="p-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-pink-100 italic text-gray-400">Studio is clear! ✨</div>`; return; }
+        const prioritizedJobs = jobs.map(job => {
+            let score = 0;
+            const arrival = job.arrival_date ? new Date(job.arrival_date) : today;
+            const diffDays = Math.ceil(Math.abs(today - arrival) / (1000 * 60 * 60 * 24));
+            score += diffDays;
+            if ((job.amount_paid >= job.total_price && job.total_price > 0) || job.payment_method === 'Trade') score += 100;
+            if (job.is_urgent) score += 500;
+            return { ...job, score, diffDays };
+        });
+        prioritizedJobs.sort((a, b) => b.score - a.score);
+        container.innerHTML = prioritizedJobs.map((job, index) => `<div class="flex items-center gap-6 p-5 rounded-[2rem] border ${job.is_urgent ? 'border-red-200 bg-red-50/30' : 'border-pink-50 bg-white'} shadow-sm transition-all"><div class="w-12 h-12 flex flex-col items-center justify-center rounded-2xl ${job.is_urgent ? 'bg-red-500' : 'bg-pink-300'} text-white shrink-0"><span class="text-[10px] font-black uppercase">Rank</span><span class="text-lg font-black">${index + 1}</span></div><div class="flex-1"><div class="flex items-center gap-2"><h4 class="font-black text-gray-800">${job.social_handle || 'Client'}</h4>${job.is_urgent ? '<span class="px-2 py-0.5 rounded-md bg-red-500 text-white text-[8px] font-black uppercase animate-pulse">Urgent</span>' : ''}</div><p class="text-[10px] uppercase tracking-widest text-gray-400">${job.diffDays} Days • ${job.status}</p></div><button onclick="openDrawer('${job.id}')" class="p-3 bg-white border border-gray-100 rounded-xl">⚙️</button></div>`).join('');
+    }
+
+    function zoomImage(url) { const img = document.getElementById('lightboxImg'); img.src = url; document.getElementById('lightbox').classList.remove('hidden'); }
+    
+    async function handleArchive() {
+        if (!confirm("Archive this order? reference images will be deleted.")) return;
+        const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+        const allImages = [...(job.faceup_details?.images || []), ...(job.manicure_details?.images || []), ...(job.eye_details?.images || [])];
+        if (allImages.length > 0) {
+            const paths = allImages.map(url => url.split('references/')[1]).filter(p => p);
+            if (paths.length > 0) await _supabase.storage.from('references').remove(paths);
+        }
+        await _supabase.from('commissions').update({ archived: true, faceup_details: job.faceup_details ? { ...job.faceup_details, images: [] } : null, manicure_details: job.manicure_details ? { ...job.manicure_details, images: [] } : null, eye_details: job.eye_details ? { ...job.eye_details, images: [] } : null }).eq('id', activeJobId);
+        closeDrawer(); renderWorkbench(false);
+    }
+
     async function addPaymentRecord(jobId) {
-    const amountInput = document.getElementById('newPayment');
-    const amount = parseFloat(amountInput.value);
-    if (!amount || amount <= 0) return;
-
-    const { data: job } = await _supabase.from('commissions').select('payments').eq('id', jobId).single();
-    const history = job.payments || [];
+        const amount = parseFloat(document.getElementById('newPayment').value);
+        if (!amount || amount <= 0) return;
+        const { data: job } = await _supabase.from('commissions').select('payments').eq('id', jobId).single();
+        const history = job.payments || [];
+        await _supabase.from('commissions').update({ payments: [...history, { amount, date: new Date().toISOString(), id: crypto.randomUUID() }] }).eq('id', jobId);
+        openDrawer(jobId);
+    }
     
-    const newPayment = { amount, date: new Date().toISOString(), id: crypto.randomUUID() };
-
-    await _supabase.from('commissions').update({ payments: [...history, newPayment] }).eq('id', jobId);
-    openDrawer(jobId); // Refresh to show new balance
-}
-    
-async function saveAndRefreshDrawer() {
-    const method = document.getElementById('payMethod').value;
-    // We update the method in the database immediately so the refresh knows what to show
-    const { error } = await _supabase
-        .from('commissions')
-        .update({ payment_method: method })
-        .eq('id', activeJobId);
-
-    if (!error) {
+    async function saveAndRefreshDrawer() {
+        await _supabase.from('commissions').update({ payment_method: document.getElementById('payMethod').value }).eq('id', activeJobId);
         openDrawer(activeJobId);
     }
-}
 
-    
-function updateBalanceLive() {
-    const totalInput = document.getElementById('totalPrice');
-    const balanceDisplay = document.getElementById('balanceDisplay');
-    const paidLabel = document.getElementById('paidLabel');
-    
-    if (!totalInput || !balanceDisplay || !paidLabel) return;
-    
-    const total = parseFloat(totalInput.value) || 0;
-    const totalPaidSoFar = parseFloat(paidLabel.getAttribute('data-paid-amount')) || 0;
-    
-    const newBalance = Math.max(0, total - totalPaidSoFar);
-    
-    balanceDisplay.innerText = `£${newBalance.toFixed(2)}`;
-    balanceDisplay.className = `text-2xl font-black ${newBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}`;
-}
-
-function togglePaidStatus() {
-    const isChecked = document.getElementById('markAsPaid').checked;
-    const balanceDisplay = document.getElementById('balanceDisplay');
-    const total = parseFloat(document.getElementById('totalPrice').value) || 0;
-
-    if (isChecked) {
-        balanceDisplay.innerText = "£0.00";
-        balanceDisplay.className = "text-2xl font-black text-emerald-500";
-    } else {
-        updateBalanceLive(); // Revert to actual math
+    function updateBalanceLive() {
+        const total = parseFloat(document.getElementById('totalPrice').value) || 0;
+        const totalPaidSoFar = parseFloat(document.getElementById('paidLabel').getAttribute('data-paid-amount')) || 0;
+        const newBalance = Math.max(0, total - totalPaidSoFar);
+        document.getElementById('balanceDisplay').innerText = `£${newBalance.toFixed(2)}`;
+        document.getElementById('balanceDisplay').className = `text-2xl font-black ${newBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}`;
     }
-}
-    function closeDrawer() {
-    // This adds the 'translate-x-full' class which slides the drawer off-screen to the right
-    document.getElementById('detailDrawer').classList.add('translate-x-full');
-}
+
+    function togglePaidStatus() {
+        if (document.getElementById('markAsPaid').checked) {
+            document.getElementById('balanceDisplay').innerText = "£0.00";
+            document.getElementById('balanceDisplay').className = "text-2xl font-black text-emerald-500";
+        } else { updateBalanceLive(); }
+    }
+
+    function closeDrawer() { document.getElementById('detailDrawer').classList.add('translate-x-full'); }
 </script>
-    <div id="lightbox" onclick="this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 cursor-zoom-out">
+
+<div id="lightbox" onclick="this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 cursor-zoom-out">
     <img id="lightboxImg" src="" class="max-w-full max-h-full rounded-lg shadow-2xl border-4 border-white/10">
     <p class="absolute bottom-6 text-white/50 text-[10px] uppercase font-black tracking-widest">Click anywhere to close</p>
 </div>
