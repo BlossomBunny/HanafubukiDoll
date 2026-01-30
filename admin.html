@@ -60,15 +60,12 @@
     <div class="glass-card p-8 flex justify-between items-center">
         <div>
             <h2 class="text-3xl font-black italic">Studio Stock</h2>
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Manage inventory via inline tables</p>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Type into the bottom row to add new stock ♡</p>
         </div>
     </div>
 
     <div class="space-y-4">
-        <div class="flex justify-between items-end px-4">
-            <h3 class="text-xs font-black uppercase tracking-widest text-pink-500">Smartdoll Heads</h3>
-            <button onclick="addInventoryRow('Smartdoll Head')" class="text-[10px] font-black uppercase bg-pink-50 text-pink-500 px-3 py-1 rounded-lg hover:bg-pink-500 hover:text-white transition-all">+ Add New Sculpt</button>
-        </div>
+        <h3 class="text-xs font-black uppercase tracking-widest text-pink-500 px-4">Smartdoll Heads</h3>
         <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-pink-50/50 text-[10px] font-black uppercase text-pink-400">
@@ -80,15 +77,20 @@
                     </tr>
                 </thead>
                 <tbody id="table-smartdoll-head"></tbody>
+                <tfoot class="bg-pink-50/20">
+                    <tr>
+                        <td class="p-2"><input type="text" id="new-sm-head-sculpt" placeholder="e.g. Mirai" class="w-full p-2 bg-transparent border-b border-pink-100 outline-none text-sm"></td>
+                        <td class="p-2"><input type="text" id="new-sm-head-tone" placeholder="Cinnamon" class="w-full p-2 bg-transparent border-b border-pink-100 outline-none text-sm"></td>
+                        <td class="p-2 text-center text-xs text-gray-400 italic">Save →</td>
+                        <td class="p-2 text-center"><button onclick="quickAdd('Smartdoll Head', 'sm-head')" class="bg-pink-500 text-white p-2 rounded-lg text-xs">OK</button></td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>
 
     <div class="space-y-4">
-        <div class="flex justify-between items-end px-4">
-            <h3 class="text-xs font-black uppercase tracking-widest text-purple-500">Dollfie Dream Heads</h3>
-            <button onclick="addInventoryRow('Dollfie Head')" class="text-[10px] font-black uppercase bg-purple-50 text-purple-500 px-3 py-1 rounded-lg hover:bg-purple-500 hover:text-white transition-all">+ Add New Sculpt</button>
-        </div>
+        <h3 class="text-xs font-black uppercase tracking-widest text-purple-500 px-4">Dollfie Dream Heads</h3>
         <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-purple-50/50 text-[10px] font-black uppercase text-purple-400">
@@ -100,51 +102,78 @@
                     </tr>
                 </thead>
                 <tbody id="table-dollfie-head"></tbody>
+                <tfoot class="bg-purple-50/20">
+                    <tr>
+                        <td class="p-2"><input type="text" id="new-dd-head-sculpt" placeholder="e.g. 22号" class="w-full p-2 bg-transparent border-b border-purple-100 outline-none text-sm"></td>
+                        <td class="p-2"><input type="text" id="new-dd-head-tone" placeholder="Semi-White" class="w-full p-2 bg-transparent border-b border-purple-100 outline-none text-sm"></td>
+                        <td class="p-2 text-center text-xs text-gray-400 italic">Save →</td>
+                        <td class="p-2 text-center"><button onclick="quickAdd('Dollfie Head', 'dd-head')" class="bg-purple-500 text-white p-2 rounded-lg text-xs">OK</button></td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="space-y-4">
-            <div class="flex justify-between items-end px-4">
-                <h3 class="text-xs font-black uppercase tracking-widest text-emerald-500">Hands (Pairs)</h3>
-            </div>
+            <h3 class="text-xs font-black uppercase tracking-widest text-emerald-500 px-4">Smartdoll Hands</h3>
             <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm text-sm">
                 <table class="w-full border-collapse">
                     <thead class="bg-emerald-50 text-[10px] font-black uppercase text-emerald-600">
-                        <tr>
-                            <th class="p-4 text-left">Company/Tone</th>
-                            <th class="p-4 w-24 text-center">Pairs</th>
-                            <th class="p-4 w-16"></th>
-                        </tr>
+                        <tr><th class="p-4 text-left">Skintone</th><th class="p-4 w-24 text-center">Pairs</th><th class="p-4 w-16"></th></tr>
                     </thead>
-                    <tbody id="table-hands"></tbody>
+                    <tbody id="table-smartdoll-hands"></tbody>
+                    <tfoot class="bg-emerald-50/50">
+                        <tr>
+                            <td class="p-2"><input type="text" id="new-sm-hands-tone" placeholder="Tone..." class="w-full bg-transparent outline-none text-xs"></td>
+                            <td class="p-2"></td>
+                            <td class="p-2"><button onclick="quickAdd('Smartdoll Hands', 'sm-hands')" class="text-emerald-600 font-bold">+</button></td>
+                        </tr>
+                    </tfoot>
                 </table>
-                <button onclick="addInventoryRow('Hands')" class="w-full py-3 text-[9px] font-black uppercase text-emerald-400 hover:bg-emerald-50">+ Add Hand Stock</button>
             </div>
         </div>
 
         <div class="space-y-4">
-            <div class="flex justify-between items-end px-4">
-                <h3 class="text-xs font-black uppercase tracking-widest text-blue-500">Eye Bases (Pairs)</h3>
-            </div>
+            <h3 class="text-xs font-black uppercase tracking-widest text-teal-500 px-4">Dollfie Hands</h3>
             <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm text-sm">
                 <table class="w-full border-collapse">
-                    <thead class="bg-blue-50 text-[10px] font-black uppercase text-blue-600">
-                        <tr>
-                            <th class="p-4 text-left">Size (mm)</th>
-                            <th class="p-4 w-24 text-center">Pairs</th>
-                            <th class="p-4 w-16"></th>
-                        </tr>
+                    <thead class="bg-teal-50 text-[10px] font-black uppercase text-teal-600">
+                        <tr><th class="p-4 text-left">Skintone</th><th class="p-4 w-24 text-center">Pairs</th><th class="p-4 w-16"></th></tr>
                     </thead>
-                    <tbody id="table-eyes"></tbody>
+                    <tbody id="table-dollfie-hands"></tbody>
+                    <tfoot class="bg-teal-50/50">
+                        <tr>
+                            <td class="p-2"><input type="text" id="new-dd-hands-tone" placeholder="Tone..." class="w-full bg-transparent outline-none text-xs"></td>
+                            <td class="p-2"></td>
+                            <td class="p-2"><button onclick="quickAdd('Dollfie Hands', 'dd-hands')" class="text-teal-600 font-bold">+</button></td>
+                        </tr>
+                    </tfoot>
                 </table>
-                <button onclick="addInventoryRow('Eyes')" class="w-full py-3 text-[9px] font-black uppercase text-blue-400 hover:bg-blue-50">+ Add Eye Size</button>
             </div>
         </div>
     </div>
+
+    <div class="space-y-4 max-w-md">
+        <h3 class="text-xs font-black uppercase tracking-widest text-blue-500 px-4">Eye Bases</h3>
+        <div class="bg-white rounded-[2rem] border border-pink-50 overflow-hidden shadow-sm text-sm">
+            <table class="w-full border-collapse">
+                <thead class="bg-blue-50 text-[10px] font-black uppercase text-blue-600">
+                    <tr><th class="p-4 text-left">Size (mm)</th><th class="p-4 w-24 text-center">Pairs</th><th class="p-4 w-16"></th></tr>
+                </thead>
+                <tbody id="table-eyes"></tbody>
+                <tfoot class="bg-blue-50/50">
+                    <tr>
+                        <td class="p-2"><input type="text" id="new-eyes-size" placeholder="e.g. 16mm" class="w-full bg-transparent outline-none text-xs"></td>
+                        <td class="p-2"></td>
+                        <td class="p-2"><button onclick="quickAdd('Eyes', 'eyes')" class="text-blue-600 font-bold">+</button></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
 </div>
-    <div id="view-settings" class="hidden animate-fadeIn space-y-6">
+       <div id="view-settings" class="hidden animate-fadeIn space-y-6">
         <h2 class="text-3xl font-black italic mb-8">Studio Status Controls</h2>
         <div id="services-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </div>
@@ -261,76 +290,92 @@
    async function renderInventory() {
     const { data: items } = await _supabase.from('inventory').select('*').order('sculpt_size');
     
-    // Clear all tables
     const tables = {
         'Smartdoll Head': document.getElementById('table-smartdoll-head'),
         'Dollfie Head': document.getElementById('table-dollfie-head'),
-        'Hands': document.getElementById('table-hands'),
+        'Smartdoll Hands': document.getElementById('table-smartdoll-hands'),
+        'Dollfie Hands': document.getElementById('table-dollfie-hands'),
         'Eyes': document.getElementById('table-eyes')
     };
+    
+    // Clear current tables
     Object.values(tables).forEach(t => t.innerHTML = "");
 
     items.forEach(item => {
-        let targetTable = tables[item.category];
-        if (item.category.includes('Hands')) targetTable = tables['Hands'];
+        const t = tables[item.category];
+        if (!t) return;
 
         const row = document.createElement('tr');
-        row.className = "border-t border-pink-50 group hover:bg-pink-50/20 transition-colors";
+        row.className = "border-t border-pink-50 group hover:bg-pink-50/30 transition-colors";
         
+        // Heads use two columns for Sculpt/Tone
         if (item.category.includes('Head')) {
             row.innerHTML = `
                 <td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size}</td>
                 <td class="p-4 text-xs font-medium text-gray-400 uppercase tracking-widest">${item.skintone}</td>
-                <td class="p-4 text-center">
-                    <div class="flex items-center justify-center gap-3">
-                        <button onclick="updateStock('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-gray-100 hover:bg-pink-200">-</button>
-                        <span class="font-black text-sm w-4">${item.quantity}</span>
-                        <button onclick="updateStock('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-gray-100 hover:bg-emerald-200">+</button>
-                    </div>
-                </td>
-                <td class="p-4 text-right">
-                    <button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-xs">🗑️</button>
-                </td>
             `;
         } else {
-            // Layout for Hands & Eyes
-            row.innerHTML = `
-                <td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size} <span class="text-[10px] text-gray-300 ml-2">${item.skintone !== 'N/A' ? item.skintone : ''}</span></td>
-                <td class="p-4 text-center">
-                    <div class="flex items-center justify-center gap-3">
-                        <button onclick="updateStock('${item.id}', -1)" class="w-5 h-5 rounded-md bg-gray-50 text-[10px]">-</button>
-                        <span class="font-black text-sm">${item.quantity}</span>
-                        <button onclick="updateStock('${item.id}', 1)" class="w-5 h-5 rounded-md bg-gray-50 text-[10px]">+</button>
-                    </div>
-                </td>
-                <td class="p-4 text-right">
-                    <button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 text-xs">🗑️</button>
-                </td>
-            `;
+            // Hands/Eyes use one combined column
+            row.innerHTML = `<td class="p-4 font-bold text-sm text-gray-700">${item.sculpt_size} ${item.skintone !== 'N/A' ? `<span class="text-[10px] text-gray-300 ml-2">${item.skintone}</span>` : ''}</td>`;
         }
-        targetTable.appendChild(row);
+
+        // Common quantity and delete buttons
+        row.innerHTML += `
+            <td class="p-4 text-center">
+                <div class="flex items-center justify-center gap-3">
+                    <button onclick="updateStock('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-pink-100 font-bold">-</button>
+                    <span class="font-black text-sm w-4">${item.quantity}</span>
+                    <button onclick="updateStock('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-gray-50 hover:bg-emerald-100 font-bold">+</button>
+                </div>
+            </td>
+            <td class="p-4 text-right">
+                <button onclick="deleteInventoryItem('${item.id}')" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all text-xs">🗑️</button>
+            </td>
+        `;
+        t.appendChild(row);
     });
 }
 
-// Add a row using a simple one-line text entry instead of 4 popups
-async function addInventoryRow(category) {
-    const val = prompt(`Enter ${category} details (e.g. "Mirai, Cinnamon" or "16mm")`);
-    if (!val) return;
+// Inline row creation - NO POPUPS!
+async function quickAdd(category, prefix) {
+    let sculpt, tone;
+    
+    if (category.includes('Head')) {
+        sculpt = document.getElementById(`new-${prefix}-sculpt`).value;
+        tone = document.getElementById(`new-${prefix}-tone`).value;
+    } else if (category.includes('Hands')) {
+        sculpt = category.split(' ')[0]; // Smartdoll or Dollfie
+        tone = document.getElementById(`new-${prefix}-tone`).value;
+    } else {
+        sculpt = document.getElementById(`new-${prefix}-size`).value;
+        tone = 'N/A';
+    }
 
-    const parts = val.split(',').map(p => p.trim());
-    const updates = {
+    if (!sculpt) return alert("Please enter details first!");
+
+    await _supabase.from('inventory').insert([{
         category: category,
-        sculpt_size: parts[0],
-        skintone: parts[1] || 'N/A',
+        sculpt_size: sculpt,
+        skintone: tone || 'N/A',
         quantity: 0
-    };
+    }]);
 
-    await _supabase.from('inventory').insert([updates]);
+    // Clear inputs
+    if (document.getElementById(`new-${prefix}-sculpt`)) document.getElementById(`new-${prefix}-sculpt`).value = '';
+    if (document.getElementById(`new-${prefix}-tone`)) document.getElementById(`new-${prefix}-tone`).value = '';
+    if (document.getElementById(`new-${prefix}-size`)) document.getElementById(`new-${prefix}-size`).value = '';
+    
+    renderInventory();
+}
+
+async function updateStock(id, change) {
+    const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
+    await _supabase.from('inventory').update({ quantity: Math.max(0, (data.quantity || 0) + change) }).eq('id', id);
     renderInventory();
 }
 
 async function deleteInventoryItem(id) {
-    if (confirm("Permanently delete this stock line?")) {
+    if (confirm("Delete this stock line?")) {
         await _supabase.from('inventory').delete().eq('id', id);
         renderInventory();
     }
