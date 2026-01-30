@@ -8,15 +8,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* CRITICAL FIX: Ensure this class actually hides the element */
         .step-hidden { display: none !important; }
-        
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .tab-btn.active { background: var(--accent-pink) !important; color: white !important; transform: translateY(-2px); }
         .disabled-section { opacity: 0.3; pointer-events: none; filter: grayscale(1); transition: all 0.4s ease; }
-        
-        /* Smooth Fade In */
         .animate-fadeIn { animation: fadeIn 0.5s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -38,11 +34,9 @@
     </nav>
         
     <main class="max-w-3xl mx-auto relative z-10 p-6 md:p-10">
-
         <div id="entryChoice" class="glass-card p-10 text-center space-y-8 animate-fadeIn">
             <h1 class="text-4xl font-black tracking-tighter text-gray-800">Connect with the Studio</h1>
             <p class="italic text-pink-400 font-medium">How can we help today? ♡</p>
-            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <a href="mailto:Admin@hanafubukidoll.co.uk" class="p-8 border-2 border-pink-50 rounded-3xl hover:bg-pink-50 transition-all group">
                     <span class="text-4xl">✉️</span>
@@ -60,40 +54,49 @@
         <form id="bookingForm" class="step-hidden space-y-8 pb-20 animate-fadeIn">
             <button type="button" onclick="location.reload()" class="text-[10px] font-black uppercase tracking-widest text-pink-400 hover:text-pink-600">← Back to Options</button>
 
-           <div class="glass-card p-8 space-y-6">
-    <h2 class="text-2xl font-black tracking-tighter">1. Your Details</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input type="text" id="custName" placeholder="Full Name*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none focus:ring-2 ring-pink-200">
-        <input type="text" id="socialHandle" placeholder="Social Handle (@...)" class="w-full p-4 rounded-xl border border-pink-100 outline-none">
-        <input type="text" id="Country" placeholder="Country (e.g. USA)" required class="w-full p-4 rounded-xl border border-pink-100 outline-none">
-        <input type="email" id="custEmail" placeholder="Email Address*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
-        </div>
-</div>
+            <div class="glass-card p-8 space-y-6">
+                <h2 class="text-2xl font-black tracking-tighter">1. Your Details</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="custName" placeholder="Full Name*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none focus:ring-2 ring-pink-200">
+                    <input type="text" id="socialHandle" placeholder="Social Handle (@...)" class="w-full p-4 rounded-xl border border-pink-100 outline-none">
+                    <input type="text" id="Country" placeholder="Country (e.g. USA)" required class="w-full p-4 rounded-xl border border-pink-100 outline-none">
+                    <input type="email" id="custEmail" placeholder="Email Address*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
+                </div>
             </div>
 
             <div class="space-y-6">
                 <h2 class="text-2xl font-black tracking-tighter px-4">2. Service Details</h2>
 
                 <div id="faceups-section" class="glass-card p-6 service-block border-l-4 border-pink-400">
-    <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest mb-4">Face-Up & Doll Info</h3>
-    
-    <select id="faceupBase" onchange="toggleDollDetails()" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
-        <option value="None">No Faceup Needed</option>
-        <option value="Standard Face-Up">Standard Face-Up</option>
-        <option value="Face-Up + Smartdoll Head">Face-Up + Smartdoll Head (Bundle)</option>
-        <option value="Face-Up + Dollfie Dream Head">Face-Up + Dollfie Dream Head (Bundle)</option>
-    </select>
+                    <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest mb-4">Face-Up & Doll Info</h3>
+                    <select id="faceupBase" onchange="toggleDollDetails()" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
+                        <option value="None">No Faceup Needed</option>
+                        <option value="Standard Face-Up">Standard Face-Up</option>
+                        <option value="Face-Up + Smartdoll Head (Bundle)" id="opt-sm-bundle">Face-Up + Smartdoll Head (Bundle)</option>
+                        <option value="Face-Up + Dollfie Dream Head (Bundle)" id="opt-dd-bundle">Face-Up + Dollfie Dream Head (Bundle)</option>
+                    </select>
 
-    <div id="dollDetails" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-fadeIn">
-        <input type="text" id="dollCompany" placeholder="Doll Company (e.g. SmartDoll)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none md:col-span-2 bg-pink-50/20">
-        <input type="text" id="dollSculpt" placeholder="Doll Sculpt (e.g. Mirai)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none bg-pink-50/20">
-        <input type="text" id="dollSkintone" placeholder="Skintone (e.g. Cinnamon)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none bg-pink-50/20">
-    </div>
+                    <div id="bundle-sm-head" class="hidden mb-4 animate-fadeIn">
+                        <label class="text-[10px] font-black uppercase text-pink-400 ml-2">Select In-Stock Smartdoll Sculpt ♡</label>
+                        <select id="sm-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white"></select>
+                    </div>
 
-    <div class="space-y-4">
-        <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
-    </div>
-</div>
+                    <div id="bundle-dd-head" class="hidden mb-4 animate-fadeIn">
+                        <label class="text-[10px] font-black uppercase text-purple-400 ml-2">Select In-Stock Dollfie Sculpt ♡</label>
+                        <select id="dd-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white"></select>
+                    </div>
+
+                    <div id="dollDetails" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-fadeIn">
+                        <input type="text" id="dollCompany" placeholder="Doll Company (e.g. SmartDoll)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none md:col-span-2 bg-pink-50/20">
+                        <input type="text" id="dollSculpt" placeholder="Doll Sculpt (e.g. Mirai)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none bg-pink-50/20">
+                    </div>
+
+                    <div class="space-y-4">
+                        <input type="text" id="dollSkintone" placeholder="Skintone (e.g. Cinnamon)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none bg-pink-50/20">
+                        <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
+                        <input type="file" id="faceupFiles" multiple class="text-[10px]">
+                    </div>
+                </div>
                 
                 <div id="manicures-section" class="glass-card p-6 service-block border-l-4 border-emerald-400">
                     <h3 class="font-black text-emerald-500 uppercase text-[10px] tracking-widest mb-4">Manicures</h3>
@@ -101,8 +104,8 @@
                         <option value="None">No Manicure Needed</option>
                         <option value="Standard Manicure">Standard Manicure</option>
                         <option value="Acrylic Manicure">Acrylic Manicure</option>
-                        <option value="Smartdoll Decora Hands">Smartdoll Decora Hands</option>
-                        <option value="Dollfie Dream Decora Hands">Dollfie Dream Decora Hands</option>
+                        <option value="Smartdoll Decora Hands" id="opt-sm-mani">Smartdoll Decora Hands</option>
+                        <option value="Dollfie Dream Decora Hands" id="opt-dd-mani">Dollfie Dream Decora Hands</option>
                     </select>
                     <div class="space-y-4">
                         <label class="text-xs font-bold flex items-center gap-2 cursor-pointer"><input type="checkbox" id="pediAddon" value="Pedicure" class="w-4 h-4 accent-emerald-400"> Include Pedicure?</label>
@@ -125,42 +128,28 @@
             </div>
 
             <div class="p-5 bg-pink-50/50 rounded-2xl border border-pink-100 text-[11px] h-48 overflow-y-auto text-gray-600 leading-relaxed custom-scrollbar">
-    <p class="font-black mb-3 uppercase tracking-widest text-pink-500 border-b border-pink-100 pb-1">Studio Terms of Service</p>
-    
-    <div class="space-y-3">
-        <p><strong>♡ Payments:</strong> Payment is required in full before work can begin. Layaway is accepted but should be discussed prior to submitting a commission form. All payments are non-refundable after work has commenced.</p>
-        
-        <p><strong>♡ Shipping:</strong> Client covers all shipping/insurance costs. We are not liable for postal loss or damage after the item is shipped, but will assist in creating a case with the mail carrier.</p>
-
-        <p><strong>♡ Customs Fees:</strong> Shipments from outside of the UK may collect a customs charge if over the threshold. Any invoices will be passed on to you to clear customs. Work cannot commence until these fees are paid.</p>
-
-        
-        <p><strong>♡ Artistic Freedom:</strong> By booking, you trust our artistic style. We do not offer exact copies of other artists' work and retain the right to refuse a commission we feel we can't fulfil..</p>
-        
-        <p><strong>♡ Abandonment:</strong> Items left for 3+ months without contact will be forfeited to the studio to cover costs.</p>
-        
-        <p><strong>♡ Photo Rights:</strong> We will use photos of the work for social media/portfolio use unless otherwise agreed.</p>
-    </div>
-</div>
-                <label class="flex items-start gap-3 cursor-pointer">
-                    <input type="checkbox" id="tosCheck" required class="mt-1 w-5 h-5 accent-pink-500">
-                    <span class="text-xs font-bold text-gray-700">I agree to the Terms of Service and understand the non-refundable deposit. ♡</span>
-                </label>
-                <button type="submit" id="submitBtn" class="w-full bg-pink-500 text-white py-5 rounded-3xl font-black shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
-                    Submit Commission Request ✨
-                </button>
+                <p class="font-black mb-3 uppercase tracking-widest text-pink-500 border-b border-pink-100 pb-1">Studio Terms of Service</p>
+                <div class="space-y-3">
+                    <p><strong>♡ Payments:</strong> Payment is required in full before work can begin. Layaway is accepted but should be discussed prior to submitting a commission form.</p>
+                    <p><strong>♡ Shipping:</strong> Client covers all shipping/insurance costs.</p>
+                    <p><strong>♡ Customs Fees:</strong> Shipments from outside of the UK may collect a customs charge.</p>
+                    <p><strong>♡ Artistic Freedom:</strong> By booking, you trust our artistic style.</p>
+                </div>
             </div>
+
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" id="tosCheck" required class="mt-1 w-5 h-5 accent-pink-500">
+                <span class="text-xs font-bold text-gray-700">I agree to the Terms of Service. ♡</span>
+            </label>
+            <button type="submit" id="submitBtn" class="w-full bg-pink-500 text-white py-5 rounded-3xl font-black shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+                Submit Commission Request ✨
+            </button>
         </form>
     </main>
 
     <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
         <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Aesthetic Studio</p>
-        <p class="text-gray-400 text-sm italic">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
-
-  </p>
-    <a href="login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors duration-300 uppercase tracking-widest font-bold">
-        Staff Access 🔒
-    </a>        
+        <a href="login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors uppercase tracking-widest font-bold">Staff Access 🔒</a>        
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -169,182 +158,123 @@
         const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // --- STOCK LOGIC ---
+        async function syncFormWithStock() {
+            const { data: stock } = await _supabase.from('inventory').select('*');
+            if (!stock) return;
+
+            const smHeads = stock.filter(i => i.category === 'Smartdoll Head' && i.quantity > 0);
+            const ddHeads = stock.filter(i => i.category === 'Dollfie Head' && i.quantity > 0);
+
+            if (smHeads.length === 0) document.getElementById('opt-sm-bundle')?.remove();
+            else document.getElementById('sm-head-sculpt-select').innerHTML = smHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
+
+            if (ddHeads.length === 0) document.getElementById('opt-dd-bundle')?.remove();
+            else document.getElementById('dd-head-sculpt-select').innerHTML = ddHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
+
+            const smHands = stock.filter(i => i.category === 'Smartdoll Hands' && i.quantity > 0);
+            const ddHands = stock.filter(i => i.category === 'Dollfie Hands' && i.quantity > 0);
+
+            if (smHands.length === 0) document.getElementById('opt-sm-mani')?.remove();
+            if (ddHands.length === 0) document.getElementById('opt-dd-mani')?.remove();
+        }
+
         function startBooking() {
             document.getElementById('entryChoice').classList.add('step-hidden');
             document.getElementById('bookingForm').classList.remove('step-hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        function toggleDollDetails() {
+            const selection = document.getElementById('faceupBase').value;
+            const dollDetailsBox = document.getElementById('dollDetails');
+            const smBundleBox = document.getElementById('bundle-sm-head');
+            const ddBundleBox = document.getElementById('bundle-dd-head');
+            const inputs = dollDetailsBox.querySelectorAll('input');
+
+            [dollDetailsBox, smBundleBox, ddBundleBox].forEach(el => el?.classList.add('hidden'));
+            inputs.forEach(input => input.removeAttribute('required'));
+
+            if (selection === 'Standard Face-Up') {
+                dollDetailsBox.classList.remove('hidden');
+                inputs.forEach(input => input.setAttribute('required', ''));
+            } else if (selection === 'Face-Up + Smartdoll Head (Bundle)') {
+                smBundleBox.classList.remove('hidden');
+            } else if (selection === 'Face-Up + Dollfie Dream Head (Bundle)') {
+                ddBundleBox.classList.remove('hidden');
+            }
+        }
+
         async function checkServiceAvailability() {
             const { data: settings } = await _supabase.from('studio_settings').select('*');
             if (!settings) return;
-            
             settings.forEach(service => {
                 const container = document.getElementById(`${service.id}-section`);
                 if (!service.is_live && container) {
-                    container.innerHTML = `
-                        <div class="p-6 bg-pink-50/50 rounded-2xl border-2 border-dashed border-pink-200 text-center animate-fadeIn">
-                            <p class="text-[10px] font-black uppercase text-pink-400 mb-2">🌸 Our ${service.id} service is currently full</p>
-                            <p class="text-xs mb-4 text-gray-600 font-medium">Sorry, We are not taking new orders for this service right now. Join the waitlist to be notified!</p>
-                            <div class="flex gap-2 max-w-sm mx-auto">
-                                <input type="email" id="wait-email-${service.id}" placeholder="your@email.com" class="flex-1 p-3 rounded-xl border border-pink-100 text-sm outline-none focus:ring-2 ring-pink-100">
-                                <button type="button" onclick="joinWaitlist('${service.id}')" class="bg-pink-400 text-white px-4 rounded-xl font-bold text-xs hover:bg-pink-500 transition-colors">Join</button>
-                            </div>
-                        </div>
-                    `;
+                    container.innerHTML = `<div class="p-6 text-center text-xs font-bold text-pink-400">🌸 ${service.id} is currently full.</div>`;
                 }
             });
         }
 
-        async function joinWaitlist(serviceName) {
-            const emailInput = document.getElementById(`wait-email-${serviceName}`);
-            const email = emailInput.value;
-            if (!email || !email.includes('@')) return alert("Please enter a valid email! ♡");
-            
-            const { error } = await _supabase.from('waitlist').insert([{ email, service_requested: serviceName }]);
-            if (!error) {
-                alert("You've been added to the waitlist! ♡ We'll email you when this service has been resumed!");
-                emailInput.value = "";
-            }
-        }
-
         document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    btn.innerText = "Sending... ✨";
-    btn.disabled = true;
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Sending... ✨";
+            btn.disabled = true;
 
-    // Helper function for uploads
-    const uploadSet = async (fileInputId) => {
-        const files = document.getElementById(fileInputId)?.files;
-        if (!files || files.length === 0) return [];
-        const urls = [];
-        for (const file of files) {
-            const path = `refs/${Date.now()}-${file.name}`;
-            const { data } = await _supabase.storage.from('references').upload(path, file);
-            if (data) {
-                const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
-                urls.push(pUrl.publicUrl);
+            const uploadSet = async (fileInputId) => {
+                const files = document.getElementById(fileInputId)?.files;
+                if (!files || files.length === 0) return [];
+                const urls = [];
+                for (const file of files) {
+                    const path = `refs/${Date.now()}-${file.name}`;
+                    const { data } = await _supabase.storage.from('references').upload(path, file);
+                    if (data) {
+                        const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
+                        urls.push(pUrl.publicUrl);
+                    }
+                }
+                return urls;
+            };
+
+            const fBase = document.getElementById('faceupBase').value;
+            let finalSculpt = document.getElementById('dollSculpt').value;
+            let finalCompany = document.getElementById('dollCompany').value;
+
+            if (fBase.includes('Smartdoll')) {
+                finalSculpt = document.getElementById('sm-head-sculpt-select').value;
+                finalCompany = "Smartdoll";
+            } else if (fBase.includes('Dollfie')) {
+                finalSculpt = document.getElementById('dd-head-sculpt-select').value;
+                finalCompany = "Volks";
             }
-        }
-        return urls;
-    };
 
-    // --- CLEAN DATA LOGIC ---
+            const faceupDetails = (fBase !== "None") ? { base: fBase, notes: document.getElementById('faceupNotes')?.value, images: await uploadSet('faceupFiles') } : null;
+            const maniDetails = (document.getElementById('maniBase').value !== "None") ? { base: document.getElementById('maniBase').value, addons: document.getElementById('pediAddon').checked ? ['Pedicure'] : [], notes: document.getElementById('maniNotes')?.value, images: await uploadSet('maniFiles') } : null;
+            const eyeDetails = (document.getElementById('eyeBase').value !== "None") ? { base: document.getElementById('eyeBase').value, notes: document.getElementById('eyeNotes')?.value, images: await uploadSet('eyeFiles') } : null;
 
-    // 1. Faceup: Only create object if base is not 'None'
-    const fBase = document.getElementById('faceupBase')?.value;
-    const faceupDetails = (fBase && fBase !== "None") ? {
-        base: fBase,
-        addons: Array.from(document.querySelectorAll('.faceup-addon:checked')).map(el => el.value),
-        notes: document.getElementById('faceupNotes')?.value || '',
-        images: await uploadSet('faceupFiles')
-    } : null;
+            const { error } = await _supabase.from('commissions').insert([{
+                customer_name: document.getElementById('custName').value,
+                customer_email: document.getElementById('custEmail').value,
+                social_handle: document.getElementById('socialHandle').value,
+                country: document.getElementById('Country').value,
+                doll_company: finalCompany,
+                doll_sculpt: finalSculpt,
+                doll_skintone: document.getElementById('dollSkintone').value || 'N/A',
+                faceup_details: faceupDetails,
+                manicure_details: maniDetails,
+                eye_details: eyeDetails,
+                status: 'Enquiry'
+            }]);
 
-    // 2. Manicure: Only create object if base is not 'None'
-    const mBase = document.getElementById('maniBase')?.value;
-    const maniDetails = (mBase && mBase !== "None") ? {
-        base: mBase,
-        addons: document.getElementById('pediAddon')?.checked ? ['Pedicure'] : [],
-        notes: document.getElementById('maniNotes')?.value || '',
-        images: await uploadSet('maniFiles')
-    } : null;
+            if (!error) { alert("Request Sent! ♡"); window.location.href = "index.html"; }
+            else { alert("Error: " + error.message); btn.disabled = false; btn.innerText = "Submit ✨"; }
+        });
 
-    // 3. Eyes: Only create object if base is not 'None'
-    const eBase = document.getElementById('eyeBase')?.value;
-    const eyeDetails = (eBase && eBase !== "None") ? {
-        base: eBase,
-        notes: document.getElementById('eyeNotes')?.value || '',
-        images: await uploadSet('eyeFiles')
-    } : null;
-
-    // --- DATABASE INSERT ---
-    const { error } = await _supabase.from('commissions').insert([{
-        customer_name: document.getElementById('custName').value,
-        customer_email: document.getElementById('custEmail').value,
-        social_handle: document.getElementById('socialHandle').value,
-        country: document.getElementById('Country').value,
-        doll_company: document.getElementById('dollCompany').value,
-        doll_sculpt: document.getElementById('dollSculpt').value,
-        doll_skintone: document.getElementById('dollSkintone').value,
-        faceup_details: faceupDetails, // This will now be null if 'None' was selected
-        manicure_details: maniDetails, // This will now be null if 'None' was selected
-        eye_details: eyeDetails,       // This will now be null if 'None' was selected
-        tos_agreed: true,
-        status: 'enquiry' // Changed from 'inquiry' to match your admin color-coded pills
-    }]);
-
-    if (!error) {
-        alert("Request Sent Successfully! ♡");
-        window.location.href = "index.html";
-    } else {
-        alert("Error: " + error.message);
-        btn.disabled = false;
-        btn.innerText = "Submit Commission Request ✨";
-    }
-});
-        window.onload = checkServiceAvailability;
-
-        function toggleDollDetails() {
-    const selection = document.getElementById('faceupBase').value;
-    const dollDetailsBox = document.getElementById('dollDetails');
-    const inputs = dollDetailsBox.querySelectorAll('input');
-
-    if (selection === 'Standard Face-Up') {
-        // Show the box
-        dollDetailsBox.classList.remove('hidden');
-        // Make fields required so they can't be skipped
-        inputs.forEach(input => input.setAttribute('required', ''));
-    } else {
-        // Hide the box
-        dollDetailsBox.classList.add('hidden');
-        // Remove required attribute so the form can still submit
-        inputs.forEach(input => input.removeAttribute('required'));
-        // Optional: Clear the values so no old data is sent accidentally
-        inputs.forEach(input => input.value = '');
-    }
-}
-        // Add this to your contact form script
-async function syncFormWithStock() {
-    const { data: stock } = await _supabase.from('inventory').select('*');
-    
-    // 1. Handle Faceup Bundles (Heads)
-    const smartdollHeads = stock.filter(i => i.category === 'Smartdoll Head' && i.quantity > 0);
-    const dollfieHeads = stock.filter(i => i.category === 'Dollfie Head' && i.quantity > 0);
-
-    // Update Smartdoll Bundle
-    const smBundle = document.getElementById('bundle-sm-head'); // Ensure your HTML IDs match
-    if (smartdollHeads.length === 0) {
-        smBundle.classList.add('hidden'); // Hide bundle if no heads
-    } else {
-        const select = document.getElementById('sm-head-sculpt-select');
-        select.innerHTML = smartdollHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
-    }
-
-    // Update Dollfie Bundle
-    const ddBundle = document.getElementById('bundle-dd-head');
-    if (dollfieHeads.length === 0) {
-        ddBundle.classList.add('hidden');
-    } else {
-        const select = document.getElementById('dd-head-sculpt-select');
-        select.innerHTML = dollfieHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
-    }
-
-    // 2. Handle Manicure Options (Hands)
-    const smHands = stock.filter(i => i.category === 'Smartdoll Hands' && i.quantity > 0);
-    const ddHands = stock.filter(i => i.category === 'Dollfie Hands' && i.quantity > 0);
-
-    // Hide Manicure sections if no hand stock
-    if (smHands.length === 0) {
-        document.getElementById('manicure-sm-section').classList.add('hidden');
-    }
-    if (ddHands.length === 0) {
-        document.getElementById('manicure-dd-section').classList.add('hidden');
-    }
-}
-
-// Run this when the page loads
-window.addEventListener('DOMContentLoaded', syncFormWithStock);
+        window.onload = () => {
+            syncFormWithStock();
+            checkServiceAvailability();
+        };
     </script>
 </body>
 </html>
