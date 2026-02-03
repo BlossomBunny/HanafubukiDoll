@@ -1,37 +1,68 @@
-function toggleAccessMenu() {
-    const menu = document.getElementById('accessMenu');
-    menu.classList.toggle('hidden');
-}
+/* --- Hanafubuki Studio Global Accessibility Script --- */
 
-function updateAccessSetting(className, isEnabled) {
-    if (isEnabled) {
-        document.body.classList.add(className);
-        localStorage.setItem(className, 'enabled');
-    } else {
-        document.body.classList.remove(className);
-        localStorage.setItem(className, 'disabled');
-    }
-}
-
-function applySavedPreferences() {
-    // List of all our accessibility classes
-    const settings = [
+const ComfortSettings = {
+    settings: [
         { id: 'dark-theme', toggle: 'darkToggle' },
         { id: 'reduced-motion', toggle: 'motionToggle' },
         { id: 'dyslexia-mode', toggle: 'dyslexiaToggle' },
-        { id: 'high-contrast', toggle: 'contrastToggle' }
-    ];
-    
-    settings.forEach(setting => {
-        const isEnabled = localStorage.getItem(setting.id) === 'enabled';
-        if (isEnabled) {
-            document.body.classList.add(setting.id);
-            // Check the box if it exists on the current page
-            const checkbox = document.getElementById(setting.toggle);
-            if (checkbox) checkbox.checked = true;
-        }
-    });
-}
+        { id: 'high-contrast', toggle: 'high-contrast' }
+    ],
 
-// Ensure settings apply immediately on every page load
-window.addEventListener('DOMContentLoaded', applySavedPreferences);
+    init() {
+        // Apply saved classes immediately to prevent "flash"
+        this.applySaved();
+        
+        // Sync the checkboxes once the HTML has loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            this.syncUI();
+            
+            // Optional: Close menu when clicking outside
+            window.addEventListener('click', (e) => {
+                const menu = document.getElementById('accessMenu');
+                const btn = document.querySelector('.access-btn');
+                if (menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && !btn.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            });
+        });
+    },
+
+    toggleMenu() {
+        const menu = document.getElementById('accessMenu');
+        if (menu) {
+            menu.classList.toggle('hidden');
+        } else {
+            console.error("Accessibility Menu element not found!");
+        }
+    },
+
+    update(className, isEnabled) {
+        if (isEnabled) {
+            document.body.classList.add(className);
+            localStorage.setItem(className, 'enabled');
+        } else {
+            document.body.classList.remove(className);
+            localStorage.setItem(className, 'disabled');
+        }
+    },
+
+    applySaved() {
+        this.settings.forEach(s => {
+            if (localStorage.getItem(s.id) === 'enabled') {
+                document.body.classList.add(s.id);
+            }
+        });
+    },
+
+    syncUI() {
+        this.settings.forEach(s => {
+            const checkbox = document.getElementById(s.toggle);
+            if (checkbox) {
+                checkbox.checked = (localStorage.getItem(s.id) === 'enabled');
+            }
+        });
+    }
+};
+
+// Initialize the object
+ComfortSettings.init();
