@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* The Moving Background Logic */
+        /* Moving Background */
         .mesh-bg {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -29,12 +29,17 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* BIGGER CANVAS AREA */
         .canvas-area {
             background-image: radial-gradient(#fee2e2 1px, transparent 1px);
             background-size: 20px 20px;
             background-color: #ffffff !important;
             position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 12; /* Made it deeper/taller */
+            min-height: 700px;
         }
+
         .draggable { 
             position: absolute !important; 
             touch-action: none; 
@@ -48,7 +53,7 @@
         }
         .exporting .draggable { box-shadow: none !important; outline: none !important; }
         
-        /* Accessibility Sync */
+        /* Accessibility Overrides */
         body.high-contrast .canvas-area { border: 4px solid #000; background-image: none; }
         body.dyslexia-mode * { font-family: 'OpenDyslexic', sans-serif !important; }
         body.reduced-motion .mesh-bg::after { animation: none; }
@@ -58,7 +63,7 @@
     <div class="mesh-bg"></div>
 
     <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="text-xl md:text-2xl font-black tracking-tighter">
                 <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
             </div>
@@ -71,14 +76,14 @@
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-6 md:p-10 relative z-10">
+    <main class="max-w-[1600px] mx-auto p-6 md:p-10 relative z-10">
         <header class="text-center mb-10">
             <h1 class="text-4xl font-black tracking-tighter text-gray-800">Reference Builder</h1>
-            <p class="text-sm text-pink-400 font-medium italic">Accurate color references for your custom doll work. ♡</p>
+            <p class="text-sm text-pink-400 font-medium italic">Create your guide with perfect color accuracy. ♡</p>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div class="lg:col-span-1">
+        <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
+            <div class="xl:col-span-1">
                 <div class="glass-card p-6 space-y-6 sticky top-32">
                     <div>
                         <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Add Content</p>
@@ -94,12 +99,12 @@
                     <div id="controls" class="pt-4 border-t border-pink-50 space-y-3">
                         <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Transform Tool</p>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="changeWidth(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➕ Wider</button>
-                            <button onclick="changeWidth(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➖ Thinner</button>
-                            <button onclick="changeHeight(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">↕️ Taller</button>
-                            <button onclick="changeHeight(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">↔️ Shorter</button>
-                            <button onclick="changeRotation(-15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">⟲ Left</button>
-                            <button onclick="changeRotation(15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">⟳ Right</button>
+                            <button onclick="changeWidth(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">➕ Wider</button>
+                            <button onclick="changeWidth(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">➖ Thinner</button>
+                            <button onclick="changeHeight(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">↕️ Taller</button>
+                            <button onclick="changeHeight(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">↔️ Shorter</button>
+                            <button onclick="changeRotation(-15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">⟲ Left</button>
+                            <button onclick="changeRotation(15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">⟳ Right</button>
                         </div>
                         
                         <div id="noteExtras" class="hidden space-y-2 pt-2">
@@ -112,8 +117,8 @@
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 pt-2">
-                            <button onclick="bringToFront()" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">🔝 Front</button>
-                            <button onclick="deleteSelected()" class="bg-white border border-red-50 p-2 rounded-xl text-[10px] font-bold text-red-400 hover:bg-red-50">🗑️ Remove</button>
+                            <button onclick="bringToFront()" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">🔝 Front</button>
+                            <button onclick="deleteSelected()" class="bg-white border border-red-50 p-2 rounded-xl text-[10px] font-bold text-red-400">🗑️ Remove</button>
                         </div>
                     </div>
 
@@ -125,10 +130,10 @@
                 </div>
             </div>
 
-            <div class="lg:col-span-3">
-                <div id="collage-canvas" class="canvas-area w-full aspect-[16/10] border-4 border-pink-100 rounded-[2.5rem] shadow-2xl overflow-hidden">
+            <div class="xl:col-span-4">
+                <div id="collage-canvas" class="canvas-area border-4 border-pink-100 rounded-[3rem] shadow-2xl overflow-hidden">
                     <div id="placeholder" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-                        <p class="font-black uppercase tracking-widest text-sm text-pink-300">Workspace ♡</p>
+                        <p class="font-black uppercase tracking-widest text-sm text-pink-300">Studio Workspace ♡</p>
                     </div>
                 </div>
             </div>
@@ -173,6 +178,7 @@
 
     <script src="globalscripts.js"></script>
     <script>
+        // All logic stays consolidated here
         let selectedElement = null;
         let topZIndex = 100;
 
@@ -199,7 +205,7 @@
                 reader.onload = (e) => {
                     const div = document.createElement('div');
                     div.className = "draggable p-2 bg-white shadow-xl rounded-lg";
-                    div.style.left = "50px"; div.style.top = "50px"; div.style.width = "200px";
+                    div.style.left = "50px"; div.style.top = "50px"; div.style.width = "300px";
                     div.dataset.rot = 0;
                     div.style.zIndex = topZIndex++;
                     div.innerHTML = `<img src="${e.target.result}" class="w-full rounded pointer-events-none block">`;
@@ -216,17 +222,16 @@
             document.getElementById('placeholder').style.display = 'none';
             const div = document.createElement('div');
             div.className = "draggable note-item p-4 bg-pink-100 rounded-2xl shadow-lg border border-pink-200";
-            div.style.left = "100px"; div.style.top = "100px"; div.style.width = "200px"; div.style.height = "100px";
+            div.style.left = "100px"; div.style.top = "100px"; div.style.width = "250px"; div.style.height = "120px";
             div.dataset.rot = 0;
             div.style.zIndex = topZIndex++;
-            div.innerHTML = `<textarea class="w-full h-full bg-transparent border-none outline-none text-[12px] font-bold text-pink-700 placeholder-pink-300 resize-none m-0 p-0 block"></textarea>`;
+            div.innerHTML = `<textarea class="w-full h-full bg-transparent border-none outline-none text-[13px] font-bold text-pink-700 placeholder-pink-300 resize-none m-0 p-0 block"></textarea>`;
             div.addEventListener('mousedown', (ev) => { ev.stopPropagation(); selectItem(div); });
             makeDraggable(div);
             document.getElementById('collage-canvas').appendChild(div);
             selectItem(div);
         }
 
-        // --- TRANSFORMATION LOGIC ---
         function changeWidth(factor) {
             if (selectedElement) selectedElement.style.width = (selectedElement.offsetWidth * factor) + "px";
         }
@@ -240,14 +245,13 @@
                 selectedElement.style.transform = `rotate(${r}deg)`;
             }
         }
-
         function bringToFront() { if (selectedElement) selectedElement.style.zIndex = ++topZIndex; }
         function deleteSelected() { if (selectedElement) { selectedElement.remove(); selectedElement = null; } }
         
         function setNoteColor(bg, text) {
             if (!selectedElement) return;
             selectedElement.className = `draggable note-item p-4 rounded-2xl shadow-lg border border-pink-200 selected ${bg}`;
-            selectedElement.querySelector('textarea').className = `w-full h-full bg-transparent border-none outline-none text-[12px] font-bold placeholder-pink-300 resize-none m-0 p-0 block ${text}`;
+            selectedElement.querySelector('textarea').className = `w-full h-full bg-transparent border-none outline-none text-[13px] font-bold placeholder-pink-300 resize-none m-0 p-0 block ${text}`;
         }
 
         function makeDraggable(el) {
