@@ -13,19 +13,15 @@
             background-image: radial-gradient(#fee2e2 1px, transparent 1px);
             background-size: 20px 20px;
         }
-        .draggable { touch-action: none; user-select: none; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .draggable { touch-action: none; user-select: none; transition: transform 0.1s linear; }
         .draggable.selected {
             outline: 3px solid #ec4899;
             outline-offset: 4px;
-            z-index: 99 !important;
+            z-index: 999 !important;
         }
         body.dark-theme .canvas-area { background-image: radial-gradient(#333 1px, transparent 1px); background-color: #1a1a1a; }
         .animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* High Contrast Support */
-        body.high-contrast .canvas-area { background-image: none; border: 4px solid #000; }
-        body.high-contrast .glass-card { border: 2px solid #000; }
     </style>
 </head>
 <body class="bg-[#fdfbfb]">
@@ -43,7 +39,7 @@
     <main class="max-w-7xl mx-auto p-6 md:p-10 relative z-10">
         <header class="text-center mb-10 animate-fadeIn">
             <h1 class="text-4xl font-black tracking-tighter text-gray-800 mb-2">Reference Sheet Builder</h1>
-            <p class="text-sm text-pink-400 font-medium italic">Arrange your inspiration, resize, and rotate to create the perfect guide. ♡</p>
+            <p class="text-sm text-pink-400 font-medium italic">Arrange, resize, and color-code your inspiration. ♡</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -56,7 +52,7 @@
                             <input type="file" id="imageInput" hidden accept="image/*" multiple onchange="handleImageUpload(event)">
                         </label>
                         <button onclick="addNote()" class="w-full bg-white border-2 border-pink-100 p-4 rounded-2xl font-bold text-xs hover:bg-pink-50 transition-all">
-                            📝 Add Label/Note
+                            📝 Add Note
                         </button>
                     </div>
 
@@ -68,6 +64,17 @@
                             <button onclick="rotateSelected()" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">🔄 Rotate</button>
                             <button onclick="bringToFront()" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">🔝 Front</button>
                         </div>
+                        
+                        <div id="noteExtras" class="hidden space-y-2 pt-2">
+                            <p class="text-[9px] font-black uppercase tracking-widest text-pink-400">Note Color</p>
+                            <div class="flex gap-2">
+                                <button onclick="changeNoteColor('bg-pink-100', 'text-pink-700')" class="w-6 h-6 rounded-full bg-pink-100 border border-pink-200"></button>
+                                <button onclick="changeNoteColor('bg-blue-100', 'text-blue-700')" class="w-6 h-6 rounded-full bg-blue-100 border border-blue-200"></button>
+                                <button onclick="changeNoteColor('bg-emerald-100', 'text-emerald-700')" class="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-200"></button>
+                                <button onclick="changeNoteColor('bg-purple-100', 'text-purple-700')" class="w-6 h-6 rounded-full bg-purple-100 border border-purple-200"></button>
+                            </div>
+                        </div>
+
                         <button onclick="removeSelected()" class="w-full bg-white border-2 border-red-50 p-3 rounded-xl text-[10px] font-bold text-red-400 hover:bg-red-50 transition-all">🗑️ Remove Selected</button>
                     </div>
 
@@ -97,32 +104,22 @@
         <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden animate-fadeIn mb-2">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility Settings</h3>
-                <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 hover:text-pink-500 text-2xl" aria-label="Close Menu">&times;</button>
+                <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 hover:text-pink-500 text-2xl">&times;</button>
             </div>
-            
             <div class="space-y-5">
                 <label class="flex justify-between items-center cursor-pointer group">
                     <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Dark Mode</span>
                     <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
                 </label>
                 <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Reduce Motion</span>
-                    <input type="checkbox" id="motionToggle" onchange="ComfortSettings.update('reduced-motion', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
-                <label class="flex justify-between items-center cursor-pointer group">
                     <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Dyslexia Font</span>
                     <input type="checkbox" id="dyslexiaToggle" onchange="ComfortSettings.update('dyslexia-mode', this.checked)" class="w-5 h-5 accent-pink-500">
                 </label>
-                <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">High Contrast</span>
-                    <input type="checkbox" id="contrastToggle" onchange="ComfortSettings.update('high-contrast', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
             </div>
         </div>
-
-        <button onclick="ComfortSettings.toggleMenu()" class="access-btn flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all" aria-label="Accessibility Settings">
+        <button onclick="ComfortSettings.toggleMenu()" class="access-btn flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all">
             <span>⚙️</span>
-            <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Accessibility Settings</span>
+            <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Settings</span>
         </button>
     </div>
 
@@ -131,17 +128,26 @@
         let selectedElement = null;
         let topZIndex = 10;
 
-        // Selection & Transformation logic stays the same as before...
         function selectElement(el) {
             if (selectedElement) selectedElement.classList.remove('selected');
             selectedElement = el;
             selectedElement.classList.add('selected');
+            
+            // Show note color tools only if a note is selected
+            const noteTools = document.getElementById('noteExtras');
+            if (el.classList.contains('note-item')) {
+                noteTools.classList.remove('hidden');
+            } else {
+                noteTools.classList.add('hidden');
+            }
         }
 
+        // Deselect on background click
         document.getElementById('collage-canvas').addEventListener('mousedown', function(e) {
             if (e.target === this || e.target.id === 'placeholder') {
                 if (selectedElement) selectedElement.classList.remove('selected');
                 selectedElement = null;
+                document.getElementById('noteExtras').classList.add('hidden');
             }
         });
 
@@ -154,7 +160,7 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const wrapper = document.createElement('div');
-                    wrapper.className = "draggable absolute cursor-move group p-2 bg-white shadow-xl rounded-lg animate-fadeIn";
+                    wrapper.className = "draggable absolute cursor-move group p-2 bg-white shadow-xl rounded-lg animate-fadeIn image-item";
                     wrapper.style.left = "100px";
                     wrapper.style.top = "100px";
                     wrapper.style.width = "250px";
@@ -167,7 +173,10 @@
                         <button onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-red-400 text-white w-6 h-6 rounded-full text-xs shadow-md opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                     `;
 
-                    wrapper.addEventListener('mousedown', () => selectElement(wrapper));
+                    wrapper.addEventListener('mousedown', (ev) => {
+                        ev.stopPropagation();
+                        selectElement(wrapper);
+                    });
                     makeDraggable(wrapper);
                     canvas.appendChild(wrapper);
                     selectElement(wrapper);
@@ -180,7 +189,7 @@
             const canvas = document.getElementById('collage-canvas');
             document.getElementById('placeholder').style.display = 'none';
             const note = document.createElement('div');
-            note.className = "draggable absolute cursor-move p-4 bg-pink-100 rounded-2xl shadow-lg border border-pink-200 animate-fadeIn";
+            note.className = "draggable note-item absolute cursor-move p-4 bg-pink-100 rounded-2xl shadow-lg border border-pink-200 animate-fadeIn";
             note.style.left = "200px";
             note.style.top = "200px";
             note.dataset.rotation = 0;
@@ -188,26 +197,44 @@
             note.style.zIndex = topZIndex++;
             
             note.innerHTML = `
-                <textarea placeholder="Type here..." class="bg-transparent border-none outline-none text-[11px] font-black uppercase text-pink-700 placeholder-pink-300 resize-both min-w-[140px] min-h-[80px]"></textarea>
+                <textarea placeholder="Type here..." class="bg-transparent border-none outline-none text-[11px] font-black uppercase text-pink-700 placeholder-pink-300 resize-both min-w-[140px] min-h-[80px] w-full h-full"></textarea>
                 <button onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-red-400 text-white w-6 h-6 rounded-full text-xs shadow-md">✕</button>
             `;
 
-            note.addEventListener('mousedown', () => selectElement(note));
+            note.addEventListener('mousedown', (ev) => {
+                ev.stopPropagation();
+                selectElement(note);
+            });
             makeDraggable(note);
             canvas.appendChild(note);
             selectElement(note);
         }
 
+        function changeNoteColor(bgColor, textColor) {
+            if (!selectedElement || !selectedElement.classList.contains('note-item')) return;
+            
+            // Remove old colors
+            selectedElement.classList.remove('bg-pink-100', 'bg-blue-100', 'bg-emerald-100', 'bg-purple-100');
+            const textarea = selectedElement.querySelector('textarea');
+            textarea.classList.remove('text-pink-700', 'text-blue-700', 'text-emerald-700', 'text-purple-700');
+            
+            // Add new colors
+            selectedElement.classList.add(bgColor);
+            textarea.classList.add(textColor);
+        }
+
         function rotateSelected() {
             if (!selectedElement) return;
-            selectedElement.dataset.rotation = (parseInt(selectedElement.dataset.rotation) + 15) % 360;
+            let currentRot = parseInt(selectedElement.dataset.rotation || 0);
+            selectedElement.dataset.rotation = (currentRot + 15) % 360;
             applyTransforms(selectedElement);
         }
 
         function resizeSelected(multiplier) {
             if (!selectedElement) return;
-            let newScale = parseFloat(selectedElement.dataset.scale) * multiplier;
-            if (newScale > 0.1 && newScale < 3) {
+            let currentScale = parseFloat(selectedElement.dataset.scale || 1);
+            let newScale = currentScale * multiplier;
+            if (newScale > 0.2 && newScale < 3) {
                 selectedElement.dataset.scale = newScale;
                 applyTransforms(selectedElement);
             }
@@ -222,40 +249,37 @@
             if (selectedElement) {
                 selectedElement.remove();
                 selectedElement = null;
+                document.getElementById('noteExtras').classList.add('hidden');
             }
         }
 
         function applyTransforms(el) {
-            el.style.transform = `rotate(${el.dataset.rotation}deg) scale(${el.dataset.scale})`;
+            const rot = el.dataset.rotation || 0;
+            const sc = el.dataset.scale || 1;
+            el.style.transform = `rotate(${rot}deg) scale(${sc})`;
         }
 
         function makeDraggable(element) {
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-            element.onmousedown = dragMouseDown;
-
-            function dragMouseDown(e) {
+            element.onmousedown = function(e) {
                 if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
                 e.preventDefault();
                 pos3 = e.clientX;
                 pos4 = e.clientY;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
-            }
-
-            function elementDrag(e) {
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                element.style.top = (element.offsetTop - pos2) + "px";
-                element.style.left = (element.offsetLeft - pos1) + "px";
-            }
-
-            function closeDragElement() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-            }
+                document.onmouseup = function() {
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                };
+                document.onmousemove = function(e) {
+                    e.preventDefault();
+                    pos1 = pos3 - e.clientX;
+                    pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    element.style.top = (element.offsetTop - pos2) + "px";
+                    element.style.left = (element.offsetLeft - pos1) + "px";
+                };
+            };
         }
 
         function clearCanvas() {
@@ -264,6 +288,7 @@
                 canvas.querySelectorAll('.draggable').forEach(el => el.remove());
                 document.getElementById('placeholder').style.display = 'flex';
                 selectedElement = null;
+                document.getElementById('noteExtras').classList.add('hidden');
             }
         }
 
@@ -271,22 +296,42 @@
             const canvas = document.getElementById('collage-canvas');
             const draggables = canvas.querySelectorAll('.draggable');
             
+            // PRE-EXPORT FIX: HARDEN STYLES
             if(selectedElement) selectedElement.classList.remove('selected');
-            canvas.querySelectorAll('button').forEach(b => b.style.opacity = '0');
+            canvas.querySelectorAll('button').forEach(b => b.style.display = 'none');
+            
+            // This is the magic part that stops the fading
             draggables.forEach(el => {
-                el.style.backgroundColor = "white";
-                el.style.boxShadow = "0 10px 15px -3px rgba(0,0,0,0.1)";
+                const originalBg = window.getComputedStyle(el).backgroundColor;
+                // If it's a note, force its specific background, otherwise force solid white for images
+                if (el.classList.contains('note-item')) {
+                    el.style.backgroundColor = originalBg.replace('0.9', '1').replace('0.8', '1'); 
+                } else {
+                    el.style.backgroundColor = "#ffffff";
+                }
+                el.style.opacity = "1";
+                el.style.boxShadow = "0 10px 15px -3px rgba(0,0,0,0.2)";
             });
 
-            const result = await html2canvas(canvas, { backgroundColor: '#ffffff', scale: 2 });
+            const result = await html2canvas(canvas, { 
+                backgroundColor: '#ffffff', 
+                scale: 2,
+                useCORS: true,
+                logging: false
+            });
             
             const link = document.createElement('a');
-            link.download = `Hanafubuki-Ref-Sheet.jpg`;
-            link.href = result.toDataURL("image/jpeg", 0.9);
+            link.download = `Hanafubuki-Ref-Sheet-${Date.now()}.jpg`;
+            link.href = result.toDataURL("image/jpeg", 1.0);
             link.click();
 
-            canvas.querySelectorAll('button').forEach(b => b.style.opacity = '');
-            draggables.forEach(el => { el.style.backgroundColor = ""; el.style.boxShadow = ""; });
+            // Restore UI
+            canvas.querySelectorAll('button').forEach(b => b.style.display = '');
+            draggables.forEach(el => { 
+                el.style.backgroundColor = ""; 
+                el.style.opacity = "";
+                el.style.boxShadow = "";
+            });
             if(selectedElement) selectedElement.classList.add('selected');
         }
     </script>
