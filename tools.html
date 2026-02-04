@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* Moving Background */
         .mesh-bg {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -29,15 +28,15 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* BIGGER CANVAS AREA */
+        /* UPDATED CANVAS DIMENSIONS - Wider but shorter per black box outline */
         .canvas-area {
             background-image: radial-gradient(#fee2e2 1px, transparent 1px);
             background-size: 20px 20px;
             background-color: #ffffff !important;
             position: relative;
             width: 100%;
-            aspect-ratio: 16 / 12; /* Made it deeper/taller */
-            min-height: 700px;
+            aspect-ratio: 16 / 8; /* Shorter vertical profile */
+            min-height: 500px;
         }
 
         .draggable { 
@@ -45,15 +44,18 @@
             touch-action: none; 
             user-select: none;
             cursor: move;
+            transition: outline 0.2s ease;
         }
         .draggable.selected {
             outline: 4px solid #ec4899 !important;
             outline-offset: 2px;
             z-index: 999 !important;
         }
-        .exporting .draggable { box-shadow: none !important; outline: none !important; }
         
-        /* Accessibility Overrides */
+        /* Export Fix: Hide UI elements and pause animations during save */
+        .exporting .draggable { outline: none !important; box-shadow: none !important; }
+        .exporting .mesh-bg::after { animation: none !important; }
+
         body.high-contrast .canvas-area { border: 4px solid #000; background-image: none; }
         body.dyslexia-mode * { font-family: 'OpenDyslexic', sans-serif !important; }
         body.reduced-motion .mesh-bg::after { animation: none; }
@@ -77,11 +79,6 @@
     </nav>
 
     <main class="max-w-[1600px] mx-auto p-6 md:p-10 relative z-10">
-        <header class="text-center mb-10">
-            <h1 class="text-4xl font-black tracking-tighter text-gray-800">Reference Builder</h1>
-            <p class="text-sm text-pink-400 font-medium italic">Create your guide with perfect color accuracy. ♡</p>
-        </header>
-
         <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
             <div class="xl:col-span-1">
                 <div class="glass-card p-6 space-y-6 sticky top-32">
@@ -153,19 +150,15 @@
             </div>
             <div class="space-y-5">
                 <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Dark Mode</span>
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dark Mode</span>
                     <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
                 </label>
                 <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Reduce Motion</span>
-                    <input type="checkbox" id="motionToggle" onchange="ComfortSettings.update('reduced-motion', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
-                <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Dyslexia Font</span>
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dyslexia Font</span>
                     <input type="checkbox" id="dyslexiaToggle" onchange="ComfortSettings.update('dyslexia-mode', this.checked)" class="w-5 h-5 accent-pink-500">
                 </label>
                 <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">High Contrast</span>
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">High Contrast</span>
                     <input type="checkbox" id="contrastToggle" onchange="ComfortSettings.update('high-contrast', this.checked)" class="w-5 h-5 accent-pink-500">
                 </label>
             </div>
@@ -178,7 +171,6 @@
 
     <script src="globalscripts.js"></script>
     <script>
-        // All logic stays consolidated here
         let selectedElement = null;
         let topZIndex = 100;
 
@@ -222,7 +214,7 @@
             document.getElementById('placeholder').style.display = 'none';
             const div = document.createElement('div');
             div.className = "draggable note-item p-4 bg-pink-100 rounded-2xl shadow-lg border border-pink-200";
-            div.style.left = "100px"; div.style.top = "100px"; div.style.width = "250px"; div.style.height = "120px";
+            div.style.left = "100px"; div.style.top = "100px"; div.style.width = "250px"; div.style.height = "100px";
             div.dataset.rot = 0;
             div.style.zIndex = topZIndex++;
             div.innerHTML = `<textarea class="w-full h-full bg-transparent border-none outline-none text-[13px] font-bold text-pink-700 placeholder-pink-300 resize-none m-0 p-0 block"></textarea>`;
@@ -232,12 +224,8 @@
             selectItem(div);
         }
 
-        function changeWidth(factor) {
-            if (selectedElement) selectedElement.style.width = (selectedElement.offsetWidth * factor) + "px";
-        }
-        function changeHeight(factor) {
-            if (selectedElement) selectedElement.style.height = (selectedElement.offsetHeight * factor) + "px";
-        }
+        function changeWidth(factor) { if (selectedElement) selectedElement.style.width = (selectedElement.offsetWidth * factor) + "px"; }
+        function changeHeight(factor) { if (selectedElement) selectedElement.style.height = (selectedElement.offsetHeight * factor) + "px"; }
         function changeRotation(deg) {
             if (selectedElement) {
                 let r = (parseInt(selectedElement.dataset.rot) || 0) + deg;
@@ -272,14 +260,26 @@
 
         async function exportCollage() {
             const canvas = document.getElementById('collage-canvas');
-            canvas.classList.add('exporting');
+            document.body.classList.add('exporting'); // PAUSES ANIMATIONS & HIDES UI
             if (selectedElement) selectedElement.classList.remove('selected');
-            const result = await html2canvas(canvas, { backgroundColor: '#ffffff', scale: 3, useCORS: true });
+            
+            // Allow DOM to settle before capture
+            await new Promise(r => setTimeout(r, 100));
+
+            const result = await html2canvas(canvas, { 
+                backgroundColor: '#ffffff', 
+                scale: 3, 
+                useCORS: true,
+                logging: false,
+                allowTaint: true
+            });
+
             const link = document.createElement('a');
             link.download = `Hanafubuki-Ref-${Date.now()}.jpg`;
-            link.href = result.toDataURL("image/jpeg", 1.0);
+            link.href = result.toDataURL("image/jpeg", 0.9);
             link.click();
-            canvas.classList.remove('exporting');
+
+            document.body.classList.remove('exporting');
             if (selectedElement) selectedElement.classList.add('selected');
         }
     </script>
