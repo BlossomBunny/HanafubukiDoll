@@ -9,6 +9,26 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        /* The Moving Background Logic */
+        .mesh-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: linear-gradient(45deg, #fdfbfb 0%, #fff5f7 100%);
+            overflow: hidden;
+        }
+        .mesh-bg::after {
+            content: "";
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at center, rgba(255,192,203,0.15) 0%, transparent 50%);
+            animation: meshMove 20s linear infinite;
+        }
+        @keyframes meshMove {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .canvas-area {
             background-image: radial-gradient(#fee2e2 1px, transparent 1px);
             background-size: 20px 20px;
@@ -28,12 +48,10 @@
         }
         .exporting .draggable { box-shadow: none !important; outline: none !important; }
         
-        /* Matching Accessibility Classes from Contact */
+        /* Accessibility Sync */
         body.high-contrast .canvas-area { border: 4px solid #000; background-image: none; }
         body.dyslexia-mode * { font-family: 'OpenDyslexic', sans-serif !important; }
-        
-        /* Note specific fixes */
-        .note-item textarea { line-height: 1.2; }
+        body.reduced-motion .mesh-bg::after { animation: none; }
     </style>
 </head>
 <body class="bg-[#fdfbfb]">
@@ -56,12 +74,12 @@
     <main class="max-w-7xl mx-auto p-6 md:p-10 relative z-10">
         <header class="text-center mb-10">
             <h1 class="text-4xl font-black tracking-tighter text-gray-800">Reference Builder</h1>
-            <p class="text-sm text-pink-400 font-medium italic">Create your guide with perfect color accuracy. ♡</p>
+            <p class="text-sm text-pink-400 font-medium italic">Accurate color references for your custom doll work. ♡</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div class="lg:col-span-1 space-y-4">
-                <div class="glass-card p-6 space-y-6">
+            <div class="lg:col-span-1">
+                <div class="glass-card p-6 space-y-6 sticky top-32">
                     <div>
                         <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Add Content</p>
                         <label class="block w-full text-center bg-pink-500 text-white p-4 rounded-2xl font-bold text-xs cursor-pointer hover:bg-pink-600 transition-all shadow-lg mb-2">
@@ -76,17 +94,16 @@
                     <div id="controls" class="pt-4 border-t border-pink-50 space-y-3">
                         <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Transform Tool</p>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="changeSize(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➕ Wider</button>
-                            <button onclick="changeSize(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➖ Thinner</button>
+                            <button onclick="changeWidth(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➕ Wider</button>
+                            <button onclick="changeWidth(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➖ Thinner</button>
                             <button onclick="changeHeight(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">↕️ Taller</button>
                             <button onclick="changeHeight(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">↔️ Shorter</button>
                             <button onclick="changeRotation(-15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">⟲ Left</button>
                             <button onclick="changeRotation(15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">⟳ Right</button>
-                            <button onclick="bringToFront()" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50 col-span-2">🔝 Bring to Front</button>
                         </div>
                         
                         <div id="noteExtras" class="hidden space-y-2 pt-2">
-                            <p class="text-[9px] font-black uppercase tracking-widest text-pink-400">Color Profile</p>
+                            <p class="text-[9px] font-black uppercase tracking-widest text-pink-400">Note Color</p>
                             <div class="flex gap-2">
                                 <button onclick="setNoteColor('bg-pink-100', 'text-pink-700')" class="w-6 h-6 rounded-full bg-pink-100 border border-pink-200"></button>
                                 <button onclick="setNoteColor('bg-blue-100', 'text-blue-700')" class="w-6 h-6 rounded-full bg-blue-100 border border-blue-200"></button>
@@ -94,7 +111,10 @@
                             </div>
                         </div>
 
-                        <button onclick="deleteSelected()" class="w-full bg-white border-2 border-red-50 p-3 rounded-xl text-[10px] font-bold text-red-400 hover:bg-red-50">🗑️ Remove Item</button>
+                        <div class="grid grid-cols-2 gap-2 pt-2">
+                            <button onclick="bringToFront()" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">🔝 Front</button>
+                            <button onclick="deleteSelected()" class="bg-white border border-red-50 p-2 rounded-xl text-[10px] font-bold text-red-400 hover:bg-red-50">🗑️ Remove</button>
+                        </div>
                     </div>
 
                     <div class="pt-4 border-t border-pink-50">
@@ -107,7 +127,7 @@
 
             <div class="lg:col-span-3">
                 <div id="collage-canvas" class="canvas-area w-full aspect-[16/10] border-4 border-pink-100 rounded-[2.5rem] shadow-2xl overflow-hidden">
-                    <div id="placeholder" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 text-center">
+                    <div id="placeholder" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
                         <p class="font-black uppercase tracking-widest text-sm text-pink-300">Workspace ♡</p>
                     </div>
                 </div>
@@ -128,20 +148,24 @@
             </div>
             <div class="space-y-5">
                 <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dark Mode</span>
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Dark Mode</span>
                     <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
                 </label>
                 <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dyslexia Font</span>
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Reduce Motion</span>
+                    <input type="checkbox" id="motionToggle" onchange="ComfortSettings.update('reduced-motion', this.checked)" class="w-5 h-5 accent-pink-500">
+                </label>
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Dyslexia Font</span>
                     <input type="checkbox" id="dyslexiaToggle" onchange="ComfortSettings.update('dyslexia-mode', this.checked)" class="w-5 h-5 accent-pink-500">
                 </label>
                 <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">High Contrast</span>
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">High Contrast</span>
                     <input type="checkbox" id="contrastToggle" onchange="ComfortSettings.update('high-contrast', this.checked)" class="w-5 h-5 accent-pink-500">
                 </label>
             </div>
         </div>
-        <button onclick="ComfortSettings.toggleMenu()" class="flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all">
+        <button onclick="ComfortSettings.toggleMenu()" class="access-btn flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all">
             <span>⚙️</span>
             <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Accessibility Settings</span>
         </button>
@@ -202,8 +226,8 @@
             selectItem(div);
         }
 
-        // --- NEW FLEXIBLE DIMENSION LOGIC ---
-        function changeSize(factor) {
+        // --- TRANSFORMATION LOGIC ---
+        function changeWidth(factor) {
             if (selectedElement) selectedElement.style.width = (selectedElement.offsetWidth * factor) + "px";
         }
         function changeHeight(factor) {
