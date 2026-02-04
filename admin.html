@@ -387,11 +387,18 @@
         content.innerHTML = `
             <div class="space-y-10 pb-10">
                 <section class="grid grid-cols-2 gap-8">
-                    <div>
-                        <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Order Info</h3>
-                        <p class="text-sm font-bold">${job.social_handle || 'Client'}</p>
-                        <p class="text-[10px] text-pink-400 font-black uppercase">${job.doll_company} ${job.doll_sculpt}</p>
-                    </div>
+            <div>
+    <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Order Info</h3>
+    <p class="text-sm font-bold">${job.client_name || 'Client'}</p>
+    
+    <p class="text-sm font-bold">${job.social_handle ? job.social_handle : 'N/A'}</p>
+    
+    <p class="text-sm font-bold">
+        ${job.customer_email?.toLowerCase() === 'test@hanafubukidoll.co.uk' ? 'N/A' : (job.customer_email || 'N/A')}
+    </p>
+    
+    <p class="text-[10px] text-pink-400 font-black uppercase">${job.doll_company} ${job.doll_sculpt}</p>
+</div>
                     <div>
                         <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Global Status</h3>
                         <select id="upStatus" class="w-full p-2 border border-pink-100 rounded-xl text-xs font-bold bg-white">
