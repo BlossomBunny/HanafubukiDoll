@@ -26,27 +26,29 @@
             outline-offset: 2px;
             z-index: 999 !important;
         }
-        /* Fix for color accuracy on export */
-        .exporting .draggable {
-            box-shadow: none !important;
-            outline: none !important;
-            transition: none !important;
-        }
-        body.dark-theme .canvas-area { background-image: radial-gradient(#333 1px, transparent 1px); background-color: #1a1a1a !important; }
+        .exporting .draggable { box-shadow: none !important; outline: none !important; }
+        
+        /* Matching Accessibility Classes from Contact */
         body.high-contrast .canvas-area { border: 4px solid #000; background-image: none; }
+        body.dyslexia-mode * { font-family: 'OpenDyslexic', sans-serif !important; }
+        
+        /* Note specific fixes */
+        .note-item textarea { line-height: 1.2; }
     </style>
 </head>
 <body class="bg-[#fdfbfb]">
     <div class="mesh-bg"></div>
 
-    <nav class="p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="text-2xl font-black tracking-tighter">
-                <span class="bounce-bunny">🐰</span> Hanafubuki Tools
+    <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-xl md:text-2xl font-black tracking-tighter">
+                <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
             </div>
-            <div class="flex gap-4">
-                <a href="index.html" class="nav-btn nav-btn-pink text-[10px] uppercase font-bold tracking-widest px-4 py-2 bg-pink-500 text-white rounded-full hover:bg-pink-600 transition-all">Home ♡</a>
-                <a href="contact.html" class="nav-btn nav-btn-mint text-[10px] uppercase font-bold tracking-widest px-4 py-2 bg-emerald-500 text-white rounded-full hover:bg-emerald-600 transition-all">Contact ♡</a>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
+                <a href="services.html" class="nav-btn nav-btn-mint">Services ♡</a>
+                <a href="tools.html" class="nav-btn nav-btn-pink">Studio Tools 🛠️</a>
+                <a href="contact.html" class="nav-btn nav-btn-mint">Contact ♡</a>
             </div>
         </div>
     </nav>
@@ -54,12 +56,12 @@
     <main class="max-w-7xl mx-auto p-6 md:p-10 relative z-10">
         <header class="text-center mb-10">
             <h1 class="text-4xl font-black tracking-tighter text-gray-800">Reference Builder</h1>
-            <p class="text-sm text-pink-400 font-medium italic">Create your own collages to help with uploading large amounts of reference materials when booking! ♡</p>
+            <p class="text-sm text-pink-400 font-medium italic">Create your guide with perfect color accuracy. ♡</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div class="lg:col-span-1 space-y-4">
-                <div class="glass-card p-6 space-y-6 bg-white rounded-[2rem] shadow-xl border border-pink-50">
+                <div class="glass-card p-6 space-y-6">
                     <div>
                         <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Add Content</p>
                         <label class="block w-full text-center bg-pink-500 text-white p-4 rounded-2xl font-bold text-xs cursor-pointer hover:bg-pink-600 transition-all shadow-lg mb-2">
@@ -72,12 +74,15 @@
                     </div>
 
                     <div id="controls" class="pt-4 border-t border-pink-50 space-y-3">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Edit Selection</p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Transform Tool</p>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="changeSize(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➕ Bigger</button>
-                            <button onclick="changeSize(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➖ Smaller</button>
-                            <button onclick="changeRotation(15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">🔄 Rotate</button>
-                            <button onclick="bringToFront()" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">🔝 Front</button>
+                            <button onclick="changeSize(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➕ Wider</button>
+                            <button onclick="changeSize(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➖ Thinner</button>
+                            <button onclick="changeHeight(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">↕️ Taller</button>
+                            <button onclick="changeHeight(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">↔️ Shorter</button>
+                            <button onclick="changeRotation(-15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">⟲ Left</button>
+                            <button onclick="changeRotation(15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">⟳ Right</button>
+                            <button onclick="bringToFront()" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50 col-span-2">🔝 Bring to Front</button>
                         </div>
                         
                         <div id="noteExtras" class="hidden space-y-2 pt-2">
@@ -94,7 +99,7 @@
 
                     <div class="pt-4 border-t border-pink-50">
                         <button onclick="exportCollage()" class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-bold text-xs hover:bg-emerald-600 shadow-lg">
-                            💾 Save High-Res Collage
+                            💾 Save Collage
                         </button>
                     </div>
                 </div>
@@ -102,16 +107,21 @@
 
             <div class="lg:col-span-3">
                 <div id="collage-canvas" class="canvas-area w-full aspect-[16/10] border-4 border-pink-100 rounded-[2.5rem] shadow-2xl overflow-hidden">
-                    <div id="placeholder" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-                        <p class="font-black uppercase tracking-widest text-sm text-pink-300">Canvas Ready ♡</p>
+                    <div id="placeholder" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 text-center">
+                        <p class="font-black uppercase tracking-widest text-sm text-pink-300">Workspace ♡</p>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
+    <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
+        <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Aesthetic Studio</p>
+        <a href="login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors uppercase tracking-widest font-bold">Staff Access 🔒</a>
+    </footer>
+
     <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
-        <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden mb-2">
+        <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden mb-2 animate-fadeIn">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility Settings</h3>
                 <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 text-2xl">&times;</button>
@@ -122,6 +132,10 @@
                     <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
                 </label>
                 <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dyslexia Font</span>
+                    <input type="checkbox" id="dyslexiaToggle" onchange="ComfortSettings.update('dyslexia-mode', this.checked)" class="w-5 h-5 accent-pink-500">
+                </label>
+                <label class="flex justify-between items-center cursor-pointer group">
                     <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">High Contrast</span>
                     <input type="checkbox" id="contrastToggle" onchange="ComfortSettings.update('high-contrast', this.checked)" class="w-5 h-5 accent-pink-500">
                 </label>
@@ -129,7 +143,7 @@
         </div>
         <button onclick="ComfortSettings.toggleMenu()" class="flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all">
             <span>⚙️</span>
-            <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Accessibility</span>
+            <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Accessibility Settings</span>
         </button>
     </div>
 
@@ -145,7 +159,6 @@
             document.getElementById('noteExtras').classList.toggle('hidden', !el.classList.contains('note-item'));
         }
 
-        // Handle Background Clicks
         document.getElementById('collage-canvas').addEventListener('mousedown', (e) => {
             if (e.target.id === 'collage-canvas' || e.target.id === 'placeholder') {
                 if (selectedElement) selectedElement.classList.remove('selected');
@@ -161,12 +174,11 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const div = document.createElement('div');
-                    div.className = "draggable image-item p-2 bg-white shadow-xl rounded-lg";
+                    div.className = "draggable p-2 bg-white shadow-xl rounded-lg";
                     div.style.left = "50px"; div.style.top = "50px"; div.style.width = "200px";
                     div.dataset.rot = 0;
                     div.style.zIndex = topZIndex++;
                     div.innerHTML = `<img src="${e.target.result}" class="w-full rounded pointer-events-none block">`;
-                    
                     div.addEventListener('mousedown', (ev) => { ev.stopPropagation(); selectItem(div); });
                     makeDraggable(div);
                     document.getElementById('collage-canvas').appendChild(div);
@@ -180,46 +192,34 @@
             document.getElementById('placeholder').style.display = 'none';
             const div = document.createElement('div');
             div.className = "draggable note-item p-4 bg-pink-100 rounded-2xl shadow-lg border border-pink-200";
-            div.style.left = "100px"; div.style.top = "100px"; div.style.width = "200px"; div.style.height = "150px";
+            div.style.left = "100px"; div.style.top = "100px"; div.style.width = "200px"; div.style.height = "100px";
             div.dataset.rot = 0;
             div.style.zIndex = topZIndex++;
             div.innerHTML = `<textarea class="w-full h-full bg-transparent border-none outline-none text-[12px] font-bold text-pink-700 placeholder-pink-300 resize-none m-0 p-0 block"></textarea>`;
-            
             div.addEventListener('mousedown', (ev) => { ev.stopPropagation(); selectItem(div); });
             makeDraggable(div);
             document.getElementById('collage-canvas').appendChild(div);
             selectItem(div);
         }
 
-        // --- FIXED TRANSFORMATION ENGINE ---
+        // --- NEW FLEXIBLE DIMENSION LOGIC ---
         function changeSize(factor) {
-            if (!selectedElement) return;
-            const currentWidth = selectedElement.offsetWidth;
-            const currentHeight = selectedElement.offsetHeight;
-            
-            // Physical resizing (better for export color accuracy)
-            selectedElement.style.width = (currentWidth * factor) + "px";
-            if (selectedElement.classList.contains('note-item')) {
-                selectedElement.style.height = (currentHeight * factor) + "px";
+            if (selectedElement) selectedElement.style.width = (selectedElement.offsetWidth * factor) + "px";
+        }
+        function changeHeight(factor) {
+            if (selectedElement) selectedElement.style.height = (selectedElement.offsetHeight * factor) + "px";
+        }
+        function changeRotation(deg) {
+            if (selectedElement) {
+                let r = (parseInt(selectedElement.dataset.rot) || 0) + deg;
+                selectedElement.dataset.rot = r;
+                selectedElement.style.transform = `rotate(${r}deg)`;
             }
         }
 
-        function changeRotation(deg) {
-            if (!selectedElement) return;
-            let currentRot = parseInt(selectedElement.dataset.rot) || 0;
-            currentRot = (currentRot + deg) % 360;
-            selectedElement.dataset.rot = currentRot;
-            selectedElement.style.transform = `rotate(${currentRot}deg)`;
-        }
-
-        function bringToFront() {
-            if (selectedElement) selectedElement.style.zIndex = ++topZIndex;
-        }
-
-        function deleteSelected() {
-            if (selectedElement) { selectedElement.remove(); selectedElement = null; }
-        }
-
+        function bringToFront() { if (selectedElement) selectedElement.style.zIndex = ++topZIndex; }
+        function deleteSelected() { if (selectedElement) { selectedElement.remove(); selectedElement = null; } }
+        
         function setNoteColor(bg, text) {
             if (!selectedElement) return;
             selectedElement.className = `draggable note-item p-4 rounded-2xl shadow-lg border border-pink-200 selected ${bg}`;
@@ -244,38 +244,14 @@
 
         async function exportCollage() {
             const canvas = document.getElementById('collage-canvas');
-            const items = canvas.querySelectorAll('.draggable');
-            
-            // PHASE 1: PREPARE SOLID COLORS
             canvas.classList.add('exporting');
             if (selectedElement) selectedElement.classList.remove('selected');
-            
-            // Force notes to be 100% opaque for the color-accurate snapshot
-            items.forEach(el => {
-                el.style.opacity = "1";
-                if (el.classList.contains('note-item')) {
-                    el.style.backgroundColor = window.getComputedStyle(el).backgroundColor;
-                }
-            });
-
-            // PHASE 2: CAPTURE
-            const result = await html2canvas(canvas, { 
-                backgroundColor: '#ffffff', 
-                scale: 3, // High Resolution
-                useCORS: true,
-                logging: false,
-                removeContainer: true
-            });
-            
-            // PHASE 3: DOWNLOAD
+            const result = await html2canvas(canvas, { backgroundColor: '#ffffff', scale: 3, useCORS: true });
             const link = document.createElement('a');
             link.download = `Hanafubuki-Ref-${Date.now()}.jpg`;
             link.href = result.toDataURL("image/jpeg", 1.0);
             link.click();
-
-            // PHASE 4: RESTORE STUDIO UI
             canvas.classList.remove('exporting');
-            items.forEach(el => el.style.opacity = "");
             if (selectedElement) selectedElement.classList.add('selected');
         }
     </script>
