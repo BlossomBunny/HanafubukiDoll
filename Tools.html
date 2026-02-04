@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio Tools - HanafubukiDoll</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        .canvas-area {
+            background-image: radial-gradient(#fee2e2 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .draggable { touch-action: none; user-select: none; }
+        body.dark-theme .canvas-area { background-image: radial-gradient(#333 1px, transparent 1px); }
+    </style>
+</head>
+<body class="bg-[#fdfbfb]">
+    <nav class="p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="text-2xl font-black tracking-tighter">Hanafubuki Studio Tools 🛠️</div>
+            <a href="index.html" class="nav-btn nav-btn-pink">Back to Studio ♡</a>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-6 md:p-10">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-black tracking-tighter text-gray-800 mb-2">Reference Sheet Builder</h1>
+            <p class="text-sm text-pink-400 font-medium italic">Create a perfect moodboard for your commission! Add photos, notes, and labels. ♡</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div class="lg:col-span-1 space-y-4">
+                <div class="glass-card p-6 space-y-4">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Controls</p>
+                    
+                    <label class="block w-full text-center bg-pink-500 text-white p-4 rounded-2xl font-bold text-xs cursor-pointer hover:bg-pink-600 transition-all shadow-lg shadow-pink-100">
+                        ✨ Add Images
+                        <input type="file" id="imageInput" hidden accept="image/*" multiple onchange="handleImageUpload(event)">
+                    </label>
+
+                    <button onclick="addNote()" class="w-full bg-white border-2 border-pink-100 p-4 rounded-2xl font-bold text-xs hover:bg-pink-50 transition-all">
+                        📝 Add Label/Note
+                    </button>
+
+                    <button onclick="exportCollage()" class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-bold text-xs hover:bg-emerald-600 transition-all">
+                        💾 Save for Upload
+                    </button>
+                    
+                    <div class="pt-4 border-t border-pink-50">
+                        <p class="text-[9px] text-gray-400 leading-relaxed italic">Tip: Drag items to move them. Use the corner of notes to resize. When you're done, save and upload the file to the commission form!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3">
+                <div id="collage-canvas" class="canvas-area relative w-full aspect-[4/3] bg-white border-4 border-pink-100 rounded-[2rem] shadow-inner overflow-hidden">
+                    <div id="placeholder" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                        <div class="text-center">
+                            <span class="text-6xl block mb-4">🎨</span>
+                            <p class="font-black uppercase tracking-widest text-sm">Your Canvas is Ready</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
+        </div>
+
+    <script src="globalscripts.js"></script>
+    <script>
+        // --- BUILDER LOGIC ---
+        function handleImageUpload(event) {
+            const files = event.target.files;
+            const canvas = document.getElementById('collage-canvas');
+            document.getElementById('placeholder').style.display = 'none';
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = "draggable absolute cursor-move group p-2 bg-white shadow-xl rounded-lg animate-fadeIn";
+                    wrapper.style.left = "50px";
+                    wrapper.style.top = "50px";
+                    wrapper.style.width = "220px";
+
+                    wrapper.innerHTML = `
+                        <img src="${e.target.result}" class="w-full rounded pointer-events-none">
+                        <button onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-red-400 text-white w-6 h-6 rounded-full text-xs shadow-md opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                    `;
+
+                    makeDraggable(wrapper);
+                    canvas.appendChild(wrapper);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function addNote() {
+            const canvas = document.getElementById('collage-canvas');
+            const note = document.createElement('div');
+            note.className = "draggable absolute cursor-move p-4 bg-pink-100/90 backdrop-blur-sm rounded-2xl shadow-lg border border-pink-200 animate-fadeIn";
+            note.style.left = "150px";
+            note.style.top = "150px";
+            
+            note.innerHTML = `
+                <textarea placeholder="Write a note... (e.g. Lip Color)" class="bg-transparent border-none outline-none text-[11px] font-black uppercase text-pink-700 placeholder-pink-300 resize-both w-32 h-16"></textarea>
+                <button onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-red-400 text-white w-6 h-6 rounded-full text-xs shadow-md">✕</button>
+            `;
+
+            makeDraggable(note);
+            canvas.appendChild(note);
+        }
+
+        function makeDraggable(element) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            element.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                if (e.target.tagName === 'TEXTAREA') return;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        async function exportCollage() {
+            const canvas = document.getElementById('collage-canvas');
+            // Temporarily hide close buttons for export
+            const buttons = canvas.querySelectorAll('button');
+            buttons.forEach(b => b.style.display = 'none');
+
+            const result = await html2canvas(canvas, { backgroundColor: '#ffffff' });
+            
+            const link = document.createElement('a');
+            link.download = `Hanafubuki-Ref-Sheet-${Date.now()}.jpg`;
+            link.href = result.toDataURL("image/jpeg", 0.9);
+            link.click();
+
+            // Show buttons again
+            buttons.forEach(b => b.style.display = 'block');
+        }
+    </script>
+</body>
+</html>
