@@ -44,7 +44,13 @@
                     <button onclick="addNote()" class="w-full bg-white border-2 border-pink-100 p-4 rounded-2xl font-bold text-xs hover:bg-pink-50 transition-all">
                         📝 Add Label/Note
                     </button>
+                    <button onclick="addNote()" class="w-full bg-white border-2 border-pink-100 p-4 rounded-2xl font-bold text-xs hover:bg-pink-50 transition-all">
+    📝 Add Label/Note
+</button>
 
+<button onclick="clearCanvas()" class="w-full bg-white border-2 border-red-50 p-4 rounded-2xl font-bold text-[10px] text-red-400 uppercase tracking-widest hover:bg-red-50 transition-all">
+    🗑️ Clear Canvas
+</button>
                     <button onclick="exportCollage()" class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-bold text-xs hover:bg-emerald-600 transition-all">
                         💾 Save for Upload
                     </button>
@@ -103,7 +109,7 @@
         function addNote() {
             const canvas = document.getElementById('collage-canvas');
             const note = document.createElement('div');
-            note.className = "draggable absolute cursor-move p-4 bg-pink-100/90 backdrop-blur-sm rounded-2xl shadow-lg border border-pink-200 animate-fadeIn";
+            note.className = "draggable absolute cursor-move p-4 bg-pink-100 rounded-2xl shadow-lg border border-pink-200 animate-fadeIn";
             note.style.left = "150px";
             note.style.top = "150px";
             
@@ -146,21 +152,58 @@
         }
 
         async function exportCollage() {
-            const canvas = document.getElementById('collage-canvas');
-            // Temporarily hide close buttons for export
-            const buttons = canvas.querySelectorAll('button');
-            buttons.forEach(b => b.style.display = 'none');
+    const canvas = document.getElementById('collage-canvas');
+    const elements = canvas.querySelectorAll('.draggable');
+    const placeholders = canvas.querySelectorAll('#placeholder');
+    
+    // 1. Hide placeholders and close buttons
+    placeholders.forEach(p => p.style.display = 'none');
+    const buttons = canvas.querySelectorAll('button');
+    buttons.forEach(b => b.style.opacity = '0');
 
-            const result = await html2canvas(canvas, { backgroundColor: '#ffffff' });
-            
-            const link = document.createElement('a');
-            link.download = `Hanafubuki-Ref-Sheet-${Date.now()}.jpg`;
-            link.href = result.toDataURL("image/jpeg", 0.9);
-            link.click();
+    // 2. TEMPORARY FIX FOR WASHED OUT COLORS:
+    // Force solid backgrounds and full opacity for the export
+    elements.forEach(el => {
+        el.style.backgroundColor = "white"; // Force a solid white background
+        el.style.opacity = "1";             // Ensure full opacity
+        el.style.boxShadow = "none";        // Shadows can sometimes cause dark blurs in exports
+    });
 
-            // Show buttons again
-            buttons.forEach(b => b.style.display = 'block');
-        }
+    // 3. Capture the canvas
+    const result = await html2canvas(canvas, { 
+        backgroundColor: '#ffffff', // Ensure the base canvas is solid white
+        scale: 2,                   // Keep high resolution
+        useCORS: true,              // Helps with images from different sources
+        logging: false
+    });
+    
+    // 4. Download the image
+    const link = document.createElement('a');
+    link.download = `Hanafubuki-Ref-Sheet-${Date.now()}.jpg`;
+    link.href = result.toDataURL("image/jpeg", 0.9);
+    link.click();
+
+    // 5. RESTORE STYLES: Return everything to its pretty, blurry self
+    buttons.forEach(b => b.style.opacity = '');
+    elements.forEach(el => {
+        el.style.backgroundColor = ""; 
+        el.style.opacity = "";
+        el.style.boxShadow = "";
+    });
+    placeholders.forEach(p => p.style.display = '');
+}
+        function clearCanvas() {
+    if (confirm("Are you sure you want to clear your collage? This cannot be undone! ♡")) {
+        const canvas = document.getElementById('collage-canvas');
+        const draggables = canvas.querySelectorAll('.draggable');
+        
+        // Remove all images and notes
+        draggables.forEach(el => el.remove());
+        
+        // Show the placeholder again
+        document.getElementById('placeholder').style.display = 'flex';
+    }
+}
     </script>
 </body>
 </html>
