@@ -12,26 +12,28 @@
         .canvas-area {
             background-image: radial-gradient(#fee2e2 1px, transparent 1px);
             background-size: 20px 20px;
-            background-color: white;
+            background-color: #ffffff !important;
             position: relative;
         }
         .draggable { 
             position: absolute !important; 
             touch-action: none; 
             user-select: none;
-            transform-origin: center center;
+            cursor: move;
         }
         .draggable.selected {
-            outline: 3px solid #ec4899;
-            outline-offset: 4px;
+            outline: 4px solid #ec4899 !important;
+            outline-offset: 2px;
             z-index: 999 !important;
         }
-        /* High Contrast Support from contact.html */
+        /* Fix for color accuracy on export */
+        .exporting .draggable {
+            box-shadow: none !important;
+            outline: none !important;
+            transition: none !important;
+        }
+        body.dark-theme .canvas-area { background-image: radial-gradient(#333 1px, transparent 1px); background-color: #1a1a1a !important; }
         body.high-contrast .canvas-area { border: 4px solid #000; background-image: none; }
-        body.dyslexia-mode * { font-family: 'OpenDyslexic', sans-serif !important; }
-
-        .animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-[#fdfbfb]">
@@ -40,27 +42,27 @@
     <nav class="p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="text-2xl font-black tracking-tighter">
-                <span class="bounce-bunny">🐰</span> HanafubukiDoll 
+                <span class="bounce-bunny">🐰</span> Hanafubuki Tools
             </div>
             <div class="flex gap-4">
-                <a href="index.html" class="nav-btn nav-btn-pink text-xs uppercase font-bold tracking-widest">Home ♡</a>
-                <a href="contact.html" class="nav-btn nav-btn-mint text-xs uppercase font-bold tracking-widest">Contact ♡</a>
+                <a href="index.html" class="nav-btn nav-btn-pink text-[10px] uppercase font-bold tracking-widest px-4 py-2 bg-pink-500 text-white rounded-full hover:bg-pink-600 transition-all">Home ♡</a>
+                <a href="contact.html" class="nav-btn nav-btn-mint text-[10px] uppercase font-bold tracking-widest px-4 py-2 bg-emerald-500 text-white rounded-full hover:bg-emerald-600 transition-all">Contact ♡</a>
             </div>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto p-6 md:p-10 relative z-10">
-        <header class="text-center mb-10 animate-fadeIn">
-            <h1 class="text-4xl font-black tracking-tighter text-gray-800 mb-2">Reference Sheet Builder</h1>
-            <p class="text-sm text-pink-400 font-medium italic">Create your own collages to help with uploading large amounts of reference materials when booking! ♡</p>
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-black tracking-tighter text-gray-800">Reference Builder</h1>
+            <p class="text-sm text-pink-400 font-medium italic">Accurate color capture for your studio guides. ♡</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div class="lg:col-span-1 space-y-4 animate-fadeIn">
-                <div class="glass-card p-6 space-y-6">
+            <div class="lg:col-span-1 space-y-4">
+                <div class="glass-card p-6 space-y-6 bg-white rounded-[2rem] shadow-xl border border-pink-50">
                     <div>
                         <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Add Content</p>
-                        <label class="block w-full text-center bg-pink-500 text-white p-4 rounded-2xl font-bold text-xs cursor-pointer hover:bg-pink-600 transition-all shadow-lg shadow-pink-100 mb-2">
+                        <label class="block w-full text-center bg-pink-500 text-white p-4 rounded-2xl font-bold text-xs cursor-pointer hover:bg-pink-600 transition-all shadow-lg mb-2">
                             ✨ Add Images
                             <input type="file" id="imageInput" hidden accept="image/*" multiple onchange="handleImageUpload(event)">
                         </label>
@@ -69,17 +71,17 @@
                         </button>
                     </div>
 
-                    <div id="transformControls" class="pt-4 border-t border-pink-50 space-y-3">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Transform Selected</p>
+                    <div id="controls" class="pt-4 border-t border-pink-50 space-y-3">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Edit Selection</p>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="adjustScale(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➕ Bigger</button>
-                            <button onclick="adjustScale(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➖ Smaller</button>
-                            <button onclick="adjustRotation(15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">🔄 Rotate</button>
+                            <button onclick="changeSize(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➕ Bigger</button>
+                            <button onclick="changeSize(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">➖ Smaller</button>
+                            <button onclick="changeRotation(15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">🔄 Rotate</button>
                             <button onclick="bringToFront()" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold hover:bg-pink-50">🔝 Front</button>
                         </div>
                         
                         <div id="noteExtras" class="hidden space-y-2 pt-2">
-                            <p class="text-[9px] font-black uppercase tracking-widest text-pink-400">Note Color</p>
+                            <p class="text-[9px] font-black uppercase tracking-widest text-pink-400">Color Profile</p>
                             <div class="flex gap-2">
                                 <button onclick="setNoteColor('bg-pink-100', 'text-pink-700')" class="w-6 h-6 rounded-full bg-pink-100 border border-pink-200"></button>
                                 <button onclick="setNoteColor('bg-blue-100', 'text-blue-700')" class="w-6 h-6 rounded-full bg-blue-100 border border-blue-200"></button>
@@ -87,12 +89,12 @@
                             </div>
                         </div>
 
-                        <button onclick="deleteSelected()" class="w-full bg-white border-2 border-red-50 p-3 rounded-xl text-[10px] font-bold text-red-400 hover:bg-red-50">🗑️ Remove</button>
+                        <button onclick="deleteSelected()" class="w-full bg-white border-2 border-red-50 p-3 rounded-xl text-[10px] font-bold text-red-400 hover:bg-red-50">🗑️ Remove Item</button>
                     </div>
 
                     <div class="pt-4 border-t border-pink-50">
-                        <button onclick="exportCollage()" class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-bold text-xs hover:bg-emerald-600 shadow-lg shadow-emerald-100">
-                            💾 Save Collage
+                        <button onclick="exportCollage()" class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-bold text-xs hover:bg-emerald-600 shadow-lg">
+                            💾 Save High-Res Collage
                         </button>
                     </div>
                 </div>
@@ -101,7 +103,7 @@
             <div class="lg:col-span-3">
                 <div id="collage-canvas" class="canvas-area w-full aspect-[16/10] border-4 border-pink-100 rounded-[2.5rem] shadow-2xl overflow-hidden">
                     <div id="placeholder" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-                        <p class="font-black uppercase tracking-widest text-sm text-pink-300">Studio Workspace</p>
+                        <p class="font-black uppercase tracking-widest text-sm text-pink-300">Canvas Ready ♡</p>
                     </div>
                 </div>
             </div>
@@ -109,19 +111,15 @@
     </main>
 
     <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
-        <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden animate-fadeIn mb-2">
+        <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden mb-2">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility</h3>
+                <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility Settings</h3>
                 <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 text-2xl">&times;</button>
             </div>
             <div class="space-y-5">
                 <label class="flex justify-between items-center cursor-pointer group">
                     <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dark Mode</span>
                     <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
-                <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dyslexia Font</span>
-                    <input type="checkbox" id="dyslexiaToggle" onchange="ComfortSettings.update('dyslexia-mode', this.checked)" class="w-5 h-5 accent-pink-500">
                 </label>
                 <label class="flex justify-between items-center cursor-pointer group">
                     <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">High Contrast</span>
@@ -131,7 +129,7 @@
         </div>
         <button onclick="ComfortSettings.toggleMenu()" class="flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all">
             <span>⚙️</span>
-            <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Settings</span>
+            <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Accessibility</span>
         </button>
     </div>
 
@@ -144,16 +142,12 @@
             if (selectedElement) selectedElement.classList.remove('selected');
             selectedElement = el;
             selectedElement.classList.add('selected');
-            
-            // Toggle note-specific controls
-            const extras = document.getElementById('noteExtras');
-            if (el.classList.contains('note-item')) extras.classList.remove('hidden');
-            else extras.classList.add('hidden');
+            document.getElementById('noteExtras').classList.toggle('hidden', !el.classList.contains('note-item'));
         }
 
-        // Deselect when clicking background
-        document.getElementById('collage-canvas').addEventListener('mousedown', function(e) {
-            if (e.target === this || e.target.id === 'placeholder') {
+        // Handle Background Clicks
+        document.getElementById('collage-canvas').addEventListener('mousedown', (e) => {
+            if (e.target.id === 'collage-canvas' || e.target.id === 'placeholder') {
                 if (selectedElement) selectedElement.classList.remove('selected');
                 selectedElement = null;
                 document.getElementById('noteExtras').classList.add('hidden');
@@ -163,17 +157,15 @@
         function handleImageUpload(event) {
             const files = event.target.files;
             document.getElementById('placeholder').style.display = 'none';
-
             Array.from(files).forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const div = document.createElement('div');
-                    div.className = "draggable group p-2 bg-white shadow-xl rounded-lg animate-fadeIn image-item";
+                    div.className = "draggable image-item p-2 bg-white shadow-xl rounded-lg";
                     div.style.left = "50px"; div.style.top = "50px"; div.style.width = "200px";
-                    div.dataset.rot = 0; div.dataset.sc = 1;
+                    div.dataset.rot = 0;
                     div.style.zIndex = topZIndex++;
-
-                    div.innerHTML = `<img src="${e.target.result}" class="w-full rounded pointer-events-none">`;
+                    div.innerHTML = `<img src="${e.target.result}" class="w-full rounded pointer-events-none block">`;
                     
                     div.addEventListener('mousedown', (ev) => { ev.stopPropagation(); selectItem(div); });
                     makeDraggable(div);
@@ -187,12 +179,11 @@
         function addNote() {
             document.getElementById('placeholder').style.display = 'none';
             const div = document.createElement('div');
-            div.className = "draggable note-item p-4 bg-pink-100 rounded-2xl shadow-lg border border-pink-200 animate-fadeIn";
-            div.style.left = "100px"; div.style.top = "100px"; div.style.width = "180px"; div.style.height = "120px";
-            div.dataset.rot = 0; div.dataset.sc = 1;
+            div.className = "draggable note-item p-4 bg-pink-100 rounded-2xl shadow-lg border border-pink-200";
+            div.style.left = "100px"; div.style.top = "100px"; div.style.width = "200px"; div.style.height = "150px";
+            div.dataset.rot = 0;
             div.style.zIndex = topZIndex++;
-
-            div.innerHTML = `<textarea class="w-full h-full bg-transparent border-none outline-none text-[11px] font-black uppercase text-pink-700 placeholder-pink-300 resize-none"></textarea>`;
+            div.innerHTML = `<textarea class="w-full h-full bg-transparent border-none outline-none text-[12px] font-bold text-pink-700 placeholder-pink-300 resize-none m-0 p-0 block"></textarea>`;
             
             div.addEventListener('mousedown', (ev) => { ev.stopPropagation(); selectItem(div); });
             makeDraggable(div);
@@ -200,29 +191,25 @@
             selectItem(div);
         }
 
-        // --- FIXED TRANSFORMATION FUNCTIONS ---
-        function adjustScale(factor) {
+        // --- FIXED TRANSFORMATION ENGINE ---
+        function changeSize(factor) {
             if (!selectedElement) return;
-            let currentSc = parseFloat(selectedElement.dataset.sc) || 1;
-            let newSc = currentSc * factor;
-            if (newSc > 0.2 && newSc < 4) {
-                selectedElement.dataset.sc = newSc;
-                updateElementStyle();
+            const currentWidth = selectedElement.offsetWidth;
+            const currentHeight = selectedElement.offsetHeight;
+            
+            // Physical resizing (better for export color accuracy)
+            selectedElement.style.width = (currentWidth * factor) + "px";
+            if (selectedElement.classList.contains('note-item')) {
+                selectedElement.style.height = (currentHeight * factor) + "px";
             }
         }
 
-        function adjustRotation(deg) {
+        function changeRotation(deg) {
             if (!selectedElement) return;
             let currentRot = parseInt(selectedElement.dataset.rot) || 0;
-            selectedElement.dataset.rot = (currentRot + deg) % 360;
-            updateElementStyle();
-        }
-
-        function updateElementStyle() {
-            if (!selectedElement) return;
-            const r = selectedElement.dataset.rot;
-            const s = selectedElement.dataset.sc;
-            selectedElement.style.transform = `rotate(${r}deg) scale(${s})`;
+            currentRot = (currentRot + deg) % 360;
+            selectedElement.dataset.rot = currentRot;
+            selectedElement.style.transform = `rotate(${currentRot}deg)`;
         }
 
         function bringToFront() {
@@ -234,11 +221,9 @@
         }
 
         function setNoteColor(bg, text) {
-            if (!selectedElement || !selectedElement.classList.contains('note-item')) return;
-            selectedElement.classList.remove('bg-pink-100', 'bg-blue-100', 'bg-emerald-100');
-            selectedElement.querySelector('textarea').classList.remove('text-pink-700', 'text-blue-700', 'text-emerald-700');
-            selectedElement.classList.add(bg);
-            selectedElement.querySelector('textarea').classList.add(text);
+            if (!selectedElement) return;
+            selectedElement.className = `draggable note-item p-4 rounded-2xl shadow-lg border border-pink-200 selected ${bg}`;
+            selectedElement.querySelector('textarea').className = `w-full h-full bg-transparent border-none outline-none text-[12px] font-bold placeholder-pink-300 resize-none m-0 p-0 block ${text}`;
         }
 
         function makeDraggable(el) {
@@ -261,28 +246,36 @@
             const canvas = document.getElementById('collage-canvas');
             const items = canvas.querySelectorAll('.draggable');
             
-            // UI Preparation
+            // PHASE 1: PREPARE SOLID COLORS
+            canvas.classList.add('exporting');
             if (selectedElement) selectedElement.classList.remove('selected');
             
-            // Transparency Fix: Force elements to be solid for the snapshot
+            // Force notes to be 100% opaque for the color-accurate snapshot
             items.forEach(el => {
                 el.style.opacity = "1";
-                if (!el.classList.contains('note-item')) el.style.backgroundColor = "#ffffff";
+                if (el.classList.contains('note-item')) {
+                    el.style.backgroundColor = window.getComputedStyle(el).backgroundColor;
+                }
             });
 
+            // PHASE 2: CAPTURE
             const result = await html2canvas(canvas, { 
                 backgroundColor: '#ffffff', 
-                scale: 2,
-                useCORS: true 
+                scale: 3, // High Resolution
+                useCORS: true,
+                logging: false,
+                removeContainer: true
             });
             
+            // PHASE 3: DOWNLOAD
             const link = document.createElement('a');
-            link.download = `Hanafubuki-Studio-${Date.now()}.jpg`;
+            link.download = `Hanafubuki-Ref-${Date.now()}.jpg`;
             link.href = result.toDataURL("image/jpeg", 1.0);
             link.click();
 
-            // Restore UI
-            items.forEach(el => { el.style.opacity = ""; if (!el.classList.contains('note-item')) el.style.backgroundColor = ""; });
+            // PHASE 4: RESTORE STUDIO UI
+            canvas.classList.remove('exporting');
+            items.forEach(el => el.style.opacity = "");
             if (selectedElement) selectedElement.classList.add('selected');
         }
     </script>
