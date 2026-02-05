@@ -564,12 +564,12 @@
 
 function updateBalanceLive(paid = 0) {
     const type = document.getElementById('payType').value;
-    const isPaid = document.getElementById('isPaidCheck')?.checked;
+    const isPaidChecked = document.getElementById('isPaidCheck')?.checked;
     const total = parseFloat(document.getElementById('tPrice')?.value) || 0;
     const label = document.getElementById('balanceLabel');
     
-    // Logic: If marked as paid, balance is 0. Otherwise, it's Total - Paid.
-    if (isPaid) {
+    // If the checkbox is ticked, show 0. Otherwise, calculate remaining.
+    if (isPaidChecked) {
         label.innerText = "£0.00";
         label.className = "text-xl font-black text-emerald-500";
     } else {
@@ -611,11 +611,10 @@ function updateBalanceLive(paid = 0) {
             payment_method: payType,
             total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
             is_urgent: document.getElementById('isUrg').checked,
-            // Use 'payment_status' instead of 'is_paid' to avoid schema errors
+            // FIX: Map the UI checkbox to your database text column 'payment_status'
             payment_status: isPaidChecked ? 'Paid' : 'Unpaid'
         };
 
-        // Only include shipping toggles if in Trade mode
         if (payType === 'Trade') {
             updates.partner_shipped = document.getElementById('partnerShipped').checked;
             updates.artist_shipped = document.getElementById('artistShipped').checked;
