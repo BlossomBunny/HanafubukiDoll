@@ -484,105 +484,115 @@ document.getElementById('saveBtn').onclick = async () => {
             if (key === 'high-contrast') document.body.style.contrast = val ? '150%' : '100%';
         }
     };
-
 async function renderInventory() {
     const container = document.getElementById('view-inventory');
-    container.innerHTML = `<div class="flex justify-center py-12"><div class="animate-spin text-3xl">🌸</div></div>`;
+    // Added a loading spinner so the screen doesn't just "pop" in
+    container.innerHTML = `<div class="flex justify-center py-20"><span class="animate-bounce text-2xl">🌸</span></div>`;
 
-    try {
-        const { data: items, error } = await _supabase.from('inventory').select('*').order('category');
-        if (error) throw error;
+    const { data: items, error } = await _supabase.from('inventory').select('*').order('sculpt_size', { ascending: true });
+    if (error) {
+        container.innerHTML = `<p class="text-center text-rose-500">Error loading inventory: ${error.message}</p>`;
+        return;
+    }
 
-        container.innerHTML = `
-            <div class="max-w-5xl mx-auto space-y-8 animate-fadeIn">
-                <div class="flex justify-between items-end">
-                    <div>
-                        <h2 class="text-3xl font-black italic tracking-tighter">Studio Stock ♡</h2>
-                        <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Inventory Management</p>
-                    </div>
-                    <button onclick="addNewStockItem()" class="nav-btn nav-btn-pink">+ Add New Product</button>
+    const categories = [
+        { title: "Smartdoll Hands (Pairs)", key: "Smartdoll Hands" },
+        { title: "Dollfie Dream Hands (Pairs)", key: "Dollfie Dream Hands" },
+        { title: "Smartdoll Heads", key: "Smartdoll Heads" },
+        { title: "Dollfie Dream Heads", key: "Dollfie Dream Heads" },
+        { title: "Eye Bases (mm)", key: "Eye Bases" }
+    ];
+
+    container.innerHTML = `
+        <div class="max-w-6xl mx-auto space-y-10 pb-20 animate-fadeIn">
+            <div class="flex justify-between items-end px-4">
+                <div>
+                    <h2 class="text-3xl font-black italic tracking-tighter text-gray-800">Studio Inventory ♡</h2>
+                    <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Stock Management</p>
                 </div>
+                <button onclick="addNewStockItem()" class="nav-btn nav-btn-pink shadow-sm hover:shadow-pink-100">+ Add New Stock</button>
+            </div>
 
-                <div class="glass-card overflow-hidden border border-pink-50">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-pink-50/50">
-                            <tr>
-                                <th class="p-5 text-[10px] font-black uppercase text-pink-500">Product</th>
-                                <th class="p-5 text-[10px] font-black uppercase text-pink-500">Category</th>
-                                <th class="p-5 text-[10px] font-black uppercase text-pink-500">Stock Level</th>
-                                <th class="p-5 text-[10px] font-black uppercase text-pink-500 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-pink-50">
-                            ${items.map(item => `
-                                <tr class="hover:bg-white/50 transition-colors">
-                                    <td class="p-5">
-                                        <p class="text-sm font-bold text-gray-800">${item.name}</p>
-                                        <p class="text-[9px] text-gray-400 font-medium">${item.sku || 'No SKU'}</p>
-                                    </td>
-                                    <td class="p-5">
-                                        <span class="px-3 py-1 bg-gray-100 rounded-full text-[9px] font-black uppercase text-gray-500">${item.category}</span>
-                                    </td>
-                                    <td class="p-5">
-                                        <div class="flex items-center gap-3">
-                                            <span class="text-sm font-black ${item.quantity < 3 ? 'text-rose-500' : 'text-gray-700'}">${item.quantity}</span>
-                                            ${item.quantity < 3 ? '<span class="text-[9px] font-black text-rose-400 animate-pulse">LOW</span>' : ''}
-                                        </div>
-                                    </td>
-                                    <td class="p-5 text-right">
-                                        <div class="flex justify-end gap-2">
-                                            <button onclick="updateStock('${item.id}', -1)" class="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all">－</button>
-                                            <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-emerald-50 hover:text-emerald-500 transition-all">＋</button>
-                                            <button onclick="deleteStockItem('${item.id}')" class="ml-4 text-gray-300 hover:text-rose-500 transition-colors text-xs">🗑️</button>
-                                        </div>
-                                    </td>
+            ${categories.map(cat => {
+                const filtered = items.filter(i => i.category === cat.key);
+                return `
+                <div class="space-y-3">
+                    <h3 class="text-[11px] font-black uppercase text-gray-400 tracking-widest ml-6">${cat.title}</h3>
+                    <div class="glass-card overflow-hidden border border-pink-100/30 shadow-sm">
+                        <table class="w-full text-left">
+                            <thead class="bg-pink-50/40 border-b border-pink-50">
+                                <tr>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">Sculpt / Size</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">Skintone</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70 text-center">Qty</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70 text-right">Adjust</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </div>`;
-    } catch (err) {
-        container.innerHTML = `<div class="p-8 text-center text-rose-500 font-bold">Failed to load stock: ${err.message}</div>`;
-    }
-}
-    // Quick +/- update for stock levels
-async function updateStock(id, change) {
-    try {
-        const { data: item } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
-        const newQty = Math.max(0, (item.quantity || 0) + change);
-        
-        await _supabase.from('inventory').update({ quantity: newQty }).eq('id', id);
-        renderInventory(); // Refresh the table
-    } catch (err) {
-        console.error("Stock Update Error:", err);
-    }
+                            </thead>
+                            <tbody class="divide-y divide-pink-50/50">
+                                ${filtered.length ? filtered.map(item => `
+                                    <tr class="hover:bg-white/60 transition-colors">
+                                        <td class="p-4 text-sm font-bold text-gray-700">${item.sculpt_size}</td>
+                                        <td class="p-4">
+                                            <span class="px-3 py-1 bg-white border border-pink-100 rounded-full text-[10px] font-black text-pink-400 uppercase">
+                                                ${item.skintone || '---'}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <span class="text-sm font-black 
+                                                ${item.quantity === 0 ? 'text-gray-300' : (item.quantity < 2 ? 'text-rose-500 animate-pulse' : 'text-gray-600')}">
+                                                ${item.quantity}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-right">
+                                            <div class="flex justify-end gap-2">
+                                                <button onclick="updateStock('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 font-bold transition-all shadow-sm">－</button>
+                                                <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 font-bold transition-all shadow-sm">＋</button>
+                                                <button onclick="deleteStockItem('${item.id}')" class="ml-2 text-gray-200 hover:text-rose-400 transition-colors" title="Delete Item">🗑️</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('') : `
+                                    <tr>
+                                        <td colspan="4" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase tracking-widest italic">
+                                            No ${cat.title} currently recorded
+                                        </td>
+                                    </tr>`}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>`;
 }
 
-// Simple prompt to add a new item
 async function addNewStockItem() {
-    const name = prompt("Product Name:");
-    if (!name) return;
-    const category = prompt("Category (e.g., Lashes, Faceup, Tools):", "Misc");
-    const qty = parseInt(prompt("Starting Quantity:", "0"));
+    const categories = ["Smartdoll Hands", "Dollfie Dream Hands", "Smartdoll Heads", "Dollfie Dream Heads", "Eye Bases"];
+    const catChoice = prompt(`Select Category:\n1. Smartdoll Hands\n2. Dollfie Dream Hands\n3. Smartdoll Heads\n4. Dollfie Dream Heads\n5. Eye Bases`);
+    
+    if (!catChoice || catChoice < 1 || catChoice > 5) return;
+    
+    const category = categories[catChoice - 1];
+    const sculpt_size = prompt("Sculpt or Size (e.g. Kizuna, Style 01, 14mm):");
+    const skintone = prompt("Skintone (e.g. Milk, Cinnamon, Semi-White, Tan):");
+    let quantity = parseInt(prompt("Initial Quantity:", "0"));
+
+    // Validation to prevent empty database rows or NaN quantities
+    if (!sculpt_size || isNaN(quantity)) {
+        alert("Invalid input. Sculpt name and a valid number for quantity are required.");
+        return;
+    }
 
     const { error } = await _supabase.from('inventory').insert([{ 
-        name, 
         category, 
-        quantity: qty 
+        sculpt_size, 
+        skintone: skintone || 'Standard', 
+        quantity 
     }]);
 
     if (!error) renderInventory();
+    else alert("Error: " + error.message);
 }
 
-// Delete an item
-async function deleteStockItem(id) {
-    if (confirm("Permanently remove this product from stock?")) {
-        await _supabase.from('inventory').delete().eq('id', id);
-        renderInventory();
-    }
-}
-    
     async function renderPL() {
     const container = document.getElementById('view-pl');
     const { data: jobs } = await _supabase.from('commissions').select('*').eq('payment_status', 'Paid');
