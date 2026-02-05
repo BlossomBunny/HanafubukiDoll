@@ -483,10 +483,10 @@
                                 <p id="balanceLabel" class="text-xl font-black ${displayBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${displayBalance.toFixed(2)}</p>
                             </div>
                         </div>
-                        <div id="pifUI" class="${job.payment_method === 'Paid in Full' ? '' : 'hidden'} flex items-center gap-2 px-2">
-                            <input type="checkbox" id="isPaidCheck" onchange="togglePayUI()" ${job.is_paid ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
-                            <label class="text-[10px] font-black uppercase text-emerald-600">Mark as Paid (Balance £0)</label>
-                        </div>
+                      <div id="pifUI" class="${job.payment_method === 'Paid in Full' ? '' : 'hidden'} flex items-center gap-2 px-2">
+    <input type="checkbox" id="isPaidCheck" onchange="updateBalanceLive(${paidTotal})" ${job.payment_status === 'Paid' ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
+    <label class="text-[10px] font-black uppercase text-emerald-600">Mark as Paid (Settles Balance)</label>
+</div>
                     </div>
 
                     <div id="layawayUI" class="${job.payment_method === 'Layaway' ? '' : 'hidden'} space-y-3 pt-3 border-t border-pink-100">
@@ -553,18 +553,14 @@
         document.getElementById('detailDrawer').classList.remove('translate-x-full');
     }
     // --- FINANCIAL HELPERS ---
-    function togglePayUI() {
-        const type = document.getElementById('payType').value;
-        const isPaid = document.getElementById('isPaidCheck')?.checked;
-        document.getElementById('moneyRow').classList.toggle('hidden', ['Trade', 'Gift'].includes(type));
-        document.getElementById('pifUI').classList.toggle('hidden', type !== 'Paid in Full');
-        document.getElementById('layawayUI').classList.toggle('hidden', type !== 'Layaway');
-        document.getElementById('tradeUI').classList.toggle('hidden', type !== 'Trade');
-        if (type === 'Paid in Full' && isPaid) {
-            document.getElementById('balanceLabel').innerText = "£0.00";
-            document.getElementById('balanceLabel').className = "text-xl font-black text-emerald-500";
-        } else { updateBalanceLive(); }
-    }
+   function togglePayUI() {
+    const type = document.getElementById('payType').value;
+    document.getElementById('moneyRow').classList.toggle('hidden', ['Trade', 'Gift'].includes(type));
+    document.getElementById('pifUI').classList.toggle('hidden', type !== 'Paid in Full');
+    document.getElementById('layawayUI').classList.toggle('hidden', type !== 'Layaway');
+    document.getElementById('tradeUI').classList.toggle('hidden', type !== 'Trade');
+    updateBalanceLive();
+}
 
 function updateBalanceLive(paid = 0) {
     const type = document.getElementById('payType').value;
@@ -572,8 +568,8 @@ function updateBalanceLive(paid = 0) {
     const total = parseFloat(document.getElementById('tPrice')?.value) || 0;
     const label = document.getElementById('balanceLabel');
     
-    // If specifically marked as Paid, show 0. Otherwise show calculation.
-    if (type === 'Paid in Full' && isPaid) {
+    // Logic: If marked as paid, balance is 0. Otherwise, it's Total - Paid.
+    if (isPaid) {
         label.innerText = "£0.00";
         label.className = "text-xl font-black text-emerald-500";
     } else {
@@ -582,7 +578,6 @@ function updateBalanceLive(paid = 0) {
         label.className = `text-xl font-black ${bal > 0 ? 'text-rose-500' : 'text-emerald-500'}`;
     }
 }
-
     async function saveNewPayment() {
         const amt = parseFloat(document.getElementById('newPayAmt').value);
         if (!amt) return;
