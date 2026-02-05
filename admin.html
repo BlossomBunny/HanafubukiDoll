@@ -385,28 +385,45 @@ async function openDrawer(id) {
     document.getElementById('detailDrawer').classList.remove('translate-x-full');
     }
     
-    function renderServiceBlock(job, key, title, color) {
+function renderServiceBlock(job, key, title, color) {
     const data = job[`${key}_details`];
     if (!data) return '';
+    
+    // Logic to ensure the theme matches (pink, blue, or emerald)
+    const theme = color === 'pink' ? 'pink' : (color === 'blue' ? 'blue' : 'emerald');
+
     return `
-        <div class="p-6 bg-white rounded-[2rem] border border-gray-50 space-y-4 shadow-sm">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h4 class="text-xs font-black uppercase text-pink-500">${title}</h4>
-                <select id="${key}Status" class="text-[9px] font-black uppercase bg-gray-50 p-1 rounded-md">
+        <div class="p-6 bg-white rounded-[2rem] border border-${theme}-50 space-y-4 shadow-sm">
+            <div class="flex justify-between items-center border-b border-${theme}-50 pb-2">
+                <h4 class="text-xs font-black uppercase text-${theme}-500">${title}</h4>
+                <select id="${key}Status" class="text-[9px] font-black uppercase bg-${theme}-50 p-1 rounded-md">
                     <option value="Pending" ${data.status==='Pending'?'selected':''}>Pending</option>
                     <option value="Working" ${data.status==='Working'?'selected':''}>Working</option>
                     <option value="Completed" ${data.status==='Completed'?'selected':''}>Completed</option>
                 </select>
             </div>
+            
+            ${data.images && data.images.length > 0 ? `
+                <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                    ${data.images.map(img => `
+                        <img src="${img}" 
+                             class="w-24 h-24 object-cover rounded-2xl border-2 border-white shadow-sm cursor-zoom-in hover:scale-105 transition-transform" 
+                             onclick="this.classList.toggle('img-enlarge')">
+                    `).join('')}
+                </div>` : `
+                <div class="py-4 text-center border-2 border-dashed border-gray-100 rounded-2xl">
+                    <p class="text-[10px] font-bold text-gray-300 uppercase">No Reference Images</p>
+                </div>
+            `}
 
-            <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                <p class="text-[9px] font-black uppercase text-gray-400 mb-1">Client Request Instructions:</p>
+            <div class="p-4 bg-${theme}-50/30 rounded-2xl border border-${theme}-100">
+                <p class="text-[9px] font-black uppercase text-${theme}-400 mb-1">Client Request:</p>
                 <p class="text-[11px] text-gray-700 italic">"${data.notes || 'No instructions provided.'}"</p>
             </div>
 
             <div>
                 <p class="text-[9px] font-black uppercase text-gray-400 mb-1 ml-1">Internal Artist Notes:</p>
-                <textarea id="${key}Admin" class="w-full p-4 text-[11px] border border-gray-100 rounded-2xl h-24 outline-none focus:ring-1 ring-pink-100 bg-[#fafafa]" placeholder="Write notes here...">${data.admin_notes || ''}</textarea>
+                <textarea id="${key}Admin" class="w-full p-4 text-[11px] border border-gray-100 rounded-2xl h-24 outline-none focus:ring-2 ring-${theme}-50 bg-[#fafafa]" placeholder="Write notes here...">${data.admin_notes || ''}</textarea>
             </div>
         </div>`;
 }
