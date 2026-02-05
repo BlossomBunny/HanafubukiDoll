@@ -598,74 +598,54 @@ function updateBalanceLive(paid = 0) {
 
     document.getElementById('saveBtn').onclick = async () => {
     const btn = document.getElementById('saveBtn');
-    const originalText = btn.innerText;
     btn.innerText = "Saving... ✨";
     btn.disabled = true;
 
     try {
-        // 1. Get current data to prevent overwriting service details
-        const { data: job, error: fetchError } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
-        if (fetchError) throw fetchError;
-
+        const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
         const payType = document.getElementById('payType').value;
+        const isPaidChecked = document.getElementById('isPaidCheck')?.checked;
 
-        // 2. Build the base update object
         const updates = {
             status: document.getElementById('upStatus').value,
             payment_method: payType,
             total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
             is_urgent: document.getElementById('isUrg').checked,
+            // Use 'payment_status' instead of 'is_paid' to avoid schema errors
+            payment_status: isPaidChecked ? 'Paid' : 'Unpaid'
         };
 
-        // 3. ONLY add columns that exist for specific payment types to avoid schema errors
-        if (payType === 'Paid in Full') {
-            updates.is_paid = document.getElementById('isPaidCheck').checked;
-        } else if (payType === 'Trade') {
-            // These columns only update if they exist in your DB schema
+        // Only include shipping toggles if in Trade mode
+        if (payType === 'Trade') {
             updates.partner_shipped = document.getElementById('partnerShipped').checked;
             updates.artist_shipped = document.getElementById('artistShipped').checked;
         }
 
-        // 4. Safely update service details only if they were part of the original order
+        // Safe Service Updates
         if (job.faceup_details) {
-            updates.faceup_details = { 
-                ...job.faceup_details, 
-                status: document.getElementById('faceupStatus').value, 
-                admin_notes: document.getElementById('fAdmin').value 
-            };
+            updates.faceup_details = { ...job.faceup_details, status: document.getElementById('faceupStatus').value, admin_notes: document.getElementById('fAdmin').value };
         }
         if (job.eye_details) {
-            updates.eye_details = { 
-                ...job.eye_details, 
-                status: document.getElementById('eyeStatus').value, 
-                admin_notes: document.getElementById('eAdmin')?.value || '' 
-            };
+            updates.eye_details = { ...job.eye_details, status: document.getElementById('eyeStatus').value, admin_notes: document.getElementById('eAdmin')?.value || '' };
         }
         if (job.manicure_details) {
-            updates.manicure_details = { 
-                ...job.manicure_details, 
-                status: document.getElementById('maniStatus').value, 
-                admin_notes: document.getElementById('mAdmin')?.value || '' 
-            };
+            updates.manicure_details = { ...job.manicure_details, status: document.getElementById('maniStatus').value, admin_notes: document.getElementById('mAdmin')?.value || '' };
         }
 
-        // 5. Push to Supabase
-        const { error: saveError } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
-        if (saveError) throw saveError;
+        const { error } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
+        if (error) throw error;
 
         btn.innerText = "Saved! ♡";
         setTimeout(() => { 
             closeDrawer(); 
             renderWorkbench(); 
-            renderPlanner(); 
-            btn.innerText = originalText;
+            btn.innerText = "Save All Changes ♡";
             btn.disabled = false;
         }, 800);
 
     } catch (err) {
-        console.error("Save error:", err);
-        alert("Error saving: " + err.message);
-        btn.innerText = "Error! ❌";
+        alert("Save Error: " + err.message);
+        btn.innerText = "Save Error ❌";
         btn.disabled = false;
     }
 };
