@@ -42,22 +42,21 @@
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
 
     <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="text-xl md:text-2xl font-black tracking-tighter">
-                <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
-            </div>
-            <div id="adminNav" class="auth-hidden flex flex-wrap justify-center gap-2 md:gap-4">
-                <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
-                <button onclick="switchTab('workbench')" class="nav-btn nav-btn-mint">Commissions ♡</button>
-                <button onclick="switchTab('planner')" class="nav-btn nav-btn-pink">Planner ♡</button>
-                <button onclick="switchTab('inventory')" class="nav-btn nav-btn-mint">Stock ♡</button>
-                <button onclick="switchTab('pl')" class="nav-btn nav-btn-pink">P&L Sheet 📊</button>
-                <button onclick="switchTab('settings')" class="nav-btn nav-btn-mint">Settings ♡</button>
-               <button onclick="handleLogout()" class="nav-btn nav-btn-pink opacity-50 hover:opacity-100">Logout ⏻</button>
-            </div>
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="text-xl md:text-2xl font-black tracking-tighter">
+            <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
         </div>
-    </nav>
-
+        <div id="adminNav" class="auth-hidden flex flex-wrap justify-center gap-2 md:gap-4">
+            <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
+            <button onclick="switchTab('workbench')" class="nav-btn nav-btn-mint">Commissions ♡</button>
+            <button onclick="switchTab('planner')" class="nav-btn nav-btn-pink">Planner ♡</button>
+            <button onclick="switchTab('inventory')" class="nav-btn nav-btn-mint">Stock ♡</button>
+            <button onclick="switchTab('pl')" class="nav-btn nav-btn-pink">P&L Sheet 📊</button>
+            <button onclick="switchTab('settings')" class="nav-btn nav-btn-mint">Settings ♡</button>
+            <button onclick="handleLogout()" class="nav-btn nav-btn-pink opacity-50 hover:opacity-100">Logout ⏻</button>
+        </div>
+    </div>
+</nav>
     <div id="loginGate" class="max-w-md mx-auto mt-20 p-10 glass-card text-center space-y-6">
         <h2 class="text-2xl font-black italic">Artist Entrance</h2>
         <div class="space-y-4">
@@ -282,12 +281,11 @@ async function renderWorkbench(showArchived = false) {
     }
 
     // --- DRAWER & PAYMENTS ---
- async function openDrawer(id) {
+async function openDrawer(id) {
     activeJobId = id;
     const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
     const content = document.getElementById('drawerContent');
     
-    // Original Balance Calculation Logic
     const payments = job.payments || [];
     const paidTotal = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
     const calculatedBalance = Math.max(0, (job.total_price || 0) - paidTotal);
@@ -297,25 +295,33 @@ async function renderWorkbench(showArchived = false) {
         <div class="space-y-10 pb-10">
             <section class="grid grid-cols-2 gap-8">
                 <div>
-                    <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Client Details</h3>
-                    <p class="text-sm font-bold text-gray-800">${job.customer_name || 'Anonymous'}</p>
+                    <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Order Info</h3>
+                    <p class="text-sm font-bold">${job.customer_name || 'Anonymous'}</p>
                     <p class="text-[11px] font-medium text-pink-500">${job.social_handle || '@none'}</p>
-                    <p class="text-[10px] text-gray-400 uppercase font-black mt-2">${job.doll_company} ${job.doll_sculpt}</p>
+                    <p class="text-[10px] text-gray-400 font-bold">${job.customer_email || 'No Email Registered'}</p>
+                    <p class="text-[10px] text-pink-400 font-black uppercase mt-1">${job.doll_company} ${job.doll_sculpt}</p>
                 </div>
-                ${['Enquiry', 'Quote'].includes(job.status) ? `
-<div class="mt-8 p-6 bg-red-50 rounded-[2rem] border border-red-100">
-    <h3 class="text-[10px] font-black uppercase text-red-400 mb-3">Studio Actions</h3>
-    <div class="flex gap-2">
-        <select id="rejectionReason" class="flex-1 p-3 border border-red-100 rounded-xl text-[10px] font-bold bg-white">
-            <option value="">Decline Reason (Optional)...</option>
-            <option value="fully_booked">Fully Booked / No Capacity</option>
-            <option value="complex_sculpt">Sculpt too complex for current style</option>
-            <option value="outside_niche">Request outside of studio niche</option>
-        </select>
-        <button onclick="handleDecline()" class="px-6 py-2 bg-red-500 text-white rounded-xl text-[10px] font-black uppercase">Decline Order</button>
-    </div>
-</div>` : ''}
+                <div>
+                    <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Global Workflow</h3>
+                    <select id="upStatus" class="w-full p-3 border border-pink-100 rounded-2xl text-xs font-bold bg-white shadow-sm">
+                        ${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped'].map(s => `<option value="${s}" ${job.status===s?'selected':''}>${s}</option>`).join('')}
+                    </select>
+                </div>
             </section>
+
+            ${['Enquiry', 'Quote'].includes(job.status) ? `
+            <div class="p-6 bg-red-50 rounded-[2rem] border border-red-100">
+                <h3 class="text-[10px] font-black uppercase text-red-400 mb-3">Decline Commission</h3>
+                <div class="flex gap-2">
+                    <select id="rejectionReason" class="flex-1 p-3 border border-red-100 rounded-xl text-[10px] font-bold bg-white">
+                        <option value="">Select decline reason...</option>
+                        <option value="fully_booked">Studio Fully Booked</option>
+                        <option value="complex_sculpt">Sculpt too complex</option>
+                        <option value="outside_niche">Outside of Niche</option>
+                    </select>
+                    <button onclick="handleDecline()" class="px-6 py-2 bg-red-500 text-white rounded-xl text-[10px] font-black uppercase">Decline ♡</button>
+                </div>
+            </div>` : ''}
 
             <div class="bg-pink-50/50 p-6 rounded-[3rem] border border-pink-100 space-y-4">
                 <div class="flex justify-between items-center">
@@ -327,7 +333,7 @@ async function renderWorkbench(showArchived = false) {
                     </select>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="isUrg" ${job.is_urgent ? 'checked' : ''} class="w-4 h-4 accent-red-500">
-                        <span class="text-[10px] font-black uppercase text-red-500">🚨 Urgent Priority</span>
+                        <span class="text-[10px] font-black uppercase text-red-500">🚨 Urgent</span>
                     </label>
                 </div>
 
@@ -338,75 +344,38 @@ async function renderWorkbench(showArchived = false) {
                             <input type="number" id="tPrice" oninput="updateBalanceLive(${paidTotal})" value="${job.total_price || 0}" class="w-full font-black text-lg outline-none bg-transparent">
                         </div>
                         <div class="bg-white p-4 rounded-2xl border border-pink-100">
-                            <p class="text-[9px] font-black text-gray-400 uppercase">Current Balance</p>
+                            <p class="text-[9px] font-black text-gray-400 uppercase">Balance Due</p>
                             <p id="balanceLabel" class="text-xl font-black ${displayBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${displayBalance.toFixed(2)}</p>
                         </div>
                     </div>
-                    <div id="tradeUI" class="${job.payment_method === 'Trade' ? '' : 'hidden'} grid grid-cols-2 gap-3 pt-3 border-t border-pink-100">
-    <label class="flex items-center gap-2 p-3 bg-white rounded-xl border border-pink-100 cursor-pointer">
-        <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-4 h-4 accent-blue-500">
-        <span class="text-[9px] font-black uppercase text-gray-500">Partner Shipped</span>
-    </label>
-    <label class="flex items-center gap-2 p-3 bg-white rounded-xl border border-pink-100 cursor-pointer">
-        <input type="checkbox" id="artistShipped" ${job.artist_shipped ? 'checked' : ''} class="w-4 h-4 accent-indigo-500">
-        <span class="text-[9px] font-black uppercase text-gray-500">Artist Shipped</span>
-    </label>
-</div>
-                    
                     <div id="pifUI" class="${job.payment_method === 'Paid in Full' ? '' : 'hidden'} flex items-center gap-2 px-2">
                         <input type="checkbox" id="isPaidCheck" onchange="updateBalanceLive(${paidTotal})" ${job.payment_status === 'Paid' ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
-                        <label class="text-[10px] font-black uppercase text-emerald-600">Mark Fully Settled</label>
-                    </div>
-
-                    <div id="layawayUI" class="${job.payment_method === 'Layaway' ? '' : 'hidden'} space-y-3 pt-3 border-t border-pink-100">
-                        <p class="text-[9px] font-black text-gray-400 uppercase">Payment Installments</p>
-                        <div id="paymentHistory" class="max-h-32 overflow-y-auto space-y-1">
-                            ${payments.map(p => `<div class="flex justify-between text-[10px] bg-white p-2 rounded-lg border border-pink-50"><span>${p.date}</span><span class="font-bold">£${p.amount}</span></div>`).join('')}
-                        </div>
-                        <div class="flex gap-2">
-                            <input type="number" id="newPayAmt" placeholder="Add Amount..." class="flex-1 p-2 rounded-xl text-xs border border-white">
-                            <button onclick="saveNewPayment()" class="bg-pink-500 text-white px-4 rounded-xl text-[10px] font-black uppercase">Add Payment</button>
-                        </div>
+                        <label class="text-[10px] font-black uppercase text-emerald-600">Mark as Paid</label>
                     </div>
                 </div>
             </div>
 
             <div class="space-y-6">
                 ${renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink')}
-                ${renderServiceBlock(job, 'eye', '👁️ Custom Eyes', 'blue')}
-                ${renderServiceBlock(job, 'manicure', '💅 Manicure', 'emerald')}
+                ${renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')}
+                ${renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')}
             </div>
 
-            <div class="p-6 bg-gray-100 rounded-[2rem] border border-gray-200">
-                <h4 class="text-[10px] font-black uppercase text-gray-400 mb-4">Postage & Shipping</h4>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[9px] font-black uppercase text-gray-500">Shipping Cost (£)</label>
-                        <input type="number" id="shipCost" value="${job.shipping_cost || 0}" class="w-full bg-white p-3 rounded-xl border border-gray-200 text-sm font-bold">
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-black uppercase text-gray-500">Tracking Reference</label>
-                        <input type="text" id="trackNum" value="${job.tracking_number || ''}" placeholder="Enter Code..." class="w-full bg-white p-3 rounded-xl border border-gray-200 text-sm font-bold">
-                    </div>
+            <div class="p-6 bg-gray-100 rounded-[2rem] border border-gray-200 grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[9px] font-black uppercase text-gray-500">Shipping (£)</label>
+                    <input type="number" id="shipCost" value="${job.shipping_cost || 0}" class="w-full bg-white p-3 rounded-xl border border-gray-200 text-sm font-bold">
                 </div>
-            </div>
-
-            <div class="mt-8 p-6 bg-red-50 rounded-[2rem] border border-red-100">
-                <h3 class="text-[10px] font-black uppercase text-red-400 mb-3">Studio Actions</h3>
-                <div class="flex gap-2">
-                    <select id="rejectionReason" class="flex-1 p-3 border border-red-100 rounded-xl text-[10px] font-bold bg-white">
-                        <option value="">Decline Reason (Optional)...</option>
-                        <option value="fully_booked">Fully Booked / No Capacity</option>
-                        <option value="complex_sculpt">Sculpt too complex for current style</option>
-                        <option value="outside_niche">Request outside of studio niche</option>
-                    </select>
-                    <button onclick="handleDecline()" class="px-6 py-2 bg-red-500 text-white rounded-xl text-[10px] font-black uppercase">Decline Order</button>
+                <div>
+                    <label class="text-[9px] font-black uppercase text-gray-500">Tracking #</label>
+                    <input type="text" id="trackNum" value="${job.tracking_number || ''}" placeholder="Tracking Code" class="w-full bg-white p-3 rounded-xl border border-gray-200 text-sm font-bold">
                 </div>
             </div>
         </div>`;
     document.getElementById('detailDrawer').classList.remove('translate-x-full');
-}
-function renderServiceBlock(job, key, title, color) {
+    }
+    
+    function renderServiceBlock(job, key, title, color) {
     const data = job[`${key}_details`];
     if (!data) return '';
     return `
@@ -471,6 +440,12 @@ document.getElementById('saveBtn').onclick = async () => {
         btn.disabled = false;
     }
 };    
+    function closeDrawer() {
+    const drawer = document.getElementById('detailDrawer');
+    drawer.classList.add('translate-x-full');
+    // Optional: Refresh the list when closing to show any saved changes
+    renderWorkbench(); 
+}
     
     // --- ACCESSIBILITY ---
     const ComfortSettings = {
@@ -481,11 +456,76 @@ document.getElementById('saveBtn').onclick = async () => {
         }
     };
 
-    // --- INVENTORY & P&L (STUBS) ---
-    async function renderInventory() { /* Restoration of Part 1 logic for tables */ }
-    async function renderPL() { /* Restoration of Chart and monthly cards */ }
-    async function renderSettings() { /* Restoration of Studio Status buttons */ }
-
+   async function renderInventory() {
+    const container = document.getElementById('view-inventory');
+    const { data: items } = await _supabase.from('inventory').select('*').order('category');
+    
+    container.innerHTML = `
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-black italic">Studio Stock</h2>
+            <button onclick="addItem()" class="nav-btn nav-btn-pink">Add Item +</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            ${items?.map(item => `
+                <div class="glass-card p-6 border ${item.stock_level <= item.reorder_point ? 'border-red-200 bg-red-50/20' : 'border-pink-50'}">
+                    <p class="text-[10px] font-black uppercase text-gray-400">${item.category}</p>
+                    <h4 class="font-bold text-lg">${item.item_name}</h4>
+                    <div class="mt-4 flex justify-between items-end">
+                        <span class="text-2xl font-black ${item.stock_level <= item.reorder_point ? 'text-red-500' : 'text-pink-500'}">${item.stock_level}</span>
+                        <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 rounded-full bg-pink-100 text-pink-600 font-bold">+</button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>`;
+}
+    async function renderPL() {
+    const container = document.getElementById('view-pl');
+    const { data: jobs } = await _supabase.from('commissions').select('*').eq('payment_status', 'Paid');
+    
+    const totalRev = jobs?.reduce((sum, j) => sum + (j.total_price || 0), 0) || 0;
+    
+    container.innerHTML = `
+        <div class="mb-8">
+            <h2 class="text-3xl font-black italic">Financial Overview</h2>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Settled Revenue</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card p-10 bg-gradient-to-br from-pink-500 to-rose-400 text-white">
+                <p class="text-xs font-black uppercase opacity-80">Total Revenue (All Time)</p>
+                <h3 class="text-5xl font-black mt-2">£${totalRev.toLocaleString()}</h3>
+            </div>
+            <div class="glass-card p-8 bg-white border border-pink-50">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>`;
+    
+    // Initialize chart if needed
+    const ctx = document.getElementById('revenueChart')?.getContext('2d');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr'], // This would be dynamic in full OG
+                datasets: [{ label: 'Revenue', data: [400, 700, 550, 900], borderColor: '#f43f5e', tension: 0.4 }]
+            }
+        });
+    }
+}
+    async function renderSettings() {
+    const container = document.getElementById('view-settings');
+    container.innerHTML = `
+        <div class="max-w-2xl space-y-8">
+            <h2 class="text-3xl font-black italic">Studio Settings</h2>
+            <div class="glass-card p-8 space-y-6 bg-white border border-pink-50">
+                <h4 class="font-black text-xs uppercase text-gray-400">Faceup Commission Status</h4>
+                <div class="flex gap-4">
+                    <button onclick="updateStudioStatus('open')" class="flex-1 py-4 rounded-2xl font-black uppercase text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100">Open</button>
+                    <button onclick="updateStudioStatus('closed')" class="flex-1 py-4 rounded-2xl font-black uppercase text-[10px] bg-red-50 text-red-600 border border-red-100">Closed</button>
+                </div>
+            </div>
+        </div>`;
+}
+    
 </script>
 </body>
 </html>
