@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -6,17 +8,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style type="text/tailwindcss">
-        @layer components {
-            /* 1. YOUR SITE-WIDE NAVIGATION (COPIED EXACTLY) */
-            .nav-btn { @apply px-5 py-2 rounded-full font-bold text-sm transition-all cursor-pointer inline-block; }
-            .nav-btn-pink { @apply bg-pink-50 text-pink-500 hover:bg-pink-100; }
-            .nav-btn-mint { @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; }
+             @layer components {
+            .nav-btn { 
+                @apply px-5 py-2 rounded-full font-bold text-sm transition-all cursor-pointer inline-block; 
+            }
+            .nav-btn-pink { 
+                @apply bg-pink-50 text-pink-500 hover:bg-pink-100; 
+            }
+            .nav-btn-mint { 
+                @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; 
+            }
 
-            /* 2. ADMIN-SPECIFIC STYLING */
+            /* Admin Specifics that don't break the buttons */
             .auth-hidden { @apply hidden !important; }
             
             .glass-card { 
@@ -25,25 +31,22 @@
                 @apply rounded-[2rem] border border-pink-100/20; 
             }
 
-            .comm-card { 
-                @apply border border-[#fff5f7] transition-all duration-300;
-            }
-            .comm-card:hover { 
-                @apply translate-x-2 border-[#fce7f3] shadow-lg shadow-rose-500/5;
-            }
-
-            .bounce-bunny { @apply inline-block; animation: bounce 2s infinite; }
-            @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
-            /* Image Enlargement logic */
             .img-enlarge { 
                 @apply fixed inset-0 z-[200] w-full h-full object-contain bg-black/90 cursor-zoom-out p-5;
             }
-
-            /* Clean up number inputs */
-            input::-webkit-outer-spin-button, 
-            input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         }
+
+        /* Essential animation from your index.html */
+        @keyframes pulse-custom {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0; }
+        }
+        .animate-pulse-custom {
+            animation: pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .bounce-bunny { display: inline-block; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
     </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
