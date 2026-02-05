@@ -12,6 +12,26 @@
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-radius: 2rem; border: 1px solid rgba(255, 192, 203, 0.2); }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div id="view-pl" class="hidden space-y-6 animate-fadeIn pb-20">
+    <div class="glass-card p-8 flex justify-between items-center bg-white/50">
+        <div>
+            <h2 class="text-3xl font-black italic">P&L Sheet</h2>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Studio Financial Health ♡</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="addManualIncome()" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-lg hover:scale-105 transition-all">+ Event Sale</button>
+            <button onclick="addExpenseUI()" class="bg-rose-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-lg hover:scale-105 transition-all">+ Add Expense</button>
+        </div>
+    </div>
+
+    <div class="glass-card p-6 bg-white h-64 shadow-sm">
+        <canvas id="businessChart"></canvas>
+    </div>
+
+    <div id="plContent" class="space-y-6"></div>
+</div>
 </head>
 <body class="bg-[#fdfbfb]">
 
@@ -26,6 +46,7 @@
                 <button onclick="switchTab('planner')" class="nav-btn nav-btn-pink">Planner ♡</button>
                 <button onclick="switchTab('inventory')" class="nav-btn nav-btn-mint">Stock ♡</button>
                 <button onclick="switchTab('settings')" class="nav-btn nav-btn-pink">Settings ♡</button>
+                <button onclick="switchTab('pl')" class="nav-btn nav-btn-pink">P&L Sheet 📊</button>
                 <button onclick="handleLogout()" class="nav-btn bg-gray-100 text-gray-500 border-none hover:bg-red-50 hover:text-red-400 transition-colors">Logout ⏻</button>
             </div>
         </div>
@@ -169,6 +190,19 @@
         <h2 class="text-3xl font-black italic mb-8">Studio Status Controls</h2>
         <div id="services-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </div>
+       <div id="view-pl" class="hidden space-y-6 animate-fadeIn pb-20">
+    <div class="glass-card p-8 flex justify-between items-center">
+        <div>
+            <h2 class="text-3xl font-black italic">P&L Sheet</h2>
+            <p id="taxYearSummary" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Financial Performance</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="addManualIncome()" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">+ Event Sale</button>
+            <button onclick="addExpenseUI()" class="bg-rose-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">+ Add Expense</button>
+        </div>
+    </div>
+    <div id="plContent" class="space-y-6"></div>
+</div>
 </main>
 
 <div id="detailDrawer" class="fixed inset-y-0 right-0 w-full md:w-[650px] bg-white z-[100] transform translate-x-full transition-transform duration-500 border-l border-pink-100 flex flex-col shadow-2xl">
@@ -451,6 +485,19 @@
                             ${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped'].map(s => `<option value="${s}" ${job.status===s?'selected':''}>${s}</option>`).join('')}
                         </select>
                     </div>
+                    <div class="mt-4 p-4 bg-red-50 rounded-2xl border border-red-100">
+    <h3 class="text-[9px] font-black uppercase text-red-400 mb-2">Decline Commission</h3>
+    <div class="flex gap-2">
+        <select id="rejectionReason" class="flex-1 p-2 border border-red-100 rounded-xl text-[10px] font-bold bg-white">
+            <option value="">Select a reason...</option>
+            <option value="fully_booked">Fully Booked / No Capacity</option>
+            <option value="complex_sculpt">Sculpt too complex for current style</option>
+            <option value="outside_niche">Request outside of studio niche</option>
+            <option value="safety_risk">Material/Safety Risk</option>
+        </select>
+        <button onclick="handleDecline()" class="px-4 py-2 bg-red-500 text-white rounded-xl text-[10px] font-black uppercase shadow-sm">Decline ♡</button>
+    </div>
+</div>
                 </section>
 
                 <section class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
@@ -595,6 +642,16 @@ function updateBalanceLive(paid = 0) {
             closeDrawer(); renderWorkbench();
         }
     }
+    <div class="grid grid-cols-2 gap-4 mt-4">
+    <div class="bg-white p-4 rounded-2xl border border-pink-100">
+        <label class="text-[9px] font-black uppercase text-gray-400">Shipping Cost (£)</label>
+        <input type="number" id="shipCost" value="${job.shipping_cost || 0}" class="w-full font-black text-lg outline-none bg-transparent">
+    </div>
+    <div class="bg-white p-4 rounded-2xl border border-pink-100">
+        <label class="text-[9px] font-black uppercase text-gray-400">Tracking Number</label>
+        <input type="text" id="trackNum" value="${job.tracking_number || ''}" class="w-full font-black text-xs outline-none bg-transparent placeholder-gray-200" placeholder="Paste tracking code...">
+    </div>
+</div>
 
     document.getElementById('saveBtn').onclick = async () => {
     const btn = document.getElementById('saveBtn');
@@ -648,6 +705,223 @@ function updateBalanceLive(paid = 0) {
         btn.disabled = false;
     }
 };
+    async function handleDecline() {
+    const reason = document.getElementById('rejectionReason').value;
+    if (!reason) return alert("Please select a reason first!");
+    
+    if (confirm("Are you sure? This will decline the order and draft an email.")) {
+        const { error } = await _supabase.from('commissions')
+            .update({ 
+                status: 'Rejected', 
+                rejection_reason: reason,
+                archived: true 
+            })
+            .eq('id', activeJobId);
+
+        if (!error) {
+            // Preset Email Templates
+            const templates = {
+                fully_booked: "Unfortunately, the studio is currently at full capacity and cannot take on new orders at this time.",
+                complex_sculpt: "Due to the unique nature of this sculpt, I don't feel I could give it the best possible finish within my current style.",
+                outside_niche: "This request falls slightly outside of the studio's current artistic focus."
+            };
+
+            const body = `Hi ${activeJobName},\n\nThank you for reaching out! ${templates[reason] || "I am unable to fulfill this request at this time."}\n\nBest, HanafubukiDoll`;
+            window.location.href = `mailto:${activeJobEmail}?subject=Regarding your commission enquiry&body=${encodeURIComponent(body)}`;
+            
+            closeDrawer();
+            renderWorkbench();
+        }
+    }
+}
+   let studioChart = null;
+
+    async function renderPL() {
+        const container = document.getElementById('plContent');
+        
+        // 1. Fetch Income (Paid) and Expenses
+        const { data: income } = await _supabase.from('commissions').select('*').eq('payment_status', 'Paid');
+        const { data: expenses } = await _supabase.from('studio_expenses').select('*').order('date', { ascending: false });
+
+        const monthlyData = {};
+        let totalGross = 0;
+        let totalCosts = 0;
+
+        // Process Income
+        income?.forEach(item => {
+            const d = new Date(item.created_at);
+            const key = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+            if (!monthlyData[key]) monthlyData[key] = { income: 0, expenses: 0, rawDate: d, items: [] };
+            const amt = (item.total_price || 0) + (item.shipping_cost || 0);
+            monthlyData[key].income += amt;
+            totalGross += amt;
+        });
+
+        // Process Expenses
+        expenses?.forEach(item => {
+            const d = new Date(item.date);
+            const key = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+            if (!monthlyData[key]) monthlyData[key] = { income: 0, expenses: 0, rawDate: d, items: [] };
+            monthlyData[key].expenses += (item.amount || 0);
+            monthlyData[key].items.push(item);
+            totalCosts += (item.amount || 0);
+        });
+
+        const netProfit = totalGross - totalCosts;
+        const isProfitable = netProfit > 0;
+
+        // 2. Summary Dashboard
+        const summaryHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="glass-card p-6 border-2 ${isProfitable ? 'border-emerald-100 bg-emerald-50/20' : 'border-rose-100 bg-rose-50/20'}">
+                    <p class="text-[10px] font-black uppercase text-gray-400">Business Status</p>
+                    <h3 class="text-xl font-black ${isProfitable ? 'text-emerald-600' : 'text-rose-600'}">
+                        ${isProfitable ? 'PROFITABLE ✨' : 'LOSS ⚠️'}
+                    </h3>
+                </div>
+                <div class="glass-card p-6 bg-white">
+                    <p class="text-[10px] font-black uppercase text-gray-400">Total Net Profit</p>
+                    <h3 class="text-xl font-black text-gray-800">£${netProfit.toFixed(2)}</h3>
+                </div>
+                <div class="glass-card p-6 bg-white">
+                    <p class="text-[10px] font-black uppercase text-gray-400">Expense Ratio</p>
+                    <h3 class="text-xl font-black text-gray-800">${((totalCosts / (totalGross || 1)) * 100).toFixed(1)}%</h3>
+                </div>
+            </div>
+        `;
+
+        // 3. Monthly Cards
+        const sortedMonths = Object.entries(monthlyData).sort((a, b) => b[1].rawDate - a[1].rawDate);
+        const monthCards = sortedMonths.map(([month, data]) => `
+            <div class="bg-white p-6 rounded-[2.5rem] border border-pink-50 shadow-sm">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-black text-xl italic">${month}</h3>
+                    <div class="text-right">
+                        <p class="text-[9px] font-black text-gray-400 uppercase">Profit</p>
+                        <p class="text-lg font-black ${data.income - data.expenses >= 0 ? 'text-emerald-500' : 'text-rose-500'}">
+                            £${(data.income - data.expenses).toFixed(2)}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="space-y-2 mb-4">
+                    ${data.items.map(exp => `
+                        <div class="flex justify-between items-center text-[10px] p-2 bg-gray-50/50 rounded-xl">
+                            <span class="font-bold text-gray-500 uppercase">${exp.category}: ${exp.description || ''}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="font-black">£${exp.amount.toFixed(2)}</span>
+                                ${exp.receipt_url ? `<button onclick="window.open('${exp.receipt_url}')" class="text-pink-400 font-bold">View 📷</button>` : ''}
+                                <button onclick="deleteExpense('${exp.id}')" class="text-gray-300 hover:text-red-400">×</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 border-t pt-4">
+                    <p class="text-[10px] font-black text-emerald-500">IN: £${data.income.toFixed(2)}</p>
+                    <p class="text-[10px] font-black text-rose-500">OUT: £${data.expenses.toFixed(2)}</p>
+                </div>
+            </div>
+        `).join('');
+
+        container.innerHTML = summaryHTML + monthCards;
+        initChart(sortedMonths.reverse());
+    }
+
+    function initChart(data) {
+        const ctx = document.getElementById('businessChart').getContext('2d');
+        if (studioChart) studioChart.destroy();
+
+        studioChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(d => d[0]),
+                datasets: [{
+                    label: 'Income',
+                    data: data.map(d => d[1].income),
+                    borderColor: '#10b981',
+                    tension: 0.4,
+                    fill: false
+                }, {
+                    label: 'Expenses',
+                    data: data.map(d => d[1].expenses),
+                    borderColor: '#f43f5e',
+                    tension: 0.4,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+            }
+        });
+    }
+
+    // --- EXPENSE ACTIONS ---
+    async function addExpenseUI() {
+        const amount = prompt("Amount (£):");
+        if (!amount || isNaN(amount)) return;
+        const cat = prompt("Category (Materials, Shipping, Fees, Studio, Travel):");
+        const desc = prompt("Description:");
+        
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            let receiptUrl = null;
+
+            if (file) {
+                const path = `receipts/${Date.now()}_${file.name}`;
+                const { error } = await _supabase.storage.from('receipts').upload(path, file);
+                if (!error) {
+                    const { data } = _supabase.storage.from('receipts').getPublicUrl(path);
+                    receiptUrl = data.publicUrl;
+                }
+            }
+
+            await _supabase.from('studio_expenses').insert([{
+                amount: parseFloat(amount),
+                category: cat,
+                description: desc,
+                receipt_url: receiptUrl,
+                date: new Date().toISOString()
+            }]);
+            renderPL();
+        };
+        fileInput.click();
+    }
+
+    async function deleteExpense(id) {
+        if (confirm("Delete this expense record?")) {
+            await _supabase.from('studio_expenses').delete().eq('id', id);
+            renderPL();
+        }
+    }
+    function exportTaxData() {
+    _supabase.from('commissions').select('*').eq('payment_status', 'Paid').then(({ data: income }) => {
+        let csv = "Date,Type,Description,Amount\n";
+        
+        // Add Income
+        income.forEach(i => {
+            csv += `${i.created_at},Income,${i.client_name} - ${i.doll_sculpt},${(i.total_price + i.shipping_cost).toFixed(2)}\n`;
+        });
+
+        // Trigger Download
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `Hanafubuki_Tax_Data_${new Date().getFullYear()}.csv`);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    });
+}
 </script>
   <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
     
