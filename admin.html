@@ -601,7 +601,6 @@ function updateBalanceLive(paid = 0) {
         }
     }
 
-    // --- SAVE ALL CHANGES ---
     document.getElementById('saveBtn').onclick = async () => {
     const btn = document.getElementById('saveBtn');
     const originalText = btn.innerText;
@@ -609,20 +608,30 @@ function updateBalanceLive(paid = 0) {
     btn.disabled = true;
 
     try {
-        // Get fresh current state to avoid overwriting details
-        const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+        // 1. Get current data to prevent overwriting service details
+        const { data: job, error: fetchError } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+        if (fetchError) throw fetchError;
 
+        const payType = document.getElementById('payType').value;
+
+        // 2. Build the base update object
         const updates = {
             status: document.getElementById('upStatus').value,
-            payment_method: document.getElementById('payType').value,
+            payment_method: payType,
             total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
             is_urgent: document.getElementById('isUrg').checked,
-            is_paid: document.getElementById('isPaidCheck')?.checked || false,
-            partner_shipped: document.getElementById('partnerShipped')?.checked || false,
-            artist_shipped: document.getElementById('artistShipped')?.checked || false
         };
 
-        // Safely update nested objects only if they exist
+        // 3. ONLY add columns that exist for specific payment types to avoid schema errors
+        if (payType === 'Paid in Full') {
+            updates.is_paid = document.getElementById('isPaidCheck').checked;
+        } else if (payType === 'Trade') {
+            // These columns only update if they exist in your DB schema
+            updates.partner_shipped = document.getElementById('partnerShipped').checked;
+            updates.artist_shipped = document.getElementById('artistShipped').checked;
+        }
+
+        // 4. Safely update service details only if they were part of the original order
         if (job.faceup_details) {
             updates.faceup_details = { 
                 ...job.faceup_details, 
@@ -634,20 +643,20 @@ function updateBalanceLive(paid = 0) {
             updates.eye_details = { 
                 ...job.eye_details, 
                 status: document.getElementById('eyeStatus').value, 
-                admin_notes: document.getElementById('eAdmin').value 
+                admin_notes: document.getElementById('eAdmin')?.value || '' 
             };
         }
         if (job.manicure_details) {
             updates.manicure_details = { 
                 ...job.manicure_details, 
                 status: document.getElementById('maniStatus').value, 
-                admin_notes: document.getElementById('mAdmin').value 
+                admin_notes: document.getElementById('mAdmin')?.value || '' 
             };
         }
 
-        const { error } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
-        
-        if (error) throw error;
+        // 5. Push to Supabase
+        const { error: saveError } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
+        if (saveError) throw saveError;
 
         btn.innerText = "Saved! ♡";
         setTimeout(() => { 
