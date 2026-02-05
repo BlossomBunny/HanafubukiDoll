@@ -485,28 +485,104 @@ document.getElementById('saveBtn').onclick = async () => {
         }
     };
 
-   async function renderInventory() {
+async function renderInventory() {
     const container = document.getElementById('view-inventory');
-    const { data: items } = await _supabase.from('inventory').select('*').order('category');
-    
-    container.innerHTML = `
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-3xl font-black italic">Studio Stock</h2>
-            <button onclick="addItem()" class="nav-btn nav-btn-pink">Add Item +</button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            ${items?.map(item => `
-                <div class="glass-card p-6 border ${item.stock_level <= item.reorder_point ? 'border-red-200 bg-red-50/20' : 'border-pink-50'}">
-                    <p class="text-[10px] font-black uppercase text-gray-400">${item.category}</p>
-                    <h4 class="font-bold text-lg">${item.item_name}</h4>
-                    <div class="mt-4 flex justify-between items-end">
-                        <span class="text-2xl font-black ${item.stock_level <= item.reorder_point ? 'text-red-500' : 'text-pink-500'}">${item.stock_level}</span>
-                        <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 rounded-full bg-pink-100 text-pink-600 font-bold">+</button>
+    container.innerHTML = `<div class="flex justify-center py-12"><div class="animate-spin text-3xl">🌸</div></div>`;
+
+    try {
+        const { data: items, error } = await _supabase.from('inventory').select('*').order('category');
+        if (error) throw error;
+
+        container.innerHTML = `
+            <div class="max-w-5xl mx-auto space-y-8 animate-fadeIn">
+                <div class="flex justify-between items-end">
+                    <div>
+                        <h2 class="text-3xl font-black italic tracking-tighter">Studio Stock ♡</h2>
+                        <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Inventory Management</p>
                     </div>
+                    <button onclick="addNewStockItem()" class="nav-btn nav-btn-pink">+ Add New Product</button>
                 </div>
-            `).join('')}
-        </div>`;
+
+                <div class="glass-card overflow-hidden border border-pink-50">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-pink-50/50">
+                            <tr>
+                                <th class="p-5 text-[10px] font-black uppercase text-pink-500">Product</th>
+                                <th class="p-5 text-[10px] font-black uppercase text-pink-500">Category</th>
+                                <th class="p-5 text-[10px] font-black uppercase text-pink-500">Stock Level</th>
+                                <th class="p-5 text-[10px] font-black uppercase text-pink-500 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-pink-50">
+                            ${items.map(item => `
+                                <tr class="hover:bg-white/50 transition-colors">
+                                    <td class="p-5">
+                                        <p class="text-sm font-bold text-gray-800">${item.name}</p>
+                                        <p class="text-[9px] text-gray-400 font-medium">${item.sku || 'No SKU'}</p>
+                                    </td>
+                                    <td class="p-5">
+                                        <span class="px-3 py-1 bg-gray-100 rounded-full text-[9px] font-black uppercase text-gray-500">${item.category}</span>
+                                    </td>
+                                    <td class="p-5">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-sm font-black ${item.quantity < 3 ? 'text-rose-500' : 'text-gray-700'}">${item.quantity}</span>
+                                            ${item.quantity < 3 ? '<span class="text-[9px] font-black text-rose-400 animate-pulse">LOW</span>' : ''}
+                                        </div>
+                                    </td>
+                                    <td class="p-5 text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <button onclick="updateStock('${item.id}', -1)" class="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all">－</button>
+                                            <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-emerald-50 hover:text-emerald-500 transition-all">＋</button>
+                                            <button onclick="deleteStockItem('${item.id}')" class="ml-4 text-gray-300 hover:text-rose-500 transition-colors text-xs">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+    } catch (err) {
+        container.innerHTML = `<div class="p-8 text-center text-rose-500 font-bold">Failed to load stock: ${err.message}</div>`;
+    }
 }
+    // Quick +/- update for stock levels
+async function updateStock(id, change) {
+    try {
+        const { data: item } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
+        const newQty = Math.max(0, (item.quantity || 0) + change);
+        
+        await _supabase.from('inventory').update({ quantity: newQty }).eq('id', id);
+        renderInventory(); // Refresh the table
+    } catch (err) {
+        console.error("Stock Update Error:", err);
+    }
+}
+
+// Simple prompt to add a new item
+async function addNewStockItem() {
+    const name = prompt("Product Name:");
+    if (!name) return;
+    const category = prompt("Category (e.g., Lashes, Faceup, Tools):", "Misc");
+    const qty = parseInt(prompt("Starting Quantity:", "0"));
+
+    const { error } = await _supabase.from('inventory').insert([{ 
+        name, 
+        category, 
+        quantity: qty 
+    }]);
+
+    if (!error) renderInventory();
+}
+
+// Delete an item
+async function deleteStockItem(id) {
+    if (confirm("Permanently remove this product from stock?")) {
+        await _supabase.from('inventory').delete().eq('id', id);
+        renderInventory();
+    }
+}
+    
     async function renderPL() {
     const container = document.getElementById('view-pl');
     const { data: jobs } = await _supabase.from('commissions').select('*').eq('payment_status', 'Paid');
