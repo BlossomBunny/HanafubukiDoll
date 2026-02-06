@@ -68,7 +68,7 @@
     <button onclick="handleLogout()" class="nav-btn nav-btn-pink opacity-50 hover:opacity-100">Logout ⏻</button>
 </div>
 </nav>
-
+<main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
     <div id="view-summary" class="tab-content space-y-8 animate-fadeIn">
     <div class="px-4 flex justify-between items-end">
         <div>
@@ -227,8 +227,7 @@ _supabase.auth.onAuthStateChange((event, session) => {
         window.location.href = 'login.html'; 
     }
 });
-    <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10">
-       
+      
     async function handleLogout() {
     const { error } = await _supabase.auth.signOut();
     if (error) {
