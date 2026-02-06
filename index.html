@@ -38,6 +38,8 @@
 </div>
         </div>
     </nav>
+    <main class="max-w-6xl mx-auto px-4 py-12 relative z-10"> <div id="liveBanner" class="hidden px-4 mb-6 animate-fadeIn">
+            </div>
     </header>
     <div id="liveBanner" class="hidden px-4 mb-6 animate-fadeIn">
     <div class="max-w-xl mx-auto bg-white/60 backdrop-blur-md border border-pink-100 p-4 rounded-3xl shadow-sm flex items-center gap-4">
@@ -137,17 +139,16 @@
             container.appendChild(p);
         }
 
-    // --- Live Status & Banner Logic ---
+  // --- Live Status & Banner Logic ---
 async function updateHomeBlinkers() {
     try {
         const { data: settings, error } = await _supabase.from('studio_settings').select('*');
         if (error || !settings) return;
 
-        // 1. Separate Banner from Services
         const bannerData = settings.find(s => s.id === 'Banner');
         const services = settings.filter(s => s.id !== 'Banner');
 
-        // 2. Update the Card-Style Banner
+        // Update the Card-Style Banner
         const bannerEl = document.getElementById('liveBanner');
         const bannerTxt = document.getElementById('bannerText');
         if (bannerData && bannerData.is_live) {
@@ -157,7 +158,7 @@ async function updateHomeBlinkers() {
             bannerEl.classList.add('hidden');
         }
 
-        // 3. Update the Service Status Bar
+        // Update the Service Status Bar
         const barContainer = document.getElementById('service-status-bar');
         if (barContainer) {
             barContainer.innerHTML = services.map(service => {
@@ -175,8 +176,7 @@ async function updateHomeBlinkers() {
                         <span class="text-[10px] font-black uppercase tracking-widest text-gray-700">
                             ${service.id}: <span class="${isLive ? 'text-emerald-600' : 'text-amber-500'}">${label}</span>
                         </span>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
         }
     } catch (err) {
@@ -184,43 +184,25 @@ async function updateHomeBlinkers() {
     }
 }
 
-// --- Initialize & Listen for Live Updates ---
+// --- Single Initialization Point ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial fetch
     updateHomeBlinkers();
 
-    // Setup Realtime Channel
-    const statusSubscription = _supabase
-        .channel('studio-status-changes')
+    // Listen for any changes in studio_settings table
+    _supabase
+        .channel('studio-status-updates')
         .on('postgres_changes', { 
             event: '*', 
             schema: 'public', 
             table: 'studio_settings' 
-        }, (payload) => {
-            console.log('Studio status updated live! ♡');
+        }, () => {
+            console.log('Live Update Received! ♡');
             updateHomeBlinkers(); 
         })
         .subscribe();
 });
 
-// Safety fallback every minute
-setInterval(updateHomeBlinkers, 60000);
-    
- 
-    const statusSubscription = _supabase
-        .channel('studio-changes')
-        .on('postgres_changes', { 
-            event: '*', 
-            schema: 'public', 
-            table: 'studio_settings' 
-        }, (payload) => {
-            console.log('Update received! ♡');
-            updateHomeBlinkers(); 
-        })
-        .subscribe();
-});
-
-
+// Safety check every 60 seconds
 setInterval(updateHomeBlinkers, 60000);
         
     </script>
