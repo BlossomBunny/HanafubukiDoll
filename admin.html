@@ -257,22 +257,146 @@ _supabase.auth.onAuthStateChange((event, session) => {
     // --- NAVIGATION ---
 async function switchTab(tab) {
     localStorage.setItem('hana_active_tab', tab);
-    
-    ['view-summary', 'view-workbench', 'view-planner', 'view-inventory'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-    });
-
+   
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  
     const activeView = document.getElementById(`view-${tab}`);
     if (activeView) activeView.classList.remove('hidden');
-
-    if(tab === 'summary') renderSummary();
-    if(tab === 'workbench') renderWorkbench();
-    if(tab === 'planner') renderPlanner();
-    if(tab === 'inventory') renderInventory();
-}
    
-    // --- WORKBENCH LOGIC ---
+    if (tab === 'summary') renderSummary();
+    if (tab === 'workbench') renderWorkbench(); 
+    if (tab === 'planner') renderPlanner();     
+    if (tab === 'inventory') renderInventory(); 
+}
+let revenueChart = null;
+                                         // --- RENDERS FOR EACH TAB --- //
+// --- SUMMARY LOGIC --- //
+    async function renderSummary() {
+    try {
+        const { data: jobs } = await _supabase.from('commissions').select('*');
+        const { data: waitlist } = await _supabase.from('waitlist').select('*').order('created_at');
+        const { data: settings } = await _supabase.from('studio_settings').select('*');
+
+        if (!jobs) return;
+
+        // --- 1. STATS ---
+        const enq = jobs.filter(j => j.status === 'Enquiry').length;
+        const active = jobs.filter(j => ['Working', 'Approved', 'Arrived'].includes(j.status)).length;
+        const photo = jobs.filter(j => j.status === 'Photo').length; 
+        const totalBooked = jobs.reduce((s, j) => s + (Number(j.total_price) || 0), 0);
+        const totalPaid = jobs.filter(j => j.payment_status === 'Paid')
+                             .reduce((s, j) => s + (Number(j.total_price) || 0), 0);
+
+        if(document.getElementById('stat-enquiries')) document.getElementById('stat-enquiries').innerText = enq;
+        if(document.getElementById('stat-workbench')) document.getElementById('stat-workbench').innerText = active;
+        if(document.getElementById('stat-special')) document.getElementById('stat-special').innerText = photo;
+        if(document.getElementById('stat-revenue')) document.getElementById('stat-revenue').innerText = `£${totalBooked.toFixed(0)}`;
+        if(document.getElementById('stat-paid')) document.getElementById('stat-paid').innerText = `£${totalPaid.toFixed(0)}`;
+
+        // --- 2. PRIORITIES ---
+        const priorities = jobs.filter(j => !['Shipped', 'Enquiry'].includes(j.status))
+                               .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(0,4);
+        const prioContainer = document.getElementById('priority-list');
+        if(prioContainer) {
+            prioContainer.innerHTML = priorities.map(j => `
+                <div class="flex justify-between items-center p-3 bg-white rounded-xl border border-pink-50 shadow-sm">
+                    <span class="font-bold text-[11px] text-gray-700 uppercase">${j.social_handle || 'Client'}</span>
+                    <span class="text-[9px] px-3 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase">${j.status}</span>
+                </div>
+            `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
+        }
+
+        // --- 3. SETTINGS (Blinkers & Banner) ---
+        if (settings) {
+            const toggleContainer = document.getElementById('service-quick-toggles');
+            const servicesOnly = settings.filter(s => s.id !== 'Banner');
+            if (toggleContainer) {
+                toggleContainer.innerHTML = servicesOnly.map(s => `
+                    <button onclick="toggleServiceStatus('${s.id}', ${s.is_live})" 
+                        class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border shadow-sm
+                        ${s.is_live ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'}">
+                        ${s.id}: ${s.is_live ? 'OPEN ♡' : 'WAITLIST'}
+                    </button>
+                `).join('');
+            }
+
+            const bannerData = settings.find(s => s.id === 'Banner');
+            if (bannerData) {
+                const btn = document.getElementById('bannerToggleBtn');
+                const dot = btn?.querySelector('.dot');
+                const label = document.getElementById('bannerStatusLabel');
+                const input = document.getElementById('bannerMsgInput');
+                if (input && !input.matches(':focus')) input.value = bannerData.banner_text || "";
+                if (bannerData.is_live) {
+                    btn?.classList.replace('bg-gray-200', 'bg-pink-500');
+                    dot?.classList.add('translate-x-6');
+                    if(label) { label.innerText = "Banner Live ✨"; label.className = "text-[10px] font-black uppercase text-pink-500"; }
+                } else {
+                    btn?.classList.replace('bg-pink-500', 'bg-gray-200');
+                    dot?.classList.remove('translate-x-6');
+                    if(label) { label.innerText = "Banner Off"; label.className = "text-[10px] font-black uppercase text-gray-400"; }
+                }
+            }
+        }
+
+        // --- 4. REVENUE CHART ---
+        const chartCanvas = document.getElementById('revenueChart');
+        if(chartCanvas) {
+            const pending = totalBooked - totalPaid;
+            const ctx = chartCanvas.getContext('2d');
+            
+            if (revenueChart) revenueChart.destroy();
+            
+            revenueChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['PAID', 'PENDING'],
+                    datasets: [{
+                        data: [totalPaid, pending],
+                        backgroundColor: ['#34d399', '#f472b6'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false }, ticks: { font: { size: 8 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' } } }
+                    }
+                }
+            });
+        }
+
+        // --- 5. FULL WAITLIST TABLE ---
+        const waitlistTable = document.getElementById('waitlist-table-body');
+        if (waitlistTable && waitlist) {
+            waitlistTable.innerHTML = waitlist.length > 0 ? waitlist.map(entry => `
+                <tr class="hover:bg-amber-50/30 transition-colors">
+                    <td class="p-4 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${new Date(entry.created_at).toLocaleDateString('en-GB')}</td>
+                    <td class="p-4 text-sm font-black text-gray-700">${entry.email}</td>
+                    <td class="p-4">
+                        <span class="px-3 py-1 bg-amber-100 text-amber-600 rounded-full text-[9px] font-black uppercase">
+                            ${entry.service_requested || 'General Service'}
+                        </span>
+                    </td>
+                </tr>`).join('') : `<tr><td colspan="3" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase italic">Queue is clear! ✨</td></tr>`;
+        }
+    } catch (e) { console.error("Summary Error:", e); }
+}
+
+// --- 6. INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+    renderSummary();
+    _supabase.channel('admin-sync')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'studio_settings' }, renderSummary)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, renderSummary)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'waitlist' }, renderSummary)
+        .subscribe();
+});
+    
+    // --- WORKBENCH LOGIC --- //
 async function renderWorkbench(showArchived = false) {
     const container = document.getElementById('commissionList');
     const { data: jobs, error } = await _supabase.from('commissions')
@@ -331,7 +455,7 @@ async function renderWorkbench(showArchived = false) {
             </div>`;
     }).join('');
 }
-    // --- Planner Render) ---
+    // --- PLANNER LOGIC --- //
     async function renderPlanner() {
         const container = document.getElementById('plannerContainer');
         const inStudio = ['Arrived', 'Working', 'Approved', 'Photo'];
@@ -658,132 +782,6 @@ async function addNewStockItem() {
     if (!error) renderInventory();
     else alert("Error: " + error.message);
 }
-let revenueChart = null;
-
-async function renderSummary() {
-    try {
-        const { data: jobs } = await _supabase.from('commissions').select('*');
-        const { data: waitlist } = await _supabase.from('waitlist').select('*').order('created_at');
-        const { data: settings } = await _supabase.from('studio_settings').select('*');
-
-        if (!jobs) return;
-
-        // --- 1. STATS ---
-        const enq = jobs.filter(j => j.status === 'Enquiry').length;
-        const active = jobs.filter(j => ['Working', 'Approved', 'Arrived'].includes(j.status)).length;
-        const photo = jobs.filter(j => j.status === 'Photo').length; 
-        const totalBooked = jobs.reduce((s, j) => s + (Number(j.total_price) || 0), 0);
-        const totalPaid = jobs.filter(j => j.payment_status === 'Paid')
-                             .reduce((s, j) => s + (Number(j.total_price) || 0), 0);
-
-        if(document.getElementById('stat-enquiries')) document.getElementById('stat-enquiries').innerText = enq;
-        if(document.getElementById('stat-workbench')) document.getElementById('stat-workbench').innerText = active;
-        if(document.getElementById('stat-special')) document.getElementById('stat-special').innerText = photo;
-        if(document.getElementById('stat-revenue')) document.getElementById('stat-revenue').innerText = `£${totalBooked.toFixed(0)}`;
-        if(document.getElementById('stat-paid')) document.getElementById('stat-paid').innerText = `£${totalPaid.toFixed(0)}`;
-
-        // --- 2. PRIORITIES ---
-        const priorities = jobs.filter(j => !['Shipped', 'Enquiry'].includes(j.status))
-                               .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(0,4);
-        const prioContainer = document.getElementById('priority-list');
-        if(prioContainer) {
-            prioContainer.innerHTML = priorities.map(j => `
-                <div class="flex justify-between items-center p-3 bg-white rounded-xl border border-pink-50 shadow-sm">
-                    <span class="font-bold text-[11px] text-gray-700 uppercase">${j.social_handle || 'Client'}</span>
-                    <span class="text-[9px] px-3 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase">${j.status}</span>
-                </div>
-            `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
-        }
-
-        // --- 3. SETTINGS (Blinkers & Banner) ---
-        if (settings) {
-            const toggleContainer = document.getElementById('service-quick-toggles');
-            const servicesOnly = settings.filter(s => s.id !== 'Banner');
-            if (toggleContainer) {
-                toggleContainer.innerHTML = servicesOnly.map(s => `
-                    <button onclick="toggleServiceStatus('${s.id}', ${s.is_live})" 
-                        class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border shadow-sm
-                        ${s.is_live ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'}">
-                        ${s.id}: ${s.is_live ? 'OPEN ♡' : 'WAITLIST'}
-                    </button>
-                `).join('');
-            }
-
-            const bannerData = settings.find(s => s.id === 'Banner');
-            if (bannerData) {
-                const btn = document.getElementById('bannerToggleBtn');
-                const dot = btn?.querySelector('.dot');
-                const label = document.getElementById('bannerStatusLabel');
-                const input = document.getElementById('bannerMsgInput');
-                if (input && !input.matches(':focus')) input.value = bannerData.banner_text || "";
-                if (bannerData.is_live) {
-                    btn?.classList.replace('bg-gray-200', 'bg-pink-500');
-                    dot?.classList.add('translate-x-6');
-                    if(label) { label.innerText = "Banner Live ✨"; label.className = "text-[10px] font-black uppercase text-pink-500"; }
-                } else {
-                    btn?.classList.replace('bg-pink-500', 'bg-gray-200');
-                    dot?.classList.remove('translate-x-6');
-                    if(label) { label.innerText = "Banner Off"; label.className = "text-[10px] font-black uppercase text-gray-400"; }
-                }
-            }
-        }
-
-        // --- 4. REVENUE CHART ---
-        const chartCanvas = document.getElementById('revenueChart');
-        if(chartCanvas) {
-            const pending = totalBooked - totalPaid;
-            const ctx = chartCanvas.getContext('2d');
-            
-            if (revenueChart) revenueChart.destroy();
-            
-            revenueChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['PAID', 'PENDING'],
-                    datasets: [{
-                        data: [totalPaid, pending],
-                        backgroundColor: ['#34d399', '#f472b6'],
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { display: false }, ticks: { font: { size: 8 } } },
-                        x: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' } } }
-                    }
-                }
-            });
-        }
-
-        // --- 5. FULL WAITLIST TABLE ---
-        const waitlistTable = document.getElementById('waitlist-table-body');
-        if (waitlistTable && waitlist) {
-            waitlistTable.innerHTML = waitlist.length > 0 ? waitlist.map(entry => `
-                <tr class="hover:bg-amber-50/30 transition-colors">
-                    <td class="p-4 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${new Date(entry.created_at).toLocaleDateString('en-GB')}</td>
-                    <td class="p-4 text-sm font-black text-gray-700">${entry.email}</td>
-                    <td class="p-4">
-                        <span class="px-3 py-1 bg-amber-100 text-amber-600 rounded-full text-[9px] font-black uppercase">
-                            ${entry.service_requested || 'General Service'}
-                        </span>
-                    </td>
-                </tr>`).join('') : `<tr><td colspan="3" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase italic">Queue is clear! ✨</td></tr>`;
-        }
-    } catch (e) { console.error("Summary Error:", e); }
-}
-
-// --- 6. INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', () => {
-    renderSummary();
-    _supabase.channel('admin-sync')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'studio_settings' }, renderSummary)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, renderSummary)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'waitlist' }, renderSummary)
-        .subscribe();
-});
 
 function closeDrawer() {
     const drawer = document.getElementById('editDrawer');
