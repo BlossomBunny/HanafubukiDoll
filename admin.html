@@ -151,22 +151,21 @@
     let studioChart = null;
 
     // --- AUTH & INITIALIZATION ---
-    _supabase.auth.onAuthStateChange((event, session) => {
-        const loginGate = document.getElementById('loginGate');
-        const adminNav = document.getElementById('adminNav');
-        const adminMain = document.getElementById('adminMain');
-        if (session) {
-            loginGate.classList.add('hidden');
-            adminNav.classList.remove('auth-hidden');
-            adminMain.classList.remove('auth-hidden');
-            const lastTab = localStorage.getItem('hana_active_tab') || 'workbench';
-            switchTab(lastTab);
-        } else {
-            loginGate.classList.remove('hidden');
-            adminNav.classList.add('auth-hidden');
-            adminMain.classList.add('auth-hidden');
-        }
-    });
+_supabase.auth.onAuthStateChange((event, session) => {
+    const loginGate = document.getElementById('loginGate');
+    const adminNav = document.getElementById('adminNav');
+    const adminMain = document.getElementById('adminMain');
+
+    if (session) {
+        loginGate.classList.add('hidden');
+        adminNav.classList.remove('auth-hidden');
+        adminMain.classList.remove('auth-hidden');
+        const lastTab = localStorage.getItem('hana_active_tab') || 'workbench';
+        switchTab(lastTab);
+    } else {
+             window.location.href = 'index.html';
+    }
+});
 
     async function handleLogin() {
         const email = document.getElementById('adminEmail').value;
