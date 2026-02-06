@@ -255,26 +255,19 @@ _supabase.auth.onAuthStateChange((event, session) => {
   
     // --- NAVIGATION ---
 async function switchTab(tab) {
-    // 1. Save preference so it remembers where you were on refresh
     localStorage.setItem('hana_active_tab', tab);
     
-    // 2. Hide ALL tab content sections
-    document.querySelectorAll('.tab-content').forEach(el => {
-        el.classList.add('hidden');
-    });
-
-    // 3. Show the target tab
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     const activeView = document.getElementById(`view-${tab}`);
-    if (activeView) {
-        activeView.classList.remove('hidden');
-    }
+    if (activeView) activeView.classList.remove('hidden');
 
-    // 4. THE DATA TRIGGER: Wake up the specific render functions
-    if (tab === 'summary') renderSummary();
-    if (tab === 'workbench') renderWorkbench(); // Fetches commissions
-    if (tab === 'planner') renderPlanner();     // Fetches prioritized list
-    if (tab === 'inventory') renderInventory(); // Fetches stock
+    // Always call render with sane defaults
+    if (tab === 'summary')    await renderSummary();
+    if (tab === 'workbench')  await renderWorkbench(false);       // ← add false explicitly
+    if (tab === 'planner')    await renderPlanner();
+    if (tab === 'inventory')  await renderInventory();
 }
+    
 let revenueChart = null;
                                          // --- RENDERS FOR EACH TAB --- //
 // --- SUMMARY LOGIC --- //
