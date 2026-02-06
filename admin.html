@@ -255,17 +255,25 @@ _supabase.auth.onAuthStateChange((event, session) => {
   
     // --- NAVIGATION ---
 async function switchTab(tab) {
+    // 1. Save preference so it remembers where you were on refresh
     localStorage.setItem('hana_active_tab', tab);
-   
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-  
+    
+    // 2. Hide ALL tab content sections
+    document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.add('hidden');
+    });
+
+    // 3. Show the target tab
     const activeView = document.getElementById(`view-${tab}`);
-    if (activeView) activeView.classList.remove('hidden');
-   
+    if (activeView) {
+        activeView.classList.remove('hidden');
+    }
+
+    // 4. THE DATA TRIGGER: Wake up the specific render functions
     if (tab === 'summary') renderSummary();
-    if (tab === 'workbench') renderWorkbench(); 
-    if (tab === 'planner') renderPlanner();     
-    if (tab === 'inventory') renderInventory(); 
+    if (tab === 'workbench') renderWorkbench(); // Fetches commissions
+    if (tab === 'planner') renderPlanner();     // Fetches prioritized list
+    if (tab === 'inventory') renderInventory(); // Fetches stock
 }
 let revenueChart = null;
                                          // --- RENDERS FOR EACH TAB --- //
@@ -387,11 +395,21 @@ let revenueChart = null;
 
 // --- 6. INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    renderSummary();
-    _supabase.channel('admin-sync')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'studio_settings' }, renderSummary)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, renderSummary)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'waitlist' }, renderSummary)
+    // Check which tab was used last, or default to summary
+    const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
+    switchTab(lastTab);
+
+    // Setup Realtime Sync for all tables
+    _supabase.channel('admin-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, () => {
+             // Only re-render if we are actually looking at those tabs
+             const current = localStorage.getItem('hana_active_tab');
+             if(current === 'summary') renderSummary();
+             if(current === 'workbench') renderWorkbench();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => {
+             if(localStorage.getItem('hana_active_tab') === 'inventory') renderInventory();
+        })
         .subscribe();
 });
     
