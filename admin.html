@@ -626,64 +626,27 @@ async function addNewStockItem() {
 
 async function renderSummary() {
     try {
-        const { data: jobs, error: jobErr } = await _supabase.from('commissions').select('*');
+        const { data: jobs } = await _supabase.from('commissions').select('*');
         const { data: waitlist } = await _supabase.from('waitlist').select('*').order('created_at');
         const { data: settings } = await _supabase.from('studio_settings').select('*');
 
-        if (jobErr || !jobs) return;
+        if (!jobs) return;
 
-        // 1. Calculations
+        // --- 1. STATS ---
         const enq = jobs.filter(j => j.status === 'Enquiry').length;
-        const active = jobs.filter(j => ['Working', 'Approved'].includes(j.status)).length;
+        const active = jobs.filter(j => ['Working', 'Approved', 'Arrived'].includes(j.status)).length;
         const photo = jobs.filter(j => j.status === 'Photo').length; 
         const totalBooked = jobs.reduce((s, j) => s + (Number(j.total_price) || 0), 0);
-        
-        // Calculate Total Paid (only commissions marked as 'Paid')
         const totalPaid = jobs.filter(j => j.payment_status === 'Paid')
                               .reduce((s, j) => s + (Number(j.total_price) || 0), 0);
 
-        // 2. Update Stats
-        document.getElementById('stat-enquiries').innerText = enq;
-        document.getElementById('stat-workbench').innerText = active;
-        document.getElementById('stat-special').innerText = photo;
-        document.getElementById('stat-revenue').innerText = `£${totalBooked.toFixed(0)}`;
-        document.getElementById('stat-paid').innerText = `£${totalPaid.toFixed(0)}`;
+        if(document.getElementById('stat-enquiries')) document.getElementById('stat-enquiries').innerText = enq;
+        if(document.getElementById('stat-workbench')) document.getElementById('stat-workbench').innerText = active;
+        if(document.getElementById('stat-special')) document.getElementById('stat-special').innerText = photo;
+        if(document.getElementById('stat-revenue')) document.getElementById('stat-revenue').innerText = `£${totalBooked.toFixed(0)}`;
+        if(document.getElementById('stat-paid')) document.getElementById('stat-paid').innerText = `£${totalPaid.toFixed(0)}`;
 
-        // 3. Service & Banner Toggles (Synced with Home Blinkers)
-        if (settings) {
-            const toggleContainer = document.getElementById('service-quick-toggles');
-            const servicesOnly = settings.filter(s => s.id !== 'Banner');
-            if (toggleContainer) {
-                toggleContainer.innerHTML = servicesOnly.map(s => `
-                    <button onclick="toggleServiceStatus('${s.id}', ${s.is_live})" 
-                        class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border shadow-sm
-                        ${s.is_live ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'}">
-                        ${s.id}: ${s.is_live ? 'OPEN ♡' : 'WAITLIST'}
-                    </button>
-                `).join('');
-            }
-
-            const bannerData = settings.find(s => s.id === 'Banner');
-            if (bannerData) {
-                const btn = document.getElementById('bannerToggleBtn');
-                const dot = btn?.querySelector('.dot');
-                const label = document.getElementById('bannerStatusLabel');
-                const input = document.getElementById('bannerMsgInput');
-
-                if (input && !input.matches(':focus')) input.value = bannerData.banner_text || "";
-                if (bannerData.is_live) {
-                    btn?.classList.replace('bg-gray-200', 'bg-pink-500');
-                    dot?.classList.add('translate-x-6');
-                    if (label) { label.innerText = "Banner Live ✨"; label.className = "text-[10px] font-black uppercase text-pink-500"; }
-                } else {
-                    btn?.classList.replace('bg-pink-500', 'bg-gray-200');
-                    dot?.classList.remove('translate-x-6');
-                    if (label) { label.innerText = "Banner Off"; label.className = "text-[10px] font-black uppercase text-gray-400"; }
-                }
-            }
-        }
-
-        // 4. Priorities List (RESTORED)
+        // --- 2. PRIORITIES ---
         const priorities = jobs.filter(j => !['Shipped', 'Enquiry'].includes(j.status))
                                .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(0,3);
         const prioContainer = document.getElementById('priority-list');
@@ -696,30 +659,64 @@ async function renderSummary() {
             `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
         }
 
-        // 5. Waitlist UI (RESTORED)
-        if (typeof renderWaitlistUI === "function") renderWaitlistUI(waitlist);
+        // --- 3. SETTINGS (Blinkers & Banner) ---
+        if (settings) {
+            // Render Service Toggles (Filter out the Banner row)
+            const toggleContainer = document.getElementById('service-quick-toggles');
+            const servicesOnly = settings.filter(s => s.id !== 'Banner');
+            if (toggleContainer) {
+                toggleContainer.innerHTML = servicesOnly.map(s => `
+                    <button onclick="toggleServiceStatus('${s.id}', ${s.is_live})" 
+                        class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border shadow-sm
+                        ${s.is_live ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'}">
+                        ${s.id}: ${s.is_live ? 'OPEN ♡' : 'WAITLIST'}
+                    </button>
+                `).join('');
+            }
 
-        // 6. Revenue Bars
+            // Render Banner Manager (Look for the ID 'Banner')
+            const bannerData = settings.find(s => s.id === 'Banner');
+            if (bannerData) {
+                const btn = document.getElementById('bannerToggleBtn');
+                const dot = btn?.querySelector('.dot');
+                const label = document.getElementById('bannerStatusLabel');
+                const input = document.getElementById('bannerMsgInput');
+
+                if (input && !input.matches(':focus')) input.value = bannerData.banner_text || "";
+                
+                if (bannerData.is_live) {
+                    btn?.classList.replace('bg-gray-200', 'bg-pink-500');
+                    dot?.classList.add('translate-x-6');
+                    if(label) { label.innerText = "Banner Live ✨"; label.className = "text-[10px] font-black uppercase text-pink-500"; }
+                } else {
+                    btn?.classList.replace('bg-pink-500', 'bg-gray-200');
+                    dot?.classList.remove('translate-x-6');
+                    if(label) { label.innerText = "Banner Off"; label.className = "text-[10px] font-black uppercase text-gray-400"; }
+                }
+            }
+        }
+
+        // --- 4. REVENUE SNAP ---
         const snap = document.getElementById('revenue-snap-bars');
         if(snap) {
-            const max = Math.max(totalPaid, (totalBooked - totalPaid), 1);
+            const pending = totalBooked - totalPaid;
+            const max = Math.max(totalPaid, pending, 1);
             snap.innerHTML = `
                 <div class="flex items-end gap-4 h-32">
-                    <div class="bg-emerald-400 w-full rounded-t-xl transition-all duration-1000" style="height: ${(totalPaid/max)*100}%"></div>
-                    <div class="bg-pink-300 w-full rounded-t-xl transition-all duration-1000" style="height: ${((totalBooked-totalPaid)/max)*100}%"></div>
+                    <div class="bg-emerald-400 w-full rounded-t-xl" style="height: ${(totalPaid/max)*100}%"></div>
+                    <div class="bg-pink-300 w-full rounded-t-xl" style="height: ${(pending/max)*100}%"></div>
                 </div>
                 <div class="flex justify-between mt-4 text-[10px] font-bold uppercase text-gray-500">
                     <span>Paid (£${totalPaid.toFixed(0)})</span>
-                    <span>Pending (£${(totalBooked-totalPaid).toFixed(0)})</span>
+                    <span>Pending (£${pending.toFixed(0)})</span>
                 </div>`;
         }
-        
-        if(document.getElementById('greeting-date')) {
-            document.getElementById('greeting-date').innerText = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-        }
-    } catch (e) { console.error("Dashboard error:", e); }
+
+        // --- 5. WAITLIST ---
+        if (typeof renderWaitlistUI === "function") renderWaitlistUI(waitlist);
+
+    } catch (e) { console.error("Critical Render Error:", e); }
 }
-        
         
     function closeDrawer() {
     const drawer = document.getElementById('editDrawer');
