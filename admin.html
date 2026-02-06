@@ -64,17 +64,44 @@
     <a href="finances.html" class="nav-btn nav-btn-pink flex items-center gap-2">
     P&L Sheet 📊
 </a>
-    <button onclick="switchTab('settings')" class="nav-btn nav-btn-mint">Settings ♡</button>
     <button onclick="handleLogout()" class="nav-btn nav-btn-pink opacity-50 hover:opacity-100">Logout ⏻</button>
 </div>
 </nav>
 <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
-    <div id="view-summary" class="tab-content space-y-8 animate-fadeIn">
-    <div class="px-4 flex justify-between items-end">
+  
+<div id="view-summary" class="tab-content space-y-8 animate-fadeIn">
+    <div class="px-4">
+        <section class="glass-card p-6 border-pink-100 bg-white/50 border-l-4 border-l-pink-400">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex-1 w-full">
+                    <h4 class="text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center gap-2">
+                        <span>📢</span> Live Studio Banner
+                    </h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="bannerMsgInput" placeholder="e.g. 15% OFF with code CANDY ♡" 
+                               class="flex-1 p-3 bg-white border border-pink-100 rounded-2xl text-xs font-bold focus:ring-2 ring-pink-200 outline-none transition-all">
+                        <button onclick="updateBanner()" class="px-6 bg-pink-500 text-white rounded-2xl text-[10px] font-black uppercase hover:bg-pink-600 shadow-sm transition-all active:scale-95">Update ♡</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 bg-white p-3 rounded-2xl border border-pink-50 shadow-sm">
+                    <span id="bannerStatusLabel" class="text-[10px] font-black uppercase text-gray-400">Banner Off</span>
+                    <button id="bannerToggleBtn" onclick="toggleBanner()" 
+                            class="w-12 h-6 bg-gray-200 rounded-full relative transition-all duration-300">
+                        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full shadow-sm transition-all duration-300"></div>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="px-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
             <h2 class="text-3xl font-black italic tracking-tighter text-gray-800">Studio Briefing ♡</h2>
             <p id="greeting-date" class="text-[10px] font-bold text-pink-400 uppercase tracking-widest"></p>
         </div>
+        
+        <div id="service-quick-toggles" class="flex flex-wrap gap-2">
+            </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-4">
@@ -95,51 +122,6 @@
             <p id="stat-revenue" class="text-3xl font-black tracking-tighter text-gray-800">£0</p>
         </div>
     </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
-        <div class="glass-card p-8">
-            <h3 class="text-xs font-black uppercase text-gray-400 mb-6 tracking-widest flex items-center gap-2">
-                <span>🔥</span> Top 3 Priorities
-            </h3>
-            <div id="priority-list" class="space-y-4"></div>
-        </div>
-
-        <div class="glass-card p-8 bg-pink-50/30">
-            <h3 class="text-xs font-black uppercase text-gray-400 mb-6 tracking-widest">Revenue Snap</h3>
-            <div id="revenue-snap-bars">
-                </div>
-        </div>
-    </div>
-
-    <div class="px-4">
-        <div class="glass-card p-8 bg-white/80">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div>
-                    <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Waitlist Management</h3>
-                    <p class="text-[10px] text-pink-400 font-bold uppercase mt-1">Pending Invitations ♡</p>
-                </div>
-                <div id="waitlist-counts" class="flex flex-wrap gap-2">
-                    </div>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="text-[9px] uppercase text-gray-400 border-b border-pink-50">
-                            <th class="pb-4 font-black">Joined Date</th>
-                            <th class="pb-4 font-black">Email Address</th>
-                            <th class="pb-4 font-black">Service Requested</th>
-                            <th class="pb-4 font-black text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="waitlist-table-body">
-                        </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
         
         <div id="view-workbench" class="space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
@@ -240,7 +222,7 @@ _supabase.auth.onAuthStateChange((event, session) => {
 async function switchTab(tab) {
     localStorage.setItem('hana_active_tab', tab);
     
-    ['view-summary', 'view-workbench', 'view-planner', 'view-inventory', 'view-settings'].forEach(id => {
+    ['view-summary', 'view-workbench', 'view-planner', 'view-inventory'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
@@ -252,7 +234,6 @@ async function switchTab(tab) {
     if(tab === 'workbench') renderWorkbench();
     if(tab === 'planner') renderPlanner();
     if(tab === 'inventory') renderInventory();
-    if(tab === 'settings') renderSettings();
 }
    
     // --- WORKBENCH LOGIC ---
@@ -491,13 +472,17 @@ document.getElementById('saveBtn').onclick = async () => {
     btn.disabled = true;
 
     try {
-        const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
-        
         const updates = {
-            status: document.getElementById('upStatus')?.value,
+            status: document.getElementById('upStatus').value,
             total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
-            tracking_number: document.getElementById('trackNum')?.value || '',
+            payment_method: document.getElementById('payType').value,
             payment_status: document.getElementById('isPaidCheck')?.checked ? 'Paid' : 'Unpaid',
+            is_urgent: document.getElementById('isUrg').checked,
+            // Trade-specific fields
+            artist_shipped: document.getElementById('artistShipped')?.checked || false,
+            partner_shipped: document.getElementById('partnerShipped')?.checked || false,
+            // Tracking & Shipping
+            tracking_number: document.getElementById('trackNum')?.value || '',
             shipping_cost: parseFloat(document.getElementById('shipCost')?.value || 0)
         };
 
@@ -507,13 +492,13 @@ document.getElementById('saveBtn').onclick = async () => {
         btn.innerText = "Saved! ♡";
 
         setTimeout(() => { 
-            const drawer = document.getElementById('editDrawer');
-            if (drawer) drawer.classList.add('translate-x-full'); 
+            closeDrawer(); 
             renderWorkbench(); 
             renderSummary(); 
             btn.innerText = "Save All Changes ♡"; 
             btn.disabled = false; 
         }, 800);
+
     } catch (e) { 
         console.error("Save error:", e);
         btn.innerText = "Error! ❌";
@@ -638,32 +623,6 @@ async function addNewStockItem() {
     else alert("Error: " + error.message);
 }
 
-
-    async function renderSettings() {
-    const container = document.getElementById('view-settings');
-    const { data: settings } = await _supabase.from('studio_settings').select('*').single();
-
-    container.innerHTML = `
-        <div class="max-w-2xl space-y-8">
-            <h2 class="text-3xl font-black italic">Studio Settings</h2>
-            <div class="glass-card p-8 space-y-6 bg-white border border-pink-50">
-                <h4 class="font-black text-xs uppercase text-gray-400 tracking-widest">Service Availability</h4>
-                <div class="space-y-4">
-                    ${['faceups', 'eyes', 'manicures'].map(service => `
-                        <div class="flex justify-between items-center p-4 bg-pink-50/30 rounded-2xl border border-pink-50">
-                            <span class="text-sm font-bold uppercase text-gray-700">${service}</span>
-                            <button onclick="toggleService('${service}', ${settings[service]})" 
-                                    class="px-6 py-2 rounded-full text-[10px] font-black uppercase transition-all 
-                                    ${settings[service] ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}">
-                                ${settings[service] ? 'Open ♡' : 'Closed ♡'}
-                            </button>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        </div>`;
-}
-
 async function renderSummary() {
     try {
         const { data: jobs, error: jobErr } = await _supabase.from('commissions').select('*');
@@ -698,7 +657,47 @@ async function renderSummary() {
                 </div>
             `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
         }
+       
+const { data: settings } = await _supabase.from('studio_settings').select('*').single();
 
+if (settings) {
+    // Draw Service Toggles
+    const toggleContainer = document.getElementById('service-quick-toggles');
+    if (toggleContainer) {
+        const services = [
+            { id: 'faceups', label: 'Faceups' },
+            { id: 'eyes', label: 'Eyes' },
+            { id: 'manicures', label: 'Mani' }
+        ];
+        toggleContainer.innerHTML = services.map(s => `
+            <button onclick="toggleService('${s.id}', ${settings[s.id]})" 
+                class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border shadow-sm
+                ${settings[s.id] ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}">
+                ${s.label}: ${settings[s.id] ? 'OPEN ♡' : 'FULL'}
+            </button>
+        `).join('');
+    }
+
+    // Update Banner Controls
+    const btn = document.getElementById('bannerToggleBtn');
+    const dot = btn.querySelector('.dot');
+    const label = document.getElementById('bannerStatusLabel');
+    const input = document.getElementById('bannerMsgInput');
+
+    if (input && !input.matches(':focus')) input.value = settings.banner_text || "";
+
+    if (settings.banner_active) {
+        btn.classList.replace('bg-gray-200', 'bg-emerald-400');
+        dot.classList.add('translate-x-6');
+        label.innerText = "Banner Live ✨";
+        label.classList.replace('text-gray-400', 'text-emerald-500');
+    } else {
+        btn.classList.replace('bg-emerald-400', 'bg-gray-200');
+        dot.classList.remove('translate-x-6');
+        label.innerText = "Banner Off";
+        label.classList.replace('text-emerald-500', 'text-gray-400');
+    }
+}
         // Revenue Snap
         const snap = document.getElementById('revenue-snap-bars');
         if(snap) {
@@ -774,6 +773,28 @@ function togglePayUI() {
         openDrawer(activeJobId); // Refresh the drawer to show new balance
     }
 }
+async function updateBanner() {
+    const text = document.getElementById('bannerMsgInput').value;
+    const { error } = await _supabase.from('studio_settings').update({ banner_text: text }).eq('id', 1);
+    if (!error) {
+        alert("Banner updated successfully! ✨");
+        renderSummary();
+    }
+}
+
+// Toggle Banner On/Off
+async function toggleBanner() {
+    const { data: settings } = await _supabase.from('studio_settings').select('banner_active').eq('id', 1).single();
+    const { error } = await _supabase.from('studio_settings').update({ banner_active: !settings.banner_active }).eq('id', 1);
+    if (!error) renderSummary();
+}
+
+// Toggle Service Status (Open/Full)
+async function toggleService(field, currentVal) {
+    const { error } = await _supabase.from('studio_settings').update({ [field]: !currentVal }).eq('id', 1);
+    if (!error) renderSummary();
+}
+    
 </script>
 </body>
 </html>
