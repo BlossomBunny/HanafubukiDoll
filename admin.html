@@ -68,32 +68,41 @@
 </div>
 </nav>
 <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
-  
-<div id="view-summary" class="tab-content space-y-8 animate-fadeIn">
-
-    <div class="px-4">
-    <section class="glass-card p-6 border-pink-100 bg-white/50 border-l-4 border-l-pink-400">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex-1 w-full">
-                <h4 class="text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center gap-2">
-                    <span>📢</span> Studio Announcement
-                </h4>
-                <div class="flex gap-2">
-                    <input type="text" id="bannerMsgInput" placeholder="Enter coupon code or news..." 
-                           class="flex-1 p-3 bg-white border border-pink-100 rounded-2xl text-xs font-bold focus:ring-2 ring-pink-200 outline-none transition-all">
-                    <button onclick="updateBanner()" class="px-6 bg-pink-500 text-white rounded-2xl text-[10px] font-black uppercase hover:bg-pink-600 transition-all">Update ♡</button>
+    <div id="view-summary" class="tab-content space-y-8 animate-fadeIn">
+        
+        <div class="px-4">
+            <section class="glass-card p-6 border-pink-100 bg-white/50 border-l-4 border-l-pink-400">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex-1 w-full">
+                        <h4 class="text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center gap-2">
+                            <span>📢</span> Live Studio Banner
+                        </h4>
+                        <div class="flex gap-2">
+                            <input type="text" id="bannerMsgInput" placeholder="e.g. 15% OFF with code CANDY ♡" 
+                                   class="flex-1 p-3 bg-white border border-pink-100 rounded-2xl text-xs font-bold focus:ring-2 ring-pink-200 outline-none">
+                            <button onclick="updateBanner()" class="px-6 bg-pink-500 text-white rounded-2xl text-[10px] font-black uppercase hover:bg-pink-600 transition-all">Update ♡</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 bg-white p-3 rounded-2xl border border-pink-50 shadow-sm">
+                        <span id="bannerStatusLabel" class="text-[10px] font-black uppercase text-gray-400">Banner Off</span>
+                        <button id="bannerToggleBtn" onclick="toggleBanner()" 
+                                class="w-12 h-6 bg-gray-200 rounded-full relative transition-all">
+                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all"></div>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="flex items-center gap-4 bg-white p-3 rounded-2xl border border-pink-50">
-                <span id="bannerStatusLabel" class="text-[10px] font-black uppercase text-gray-400">Banner Off</span>
-                <button id="bannerToggleBtn" onclick="toggleBanner()" class="w-12 h-6 bg-gray-200 rounded-full relative transition-all">
-                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all"></div>
-                </button>
-            </div>
+            </section>
         </div>
-    </section>
-</div>
 
+        <div class="px-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+            <div>
+                <h2 class="text-3xl font-black italic tracking-tighter text-gray-800">Studio Briefing ♡</h2>
+                <p id="greeting-date" class="text-[10px] font-bold text-pink-400 uppercase tracking-widest"></p>
+            </div>
+            
+            <div id="service-quick-toggles" class="flex flex-wrap gap-2"></div>
+        </div>
+        
 <div class="px-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mt-8">
     <div>
         <h2 class="text-3xl font-black italic tracking-tighter text-gray-800">Studio Briefing ♡</h2>
@@ -626,15 +635,14 @@ async function addNewStockItem() {
 
 async function renderSummary() {
     try {
-        // 1. Fetch all required data
         const { data: jobs, error: jobErr } = await _supabase.from('commissions').select('*');
-        const { data: waitlist, error: waitErr } = await _supabase.from('waitlist').select('*').order('created_at');
-        // Fetch settings as an array of rows to match the homepage "Blinkers" logic
-        const { data: settings, error: setErr } = await _supabase.from('studio_settings').select('*');
+        const { data: waitlist } = await _supabase.from('waitlist').select('*').order('created_at');
+        // KEY FIX: Fetch the list of settings rows
+        const { data: settings } = await _supabase.from('studio_settings').select('*');
 
         if (jobErr || !jobs) return;
 
-        // 2. Stats Logic
+        // --- 1. STATS LOGIC (Restored) ---
         const enq = jobs.filter(j => j.status === 'Enquiry').length;
         const active = jobs.filter(j => ['Working', 'Approved'].includes(j.status)).length;
         const photo = jobs.filter(j => j.status === 'Photo').length; 
@@ -642,16 +650,48 @@ async function renderSummary() {
         const settled = jobs.filter(j => j.status === 'Shipped').reduce((s, j) => s + (Number(j.total_price) || 0), 0);
         const pending = totalRev - settled;
 
-        // 3. Update UI Stat Cards
         if(document.getElementById('stat-enquiries')) document.getElementById('stat-enquiries').innerText = enq;
         if(document.getElementById('stat-workbench')) document.getElementById('stat-workbench').innerText = active;
         if(document.getElementById('stat-special')) document.getElementById('stat-special').innerText = photo;
         if(document.getElementById('stat-revenue')) document.getElementById('stat-revenue').innerText = `£${totalRev.toFixed(2)}`;
 
-        // 4. Priorities (Oldest first)
+        // --- 2. SERVICE BLINKER CONTROLS (New & Fixed) ---
+        const toggleContainer = document.getElementById('service-quick-toggles');
+        if (toggleContainer && settings) {
+            const servicesOnly = settings.filter(s => s.id !== 'Banner');
+            toggleContainer.innerHTML = servicesOnly.map(s => `
+                <button onclick="toggleServiceStatus('${s.id}', ${s.is_live})" 
+                    class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border shadow-sm
+                    ${s.is_live ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'}">
+                    ${s.id}: ${s.is_live ? 'OPEN ♡' : 'WAITLIST'}
+                </button>
+            `).join('');
+        }
+
+        // --- 3. BANNER CONTROLS (Fixed) ---
+        const bannerData = settings?.find(s => s.id === 'Banner');
+        if (bannerData) {
+            const btn = document.getElementById('bannerToggleBtn');
+            const dot = btn?.querySelector('.dot');
+            const label = document.getElementById('bannerStatusLabel');
+            const input = document.getElementById('bannerMsgInput');
+
+            if (input && !input.matches(':focus')) input.value = bannerData.banner_text || "";
+
+            if (bannerData.is_live) {
+                btn?.classList.replace('bg-gray-200', 'bg-pink-500');
+                dot?.classList.add('translate-x-6');
+                if(label) { label.innerText = "Banner Live ✨"; label.className = "text-[10px] font-black uppercase text-pink-500"; }
+            } else {
+                btn?.classList.replace('bg-pink-500', 'bg-gray-200');
+                dot?.classList.remove('translate-x-6');
+                if(label) { label.innerText = "Banner Off"; label.className = "text-[10px] font-black uppercase text-gray-400"; }
+            }
+        }
+
+        // --- 4. PRIORITIES & REVENUE (Restored) ---
         const priorities = jobs.filter(j => !['Shipped', 'Enquiry'].includes(j.status))
                                .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(0,3);
-        
         const prioContainer = document.getElementById('priority-list');
         if(prioContainer) {
             prioContainer.innerHTML = priorities.map(j => `
@@ -662,51 +702,6 @@ async function renderSummary() {
             `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
         }
 
-        // 5. Service Toggles & Banner (Synced with Home Blinkers)
-        if (settings) {
-            // Draw Service Toggles using is_live and amber/emerald colors
-            const toggleContainer = document.getElementById('service-quick-toggles');
-            if (toggleContainer) {
-                // Filter out the Banner row so only services show here
-                const servicesOnly = settings.filter(s => s.id !== 'Banner');
-                toggleContainer.innerHTML = servicesOnly.map(s => `
-                    <button onclick="toggleService('${s.id}', ${s.is_live})" 
-                        class="px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border shadow-sm
-                        ${s.is_live ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'}">
-                        ${s.id}: ${s.is_live ? 'OPEN ♡' : 'WAITLIST'}
-                    </button>
-                `).join('');
-            }
-
-            // Update Banner Controls
-            const bannerData = settings.find(s => s.id === 'Banner');
-            if (bannerData) {
-                const btn = document.getElementById('bannerToggleBtn');
-                const dot = btn?.querySelector('.dot');
-                const label = document.getElementById('bannerStatusLabel');
-                const input = document.getElementById('bannerMsgInput');
-
-                if (input && !input.matches(':focus')) input.value = bannerData.banner_text || "";
-
-                if (bannerData.is_live) {
-                    btn?.classList.replace('bg-gray-200', 'bg-pink-500');
-                    dot?.classList.add('translate-x-6');
-                    if (label) {
-                        label.innerText = "Banner Live ✨";
-                        label.className = "text-[10px] font-black uppercase text-pink-500";
-                    }
-                } else {
-                    btn?.classList.replace('bg-pink-500', 'bg-gray-200');
-                    dot?.classList.remove('translate-x-6');
-                    if (label) {
-                        label.innerText = "Banner Off";
-                        label.className = "text-[10px] font-black uppercase text-gray-400";
-                    }
-                }
-            }
-        }
-
-        // 6. Revenue Snap Bars
         const snap = document.getElementById('revenue-snap-bars');
         if(snap) {
             const max = Math.max(settled, pending, 1);
@@ -718,17 +713,14 @@ async function renderSummary() {
                 <div class="flex justify-between mt-4 text-[10px] font-bold uppercase text-gray-500">
                     <span>Settled (£${settled.toFixed(0)})</span>
                     <span>Pending (£${pending.toFixed(0)})</span>
-                </div>
-            `;
+                </div>`;
         }
 
-        // 7. Waitlist & Date
         if (typeof renderWaitlistUI === "function") renderWaitlistUI(waitlist);
-        
         if(document.getElementById('greeting-date')) {
             document.getElementById('greeting-date').innerText = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
         }
-    } catch (e) { console.error("Dashboard error caught:", e); }
+    } catch (e) { console.error("Dashboard error:", e); }
 }
         
         
@@ -782,28 +774,26 @@ function togglePayUI() {
         openDrawer(activeJobId); // Refresh the drawer to show new balance
     }
 }
+// Toggle logic for both services and the banner
+async function toggleServiceStatus(id, currentStatus) {
+    await _supabase.from('studio_settings').update({ is_live: !currentStatus }).eq('id', id);
+    renderSummary();
+}
+
+async function toggleBanner() {
+    const { data: banner } = await _supabase.from('studio_settings').select('is_live').eq('id', 'Banner').single();
+    await _supabase.from('studio_settings').update({ is_live: !banner.is_live }).eq('id', 'Banner');
+    renderSummary();
+}
+
 async function updateBanner() {
     const text = document.getElementById('bannerMsgInput').value;
-    const { error } = await _supabase.from('studio_settings').update({ banner_text: text }).eq('id', 1);
-    if (!error) {
-        alert("Banner updated successfully! ✨");
-        renderSummary();
-    }
+    await _supabase.from('studio_settings').update({ banner_text: text }).eq('id', 'Banner');
+    alert("Studio banner updated! ♡");
+    renderSummary();
 }
 
-// Toggle Banner On/Off
-async function toggleBanner() {
-    const { data: settings } = await _supabase.from('studio_settings').select('banner_active').eq('id', 1).single();
-    const { error } = await _supabase.from('studio_settings').update({ banner_active: !settings.banner_active }).eq('id', 1);
-    if (!error) renderSummary();
-}
 
-// Toggle Service Status (Open/Full)
-async function toggleService(field, currentVal) {
-    const { error } = await _supabase.from('studio_settings').update({ [field]: !currentVal }).eq('id', 1);
-    if (!error) renderSummary();
-}
-    
 </script>
 </body>
 </html>
