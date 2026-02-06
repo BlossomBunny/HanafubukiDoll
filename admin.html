@@ -122,34 +122,34 @@
         <p id="stat-paid" class="text-2xl font-black tracking-tighter text-emerald-700">£0</p>
     </div>
 </div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4">
-    
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 mb-8">
     <div class="glass-card p-6 border-l-4 border-pink-400">
-        <h3 class="text-[10px] font-black uppercase tracking-widest text-pink-500 mb-4">Top Priorities</h3>
+        <h3 class="text-[10px] font-black uppercase tracking-widest text-pink-500 mb-4">Top Priorities ♡</h3>
         <div id="priority-list" class="space-y-2">
-            <p class="text-[10px] text-gray-400 italic">Syncing...</p>
-        </div>
+            </div>
     </div>
 
     <div class="glass-card p-6 border-l-4 border-emerald-400">
-        <h3 class="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-4">Revenue Snap</h3>
-        <div id="revenue-snap-bars" class="h-32 flex items-end gap-2">
-             </div>
+        <h3 class="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-4">Revenue Snap (Paid vs Pending)</h3>
+        <div class="h-40 w-full">
+            <canvas id="revenueChart"></canvas>
+        </div>
     </div>
 </div>
-            <div class="px-4 mt-8">
+
+<div class="px-4 mb-12">
     <div class="glass-card overflow-hidden border-l-4 border-amber-400">
-        <div class="p-6 border-b border-pink-50 bg-amber-50/10">
-            <h3 class="text-[10px] font-black uppercase tracking-widest text-amber-600">Active Waitlist ♡</h3>
+        <div class="p-6 border-b border-pink-50 bg-amber-50/10 flex justify-between items-center">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-amber-600">Active Waitlist Table</h3>
+            <span id="waitlist-count" class="text-[10px] font-bold text-amber-500 bg-white px-3 py-1 rounded-full shadow-sm">0 Entries</span>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-gray-50/50">
                     <tr>
-                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Date Requested</th>
+                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Date</th>
                         <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Client Email</th>
-                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Service Requested</th>
+                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Service</th>
                     </tr>
                 </thead>
                 <tbody id="waitlist-table-body" class="divide-y divide-pink-50">
@@ -158,8 +158,6 @@
         </div>
     </div>
 </div>
-
-
         
         <div id="view-workbench" class="space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
@@ -660,6 +658,7 @@ async function addNewStockItem() {
     if (!error) renderInventory();
     else alert("Error: " + error.message);
 }
+let revenueChart = null;
 
 async function renderSummary() {
     try {
@@ -675,7 +674,7 @@ async function renderSummary() {
         const photo = jobs.filter(j => j.status === 'Photo').length; 
         const totalBooked = jobs.reduce((s, j) => s + (Number(j.total_price) || 0), 0);
         const totalPaid = jobs.filter(j => j.payment_status === 'Paid')
-                              .reduce((s, j) => s + (Number(j.total_price) || 0), 0);
+                             .reduce((s, j) => s + (Number(j.total_price) || 0), 0);
 
         if(document.getElementById('stat-enquiries')) document.getElementById('stat-enquiries').innerText = enq;
         if(document.getElementById('stat-workbench')) document.getElementById('stat-workbench').innerText = active;
@@ -685,12 +684,12 @@ async function renderSummary() {
 
         // --- 2. PRIORITIES ---
         const priorities = jobs.filter(j => !['Shipped', 'Enquiry'].includes(j.status))
-                               .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(0,3);
+                               .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(0,4);
         const prioContainer = document.getElementById('priority-list');
         if(prioContainer) {
             prioContainer.innerHTML = priorities.map(j => `
-                <div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-pink-50 shadow-sm">
-                    <span class="font-bold text-sm text-gray-700">${j.social_handle || 'Client'}</span>
+                <div class="flex justify-between items-center p-3 bg-white rounded-xl border border-pink-50 shadow-sm">
+                    <span class="font-bold text-[11px] text-gray-700 uppercase">${j.social_handle || 'Client'}</span>
                     <span class="text-[9px] px-3 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase">${j.status}</span>
                 </div>
             `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
@@ -698,7 +697,6 @@ async function renderSummary() {
 
         // --- 3. SETTINGS (Blinkers & Banner) ---
         if (settings) {
-            // Render Service Toggles (Filter out the Banner row)
             const toggleContainer = document.getElementById('service-quick-toggles');
             const servicesOnly = settings.filter(s => s.id !== 'Banner');
             if (toggleContainer) {
@@ -711,16 +709,13 @@ async function renderSummary() {
                 `).join('');
             }
 
-            // Render Banner Manager (Look for the ID 'Banner')
             const bannerData = settings.find(s => s.id === 'Banner');
             if (bannerData) {
                 const btn = document.getElementById('bannerToggleBtn');
                 const dot = btn?.querySelector('.dot');
                 const label = document.getElementById('bannerStatusLabel');
                 const input = document.getElementById('bannerMsgInput');
-
                 if (input && !input.matches(':focus')) input.value = bannerData.banner_text || "";
-                
                 if (bannerData.is_live) {
                     btn?.classList.replace('bg-gray-200', 'bg-pink-500');
                     dot?.classList.add('translate-x-6');
@@ -732,20 +727,35 @@ async function renderSummary() {
                 }
             }
         }
-// --- 4. REVENUE SNAP ---
-        const snap = document.getElementById('revenue-snap-bars');
-        if(snap) {
+
+        // --- 4. REVENUE CHART ---
+        const chartCanvas = document.getElementById('revenueChart');
+        if(chartCanvas) {
             const pending = totalBooked - totalPaid;
-            const max = Math.max(totalPaid, pending, 1);
-            snap.innerHTML = `
-                <div class="flex items-end gap-4 h-32">
-                    <div class="bg-emerald-400 w-full rounded-t-xl" style="height: ${(totalPaid/max)*100}%"></div>
-                    <div class="bg-pink-300 w-full rounded-t-xl" style="height: ${(pending/max)*100}%"></div>
-                </div>
-                <div class="flex justify-between mt-4 text-[10px] font-bold uppercase text-gray-500">
-                    <span>Paid (£${totalPaid.toFixed(0)})</span>
-                    <span>Pending (£${pending.toFixed(0)})</span>
-                </div>`;
+            const ctx = chartCanvas.getContext('2d');
+            
+            if (revenueChart) revenueChart.destroy();
+            
+            revenueChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['PAID', 'PENDING'],
+                    datasets: [{
+                        data: [totalPaid, pending],
+                        backgroundColor: ['#34d399', '#f472b6'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false }, ticks: { font: { size: 8 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' } } }
+                    }
+                }
+            });
         }
 
         // --- 5. FULL WAITLIST TABLE ---
@@ -753,7 +763,7 @@ async function renderSummary() {
         if (waitlistTable && waitlist) {
             waitlistTable.innerHTML = waitlist.length > 0 ? waitlist.map(entry => `
                 <tr class="hover:bg-amber-50/30 transition-colors">
-                    <td class="p-4 text-[11px] font-bold text-gray-500 uppercase">${new Date(entry.created_at).toLocaleDateString()}</td>
+                    <td class="p-4 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${new Date(entry.created_at).toLocaleDateString('en-GB')}</td>
                     <td class="p-4 text-sm font-black text-gray-700">${entry.email}</td>
                     <td class="p-4">
                         <span class="px-3 py-1 bg-amber-100 text-amber-600 rounded-full text-[9px] font-black uppercase">
@@ -763,9 +773,9 @@ async function renderSummary() {
                 </tr>`).join('') : `<tr><td colspan="3" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase italic">Queue is clear! ✨</td></tr>`;
         }
     } catch (e) { console.error("Summary Error:", e); }
-} // This bracket closes renderSummary correctly.
+}
 
-// --- 6. UTILITIES & LISTENERS ---
+// --- 6. INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     renderSummary();
     _supabase.channel('admin-sync')
