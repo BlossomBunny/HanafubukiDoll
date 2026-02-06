@@ -36,7 +36,6 @@
             }
         }
 
-        /* Essential animation from your index.html */
         @keyframes pulse-custom {
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.5); opacity: 0; }
@@ -58,6 +57,7 @@
         </div>
         
         <div id="adminNav" class="auth-hidden flex flex-wrap justify-center gap-2 md:gap-4">
+    <button onclick="switchTab('summary')" class="nav-btn nav-btn-pink">Dashboard 🏠</button>
     <button onclick="switchTab('workbench')" class="nav-btn nav-btn-mint">Commissions ♡</button>
     <button onclick="switchTab('planner')" class="nav-btn nav-btn-pink">Planner ♡</button>
     <button onclick="switchTab('inventory')" class="nav-btn nav-btn-mint">Stock ♡</button>
@@ -78,6 +78,55 @@
     </div>
 
     <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
+
+
+<div id="view-summary" class="tab-content space-y-8 animate-fadeIn">
+    <div class="px-4">
+        <h2 class="text-3xl font-black italic tracking-tighter text-gray-800">Studio Briefing ♡</h2>
+        <p id="greeting-date" class="text-[10px] font-bold text-pink-400 uppercase tracking-widest"></p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-4">
+        <div class="glass-card p-6 border-l-4 border-pink-300">
+            <p class="text-[9px] font-black uppercase text-gray-400">Enquiries</p>
+            <p id="stat-enquiries" class="text-3xl font-black tracking-tighter text-gray-800">0</p>
+        </div>
+        <div class="glass-card p-6 border-l-4 border-emerald-300">
+            <p class="text-[9px] font-black uppercase text-gray-400">On Workbench</p>
+            <p id="stat-workbench" class="text-3xl font-black tracking-tighter text-gray-800">0</p>
+        </div>
+        <div class="glass-card p-6 border-l-4 border-purple-300">
+            <p class="text-[9px] font-black uppercase text-gray-400">Open Trades/Layaway</p>
+            <p id="stat-special" class="text-3xl font-black tracking-tighter text-gray-800">0</p>
+        </div>
+        <div class="glass-card p-6 border-l-4 border-amber-300">
+            <p class="text-[9px] font-black uppercase text-gray-400">Total Booked</p>
+            <p id="stat-revenue" class="text-3xl font-black tracking-tighter text-gray-800">£0</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
+        <div class="glass-card p-8">
+            <h3 class="text-xs font-black uppercase text-gray-400 mb-6 tracking-widest flex items-center gap-2">
+                <span>🔥</span> Top 3 Priorities
+            </h3>
+            <div id="priority-list" class="space-y-4">
+                </div>
+        </div>
+
+        <div class="glass-card p-8 bg-pink-50/30">
+            <h3 class="text-xs font-black uppercase text-gray-400 mb-6 tracking-widest">Revenue Snap</h3>
+            <div class="flex items-end gap-4 h-32">
+                <div id="bar-settled" class="bg-emerald-400 w-full rounded-t-xl transition-all duration-1000" style="height: 0%"></div>
+                <div id="bar-pending" class="bg-pink-300 w-full rounded-t-xl transition-all duration-1000" style="height: 0%"></div>
+            </div>
+            <div class="flex justify-between mt-4 text-[10px] font-bold uppercase text-gray-500">
+                <span>Settled</span>
+                <span>Pending</span>
+            </div>
+        </div>
+    </div>
+</div>
         
         <div id="view-workbench" class="space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
@@ -158,10 +207,12 @@ _supabase.auth.onAuthStateChange((event, session) => {
         loginGate.classList.add('hidden');
         adminNav.classList.remove('auth-hidden');
         adminMain.classList.remove('auth-hidden');
-        const lastTab = localStorage.getItem('hana_active_tab') || 'workbench';
+        
+    
+        const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
         switchTab(lastTab);
     } else {
-             window.location.href = 'index.html';
+        window.location.href = 'index.html';
     }
 });
 
@@ -183,19 +234,154 @@ _supabase.auth.onAuthStateChange((event, session) => {
 
     window.location.href = 'index.html';
 }
-    // --- NAVIGATION ---
-    async function switchTab(tab) {
-        localStorage.setItem('hana_active_tab', tab);
-        ['view-workbench', 'view-planner', 'view-settings', 'view-inventory'].forEach(id => {
-            document.getElementById(id)?.classList.add('hidden');
-        });
-        document.getElementById(`view-${tab}`)?.classList.remove('hidden');
 
-        if(tab === 'workbench') renderWorkbench();
-        if(tab === 'planner') renderPlanner();
-        if(tab === 'inventory') renderInventory();
-        if(tab === 'settings') renderSettings();
+async function renderSummary() {
+    const container = document.getElementById('view-summary');
+    
+    // Fetch all commissions to calculate stats
+    const { data: jobs, error } = await _supabase.from('commissions').select('*');
+    
+    if (error) {
+        console.error("Error loading dashboard data:", error);
+        return;
     }
+
+    // --- 1. DYNAMIC DATA CALCULATIONS ---
+    const enquiryCount = jobs.filter(j => j.status === 'Enquiry').length;
+    const workbenchCount = jobs.filter(j => j.status === 'In Progress').length;
+    
+    // Filter for special payment types (Layaway/Trade)
+    const specialCount = jobs.filter(j => 
+        j.payment_type === 'Layaway' || j.payment_type === 'Trade'
+    ).length;
+
+    // Financial calculations
+    const totalBooked = jobs.reduce((sum, j) => sum + (Number(j.price) || 0), 0);
+    const settledRevenue = jobs
+        .filter(j => j.status === 'Shipped')
+        .reduce((sum, j) => sum + (Number(j.price) || 0), 0);
+    const pendingRevenue = totalBooked - settledRevenue;
+
+    // --- 2. UPDATE STAT CARDS ---
+    document.getElementById('stat-enquiries').innerText = enquiryCount;
+    document.getElementById('stat-workbench').innerText = workbenchCount;
+    document.getElementById('stat-special').innerText = specialCount;
+    document.getElementById('stat-revenue').innerText = `£${totalBooked}`;
+
+    // --- 3. DYNAMIC PRIORITIES (Oldest active jobs) ---
+    const priorities = jobs
+        .filter(j => j.status !== 'Shipped' && j.status !== 'Enquiry')
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .slice(0, 3);
+
+    document.getElementById('priority-list').innerHTML = priorities.length 
+        ? priorities.map(j => `
+            <div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-pink-50 shadow-sm hover:translate-x-1 transition-transform">
+                <div>
+                    <p class="font-black text-sm text-gray-800 tracking-tight">${j.client_name}</p>
+                    <p class="text-[9px] text-gray-400 uppercase font-bold tracking-widest">${j.project_type || 'Custom Work'}</p>
+                </div>
+                <span class="text-[9px] px-3 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase tracking-tighter">
+                    ${j.status}
+                </span>
+            </div>
+        `).join('')
+        : '<p class="text-gray-400 italic text-xs py-4">No active priorities found! ♡</p>';
+
+    // --- 4. FINANCIAL SNAPBARS ---
+    const maxVal = Math.max(settledRevenue, pendingRevenue, 1);
+    document.getElementById('finance-snap-content').innerHTML = `
+        <div class="space-y-6">
+            <div>
+                <div class="flex justify-between text-[10px] font-black uppercase mb-2">
+                    <span class="text-emerald-500">Settled (Shipped)</span>
+                    <span class="text-gray-700">£${settledRevenue}</span>
+                </div>
+                <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald-400 transition-all duration-1000" style="width: ${(settledRevenue/maxVal)*100}%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between text-[10px] font-black uppercase mb-2">
+                    <span class="text-pink-400">Pending (Work in Progress)</span>
+                    <span class="text-gray-700">£${pendingRevenue}</span>
+                </div>
+                <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-pink-300 transition-all duration-1000" style="width: ${(pendingRevenue/maxVal)*100}%"></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Set Greeting Date
+    document.getElementById('greeting-date').innerText = new Date().toLocaleDateString('en-GB', { 
+        weekday: 'long', day: 'numeric', month: 'long' 
+    });
+}
+
+    
+    // --- NAVIGATION ---
+async function switchTab(tab) {
+    localStorage.setItem('hana_active_tab', tab);
+    
+    ['view-summary', 'view-workbench', 'view-planner', 'view-inventory', 'view-settings'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
+
+    const activeView = document.getElementById(`view-${tab}`);
+    if (activeView) activeView.classList.remove('hidden');
+
+    if(tab === 'summary') renderSummary();
+    if(tab === 'workbench') renderWorkbench();
+    if(tab === 'planner') renderPlanner();
+    if(tab === 'inventory') renderInventory();
+    if(tab === 'settings') renderSettings();
+}
+
+
+    // --- SUMMARY LOGIC --- //
+    async function renderSummary() {
+    const { data: jobs, error } = await _supabase.from('commissions').select('*');
+    if (error) return;
+
+    // 1. Calculations
+    const enquiries = jobs.filter(j => j.status === 'Enquiry').length;
+    const workbench = jobs.filter(j => j.status === 'In Progress').length;
+    const specials = jobs.filter(j => j.payment_type === 'Layaway' || j.payment_type === 'Trade').length;
+    
+    const totalRevenue = jobs.reduce((acc, j) => acc + (Number(j.price) || 0), 0);
+    const settled = jobs.filter(j => j.status === 'Shipped').reduce((acc, j) => acc + (Number(j.price) || 0), 0);
+    const pending = totalRevenue - settled;
+
+    // 2. Update Stats
+    document.getElementById('stat-enquiries').innerText = enquiries;
+    document.getElementById('stat-workbench').innerText = workbench;
+    document.getElementById('stat-special').innerText = specials;
+    document.getElementById('stat-revenue').innerText = `£${totalRevenue}`;
+
+    // 3. Update Priority List (Oldest active jobs first)
+    const priorities = jobs
+        .filter(j => j.status !== 'Shipped' && j.status !== 'Enquiry')
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .slice(0, 3);
+
+    document.getElementById('priority-list').innerHTML = priorities.length ? priorities.map(j => `
+        <div class="flex justify-between items-center p-3 bg-white rounded-xl border border-pink-50 shadow-sm">
+            <span class="font-bold text-sm text-gray-700">${j.client_name}</span>
+            <span class="text-[9px] px-2 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase">${j.status}</span>
+        </div>
+    `).join('') : '<p class="text-gray-400 italic text-xs">No active tasks! Time for tea? 🍵</p>';
+
+    // 4. Update Bars
+    const max = Math.max(settled, pending, 1);
+    document.getElementById('bar-settled').style.height = `${(settled / max) * 100}%`;
+    document.getElementById('bar-pending').style.height = `${(pending / max) * 100}%`;
+    
+    document.getElementById('greeting-date').innerText = new Date().toLocaleDateString('en-GB', { 
+        weekday: 'long', day: 'numeric', month: 'long' 
+    });
+}
 
     // --- WORKBENCH LOGIC ---
 async function renderWorkbench(showArchived = false) {
