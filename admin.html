@@ -79,24 +79,25 @@
 
     <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
 
-
 <div id="view-summary" class="tab-content space-y-8 animate-fadeIn">
-    <div class="px-4">
-        <h2 class="text-3xl font-black italic tracking-tighter text-gray-800">Studio Briefing ♡</h2>
-        <p id="greeting-date" class="text-[10px] font-bold text-pink-400 uppercase tracking-widest"></p>
+    <div class="px-4 flex justify-between items-end">
+        <div>
+            <h2 class="text-3xl font-black italic tracking-tighter text-gray-800">Studio Briefing ♡</h2>
+            <p id="greeting-date" class="text-[10px] font-bold text-pink-400 uppercase tracking-widest"></p>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-4">
         <div class="glass-card p-6 border-l-4 border-pink-300">
-            <p class="text-[9px] font-black uppercase text-gray-400">Enquiries</p>
+            <p class="text-[9px] font-black uppercase text-gray-400">Needs Checking (Enquiries)</p>
             <p id="stat-enquiries" class="text-3xl font-black tracking-tighter text-gray-800">0</p>
         </div>
         <div class="glass-card p-6 border-l-4 border-emerald-300">
-            <p class="text-[9px] font-black uppercase text-gray-400">On Workbench</p>
+            <p class="text-[9px] font-black uppercase text-gray-400">On Workbench (Active)</p>
             <p id="stat-workbench" class="text-3xl font-black tracking-tighter text-gray-800">0</p>
         </div>
         <div class="glass-card p-6 border-l-4 border-purple-300">
-            <p class="text-[9px] font-black uppercase text-gray-400">Open Trades/Layaway</p>
+            <p class="text-[9px] font-black uppercase text-gray-400">Awaiting Shipping</p>
             <p id="stat-special" class="text-3xl font-black tracking-tighter text-gray-800">0</p>
         </div>
         <div class="glass-card p-6 border-l-4 border-amber-300">
@@ -110,23 +111,45 @@
             <h3 class="text-xs font-black uppercase text-gray-400 mb-6 tracking-widest flex items-center gap-2">
                 <span>🔥</span> Top 3 Priorities
             </h3>
-            <div id="priority-list" class="space-y-4">
-                </div>
+            <div id="priority-list" class="space-y-4"></div>
         </div>
 
         <div class="glass-card p-8 bg-pink-50/30">
             <h3 class="text-xs font-black uppercase text-gray-400 mb-6 tracking-widest">Revenue Snap</h3>
-            <div class="flex items-end gap-4 h-32">
-                <div id="bar-settled" class="bg-emerald-400 w-full rounded-t-xl transition-all duration-1000" style="height: 0%"></div>
-                <div id="bar-pending" class="bg-pink-300 w-full rounded-t-xl transition-all duration-1000" style="height: 0%"></div>
+            <div id="revenue-snap-bars">
+                </div>
+        </div>
+    </div>
+
+    <div class="px-4">
+        <div class="glass-card p-8 bg-white/80">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div>
+                    <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Waitlist Management</h3>
+                    <p class="text-[10px] text-pink-400 font-bold uppercase mt-1">Pending Invitations ♡</p>
+                </div>
+                <div id="waitlist-counts" class="flex flex-wrap gap-2">
+                    </div>
             </div>
-            <div class="flex justify-between mt-4 text-[10px] font-bold uppercase text-gray-500">
-                <span>Settled</span>
-                <span>Pending</span>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-[9px] uppercase text-gray-400 border-b border-pink-50">
+                            <th class="pb-4 font-black">Joined Date</th>
+                            <th class="pb-4 font-black">Email Address</th>
+                            <th class="pb-4 font-black">Service Requested</th>
+                            <th class="pb-4 font-black text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="waitlist-table-body">
+                        </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+
         
         <div id="view-workbench" class="space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
@@ -235,90 +258,73 @@ _supabase.auth.onAuthStateChange((event, session) => {
     window.location.href = 'index.html';
 }
 
-async function renderSummary() {
-    const container = document.getElementById('view-summary');
+    async function renderSummary() {
+    const { data: jobs } = await _supabase.from('commissions').select('*');
+    const { data: waitlist } = await _supabase.from('waitlist').select('*').order('created_at', { ascending: true });
+
+    // --- 1. COMMISSION STATS ---
+    const enquiries = jobs.filter(j => j.status === 'Enquiry').length;
     
-    // Fetch all commissions to calculate stats
-    const { data: jobs, error } = await _supabase.from('commissions').select('*');
+    // Active: Working, Approved, or Photo
+    const active = jobs.filter(j => ['Working', 'Approved', 'Photo'].includes(j.status)).length;
     
-    if (error) {
-        console.error("Error loading dashboard data:", error);
-        return;
-    }
-
-    // --- 1. DYNAMIC DATA CALCULATIONS ---
-    const enquiryCount = jobs.filter(j => j.status === 'Enquiry').length;
-    const workbenchCount = jobs.filter(j => j.status === 'In Progress').length;
+    // Not Shipped: Anything that isn't Shipped or an Enquiry
+    const notShipped = jobs.filter(j => j.status !== 'Shipped' && j.status !== 'Enquiry').length;
     
-    // Filter for special payment types (Layaway/Trade)
-    const specialCount = jobs.filter(j => 
-        j.payment_type === 'Layaway' || j.payment_type === 'Trade'
-    ).length;
+    const totalRev = jobs.reduce((s, j) => s + (Number(j.price) || 0), 0);
 
-    // Financial calculations
-    const totalBooked = jobs.reduce((sum, j) => sum + (Number(j.price) || 0), 0);
-    const settledRevenue = jobs
-        .filter(j => j.status === 'Shipped')
-        .reduce((sum, j) => sum + (Number(j.price) || 0), 0);
-    const pendingRevenue = totalBooked - settledRevenue;
+    document.getElementById('stat-enquiries').innerText = enquiries;
+    document.getElementById('stat-workbench').innerText = active;
+    document.getElementById('stat-special').innerText = notShipped;
+    document.getElementById('stat-revenue').innerText = `£${totalRev}`;
 
-    // --- 2. UPDATE STAT CARDS ---
-    document.getElementById('stat-enquiries').innerText = enquiryCount;
-    document.getElementById('stat-workbench').innerText = workbenchCount;
-    document.getElementById('stat-special').innerText = specialCount;
-    document.getElementById('stat-revenue').innerText = `£${totalBooked}`;
+    // --- 2. PRIORITIES & REVENUE SNAP ---
+    // (Logic from previous steps remains similar, ensures bars update)
+    renderRevenueBars(jobs);
+    renderPriorities(jobs);
 
-    // --- 3. DYNAMIC PRIORITIES (Oldest active jobs) ---
-    const priorities = jobs
-        .filter(j => j.status !== 'Shipped' && j.status !== 'Enquiry')
-        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-        .slice(0, 3);
+    // --- 3. WAITLIST LOGIC ---
+    const countsContainer = document.getElementById('waitlist-counts');
+    const tableBody = document.getElementById('waitlist-table-body');
 
-    document.getElementById('priority-list').innerHTML = priorities.length 
-        ? priorities.map(j => `
-            <div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-pink-50 shadow-sm hover:translate-x-1 transition-transform">
-                <div>
-                    <p class="font-black text-sm text-gray-800 tracking-tight">${j.client_name}</p>
-                    <p class="text-[9px] text-gray-400 uppercase font-bold tracking-widest">${j.project_type || 'Custom Work'}</p>
-                </div>
-                <span class="text-[9px] px-3 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase tracking-tighter">
-                    ${j.status}
-                </span>
-            </div>
-        `).join('')
-        : '<p class="text-gray-400 italic text-xs py-4">No active priorities found! ♡</p>';
+    // Group Waitlist by Service
+    const counts = waitlist.reduce((acc, curr) => {
+        acc[curr.service_requested] = (acc[curr.service_requested] || 0) + 1;
+        return acc;
+    }, {});
 
-    // --- 4. FINANCIAL SNAPBARS ---
-    const maxVal = Math.max(settledRevenue, pendingRevenue, 1);
-    document.getElementById('finance-snap-content').innerHTML = `
-        <div class="space-y-6">
-            <div>
-                <div class="flex justify-between text-[10px] font-black uppercase mb-2">
-                    <span class="text-emerald-500">Settled (Shipped)</span>
-                    <span class="text-gray-700">£${settledRevenue}</span>
-                </div>
-                <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                    <div class="h-full bg-emerald-400 transition-all duration-1000" style="width: ${(settledRevenue/maxVal)*100}%"></div>
-                </div>
-            </div>
-            <div>
-                <div class="flex justify-between text-[10px] font-black uppercase mb-2">
-                    <span class="text-pink-400">Pending (Work in Progress)</span>
-                    <span class="text-gray-700">£${pendingRevenue}</span>
-                </div>
-                <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                    <div class="h-full bg-pink-300 transition-all duration-1000" style="width: ${(pendingRevenue/maxVal)*100}%"></div>
-                </div>
-            </div>
-        </div>
-    `;
+    countsContainer.innerHTML = Object.entries(counts).map(([svc, num]) => `
+        <span class="bg-pink-50 text-pink-500 px-3 py-1 rounded-full text-[9px] font-black uppercase border border-pink-100">${svc}: ${num}</span>
+    `).join('');
 
-    // Set Greeting Date
-    document.getElementById('greeting-date').innerText = new Date().toLocaleDateString('en-GB', { 
-        weekday: 'long', day: 'numeric', month: 'long' 
-    });
+    tableBody.innerHTML = waitlist.map(person => `
+        <tr class="text-xs border-b border-pink-50/50 hover:bg-pink-50/10 transition-colors">
+            <td class="py-4 text-gray-500">${new Date(person.created_at).toLocaleDateString('en-GB')}</td>
+            <td class="py-4 font-bold text-gray-700">${person.email}</td>
+            <td class="py-4"><span class="text-[10px] font-black uppercase text-pink-400">${person.service_requested}</span></td>
+            <td class="py-4 text-right">
+                <button onclick="sendWaitlistEmail('${person.email}', '${person.service_requested}')" class="p-2 hover:bg-emerald-50 text-emerald-500 rounded-lg transition-all" title="Send Opening Email">✉️</button>
+                <button onclick="deleteWaitlistEntry('${person.id}')" class="p-2 hover:bg-rose-50 text-rose-400 rounded-lg transition-all" title="Remove">🗑️</button>
+            </td>
+        </tr>
+    `).join('');
+
+    document.getElementById('greeting-date').innerText = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
+// ACTION: Email Client Trigger
+function sendWaitlistEmail(email, service) {
+    const subject = encodeURIComponent(`HanafubukiDoll: We are open for ${service}!`);
+    const body = encodeURIComponent(`Hey! \n\nWe are now open for ${service} again! \n\nPlease visit our contact page (https://hanafubukidoll.com/contact) and fill out your details so that the team can review them. \n\nIf we don't hear from you within 48 hours we will have to move on to the next person on the waitlist! \n\nBest, \nHanafubuki Studio ♡`);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+}
+
+// ACTION: Delete from Supabase
+async function deleteWaitlistEntry(id) {
+    if(!confirm("Remove this entry from the waitlist?")) return;
+    const { error } = await _supabase.from('waitlist').delete().eq('id', id);
+    if (!error) renderSummary(); 
+}
     
     // --- NAVIGATION ---
 async function switchTab(tab) {
@@ -383,6 +389,64 @@ async function switchTab(tab) {
     });
 }
 
+function renderWaitlistUI(data, counts) {
+    const container = document.getElementById('waitlist-section'); // Ensure this ID exists in your HTML
+    
+    // Create the "By Service" pills
+    const pills = Object.entries(counts).map(([svc, count]) => `
+        <div class="bg-pink-50 px-3 py-1 rounded-full text-[10px] font-black text-pink-500 uppercase">
+            ${svc}: ${count}
+        </div>
+    `).join('');
+
+    // Create the Table
+    const rows = data.map(person => `
+        <tr class="border-b border-pink-50 text-[11px]">
+            <td class="py-3 font-bold">${new Date(person.created_at).toLocaleDateString()}</td>
+            <td>${person.email}</td>
+            <td class="font-black text-pink-400 uppercase">${person.service_requested}</td>
+            <td class="text-right space-x-2">
+                <button onclick="sendWaitlistEmail('${person.email}', '${person.service_requested}')" class="text-emerald-500 hover:scale-110 transition-transform">✉️</button>
+                <button onclick="removeFromWaitlist('${person.id}')" class="text-rose-400 hover:scale-110 transition-transform">🗑️</button>
+            </td>
+        </tr>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="glass-card p-8 mt-8">
+            <h3 class="text-xs font-black uppercase text-gray-400 mb-4 tracking-widest">Waitlist Management</h3>
+            <div class="flex gap-2 mb-6 flex-wrap">${pills}</div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-[9px] uppercase text-gray-400 border-b border-pink-100">
+                            <th class="pb-2">Joined</th>
+                            <th class="pb-2">Email</th>
+                            <th class="pb-2">Service</th>
+                            <th class="pb-2 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+// Action: Email Template
+function sendWaitlistEmail(email, service) {
+    const subject = encodeURIComponent(`HanafubukiDoll: Open for ${service}!`);
+    const body = encodeURIComponent(`Hey! \n\nWe are now open for ${service} again! \n\nPlease visit our contact page (https://hanafubukidoll.com/contact) and fill out your details so that the team can review them. \n\nIf we don't hear from you within 48 hours we will have to move on to the next person on the waitlist! \n\nBest, \nHanafubuki Studio ♡`);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+}
+
+// Action: Delete from Supabase
+async function removeFromWaitlist(id) {
+    if(!confirm("Remove this person from the waitlist?")) return;
+    const { error } = await _supabase.from('waitlist').delete().eq('id', id);
+    if (!error) renderSummary(); // Refresh dashboard
+}
+    
     // --- WORKBENCH LOGIC ---
 async function renderWorkbench(showArchived = false) {
     const container = document.getElementById('commissionList');
