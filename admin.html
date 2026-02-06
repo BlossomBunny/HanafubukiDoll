@@ -174,7 +174,7 @@
 
     </main>
 
-    <div id="detailDrawer" class="fixed inset-y-0 right-0 w-full md:w-[650px] bg-white z-[100] transform translate-x-full transition-transform duration-500 border-l flex flex-col shadow-2xl">
+    <div id="editDrawer" class="fixed inset-y-0 right-0 w-full md:w-[650px] bg-white z-[100] transform translate-x-full transition-transform duration-500 border-l flex flex-col shadow-2xl">
         <div class="p-6 border-b flex justify-between items-center bg-white">
             <h2 class="font-black text-xl italic">Order Details</h2>
             <button onclick="closeDrawer()" class="text-3xl text-gray-400 hover:text-pink-500">&times;</button>
@@ -233,6 +233,7 @@ _supabase.auth.onAuthStateChange((event, session) => {
         window.location.href = 'login.html'; 
     }
 });
+    <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10">
        
     async function handleLogout() {
     const { error } = await _supabase.auth.signOut();
@@ -446,7 +447,7 @@ async function openDrawer(id) {
                 </div>
             </div>
         </div>`;
-    document.getElementById('detailDrawer').classList.remove('translate-x-full');
+    document.getElementById('editDrawer').classList.remove('translate-x-full');
     }
     
 function renderServiceBlock(job, key, title, color) {
