@@ -91,6 +91,28 @@
             </div>
         </div>
     </section>
+     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4">
+        <div class="glass-card p-6 border-l-4 border-pink-400">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-pink-500 mb-4">Live Priorities</h3>
+            <div id="priority-list" class="space-y-2">
+                <p class="text-[10px] text-gray-400 italic">Syncing...</p>
+            </div>
+        </div>
+
+        <div class="glass-card p-6 border-l-4 border-emerald-400">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-4">Revenue Snap</h3>
+            <div id="revenue-snap-bars" class="h-24 flex items-end gap-2">
+                 <p class="text-[10px] text-gray-400 italic">Calculating...</p>
+            </div>
+        </div>
+
+        <div class="glass-card p-6 border-l-4 border-amber-400 bg-amber-50/10">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-4">Queue Status</h3>
+            <div id="waitlist-summary" class="h-24 flex flex-col justify-center text-center">
+                 <p class="text-[10px] text-gray-400 italic">Checking...</p>
+            </div>
+        </div>
+    </div>       
 </div>
 
 <div class="px-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
@@ -740,37 +762,42 @@ async function renderSummary() {
                 </div>`;
         }
 
-// --- 5. WAITLIST  ---
-const waitlistContainer = document.getElementById('waitlist-summary');
-if (waitlistContainer) {
-    waitlistContainer.innerHTML = waitlist.length > 0 
-        ? `<p class="text-5xl font-black tracking-tighter text-gray-800">${waitlist.length}</p>
-           <p class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500 mt-2">Active in Queue ♡</p>`
-        : `<p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest italic">Queue is clear! ✨</p>`;
-}
-        
-    function closeDrawer() {
-    const drawer = document.getElementById('editDrawer');
-    if (drawer) {
-        drawer.classList.add('translate-x-full');
+// --- 5. WAITLIST ---
+        const waitlistContainer = document.getElementById('waitlist-summary');
+        if (waitlistContainer) {
+            waitlistContainer.innerHTML = (waitlist && waitlist.length > 0) 
+                ? `<p class="text-5xl font-black tracking-tighter text-gray-800">${waitlist.length}</p>
+                   <p class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500 mt-2">Active in Queue ♡</p>`
+                : `<p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest italic">Queue is clear! ✨</p>`;
+        }
+    } catch (e) { 
+        console.error("Critical Render Error:", e); 
     }
-}
-    async function handleDecline() {
-    const reason = document.getElementById('rejectionReason').value;
-    if (!reason) return alert("Please select a reason!");
-    const { error } = await _supabase.from('commissions').update({ status: 'Declined', archived: true, internal_notes: `Declined: ${reason}` }).eq('id', activeJobId);
-    if (!error) { closeDrawer(); renderWorkbench(); }
+} // <--- THIS CLOSES RENDERSUMMARY
+
+// --- 6. INITIALIZATION (The missing piece) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // This triggers the first render when the page opens
+    renderSummary();
+
+    // Listen for live updates so you don't have to refresh
+    _supabase
+        .channel('admin-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, renderSummary)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'studio_settings' }, renderSummary)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'waitlist' }, renderSummary)
+        .subscribe();
+});
+
+function closeDrawer() {
+    const drawer = document.getElementById('editDrawer');
+    if (drawer) drawer.classList.add('translate-x-full');
 }
 
 async function updateStock(id, change) {
     const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
     await _supabase.from('inventory').update({ quantity: Math.max(0, data.quantity + change) }).eq('id', id);
     renderInventory();
-}
-
-async function toggleService(service, currentVal) {
-    await _supabase.from('studio_settings').update({ [service]: !currentVal }).eq('id', 1); // Assumes ID 1 for settings
-    renderSettings();
 }
 
 function togglePayUI() {
@@ -780,72 +807,23 @@ function togglePayUI() {
     document.getElementById('pifUI').classList.toggle('hidden', type !== 'Paid in Full');
     document.getElementById('layawayUI').classList.toggle('hidden', type !== 'Layaway');
 }
-    
-    async function handlePayAdd() {
-    const amt = parseFloat(document.getElementById('newPayAmt').value);
-    if (!amt || amt <= 0) return alert("Please enter a valid amount!");
 
-    const { data: job } = await _supabase.from('commissions').select('payments').eq('id', activeJobId).single();
-    const currentPayments = job.payments || [];
-    
-    const newPayments = [...currentPayments, {
-        amount: amt,
-        date: new Date().toISOString()
-    }];
-
-    const { error } = await _supabase.from('commissions').update({ payments: newPayments }).eq('id', activeJobId);
-    if (!error) {
-        document.getElementById('newPayAmt').value = '';
-        openDrawer(activeJobId); // Refresh the drawer to show new balance
-    }
-}
 async function toggleBanner() {
-    // 1. Fetch the current state of the Banner row
-    const { data: bannerData, error: fetchErr } = await _supabase
-        .from('studio_settings')
-        .select('is_live')
-        .eq('id', 'Banner')
-        .single();
-
-    if (fetchErr) {
-        console.error("Error fetching banner state:", fetchErr);
-        return;
-    }
-
-    // 2. Flip the is_live status
-    const { error: updateErr } = await _supabase
-        .from('studio_settings')
-        .update({ is_live: !bannerData.is_live })
-        .eq('id', 'Banner');
-
-    if (!updateErr) {
-        renderSummary(); // Refresh the UI to show the new state
-    } else {
-        console.error("Error toggling banner:", updateErr);
-    }
+    const { data: bannerData } = await _supabase.from('studio_settings').select('is_live').eq('id', 'Banner').single();
+    await _supabase.from('studio_settings').update({ is_live: !bannerData.is_live }).eq('id', 'Banner');
+    renderSummary();
 }
 
 async function updateBanner() {
     const text = document.getElementById('bannerMsgInput').value;
-    const { error } = await _supabase
-        .from('studio_settings')
-        .update({ banner_text: text })
-        .eq('id', 'Banner');
-
-    if (!error) {
-        alert("Studio announcement updated! ♡");
-        renderSummary();
-    }
+    await _supabase.from('studio_settings').update({ banner_text: text }).eq('id', 'Banner');
+    alert("Studio announcement updated! ♡");
+    renderSummary();
 }
 
-// Ensure the service toggles use the correct row-based logic too
 async function toggleServiceStatus(id, currentStatus) {
-    const { error } = await _supabase
-        .from('studio_settings')
-        .update({ is_live: !currentStatus })
-        .eq('id', id);
-
-    if (!error) renderSummary();
+    await _supabase.from('studio_settings').update({ is_live: !currentStatus }).eq('id', id);
+    renderSummary();
 }
 </script>
 </body>
