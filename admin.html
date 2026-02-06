@@ -68,121 +68,128 @@
 </div>
 </nav>
 <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
-<div id="view-summary" class="tab-content space-y-8 animate-fadeIn">
+
+    <!-- SUMMARY TAB -->
+    <div id="view-summary" class="tab-content space-y-8 animate-fadeIn">
         <div class="px-4 mb-8">
-    <section class="glass-card p-6 border-pink-100 bg-white/50 border-l-4 border-l-pink-400">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex-1 w-full">
-                <h4 class="text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center gap-2">
-                    <span>📢</span> Live Studio Banner
-                </h4>
-                <div class="flex gap-2">
-                    <input type="text" id="bannerMsgInput" placeholder="Enter coupon code or news..." 
-                           class="flex-1 p-3 bg-white border border-pink-100 rounded-2xl text-xs font-bold focus:ring-2 ring-pink-200 outline-none transition-all">
-                    <button onclick="updateBanner()" class="px-6 bg-pink-500 text-white rounded-2xl text-[10px] font-black uppercase hover:bg-pink-600 transition-all">Update ♡</button>
+            <section class="glass-card p-6 border-pink-100 bg-white/50 border-l-4 border-l-pink-400">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex-1 w-full">
+                        <h4 class="text-[10px] font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center gap-2">
+                            <span>📢</span> Live Studio Banner
+                        </h4>
+                        <div class="flex gap-2">
+                            <input type="text" id="bannerMsgInput" placeholder="Enter coupon code or news..."
+                                   class="flex-1 p-3 bg-white border border-pink-100 rounded-2xl text-xs font-bold focus:ring-2 ring-pink-200 outline-none transition-all">
+                            <button onclick="updateBanner()" class="px-6 bg-pink-500 text-white rounded-2xl text-[10px] font-black uppercase hover:bg-pink-600 transition-all">Update ♡</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 bg-white p-3 rounded-2xl border border-pink-50 shadow-sm">
+                        <span id="bannerStatusLabel" class="text-[10px] font-black uppercase text-gray-400">Banner Off</span>
+                        <button id="bannerToggleBtn" onclick="toggleBanner()" class="w-12 h-6 bg-gray-200 rounded-full relative transition-all">
+                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all"></div>
+                        </button>
+                    </div>
                 </div>
+            </section>
+        </div>
+
+        <div class="px-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-10">
+            <div>
+                <h2 class="text-3xl font-black italic tracking-tighter text-gray-800">Studio Briefing ♡</h2>
+                <p id="greeting-date" class="text-[10px] font-bold text-pink-400 uppercase tracking-widest"></p>
             </div>
-            <div class="flex items-center gap-4 bg-white p-3 rounded-2xl border border-pink-50 shadow-sm">
-                <span id="bannerStatusLabel" class="text-[10px] font-black uppercase text-gray-400">Banner Off</span>
-                <button id="bannerToggleBtn" onclick="toggleBanner()" class="w-12 h-6 bg-gray-200 rounded-full relative transition-all">
-                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all"></div>
-                </button>
+            <div id="service-quick-toggles" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 px-4 mb-8">
+            <div class="glass-card p-6 border-l-4 border-pink-300">
+                <p class="text-[9px] font-black uppercase text-gray-400">Enquiries</p>
+                <p id="stat-enquiries" class="text-2xl font-black tracking-tighter text-gray-800">0</p>
+            </div>
+            <div class="glass-card p-6 border-l-4 border-emerald-300">
+                <p class="text-[9px] font-black uppercase text-gray-400">Workbench</p>
+                <p id="stat-workbench" class="text-2xl font-black tracking-tighter text-gray-800">0</p>
+            </div>
+            <div class="glass-card p-6 border-l-4 border-purple-300">
+                <p class="text-[9px] font-black uppercase text-gray-400">To Ship</p>
+                <p id="stat-special" class="text-2xl font-black tracking-tighter text-gray-800">0</p>
+            </div>
+            <div class="glass-card p-6 border-l-4 border-blue-300">
+                <p class="text-[9px] font-black uppercase text-gray-400">Total Booked</p>
+                <p id="stat-revenue" class="text-2xl font-black tracking-tighter text-gray-800">£0</p>
+            </div>
+            <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20">
+                <p class="text-[9px] font-black uppercase text-emerald-600">Total Paid</p>
+                <p id="stat-paid" class="text-2xl font-black tracking-tighter text-emerald-700">£0</p>
             </div>
         </div>
-    </section>
- 
-<div class="px-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-10">
-    <div>
-        <h2 class="text-3xl font-black italic tracking-tighter text-gray-800">Studio Briefing ♡</h2>
-        <p id="greeting-date" class="text-[10px] font-bold text-pink-400 uppercase tracking-widest"></p>
-    </div>
-    <div id="service-quick-toggles" class="flex flex-wrap gap-2"></div>
-</div>
 
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 px-4 mb-8">
-    <div class="glass-card p-6 border-l-4 border-pink-300">
-        <p class="text-[9px] font-black uppercase text-gray-400">Enquiries</p>
-        <p id="stat-enquiries" class="text-2xl font-black tracking-tighter text-gray-800">0</p>
-    </div>
-    <div class="glass-card p-6 border-l-4 border-emerald-300">
-        <p class="text-[9px] font-black uppercase text-gray-400">Workbench</p>
-        <p id="stat-workbench" class="text-2xl font-black tracking-tighter text-gray-800">0</p>
-    </div>
-    <div class="glass-card p-6 border-l-4 border-purple-300">
-        <p class="text-[9px] font-black uppercase text-gray-400">To Ship</p>
-        <p id="stat-special" class="text-2xl font-black tracking-tighter text-gray-800">0</p>
-    </div>
-    <div class="glass-card p-6 border-l-4 border-blue-300">
-        <p class="text-[9px] font-black uppercase text-gray-400">Total Booked</p>
-        <p id="stat-revenue" class="text-2xl font-black tracking-tighter text-gray-800">£0</p>
-    </div>
-    <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20">
-        <p class="text-[9px] font-black uppercase text-emerald-600">Total Paid</p>
-        <p id="stat-paid" class="text-2xl font-black tracking-tighter text-emerald-700">£0</p>
-    </div>
-</div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 px-4 mb-8">
-    <div class="glass-card p-6 border-l-4 border-pink-400">
-        <h3 class="text-[10px] font-black uppercase tracking-widest text-pink-500 mb-4">Top Priorities ♡</h3>
-        <div id="priority-list" class="space-y-2">
+            <div class="glass-card p-6 border-l-4 border-pink-400">
+                <h3 class="text-[10px] font-black uppercase tracking-widest text-pink-500 mb-4">Top Priorities ♡</h3>
+                <div id="priority-list" class="space-y-2"></div>
             </div>
-    </div>
-
-    <div class="glass-card p-6 border-l-4 border-emerald-400">
-        <h3 class="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-4">Revenue Snap (Paid vs Pending)</h3>
-        <div class="h-40 w-full">
-            <canvas id="revenueChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<div class="px-4 mb-12">
-    <div class="glass-card overflow-hidden border-l-4 border-amber-400">
-        <div class="p-6 border-b border-pink-50 bg-amber-50/10 flex justify-between items-center">
-            <h3 class="text-[10px] font-black uppercase tracking-widest text-amber-600">Active Waitlist Table</h3>
-            <span id="waitlist-count" class="text-[10px] font-bold text-amber-500 bg-white px-3 py-1 rounded-full shadow-sm">0 Entries</span>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-gray-50/50">
-                    <tr>
-                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Date</th>
-                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Client Email</th>
-                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Service</th>
-                    </tr>
-                </thead>
-                <tbody id="waitlist-table-body" class="divide-y divide-pink-50">
-                    </tbody>
-            </table>
-        </div>
-    </div>
-</div> </div>
-        
-        <div id="view-workbench" class="tab-content hidden space-y-6">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
-                <div>
-                    <h2 class="text-3xl font-black italic">Client Inbox</h2>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Manage active & past commissions</p>
-                </div>
-                <div class="flex bg-gray-100 p-1 rounded-2xl border border-gray-200">
-                    <button onclick="renderWorkbench(false)" id="tab-live" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500">Live</button>
-                    <button onclick="renderWorkbench(true)" id="tab-archived" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400">Archived</button>
+            <div class="glass-card p-6 border-l-4 border-emerald-400">
+                <h3 class="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-4">Revenue Snap (Paid vs Pending)</h3>
+                <div class="h-40 w-full">
+                    <canvas id="revenueChart"></canvas>
                 </div>
             </div>
-            <div id="commissionList" class="space-y-3"></div>
         </div>
 
-        <div id="view-planner" class="tab-content hidden space-y-6">
-            <div class="mb-8">
-                <h2 class="text-3xl font-black italic">Priority Planner</h2>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Weighted by age and urgency status</p>
+        <div class="px-4 mb-12">
+            <div class="glass-card overflow-hidden border-l-4 border-amber-400">
+                <div class="p-6 border-b border-pink-50 bg-amber-50/10 flex justify-between items-center">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-amber-600">Active Waitlist Table</h3>
+                    <span id="waitlist-count" class="text-[10px] font-bold text-amber-500 bg-white px-3 py-1 rounded-full shadow-sm">0 Entries</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50/50">
+                            <tr>
+                                <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Date</th>
+                                <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Client Email</th>
+                                <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Service</th>
+                            </tr>
+                        </thead>
+                        <tbody id="waitlist-table-body" class="divide-y divide-pink-50"></tbody>
+                    </table>
+                </div>
             </div>
-            <div id="plannerContainer" class="space-y-4"></div>
         </div>
+    </div> <!-- ← THIS WAS MISSING or misplaced -->
 
-        <div id="view-inventory" class="tab-content hidden space-y-12 pb-20">
+    <!-- WORKBENCH TAB -->
+    <div id="view-workbench" class="tab-content hidden space-y-6">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+            <div>
+                <h2 class="text-3xl font-black italic">Client Inbox</h2>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Manage active & past commissions</p>
             </div>
+            <div class="flex bg-gray-100 p-1 rounded-2xl border border-gray-200">
+                <button onclick="renderWorkbench(false)" id="tab-live" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500">Live</button>
+                <button onclick="renderWorkbench(true)" id="tab-archived" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400">Archived</button>
+            </div>
+        </div>
+        <div id="commissionList" class="space-y-3"></div>
+    </div>
 
+    <!-- PLANNER TAB -->
+    <div id="view-planner" class="tab-content hidden space-y-6">
+        <div class="mb-8">
+            <h2 class="text-3xl font-black italic">Priority Planner</h2>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Weighted by age and urgency status</p>
+        </div>
+        <div id="plannerContainer" class="space-y-4"></div>
+    </div>
+
+    <!-- INVENTORY TAB -->
+    <div id="view-inventory" class="tab-content hidden space-y-12 pb-20">
+        <!-- inventory content will be injected here -->
+    </div>
+
+</main>
     </main>
 
     <div id="editDrawer" class="fixed inset-y-0 right-0 w-full md:w-[650px] bg-white z-[100] transform translate-x-full transition-transform duration-500 border-l flex flex-col shadow-2xl">
@@ -254,18 +261,35 @@ _supabase.auth.onAuthStateChange((event, session) => {
   
     // --- NAVIGATION ---
 async function switchTab(tab) {
+    // Remember last tab
     localStorage.setItem('hana_active_tab', tab);
-    
-    document.querySelectorAll('.tab-content').forEach(el => {
-    el.classList.add('hidden');
-    el.style.display = 'none';           // ← extra force
-});
 
-const activeView = document.getElementById(`view-${tab}`);
-if (activeView) {
-    activeView.classList.remove('hidden');
-    activeView.style.display = 'block';  // ← force visible
-    console.log(`Activated tab: view-${tab}`);
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.add('hidden');
+    });
+
+    // Show the requested one
+    const activeView = document.getElementById(`view-${tab}`);
+    if (activeView) {
+        activeView.classList.remove('hidden');
+        console.log(`Tab switched to: ${tab} (element found: yes)`);
+    } else {
+        console.error(`Tab element not found: view-${tab}`);
+        // Optional: show error in UI
+        document.getElementById('adminMain').innerHTML += 
+            `<div class="p-6 text-red-600 font-bold">Error: Tab "${tab}" content is missing from HTML!</div>`;
+    }
+
+    // Load data for that tab
+    try {
+        if (tab === 'summary')    await renderSummary();
+        if (tab === 'workbench')  await renderWorkbench(false);  // default to Live
+        if (tab === 'planner')    await renderPlanner();
+        if (tab === 'inventory')  await renderInventory();
+    } catch (err) {
+        console.error(`Render failed for ${tab}:`, err);
+    }
 }
     
 let revenueChart = null;
