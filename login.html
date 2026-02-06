@@ -9,15 +9,13 @@
     <style>
         :root { --accent-pink: #f472b6; --text-muted: #9ca3af; }
         
-        /* Force the mesh background to stay behind everything */
         .mesh-bg { 
             position: fixed !important; 
             top: 0; left: 0; width: 100%; height: 100%; 
             z-index: -1 !important; 
         }
 
-        /* Ensure the body actually scrolls if the screen is small */
-        body { overflow-y: auto; overflow-x: hidden; }
+       body { overflow-y: auto; overflow-x: hidden; }
     </style>
 </head>
 <body class="bg-[#fdfbfb] flex flex-col min-h-screen relative">
@@ -60,6 +58,7 @@
         </a>
     </div>
 </div>
+            
             <p id="errorMsg" class="text-red-400 text-xs mt-4 text-center hidden font-medium"></p>
         </div>
     </main>
