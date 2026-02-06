@@ -165,6 +165,7 @@
 
         <div id="view-inventory" class="hidden space-y-12 pb-20">
             </div>
+    <div id="view-settings" class="hidden"></div>
 
     </main>
 
@@ -494,70 +495,33 @@ document.getElementById('saveBtn').onclick = async () => {
     try {
         const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
         
-        // Use optional chaining to prevent the 'null' reading error
-        const payType = document.getElementById('payType')?.value;
-        const isPaidChecked = document.getElementById('isPaidCheck')?.checked || false;
-        const isUrgentChecked = document.getElementById('isUrg')?.checked || false;
-
         const updates = {
-    status: document.getElementById('upStatus')?.value,
-    total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
-    tracking_number: document.getElementById('trackNum')?.value || '',
-    payment_status: document.getElementById('isPaidCheck')?.checked ? 'Paid' : 'Unpaid',
-    shipping_cost: parseFloat(document.getElementById('shipCost')?.value || 0),
-    partner_shipped: document.getElementById('partnerShipped')?.checked || false,
-    artist_shipped: document.getElementById('artistShipped')?.checked || false
-};
-
-        // Handle Trade specific toggles safely
-        if (payType === 'Trade') {
-            updates.partner_shipped = document.getElementById('partnerShipped')?.checked || false;
-            updates.artist_shipped = document.getElementById('artistShipped')?.checked || false;
-        }
-
-        // Service specific details
-        if (job.faceup_details) {
-            updates.faceup_details = { 
-                ...job.faceup_details, 
-                status: document.getElementById('faceupStatus')?.value || job.faceup_details.status, 
-                admin_notes: document.getElementById('faceupAdmin')?.value || job.faceup_details.admin_notes 
-            };
-        }
-        if (job.eye_details) {
-            updates.eye_details = { 
-                ...job.eye_details, 
-                status: document.getElementById('eyeStatus')?.value || job.eye_details.status, 
-                admin_notes: document.getElementById('eyeAdmin')?.value || job.eye_details.admin_notes 
-            };
-        }
-        if (job.manicure_details) {
-            updates.manicure_details = { 
-                ...job.manicure_details, 
-                status: document.getElementById('maniStatus')?.value || job.manicure_details.status, 
-                admin_notes: document.getElementById('manicureAdmin')?.value || job.manicure_details.admin_notes 
-            };
-        }
+            status: document.getElementById('upStatus')?.value,
+            total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
+            tracking_number: document.getElementById('trackNum')?.value || '',
+            payment_status: document.getElementById('isPaidCheck')?.checked ? 'Paid' : 'Unpaid',
+            shipping_cost: parseFloat(document.getElementById('shipCost')?.value || 0)
+        };
 
         const { error } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
+        if (error) throw error;
 
-if (error) throw error;
+        btn.innerText = "Saved! ♡";
 
-btn.innerText = "Saved! ♡";
-
-// Wait 800ms so you can actually see the "Saved!" message
-setTimeout(() => { 
-    // 1. Force the drawer/popup to close
-    const drawer = document.getElementById('editDrawer');
-    if (drawer) drawer.classList.add('translate-x-full'); 
-    
-    // 2. Refresh your data
-    renderWorkbench(); 
-    renderSummary(); 
-    
-    // 3. Reset the button for next time
-    btn.innerText = "Save All Changes ♡"; 
-    btn.disabled = false; 
-}, 800);
+        setTimeout(() => { 
+            const drawer = document.getElementById('editDrawer');
+            if (drawer) drawer.classList.add('translate-x-full'); 
+            renderWorkbench(); 
+            renderSummary(); 
+            btn.innerText = "Save All Changes ♡"; 
+            btn.disabled = false; 
+        }, 800);
+    } catch (e) { 
+        console.error("Save error:", e);
+        btn.innerText = "Error! ❌";
+        btn.disabled = false;
+    }
+};
     
     // --- ACCESSIBILITY ---
     const ComfortSettings = {
