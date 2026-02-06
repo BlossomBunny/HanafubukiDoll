@@ -39,11 +39,23 @@
         </div>
     </nav>
     </header>
-
-    <main class="max-w-6xl mx-auto px-6 py-20">
-        <div id="liveBanner" class="hidden w-full bg-pink-500 text-white py-3 px-4 text-center text-xs font-black uppercase tracking-widest animate-pulse-slow z-[100]">
-    <span id="bannerText">♡ LOADING STUDIO NEWS ♡</span>
+    <div id="liveBanner" class="hidden px-4 mb-6 animate-fadeIn">
+    <div class="max-w-xl mx-auto bg-white/60 backdrop-blur-md border border-pink-100 p-4 rounded-3xl shadow-sm flex items-center gap-4">
+        <div class="flex-shrink-0 bg-pink-500 text-white w-10 h-10 rounded-2xl flex items-center justify-center text-lg shadow-sm shadow-pink-200">
+            📢
+        </div>
+        <div class="flex-1">
+            <p id="bannerText" class="text-[11px] font-black uppercase tracking-widest text-gray-700 leading-tight">
+                ♡ LOADING STUDIO NEWS ♡
+            </p>
+        </div>
+        <div class="text-pink-300 text-xs pr-2">
+            ✨
+        </div>
+    </div>
 </div>
+
+
         
         <section class="text-center mb-32">
             <div id="service-status-bar" class="flex flex-wrap gap-3 justify-center mb-10">
@@ -134,51 +146,74 @@
             container.appendChild(p);
         }
 
-        // Live Status Blinker Logic
-       async function updateHomeBlinkers() {
-    const { data: settings } = await _supabase.from('studio_settings').select('*');
-    if (!settings) return;
+    // --- Live Status & Banner Logic ---
+async function updateHomeBlinkers() {
+    try {
+        const { data: settings, error } = await _supabase.from('studio_settings').select('*');
+        if (error || !settings) return;
 
-    // Separate the Banner row from the Service rows
-    const bannerData = settings.find(s => s.id === 'Banner');
-    const services = settings.filter(s => s.id !== 'Banner');
+        // 1. Separate Banner from Services
+        const bannerData = settings.find(s => s.id === 'Banner');
+        const services = settings.filter(s => s.id !== 'Banner');
 
-    // Update Banner
-    const bannerEl = document.getElementById('liveBanner'); // Ensure this ID exists
-    const bannerTxt = document.getElementById('bannerText');
-    if (bannerData && bannerData.is_live) {
-        bannerEl.classList.remove('hidden');
-        bannerTxt.innerText = bannerData.banner_text;
-    } else if (bannerEl) {
-        bannerEl.classList.add('hidden');
+        // 2. Update the Card-Style Banner
+        const bannerEl = document.getElementById('liveBanner');
+        const bannerTxt = document.getElementById('bannerText');
+        if (bannerData && bannerData.is_live) {
+            bannerEl.classList.remove('hidden');
+            bannerTxt.innerText = bannerData.banner_text;
+        } else if (bannerEl) {
+            bannerEl.classList.add('hidden');
+        }
+
+        // 3. Update the Service Status Bar
+        const barContainer = document.getElementById('service-status-bar');
+        if (barContainer) {
+            barContainer.innerHTML = services.map(service => {
+                const isLive = service.is_live;
+                const colorClass = isLive ? 'bg-emerald-400' : 'bg-amber-400';
+                const label = isLive ? 'Open' : 'Waitlist';
+                const pulseCircle = isLive ? `<span class="animate-pulse-custom absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-75"></span>` : '';
+
+                return `
+                    <div class="flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm border border-pink-100 rounded-full shadow-sm hover:scale-105 transition-transform cursor-default">
+                        <span class="relative flex h-2 w-2">
+                            ${pulseCircle}
+                            <span class="relative inline-flex rounded-full h-2 w-2 ${colorClass}"></span>
+                        </span>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-gray-700">
+                            ${service.id}: <span class="${isLive ? 'text-emerald-600' : 'text-amber-500'}">${label}</span>
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+    } catch (err) {
+        console.error("Blinker update failed:", err);
     }
+}
 
-    // Update Blinker Bars (Your existing mapping logic)
-    const barContainer = document.getElementById('service-status-bar');
-    if (barContainer) {
-        barContainer.innerHTML = services.map(service => {
-            const isLive = service.is_live;
-            const colorClass = isLive ? 'bg-emerald-400' : 'bg-amber-400';
-            const label = isLive ? 'Open' : 'Waitlist';
-            const pulseCircle = isLive ? `<span class="animate-pulse-custom absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-75"></span>` : '';
-
-            return `
-                <div class="flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm border border-pink-100 rounded-full shadow-sm">
-                    <span class="relative flex h-2 w-2">
-                        ${pulseCircle}
-                        <span class="relative inline-flex rounded-full h-2 w-2 ${colorClass}"></span>
-                    </span>
-                    <span class="text-[10px] font-black uppercase tracking-widest text-gray-700">
-                        ${service.id}: <span class="${isLive ? 'text-emerald-600' : 'text-amber-500'}">${label}</span>
-                    </span>
-                </div>
-            `;
-        }).join('');
-    }
-}        
-
+// --- Initialize & Listen for Live Updates ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Initial fetch
     updateHomeBlinkers();
+
+    // Setup Realtime Channel
+    const statusSubscription = _supabase
+        .channel('studio-status-changes')
+        .on('postgres_changes', { 
+            event: '*', 
+            schema: 'public', 
+            table: 'studio_settings' 
+        }, (payload) => {
+            console.log('Studio status updated live! ♡');
+            updateHomeBlinkers(); 
+        })
+        .subscribe();
+});
+
+// Safety fallback every minute
+setInterval(updateHomeBlinkers, 60000);
     
  
     const statusSubscription = _supabase
