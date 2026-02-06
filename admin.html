@@ -91,30 +91,7 @@
             </div>
         </div>
     </section>
-     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4">
-        <div class="glass-card p-6 border-l-4 border-pink-400">
-            <h3 class="text-[10px] font-black uppercase tracking-widest text-pink-500 mb-4">Live Priorities</h3>
-            <div id="priority-list" class="space-y-2">
-                <p class="text-[10px] text-gray-400 italic">Syncing...</p>
-            </div>
-        </div>
-
-        <div class="glass-card p-6 border-l-4 border-emerald-400">
-            <h3 class="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-4">Revenue Snap</h3>
-            <div id="revenue-snap-bars" class="h-24 flex items-end gap-2">
-                 <p class="text-[10px] text-gray-400 italic">Calculating...</p>
-            </div>
-        </div>
-
-        <div class="glass-card p-6 border-l-4 border-amber-400 bg-amber-50/10">
-            <h3 class="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-4">Queue Status</h3>
-            <div id="waitlist-summary" class="h-24 flex flex-col justify-center text-center">
-                 <p class="text-[10px] text-gray-400 italic">Checking...</p>
-            </div>
-        </div>
-    </div>       
-</div>
-
+ 
 <div class="px-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
     <div>
         <h2 class="text-3xl font-black italic tracking-tighter text-gray-800">Studio Briefing ♡</h2>
@@ -147,10 +124,12 @@
 </div>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4">
     
-    <div class="glass-card p-6 border-l-4 border-pink-400">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-pink-500">Live Priorities</h3>
-            <span class="text-[9px] font-bold text-gray-400 uppercase">Oldest</span>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4">
+        <div class="glass-card p-6 border-l-4 border-pink-400">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-pink-500 mb-4">Top Priorities</h3>
+            <div id="priority-list" class="space-y-2">
+                <p class="text-[10px] text-gray-400 italic">Syncing...</p>
+            </div>
         </div>
         <div id="priority-list" class="space-y-3">
             <div class="animate-pulse bg-pink-50/50 h-16 rounded-2xl"></div>
@@ -158,21 +137,21 @@
     </div>
 
     <div class="glass-card p-6 border-l-4 border-emerald-400">
-        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-4">Revenue Snap</h3>
+        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-4">Revenue</h3>
         <div id="revenue-snap-bars" class="h-32 flex items-end gap-2">
             <div class="bg-emerald-100 w-full h-24 rounded-t-lg"></div>
             <div class="bg-pink-100 w-full h-12 rounded-t-lg"></div>
         </div>
     </div>
 
-    <div class="glass-card p-6 border-l-4 border-amber-400 bg-amber-50/10">
-        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 mb-4">Queue Status</h3>
-        <div id="waitlist-summary" class="flex flex-col justify-center h-32 text-center">
-            <p class="text-gray-300 text-[10px] font-bold uppercase tracking-widest italic">Syncing queue...</p>
+     <div class="glass-card p-6 border-l-4 border-amber-400 bg-amber-50/10">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-4">Waitlist Status</h3>
+            <div id="waitlist-summary" class="h-24 flex flex-col justify-center text-center">
+                 <p class="text-[10px] text-gray-400 italic">Checking...</p>
+            </div>
         </div>
-    </div>
-</div>
-        
+    </div>       
+</div>       
         
         <div id="view-workbench" class="space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
