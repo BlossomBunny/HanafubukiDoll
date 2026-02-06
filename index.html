@@ -140,32 +140,44 @@
         }
 
 // --- Live Status & Banner Logic ---
+// --- High-Frequency Update Logic ---
 async function updateHomeBlinkers() {
     try {
-        const { data: settings, error } = await _supabase.from('studio_settings').select('*');
+        // We only select the columns we need to keep the "check" super fast
+        const { data: settings, error } = await _supabase
+            .from('studio_settings')
+            .select('id, is_live, banner_text');
+            
         if (error || !settings) return;
 
         const bannerData = settings.find(s => s.id === 'Banner');
         const services = settings.filter(s => s.id !== 'Banner');
 
-        // 1. Minimalist Top Banner Logic
+        // 1. Top Bar Banner Logic
         const bannerEl = document.getElementById('liveBanner');
         const bannerTxt = document.getElementById('bannerText');
         
         if (bannerData && bannerData.is_live && bannerData.banner_text) {
-            bannerTxt.innerText = bannerData.banner_text;
-            bannerEl.classList.remove('hidden');
-            // Force a small height for the bar style
-            bannerEl.style.maxHeight = '40px'; 
+            if (bannerEl.classList.contains('hidden')) {
+                bannerTxt.innerText = bannerData.banner_text;
+                bannerEl.classList.remove('hidden');
+                // Use a tiny delay to trigger the height animation
+                setTimeout(() => bannerEl.style.maxHeight = '40px', 10);
+            } else {
+                // If already visible, just update text if it changed
+                if (bannerTxt.innerText !== bannerData.banner_text) {
+                    bannerTxt.innerText = bannerData.banner_text;
+                }
+            }
         } else {
             bannerEl.style.maxHeight = '0px';
             setTimeout(() => bannerEl.classList.add('hidden'), 500);
         }
 
-        // 2. Service Status Pills (Blinkers)
+        // 2. Service Status Pills
         const barContainer = document.getElementById('service-status-bar');
         if (barContainer) {
-            barContainer.innerHTML = services.map(service => {
+            const newHtml = services.map(service => {
                 const isLive = service.is_live;
                 const colorClass = isLive ? 'bg-emerald-400' : 'bg-amber-400';
                 return `
@@ -179,35 +191,25 @@ async function updateHomeBlinkers() {
                         </span>
                     </div>`;
             }).join('');
+
+            // Only update the innerHTML if it has actually changed to prevent flickering
+            if (barContainer.innerHTML !== newHtml) {
+                barContainer.innerHTML = newHtml;
+            }
         }
     } catch (err) {
-        console.error("Update failed:", err);
+        console.error("Polling failed:", err);
     }
 }
 
-// --- Instant Update Listener ---
+// --- Initialize Polling ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial fetch
+    // Check immediately on load
     updateHomeBlinkers();
 
-    // Listen for live changes from Admin panel
-    _supabase
-        .channel('studio-status-changes')
-        .on('postgres_changes', { 
-            event: '*', 
-            schema: 'public', 
-            table: 'studio_settings' 
-        }, (payload) => {
-            console.log('Instant Change Received! ♡');
-            updateHomeBlinkers(); 
-        })
-        .subscribe((status) => {
-            console.log("Realtime Connection:", status);
-        });
+    // Check every 5 seconds (Fast enough to feel live, slow enough to be safe)
+    setInterval(updateHomeBlinkers, 5000);
 });
-
-// Periodic safety check
-setInterval(updateHomeBlinkers, 60000);
         
     </script>
     <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
