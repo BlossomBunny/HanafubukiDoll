@@ -138,8 +138,7 @@
              </div>
     </div>
 </div>
-
-<div class="px-4">
+            <div class="px-4 mt-8">
     <div class="glass-card overflow-hidden border-l-4 border-amber-400">
         <div class="p-6 border-b border-pink-50 bg-amber-50/10">
             <h3 class="text-[10px] font-black uppercase tracking-widest text-amber-600">Active Waitlist ♡</h3>
@@ -154,14 +153,13 @@
                     </tr>
                 </thead>
                 <tbody id="waitlist-table-body" class="divide-y divide-pink-50">
-                    <tr>
-                        <td colspan="3" class="p-8 text-center text-xs italic text-gray-400 uppercase tracking-widest">Checking queue...</td>
-                    </tr>
-                </tbody>
+                    </tbody>
             </table>
         </div>
     </div>
 </div>
+
+
         
         <div id="view-workbench" class="space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
@@ -734,8 +732,7 @@ async function renderSummary() {
                 }
             }
         }
-
-        // --- 4. REVENUE SNAP ---
+// --- 4. REVENUE SNAP ---
         const snap = document.getElementById('revenue-snap-bars');
         if(snap) {
             const pending = totalBooked - totalPaid;
@@ -751,45 +748,29 @@ async function renderSummary() {
                 </div>`;
         }
 
-const waitlistTable = document.getElementById('waitlist-table-body');
-if (waitlistTable) {
-    if (waitlist && waitlist.length > 0) {
-        waitlistTable.innerHTML = waitlist.map(entry => {
-            const date = new Date(entry.created_at).toLocaleDateString('en-GB', {
-                day: '2-digit', month: 'short', year: 'numeric'
-            });
-            
-            return `
+        // --- 5. FULL WAITLIST TABLE ---
+        const waitlistTable = document.getElementById('waitlist-table-body');
+        if (waitlistTable && waitlist) {
+            waitlistTable.innerHTML = waitlist.length > 0 ? waitlist.map(entry => `
                 <tr class="hover:bg-amber-50/30 transition-colors">
-                    <td class="p-4 text-[11px] font-bold text-gray-500 uppercase">${date}</td>
+                    <td class="p-4 text-[11px] font-bold text-gray-500 uppercase">${new Date(entry.created_at).toLocaleDateString()}</td>
                     <td class="p-4 text-sm font-black text-gray-700">${entry.email}</td>
                     <td class="p-4">
                         <span class="px-3 py-1 bg-amber-100 text-amber-600 rounded-full text-[9px] font-black uppercase">
                             ${entry.service_requested || 'General Service'}
                         </span>
                     </td>
-                </tr>`;
-        }).join('');
-    } else {
-        waitlistTable.innerHTML = `
-            <tr>
-                <td colspan="3" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase tracking-widest italic">
-                    Queue is clear! ✨
-                </td>
-            </tr>`;
-    }
-}
+                </tr>`).join('') : `<tr><td colspan="3" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase italic">Queue is clear! ✨</td></tr>`;
+        }
+    } catch (e) { console.error("Summary Error:", e); }
+} // This bracket closes renderSummary correctly.
 
-// --- 6. INITIALIZATION (The missing piece) ---
+// --- 6. UTILITIES & LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
-    // This triggers the first render when the page opens
     renderSummary();
-
-    // Listen for live updates so you don't have to refresh
-    _supabase
-        .channel('admin-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, renderSummary)
+    _supabase.channel('admin-sync')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'studio_settings' }, renderSummary)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, renderSummary)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'waitlist' }, renderSummary)
         .subscribe();
 });
@@ -805,27 +786,6 @@ async function updateStock(id, change) {
     renderInventory();
 }
 
-function togglePayUI() {
-    const type = document.getElementById('payType').value;
-    document.getElementById('moneyRow').classList.toggle('hidden', ['Trade', 'Gift'].includes(type));
-    document.getElementById('tradeUI').classList.toggle('hidden', type !== 'Trade');
-    document.getElementById('pifUI').classList.toggle('hidden', type !== 'Paid in Full');
-    document.getElementById('layawayUI').classList.toggle('hidden', type !== 'Layaway');
-}
-
-async function toggleBanner() {
-    const { data: bannerData } = await _supabase.from('studio_settings').select('is_live').eq('id', 'Banner').single();
-    await _supabase.from('studio_settings').update({ is_live: !bannerData.is_live }).eq('id', 'Banner');
-    renderSummary();
-}
-
-async function updateBanner() {
-    const text = document.getElementById('bannerMsgInput').value;
-    await _supabase.from('studio_settings').update({ banner_text: text }).eq('id', 'Banner');
-    alert("Studio announcement updated! ♡");
-    renderSummary();
-}
-
 async function toggleServiceStatus(id, currentStatus) {
     await _supabase.from('studio_settings').update({ is_live: !currentStatus }).eq('id', id);
     renderSummary();
@@ -833,3 +793,4 @@ async function toggleServiceStatus(id, currentStatus) {
 </script>
 </body>
 </html>
+       
