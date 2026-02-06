@@ -62,7 +62,9 @@
     <button onclick="switchTab('workbench')" class="nav-btn nav-btn-mint">Commissions ♡</button>
     <button onclick="switchTab('planner')" class="nav-btn nav-btn-pink">Planner ♡</button>
     <button onclick="switchTab('inventory')" class="nav-btn nav-btn-mint">Stock ♡</button>
-    <button onclick="switchTab('pl')" class="nav-btn nav-btn-pink">P&L Sheet 📊</button>
+    <a href="finances.html" class="nav-btn nav-btn-pink flex items-center gap-2">
+    P&L Sheet 📊
+</a>
     <button onclick="switchTab('settings')" class="nav-btn nav-btn-mint">Settings ♡</button>
     <button onclick="handleLogout()" class="nav-btn nav-btn-pink opacity-50 hover:opacity-100">Logout ⏻</button>
 </div>
@@ -188,7 +190,7 @@ _supabase.auth.onAuthStateChange((event, session) => {
     // --- NAVIGATION ---
     async function switchTab(tab) {
         localStorage.setItem('hana_active_tab', tab);
-        ['view-workbench', 'view-planner', 'view-settings', 'view-inventory', 'view-pl'].forEach(id => {
+        ['view-workbench', 'view-planner', 'view-settings', 'view-inventory'].forEach(id => {
             document.getElementById(id)?.classList.add('hidden');
         });
         document.getElementById(`view-${tab}`)?.classList.remove('hidden');
@@ -196,7 +198,6 @@ _supabase.auth.onAuthStateChange((event, session) => {
         if(tab === 'workbench') renderWorkbench();
         if(tab === 'planner') renderPlanner();
         if(tab === 'inventory') renderInventory();
-        if(tab === 'pl') renderPL();
         if(tab === 'settings') renderSettings();
     }
 
@@ -221,14 +222,13 @@ async function renderWorkbench(showArchived = false) {
     };
 
     container.innerHTML = jobs.map(job => {
-        // Build service summary
+    
         const requested = [
             job.faceup_details ? 'Faceup' : null,
             job.eye_details ? 'Eyes' : null,
             job.manicure_details ? 'Manicure' : null
         ].filter(Boolean).join(' • ');
 
-        // Use real client images instead of placeholders
         const thumb = job.faceup_details?.images?.[0] || job.eye_details?.images?.[0] || job.manicure_details?.images?.[0];
 
         return `
@@ -598,39 +598,7 @@ async function addNewStockItem() {
     else alert("Error: " + error.message);
 }
 
-    async function renderPL() {
-    const container = document.getElementById('view-pl');
-    const { data: jobs } = await _supabase.from('commissions').select('*').eq('payment_status', 'Paid');
-    
-    const totalRev = jobs?.reduce((sum, j) => sum + (j.total_price || 0), 0) || 0;
-    
-    container.innerHTML = `
-        <div class="mb-8">
-            <h2 class="text-3xl font-black italic">Financial Overview</h2>
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Settled Revenue</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="glass-card p-10 bg-gradient-to-br from-pink-500 to-rose-400 text-white">
-                <p class="text-xs font-black uppercase opacity-80">Total Revenue (All Time)</p>
-                <h3 class="text-5xl font-black mt-2">£${totalRev.toLocaleString()}</h3>
-            </div>
-            <div class="glass-card p-8 bg-white border border-pink-50">
-                <canvas id="revenueChart"></canvas>
-            </div>
-        </div>`;
-    
-    // Initialize chart if needed
-    const ctx = document.getElementById('revenueChart')?.getContext('2d');
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr'], // This would be dynamic in full OG
-                datasets: [{ label: 'Revenue', data: [400, 700, 550, 900], borderColor: '#f43f5e', tension: 0.4 }]
-            }
-        });
-    }
-}
+
     async function renderSettings() {
     const container = document.getElementById('view-settings');
     const { data: settings } = await _supabase.from('studio_settings').select('*').single();
