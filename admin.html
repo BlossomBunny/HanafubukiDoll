@@ -295,7 +295,7 @@ let revenueChart = null;
 
         // --- 2. PRIORITIES ---
         const priorities = jobs.filter(j => !['Shipped', 'Enquiry'].includes(j.status))
-                               .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(0,4);
+                               .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(0,3);
         const prioContainer = document.getElementById('priority-list');
         if(prioContainer) {
             prioContainer.innerHTML = priorities.map(j => `
