@@ -623,7 +623,6 @@ function renderServiceBlock(job, key, title, color) {
         </div>`;
 }
 // ----SAVE LOGIC---- //
-// Updated Save Logic within admin (6).html
 document.getElementById('saveBtn').onclick = async () => {
     const btn = document.getElementById('saveBtn');
     btn.innerText = "Saving... ✨";
@@ -677,23 +676,25 @@ document.getElementById('saveBtn').onclick = async () => {
         }
 
         const { error } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
-        if (error) throw error;
 
-        btn.innerText = "Saved! ♡";
-        setTimeout(() => { 
-            closeDrawer(); 
-            renderWorkbench(); 
-            renderSummary(); // Refresh dashboard stats after save
-            btn.innerText = "Save All Changes ♡"; 
-            btn.disabled = false; 
-        }, 800);
-    } catch (err) {
-        console.error("Save Error:", err);
-        alert("Save Error: " + err.message);
-        btn.innerText = "Error ❌";
-        btn.disabled = false;
-    }
-};
+if (error) throw error;
+
+btn.innerText = "Saved! ♡";
+
+// Wait 800ms so you can actually see the "Saved!" message
+setTimeout(() => { 
+    // 1. Force the drawer/popup to close
+    const drawer = document.getElementById('editDrawer');
+    if (drawer) drawer.classList.add('translate-x-full'); 
+    
+    // 2. Refresh your data
+    renderWorkbench(); 
+    renderSummary(); 
+    
+    // 3. Reset the button for next time
+    btn.innerText = "Save All Changes ♡"; 
+    btn.disabled = false; 
+}, 800);
     
     // --- ACCESSIBILITY ---
     const ComfortSettings = {
@@ -837,7 +838,12 @@ async function addNewStockItem() {
             </div>
         </div>`;
 }
-    
+    function closeDrawer() {
+    const drawer = document.getElementById('editDrawer');
+    if (drawer) {
+        drawer.classList.add('translate-x-full');
+    }
+}
 </script>
 </body>
 </html>
