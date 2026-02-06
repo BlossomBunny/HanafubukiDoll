@@ -123,6 +123,34 @@
         <p id="stat-paid" class="text-2xl font-black tracking-tighter text-emerald-700">£0</p>
     </div>
 </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4">
+    
+    <div class="glass-card p-6 border-l-4 border-pink-400">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-pink-500">Live Priorities</h3>
+            <span class="text-[9px] font-bold text-gray-400 uppercase">Oldest</span>
+        </div>
+        <div id="priority-list" class="space-y-3">
+            <div class="animate-pulse bg-pink-50/50 h-16 rounded-2xl"></div>
+        </div>
+    </div>
+
+    <div class="glass-card p-6 border-l-4 border-emerald-400">
+        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-4">Revenue Snap</h3>
+        <div id="revenue-snap-bars" class="h-32 flex items-end gap-2">
+            <div class="bg-emerald-100 w-full h-24 rounded-t-lg"></div>
+            <div class="bg-pink-100 w-full h-12 rounded-t-lg"></div>
+        </div>
+    </div>
+
+    <div class="glass-card p-6 border-l-4 border-amber-400 bg-amber-50/10">
+        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 mb-4">Queue Status</h3>
+        <div id="waitlist-summary" class="flex flex-col justify-center h-32 text-center">
+            <p class="text-gray-300 text-[10px] font-bold uppercase tracking-widest italic">Syncing queue...</p>
+        </div>
+    </div>
+</div>
+        
         
         <div id="view-workbench" class="space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
@@ -712,10 +740,13 @@ async function renderSummary() {
                 </div>`;
         }
 
-        // --- 5. WAITLIST ---
-        if (typeof renderWaitlistUI === "function") renderWaitlistUI(waitlist);
-
-    } catch (e) { console.error("Critical Render Error:", e); }
+// --- 5. WAITLIST  ---
+const waitlistContainer = document.getElementById('waitlist-summary');
+if (waitlistContainer) {
+    waitlistContainer.innerHTML = waitlist.length > 0 
+        ? `<p class="text-5xl font-black tracking-tighter text-gray-800">${waitlist.length}</p>
+           <p class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500 mt-2">Active in Queue ♡</p>`
+        : `<p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest italic">Queue is clear! ✨</p>`;
 }
         
     function closeDrawer() {
