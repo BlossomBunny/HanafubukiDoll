@@ -408,6 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- WORKBENCH LOGIC --- //
 async function renderWorkbench(showArchived = false) {
+    console.log(">>> Rendering Workbench, archived =", showArchived);
     const container = document.getElementById('commissionList');
     const { data: jobs, error } = await _supabase.from('commissions')
         .select('*')
