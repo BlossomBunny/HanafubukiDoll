@@ -40,15 +40,15 @@
 </nav>
 
 <main class="max-w-6xl mx-auto px-4 py-12 relative z-10">
-    <div id="liveBanner" class="hidden mb-10 animate-fadeIn">
-        <div class="max-w-xl mx-auto bg-white/60 backdrop-blur-md border border-pink-100 p-4 rounded-3xl shadow-sm flex items-center gap-4">
-            <div class="flex-shrink-0 bg-pink-500 text-white w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm">📢</div>
-            <div class="flex-1">
-                <p id="bannerText" class="text-[11px] font-black uppercase tracking-widest text-gray-700 leading-tight"></p>
-            </div>
-            <div class="text-pink-300 text-xs pr-2">✨</div>
-        </div>
+   <div id="liveBanner" class="hidden fixed top-24 left-1/2 -translate-x-1/2 z-40 w-auto animate-fadeIn">
+    <div class="bg-white/40 backdrop-blur-md border border-pink-100/50 px-4 py-1.5 rounded-full shadow-[0_2px_15px_-3px_rgba(255,182,193,0.2)] flex items-center gap-2 transition-all hover:bg-white/60">
+        <span class="flex h-1.5 w-1.5">
+            <span class="animate-ping absolute inline-flex h-1.5 w-1.5 rounded-full bg-pink-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-pink-500"></span>
+        </span>
+        <p id="bannerText" class="text-[9px] font-bold uppercase tracking-[0.2em] text-pink-600/80 whitespace-nowrap"></p>
     </div>
+</div>
 
     <section class="text-center mb-32">
         <div id="service-status-bar" class="flex flex-wrap gap-3 justify-center mb-10">
@@ -139,7 +139,7 @@
             container.appendChild(p);
         }
 
-  // --- Live Status & Banner Logic ---
+// --- Live Status & Banner Logic ---
 async function updateHomeBlinkers() {
     try {
         const { data: settings, error } = await _supabase.from('studio_settings').select('*');
@@ -148,61 +148,65 @@ async function updateHomeBlinkers() {
         const bannerData = settings.find(s => s.id === 'Banner');
         const services = settings.filter(s => s.id !== 'Banner');
 
-        // Update the Card-Style Banner
+        // 1. Minimalist Top Banner Logic
         const bannerEl = document.getElementById('liveBanner');
         const bannerTxt = document.getElementById('bannerText');
-        if (bannerData && bannerData.is_live) {
-            bannerEl.classList.remove('hidden');
+        
+        if (bannerData && bannerData.is_live && bannerData.banner_text) {
             bannerTxt.innerText = bannerData.banner_text;
-        } else if (bannerEl) {
-            bannerEl.classList.add('hidden');
+            bannerEl.classList.remove('hidden');
+            // Force a small height for the bar style
+            bannerEl.style.maxHeight = '40px'; 
+        } else {
+            bannerEl.style.maxHeight = '0px';
+            setTimeout(() => bannerEl.classList.add('hidden'), 500);
         }
 
-        // Update the Service Status Bar
+        // 2. Service Status Pills (Blinkers)
         const barContainer = document.getElementById('service-status-bar');
         if (barContainer) {
             barContainer.innerHTML = services.map(service => {
                 const isLive = service.is_live;
                 const colorClass = isLive ? 'bg-emerald-400' : 'bg-amber-400';
-                const label = isLive ? 'Open' : 'Waitlist';
-                const pulseCircle = isLive ? `<span class="animate-pulse-custom absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-75"></span>` : '';
-
                 return `
-                    <div class="flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm border border-pink-100 rounded-full shadow-sm hover:scale-105 transition-transform cursor-default">
+                    <div class="flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm border border-pink-100 rounded-full shadow-sm">
                         <span class="relative flex h-2 w-2">
-                            ${pulseCircle}
+                            ${isLive ? `<span class="animate-pulse-custom absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-75"></span>` : ''}
                             <span class="relative inline-flex rounded-full h-2 w-2 ${colorClass}"></span>
                         </span>
                         <span class="text-[10px] font-black uppercase tracking-widest text-gray-700">
-                            ${service.id}: <span class="${isLive ? 'text-emerald-600' : 'text-amber-500'}">${label}</span>
+                            ${service.id}: <span class="${isLive ? 'text-emerald-600' : 'text-amber-500'}">${isLive ? 'Open' : 'Waitlist'}</span>
                         </span>
                     </div>`;
             }).join('');
         }
     } catch (err) {
-        console.error("Blinker update failed:", err);
+        console.error("Update failed:", err);
     }
 }
 
-// --- Single Initialization Point ---
+// --- Instant Update Listener ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Initial fetch
     updateHomeBlinkers();
 
-    // Listen for any changes in studio_settings table
+    // Listen for live changes from Admin panel
     _supabase
-        .channel('studio-status-updates')
+        .channel('studio-status-changes')
         .on('postgres_changes', { 
             event: '*', 
             schema: 'public', 
             table: 'studio_settings' 
-        }, () => {
-            console.log('Live Update Received! ♡');
+        }, (payload) => {
+            console.log('Instant Change Received! ♡');
             updateHomeBlinkers(); 
         })
-        .subscribe();
+        .subscribe((status) => {
+            console.log("Realtime Connection:", status);
+        });
 });
 
-// Safety check every 60 seconds
+// Periodic safety check
 setInterval(updateHomeBlinkers, 60000);
         
     </script>
