@@ -258,58 +258,104 @@ _supabase.auth.onAuthStateChange((event, session) => {
     window.location.href = 'index.html';
 }
 
-    async function renderSummary() {
-    const { data: jobs } = await _supabase.from('commissions').select('*');
-    const { data: waitlist } = await _supabase.from('waitlist').select('*').order('created_at', { ascending: true });
+   async function renderSummary() {
+    // 1. Fetch data from both tables
+    const { data: jobs, error: jobErr } = await _supabase.from('commissions').select('*');
+    const { data: waitlist, error: waitErr } = await _supabase.from('waitlist').select('*').order('created_at', { ascending: true });
 
-    // --- 1. COMMISSION STATS ---
+    if (jobErr || waitErr) {
+        console.error("Dashboard Sync Error:", jobErr || waitErr);
+        return;
+    }
+
+    // --- 2. STATS CALCULATION ---
     const enquiries = jobs.filter(j => j.status === 'Enquiry').length;
     
-    // Active: Working, Approved, or Photo
-    const active = jobs.filter(j => ['Working', 'Approved', 'Photo'].includes(j.status)).length;
+    // Active Workbench: Includes Working and Approved
+    const activeWorkbench = jobs.filter(j => ['Working', 'Approved'].includes(j.status)).length;
     
-    // Not Shipped: Anything that isn't Shipped or an Enquiry
-    const notShipped = jobs.filter(j => j.status !== 'Shipped' && j.status !== 'Enquiry').length;
+    // To be Shipped: STRICTLY dolls in 'Photo' status
+    const toBeShipped = jobs.filter(j => j.status === 'Photo').length;
     
-    const totalRev = jobs.reduce((s, j) => s + (Number(j.price) || 0), 0);
+    // Financials using the correct 'total_price' column
+    const totalBookedVal = jobs.reduce((sum, j) => sum + (Number(j.total_price) || 0), 0);
+    const settledRevenue = jobs
+        .filter(j => j.status === 'Shipped')
+        .reduce((sum, j) => sum + (Number(j.total_price) || 0), 0);
+    const pendingRevenue = totalBookedVal - settledRevenue;
 
+    // --- 3. UPDATE STAT CARDS ---
     document.getElementById('stat-enquiries').innerText = enquiries;
-    document.getElementById('stat-workbench').innerText = active;
-    document.getElementById('stat-special').innerText = notShipped;
-    document.getElementById('stat-revenue').innerText = `£${totalRev}`;
+    document.getElementById('stat-workbench').innerText = activeWorkbench;
+    document.getElementById('stat-special').innerText = toBeShipped; // Now shows only 'Photo' status count
+    document.getElementById('stat-revenue').innerText = `£${totalBookedVal.toFixed(2)}`;
 
-    // --- 2. PRIORITIES & REVENUE SNAP ---
-    // (Logic from previous steps remains similar, ensures bars update)
-    renderRevenueBars(jobs);
-    renderPriorities(jobs);
+    // --- 4. TOP 3 PRIORITIES (Oldest active jobs first) ---
+    const priorities = jobs
+        .filter(j => ['Arrived', 'Working', 'Approved', 'Photo'].includes(j.status))
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .slice(0, 3);
 
-    // --- 3. WAITLIST LOGIC ---
-    const countsContainer = document.getElementById('waitlist-counts');
-    const tableBody = document.getElementById('waitlist-table-body');
+    const priorityContainer = document.getElementById('priority-list');
+    priorityContainer.innerHTML = priorities.length ? priorities.map(j => `
+        <div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-pink-50 shadow-sm hover:translate-x-1 transition-transform">
+            <div>
+                <p class="font-black text-sm text-gray-800 tracking-tight">${j.social_handle || 'New Order'}</p>
+                <p class="text-[9px] text-gray-400 uppercase font-bold tracking-widest">${j.doll_sculpt || 'Custom Work'}</p>
+            </div>
+            <span class="text-[9px] px-3 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase tracking-tighter">
+                ${j.status}
+            </span>
+        </div>
+    `).join('') : '<p class="text-gray-400 italic text-xs py-4 text-center">No active priorities found! ♡</p>';
 
-    // Group Waitlist by Service
+    // --- 5. REVENUE SNAP BARS ---
+    const maxVal = Math.max(settledRevenue, pendingRevenue, 1);
+    const snapContainer = document.getElementById('revenue-snap-bars');
+    snapContainer.innerHTML = `
+        <div class="flex items-end gap-4 h-32">
+            <div class="bg-emerald-400 w-full rounded-t-xl transition-all duration-1000" style="height: ${(settledRevenue/maxVal)*100}%"></div>
+            <div class="bg-pink-300 w-full rounded-t-xl transition-all duration-1000" style="height: ${(pendingRevenue/maxVal)*100}%"></div>
+        </div>
+        <div class="flex justify-between mt-4 text-[10px] font-bold uppercase text-gray-500">
+            <span>Settled (£${settledRevenue.toFixed(2)})</span>
+            <span>Pending (£${pendingRevenue.toFixed(2)})</span>
+        </div>
+    `;
+
+    // --- 6. WAITLIST UI ---
     const counts = waitlist.reduce((acc, curr) => {
         acc[curr.service_requested] = (acc[curr.service_requested] || 0) + 1;
         return acc;
     }, {});
+    
+    // Update Waitlist Pills
+    const countsContainer = document.getElementById('waitlist-counts');
+    if (countsContainer) {
+        countsContainer.innerHTML = Object.entries(counts).map(([svc, num]) => `
+            <span class="bg-pink-50 text-pink-500 px-3 py-1 rounded-full text-[9px] font-black uppercase border border-pink-100">${svc}: ${num}</span>
+        `).join('');
+    }
 
-    countsContainer.innerHTML = Object.entries(counts).map(([svc, num]) => `
-        <span class="bg-pink-50 text-pink-500 px-3 py-1 rounded-full text-[9px] font-black uppercase border border-pink-100">${svc}: ${num}</span>
-    `).join('');
+    // Update Waitlist Table
+    const tableBody = document.getElementById('waitlist-table-body');
+    if (tableBody) {
+        tableBody.innerHTML = waitlist.map(person => `
+            <tr class="text-xs border-b border-pink-50/50 hover:bg-pink-50/10 transition-colors">
+                <td class="py-4 text-gray-500">${new Date(person.created_at).toLocaleDateString('en-GB')}</td>
+                <td class="py-4 font-bold text-gray-700">${person.email}</td>
+                <td class="py-4"><span class="text-[10px] font-black uppercase text-pink-400">${person.service_requested}</span></td>
+                <td class="py-4 text-right">
+                    <button onclick="sendWaitlistEmail('${person.email}', '${person.service_requested}')" class="p-2 hover:bg-emerald-50 text-emerald-500 rounded-lg transition-all">✉️</button>
+                    <button onclick="deleteWaitlistEntry('${person.id}')" class="p-2 hover:bg-rose-50 text-rose-400 rounded-lg transition-all">🗑️</button>
+                </td>
+            </tr>
+        `).join('');
+    }
 
-    tableBody.innerHTML = waitlist.map(person => `
-        <tr class="text-xs border-b border-pink-50/50 hover:bg-pink-50/10 transition-colors">
-            <td class="py-4 text-gray-500">${new Date(person.created_at).toLocaleDateString('en-GB')}</td>
-            <td class="py-4 font-bold text-gray-700">${person.email}</td>
-            <td class="py-4"><span class="text-[10px] font-black uppercase text-pink-400">${person.service_requested}</span></td>
-            <td class="py-4 text-right">
-                <button onclick="sendWaitlistEmail('${person.email}', '${person.service_requested}')" class="p-2 hover:bg-emerald-50 text-emerald-500 rounded-lg transition-all" title="Send Opening Email">✉️</button>
-                <button onclick="deleteWaitlistEntry('${person.id}')" class="p-2 hover:bg-rose-50 text-rose-400 rounded-lg transition-all" title="Remove">🗑️</button>
-            </td>
-        </tr>
-    `).join('');
-
-    document.getElementById('greeting-date').innerText = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    document.getElementById('greeting-date').innerText = new Date().toLocaleDateString('en-GB', { 
+        weekday: 'long', day: 'numeric', month: 'long' 
+    });
 }
 
 // ACTION: Email Client Trigger
