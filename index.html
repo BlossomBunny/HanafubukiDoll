@@ -135,39 +135,68 @@
         }
 
         // Live Status Blinker Logic
-        async function updateHomeBlinkers() {
-            const { data: settings, error } = await _supabase
-                .from('studio_settings')
-                .select('*');
+       async function updateHomeBlinkers() {
+    const { data: settings } = await _supabase.from('studio_settings').select('*');
+    if (!settings) return;
 
-            if (error) {
-                console.error("Status fetch error:", error);
-                return;
-            }
+    // Separate the Banner row from the Service rows
+    const bannerData = settings.find(s => s.id === 'Banner');
+    const services = settings.filter(s => s.id !== 'Banner');
 
-            const barContainer = document.getElementById('service-status-bar');
-            
-            barContainer.innerHTML = settings.map(service => {
-                const isLive = service.is_live;
-                const colorClass = isLive ? 'bg-emerald-400' : 'bg-amber-400';
-                const label = isLive ? 'Open' : 'Waitlist';
-                const pulseCircle = isLive ? `<span class="animate-pulse-custom absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-75"></span>` : '';
+    // Update Banner
+    const bannerEl = document.getElementById('liveBanner'); // Ensure this ID exists
+    const bannerTxt = document.getElementById('bannerText');
+    if (bannerData && bannerData.is_live) {
+        bannerEl.classList.remove('hidden');
+        bannerTxt.innerText = bannerData.banner_text;
+    } else if (bannerEl) {
+        bannerEl.classList.add('hidden');
+    }
 
-                return `
-                    <div class="flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm border border-pink-100 rounded-full shadow-sm hover:scale-105 transition-transform">
-                        <span class="relative flex h-2 w-2">
-                            ${pulseCircle}
-                            <span class="relative inline-flex rounded-full h-2 w-2 ${colorClass}"></span>
-                        </span>
-                        <span class="text-[10px] font-black uppercase tracking-widest text-gray-700">
-                            ${service.id}: <span class="${isLive ? 'text-emerald-600' : 'text-amber-500'}">${label}</span>
-                        </span>
-                    </div>
-                `;
-            }).join('');
-        }
+    // Update Blinker Bars (Your existing mapping logic)
+    const barContainer = document.getElementById('service-status-bar');
+    if (barContainer) {
+        barContainer.innerHTML = services.map(service => {
+            const isLive = service.is_live;
+            const colorClass = isLive ? 'bg-emerald-400' : 'bg-amber-400';
+            const label = isLive ? 'Open' : 'Waitlist';
+            const pulseCircle = isLive ? `<span class="animate-pulse-custom absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-75"></span>` : '';
 
-        window.onload = updateHomeBlinkers;
+            return `
+                <div class="flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm border border-pink-100 rounded-full shadow-sm">
+                    <span class="relative flex h-2 w-2">
+                        ${pulseCircle}
+                        <span class="relative inline-flex rounded-full h-2 w-2 ${colorClass}"></span>
+                    </span>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-gray-700">
+                        ${service.id}: <span class="${isLive ? 'text-emerald-600' : 'text-amber-500'}">${label}</span>
+                    </span>
+                </div>
+            `;
+        }).join('');
+    }
+}        
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateHomeBlinkers();
+    
+ 
+    const statusSubscription = _supabase
+        .channel('studio-changes')
+        .on('postgres_changes', { 
+            event: '*', 
+            schema: 'public', 
+            table: 'studio_settings' 
+        }, (payload) => {
+            console.log('Update received! ♡');
+            updateHomeBlinkers(); 
+        })
+        .subscribe();
+});
+
+
+setInterval(updateHomeBlinkers, 60000);
+        
     </script>
     <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
     
