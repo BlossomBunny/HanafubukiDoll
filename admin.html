@@ -344,109 +344,7 @@ async function switchTab(tab) {
     if(tab === 'inventory') renderInventory();
     if(tab === 'settings') renderSettings();
 }
-
-
-    // --- SUMMARY LOGIC --- //
-    async function renderSummary() {
-    const { data: jobs, error } = await _supabase.from('commissions').select('*');
-    if (error) return;
-
-    // 1. Calculations
-    const enquiries = jobs.filter(j => j.status === 'Enquiry').length;
-    const workbench = jobs.filter(j => j.status === 'In Progress').length;
-    const specials = jobs.filter(j => j.payment_type === 'Layaway' || j.payment_type === 'Trade').length;
-    
-    const totalRevenue = jobs.reduce((acc, j) => acc + (Number(j.price) || 0), 0);
-    const settled = jobs.filter(j => j.status === 'Shipped').reduce((acc, j) => acc + (Number(j.price) || 0), 0);
-    const pending = totalRevenue - settled;
-
-    // 2. Update Stats
-    document.getElementById('stat-enquiries').innerText = enquiries;
-    document.getElementById('stat-workbench').innerText = workbench;
-    document.getElementById('stat-special').innerText = specials;
-    document.getElementById('stat-revenue').innerText = `£${totalRevenue}`;
-
-    // 3. Update Priority List (Oldest active jobs first)
-    const priorities = jobs
-        .filter(j => j.status !== 'Shipped' && j.status !== 'Enquiry')
-        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-        .slice(0, 3);
-
-    document.getElementById('priority-list').innerHTML = priorities.length ? priorities.map(j => `
-        <div class="flex justify-between items-center p-3 bg-white rounded-xl border border-pink-50 shadow-sm">
-            <span class="font-bold text-sm text-gray-700">${j.client_name}</span>
-            <span class="text-[9px] px-2 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase">${j.status}</span>
-        </div>
-    `).join('') : '<p class="text-gray-400 italic text-xs">No active tasks! Time for tea? 🍵</p>';
-
-    // 4. Update Bars
-    const max = Math.max(settled, pending, 1);
-    document.getElementById('bar-settled').style.height = `${(settled / max) * 100}%`;
-    document.getElementById('bar-pending').style.height = `${(pending / max) * 100}%`;
-    
-    document.getElementById('greeting-date').innerText = new Date().toLocaleDateString('en-GB', { 
-        weekday: 'long', day: 'numeric', month: 'long' 
-    });
-}
-
-function renderWaitlistUI(data, counts) {
-    const container = document.getElementById('waitlist-section'); // Ensure this ID exists in your HTML
-    
-    // Create the "By Service" pills
-    const pills = Object.entries(counts).map(([svc, count]) => `
-        <div class="bg-pink-50 px-3 py-1 rounded-full text-[10px] font-black text-pink-500 uppercase">
-            ${svc}: ${count}
-        </div>
-    `).join('');
-
-    // Create the Table
-    const rows = data.map(person => `
-        <tr class="border-b border-pink-50 text-[11px]">
-            <td class="py-3 font-bold">${new Date(person.created_at).toLocaleDateString()}</td>
-            <td>${person.email}</td>
-            <td class="font-black text-pink-400 uppercase">${person.service_requested}</td>
-            <td class="text-right space-x-2">
-                <button onclick="sendWaitlistEmail('${person.email}', '${person.service_requested}')" class="text-emerald-500 hover:scale-110 transition-transform">✉️</button>
-                <button onclick="removeFromWaitlist('${person.id}')" class="text-rose-400 hover:scale-110 transition-transform">🗑️</button>
-            </td>
-        </tr>
-    `).join('');
-
-    container.innerHTML = `
-        <div class="glass-card p-8 mt-8">
-            <h3 class="text-xs font-black uppercase text-gray-400 mb-4 tracking-widest">Waitlist Management</h3>
-            <div class="flex gap-2 mb-6 flex-wrap">${pills}</div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="text-[9px] uppercase text-gray-400 border-b border-pink-100">
-                            <th class="pb-2">Joined</th>
-                            <th class="pb-2">Email</th>
-                            <th class="pb-2">Service</th>
-                            <th class="pb-2 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>
-        </div>
-    `;
-}
-
-// Action: Email Template
-function sendWaitlistEmail(email, service) {
-    const subject = encodeURIComponent(`HanafubukiDoll: Open for ${service}!`);
-    const body = encodeURIComponent(`Hey! \n\nWe are now open for ${service} again! \n\nPlease visit our contact page (https://hanafubukidoll.com/contact) and fill out your details so that the team can review them. \n\nIf we don't hear from you within 48 hours we will have to move on to the next person on the waitlist! \n\nBest, \nHanafubuki Studio ♡`);
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-}
-
-// Action: Delete from Supabase
-async function removeFromWaitlist(id) {
-    if(!confirm("Remove this person from the waitlist?")) return;
-    const { error } = await _supabase.from('waitlist').delete().eq('id', id);
-    if (!error) renderSummary(); // Refresh dashboard
-}
-    
+   
     // --- WORKBENCH LOGIC ---
 async function renderWorkbench(showArchived = false) {
     const container = document.getElementById('commissionList');
@@ -679,6 +577,7 @@ function renderServiceBlock(job, key, title, color) {
         </div>`;
 }
 // ----SAVE LOGIC---- //
+// Updated Save Logic within admin (6).html
 document.getElementById('saveBtn').onclick = async () => {
     const btn = document.getElementById('saveBtn');
     btn.innerText = "Saving... ✨";
@@ -686,46 +585,69 @@ document.getElementById('saveBtn').onclick = async () => {
 
     try {
         const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
-        const payType = document.getElementById('payType').value;
-        const isPaidChecked = document.getElementById('isPaidCheck')?.checked;
+        
+        // Use optional chaining to prevent the 'null' reading error
+        const payType = document.getElementById('payType')?.value;
+        const isPaidChecked = document.getElementById('isPaidCheck')?.checked || false;
+        const isUrgentChecked = document.getElementById('isUrg')?.checked || false;
 
         const updates = {
-            status: document.getElementById('upStatus').value,
+            status: document.getElementById('upStatus')?.value,
             payment_method: payType,
             total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
-            is_urgent: document.getElementById('isUrg').checked,
-            shipping_cost: parseFloat(document.getElementById('shipCost').value || 0), 
-            tracking_number: document.getElementById('trackNum').value, 
+            is_urgent: isUrgentChecked,
+            shipping_cost: parseFloat(document.getElementById('shipCost')?.value || 0), 
+            tracking_number: document.getElementById('trackNum')?.value || '', 
             payment_status: isPaidChecked ? 'Paid' : 'Unpaid'
         };
 
+        // Handle Trade specific toggles safely
         if (payType === 'Trade') {
-            updates.partner_shipped = document.getElementById('partnerShipped').checked;
-            updates.artist_shipped = document.getElementById('artistShipped').checked;
+            updates.partner_shipped = document.getElementById('partnerShipped')?.checked || false;
+            updates.artist_shipped = document.getElementById('artistShipped')?.checked || false;
         }
 
-       
-        if (job.faceup_details) updates.faceup_details = { ...job.faceup_details, status: document.getElementById('faceupStatus').value, admin_notes: document.getElementById('faceupAdmin').value };
-        if (job.eye_details) updates.eye_details = { ...job.eye_details, status: document.getElementById('eyeStatus').value, admin_notes: document.getElementById('eyeAdmin').value };
-        if (job.manicure_details) updates.manicure_details = { ...job.manicure_details, status: document.getElementById('maniStatus').value, admin_notes: document.getElementById('manicureAdmin').value };
+        // Service specific details
+        if (job.faceup_details) {
+            updates.faceup_details = { 
+                ...job.faceup_details, 
+                status: document.getElementById('faceupStatus')?.value || job.faceup_details.status, 
+                admin_notes: document.getElementById('faceupAdmin')?.value || job.faceup_details.admin_notes 
+            };
+        }
+        if (job.eye_details) {
+            updates.eye_details = { 
+                ...job.eye_details, 
+                status: document.getElementById('eyeStatus')?.value || job.eye_details.status, 
+                admin_notes: document.getElementById('eyeAdmin')?.value || job.eye_details.admin_notes 
+            };
+        }
+        if (job.manicure_details) {
+            updates.manicure_details = { 
+                ...job.manicure_details, 
+                status: document.getElementById('maniStatus')?.value || job.manicure_details.status, 
+                admin_notes: document.getElementById('manicureAdmin')?.value || job.manicure_details.admin_notes 
+            };
+        }
 
         const { error } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
         if (error) throw error;
 
         btn.innerText = "Saved! ♡";
-        setTimeout(() => { closeDrawer(); renderWorkbench(); btn.innerText = "Save All Changes ♡"; btn.disabled = false; }, 800);
+        setTimeout(() => { 
+            closeDrawer(); 
+            renderWorkbench(); 
+            renderSummary(); // Refresh dashboard stats after save
+            btn.innerText = "Save All Changes ♡"; 
+            btn.disabled = false; 
+        }, 800);
     } catch (err) {
+        console.error("Save Error:", err);
         alert("Save Error: " + err.message);
         btn.innerText = "Error ❌";
         btn.disabled = false;
     }
-};    
-    function closeDrawer() {
-    const drawer = document.getElementById('detailDrawer');
-    drawer.classList.add('translate-x-full');
-    // Optional: Refresh the list when closing to show any saved changes
-    renderWorkbench(); 
-}
+};
     
     // --- ACCESSIBILITY ---
     const ComfortSettings = {
