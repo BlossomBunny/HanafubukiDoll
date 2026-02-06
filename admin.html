@@ -72,7 +72,7 @@
         <h2 class="text-2xl font-black italic">Artist Entrance</h2>
         <div class="space-y-4">
             <input type="email" id="adminEmail" placeholder="Studio Email" class="w-full p-4 rounded-2xl border border-pink-100 outline-none focus:ring-2 ring-pink-200 transition-all">
-            <input type="password" id="adminPass" placeholder="Secret Key" class="w-full p-4 rounded-2xl border border-pink-100 outline-none focus:ring-2 ring-pink-200 transition-all">
+            <input type="password" id="adminPassword" placeholder="Secret Key" class="w-full p-4 rounded-2xl border border-pink-100 outline-none focus:ring-2 ring-pink-200 transition-all">
         </div>
         <button onclick="handleLogin()" id="loginBtn" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all">Unlock Studio ♡</button>
     </div>
@@ -218,157 +218,47 @@
         const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // AUTH OBSERVER
         _supabase.auth.onAuthStateChange((event, session) => {
-            const gate = document.getElementById('loginGate');
-            const nav = document.getElementById('adminNav');
-            const main = document.getElementById('adminMain');
+    const loginGate = document.getElementById('loginGate');
+    const adminNav = document.getElementById('adminNav');
+    const adminMain = document.getElementById('adminMain');
 
-            if (session) {
-                gate.classList.add('hidden');
-                nav.classList.remove('auth-hidden');
-                main.classList.remove('auth-hidden');
-                switchTab(localStorage.getItem('hana_active_tab') || 'summary');
-            } else {
-                gate.classList.remove('hidden');
-                nav.classList.add('auth-hidden');
-                main.classList.add('auth-hidden');
-            }
-        });
+    if (session) {
+        if (loginGate) loginGate.style.display = 'none';
+        
+        // Remove both hidden classes used in your file
+        if (adminNav) {
+            adminNav.classList.remove('auth-hidden', 'hidden');
+            adminNav.style.display = 'block';
+        }
+        if (adminMain) {
+            adminMain.classList.remove('auth-hidden', 'hidden');
+            adminMain.style.display = 'block';
+        }
+
+        const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
+        switchTab(lastTab);
+    } else {
+        if (loginGate) loginGate.style.display = 'flex';
+        if (adminNav) adminNav.classList.add('auth-hidden');
+        if (adminMain) adminMain.classList.add('auth-hidden');
+    }
+});
     
     async function handleLogin() {
         const email = document.getElementById('adminEmail').value;
-        const password = document.getElementById('adminPass').value;
+        const password = document.getElementById('adminPassword').value;
         const { error } = await _supabase.auth.signInWithPassword({ email, password });
         if (error) alert("Access Denied: " + error.message);
     }
 
     async function handleLogout() {
-        const { error } = await _supabase.auth.signOut();
-    
+    const { error } = await _supabase.auth.signOut();
     if (error) {
         console.error("Error logging out:", error.message);
     }
-
-    localStorage.removeItem('supabase.auth.token'); 
-
-    window.location.href = 'index.html';
-}
-
-   async function renderSummary() {
-    // 1. Fetch data from both tables
-    const { data: jobs, error: jobErr } = await _supabase.from('commissions').select('*');
-    const { data: waitlist, error: waitErr } = await _supabase.from('waitlist').select('*').order('created_at', { ascending: true });
-
-    if (jobErr || waitErr) {
-        console.error("Dashboard Sync Error:", jobErr || waitErr);
-        return;
-    }
-
-    // --- 2. STATS CALCULATION ---
-    const enquiries = jobs.filter(j => j.status === 'Enquiry').length;
-    
-    // Active Workbench: Includes Working and Approved
-    const activeWorkbench = jobs.filter(j => ['Working', 'Approved'].includes(j.status)).length;
-    
-    // To be Shipped: STRICTLY dolls in 'Photo' status
-    const toBeShipped = jobs.filter(j => j.status === 'Photo').length;
-    
-    // Financials using the correct 'total_price' column
-    const totalBookedVal = jobs.reduce((sum, j) => sum + (Number(j.total_price) || 0), 0);
-    const settledRevenue = jobs
-        .filter(j => j.status === 'Shipped')
-        .reduce((sum, j) => sum + (Number(j.total_price) || 0), 0);
-    const pendingRevenue = totalBookedVal - settledRevenue;
-
-    // --- 3. UPDATE STAT CARDS ---
-    document.getElementById('stat-enquiries').innerText = enquiries;
-    document.getElementById('stat-workbench').innerText = activeWorkbench;
-    document.getElementById('stat-special').innerText = toBeShipped; // Now shows only 'Photo' status count
-    document.getElementById('stat-revenue').innerText = `£${totalBookedVal.toFixed(2)}`;
-
-    // --- 4. TOP 3 PRIORITIES (Oldest active jobs first) ---
-    const priorities = jobs
-        .filter(j => ['Arrived', 'Working', 'Approved', 'Photo'].includes(j.status))
-        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-        .slice(0, 3);
-
-    const priorityContainer = document.getElementById('priority-list');
-    priorityContainer.innerHTML = priorities.length ? priorities.map(j => `
-        <div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-pink-50 shadow-sm hover:translate-x-1 transition-transform">
-            <div>
-                <p class="font-black text-sm text-gray-800 tracking-tight">${j.social_handle || 'New Order'}</p>
-                <p class="text-[9px] text-gray-400 uppercase font-bold tracking-widest">${j.doll_sculpt || 'Custom Work'}</p>
-            </div>
-            <span class="text-[9px] px-3 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase tracking-tighter">
-                ${j.status}
-            </span>
-        </div>
-    `).join('') : '<p class="text-gray-400 italic text-xs py-4 text-center">No active priorities found! ♡</p>';
-
-    // --- 5. REVENUE SNAP BARS ---
-    const maxVal = Math.max(settledRevenue, pendingRevenue, 1);
-    const snapContainer = document.getElementById('revenue-snap-bars');
-    snapContainer.innerHTML = `
-        <div class="flex items-end gap-4 h-32">
-            <div class="bg-emerald-400 w-full rounded-t-xl transition-all duration-1000" style="height: ${(settledRevenue/maxVal)*100}%"></div>
-            <div class="bg-pink-300 w-full rounded-t-xl transition-all duration-1000" style="height: ${(pendingRevenue/maxVal)*100}%"></div>
-        </div>
-        <div class="flex justify-between mt-4 text-[10px] font-bold uppercase text-gray-500">
-            <span>Settled (£${settledRevenue.toFixed(2)})</span>
-            <span>Pending (£${pendingRevenue.toFixed(2)})</span>
-        </div>
-    `;
-
-    // --- 6. WAITLIST UI ---
-    const counts = waitlist.reduce((acc, curr) => {
-        acc[curr.service_requested] = (acc[curr.service_requested] || 0) + 1;
-        return acc;
-    }, {});
-    
-    // Update Waitlist Pills
-    const countsContainer = document.getElementById('waitlist-counts');
-    if (countsContainer) {
-        countsContainer.innerHTML = Object.entries(counts).map(([svc, num]) => `
-            <span class="bg-pink-50 text-pink-500 px-3 py-1 rounded-full text-[9px] font-black uppercase border border-pink-100">${svc}: ${num}</span>
-        `).join('');
-    }
-
-    // Update Waitlist Table
-    const tableBody = document.getElementById('waitlist-table-body');
-    if (tableBody) {
-        tableBody.innerHTML = waitlist.map(person => `
-            <tr class="text-xs border-b border-pink-50/50 hover:bg-pink-50/10 transition-colors">
-                <td class="py-4 text-gray-500">${new Date(person.created_at).toLocaleDateString('en-GB')}</td>
-                <td class="py-4 font-bold text-gray-700">${person.email}</td>
-                <td class="py-4"><span class="text-[10px] font-black uppercase text-pink-400">${person.service_requested}</span></td>
-                <td class="py-4 text-right">
-                    <button onclick="sendWaitlistEmail('${person.email}', '${person.service_requested}')" class="p-2 hover:bg-emerald-50 text-emerald-500 rounded-lg transition-all">✉️</button>
-                    <button onclick="deleteWaitlistEntry('${person.id}')" class="p-2 hover:bg-rose-50 text-rose-400 rounded-lg transition-all">🗑️</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    document.getElementById('greeting-date').innerText = new Date().toLocaleDateString('en-GB', { 
-        weekday: 'long', day: 'numeric', month: 'long' 
-    });
-}
-
-// ACTION: Email Client Trigger
-function sendWaitlistEmail(email, service) {
-    const subject = encodeURIComponent(`HanafubukiDoll: We are open for ${service}!`);
-    const body = encodeURIComponent(`Hey! \n\nWe are now open for ${service} again! \n\nPlease visit our contact page (https://hanafubukidoll.com/contact) and fill out your details so that the team can review them. \n\nIf we don't hear from you within 48 hours we will have to move on to the next person on the waitlist! \n\nBest, \nHanafubuki Studio ♡`);
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-}
-
-// ACTION: Delete from Supabase
-async function deleteWaitlistEntry(id) {
-    if(!confirm("Remove this entry from the waitlist?")) return;
-    const { error } = await _supabase.from('waitlist').delete().eq('id', id);
-    if (!error) renderSummary(); 
-}
-    
+ }
+  
     // --- NAVIGATION ---
 async function switchTab(tab) {
     localStorage.setItem('hana_active_tab', tab);
@@ -634,14 +524,14 @@ document.getElementById('saveBtn').onclick = async () => {
         const isUrgentChecked = document.getElementById('isUrg')?.checked || false;
 
         const updates = {
-            status: document.getElementById('upStatus')?.value,
-            payment_method: payType,
-            total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
-            is_urgent: isUrgentChecked,
-            shipping_cost: parseFloat(document.getElementById('shipCost')?.value || 0), 
-            tracking_number: document.getElementById('trackNum')?.value || '', 
-            payment_status: isPaidChecked ? 'Paid' : 'Unpaid'
-        };
+    status: document.getElementById('upStatus')?.value,
+    total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
+    tracking_number: document.getElementById('trackNum')?.value || '',
+    payment_status: document.getElementById('isPaidCheck')?.checked ? 'Paid' : 'Unpaid',
+    shipping_cost: parseFloat(document.getElementById('shipCost')?.value || 0),
+    partner_shipped: document.getElementById('partnerShipped')?.checked || false,
+    artist_shipped: document.getElementById('artistShipped')?.checked || false
+};
 
         // Handle Trade specific toggles safely
         if (payType === 'Trade') {
@@ -835,6 +725,68 @@ async function addNewStockItem() {
             </div>
         </div>`;
 }
+
+        / --- RENDER SUMMARY --- /
+async function renderSummary() {
+    try {
+        const { data: jobs, error: jobErr } = await _supabase.from('commissions').select('*');
+        const { data: waitlist, error: waitErr } = await _supabase.from('waitlist').select('*').order('created_at');
+
+        if (jobErr || !jobs) return;
+
+        // Stats Logic
+        const enq = jobs.filter(j => j.status === 'Enquiry').length;
+        const active = jobs.filter(j => ['Working', 'Approved'].includes(j.status)).length;
+        const photo = jobs.filter(j => j.status === 'Photo').length; // "To be shipped"
+        const totalRev = jobs.reduce((s, j) => s + (Number(j.total_price) || 0), 0);
+        const settled = jobs.filter(j => j.status === 'Shipped').reduce((s, j) => s + (Number(j.total_price) || 0), 0);
+        const pending = totalRev - settled;
+
+        // Update UI IDs
+        if(document.getElementById('stat-enquiries')) document.getElementById('stat-enquiries').innerText = enq;
+        if(document.getElementById('stat-workbench')) document.getElementById('stat-workbench').innerText = active;
+        if(document.getElementById('stat-special')) document.getElementById('stat-special').innerText = photo;
+        if(document.getElementById('stat-revenue')) document.getElementById('stat-revenue').innerText = `£${totalRev.toFixed(2)}`;
+
+        // Priorities (Oldest first)
+        const priorities = jobs.filter(j => !['Shipped', 'Enquiry'].includes(j.status))
+                               .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(0,3);
+        
+        const prioContainer = document.getElementById('priority-list');
+        if(prioContainer) {
+            prioContainer.innerHTML = priorities.map(j => `
+                <div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-pink-50 shadow-sm">
+                    <span class="font-bold text-sm text-gray-700">${j.social_handle || 'Client'}</span>
+                    <span class="text-[9px] px-3 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase">${j.status}</span>
+                </div>
+            `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
+        }
+
+        // Revenue Snap
+        const snap = document.getElementById('revenue-snap-bars');
+        if(snap) {
+            const max = Math.max(settled, pending, 1);
+            snap.innerHTML = `
+                <div class="flex items-end gap-4 h-32">
+                    <div class="bg-emerald-400 w-full rounded-t-xl transition-all duration-1000" style="height: ${(settled/max)*100}%"></div>
+                    <div class="bg-pink-300 w-full rounded-t-xl transition-all duration-1000" style="height: ${(pending/max)*100}%"></div>
+                </div>
+                <div class="flex justify-between mt-4 text-[10px] font-bold uppercase text-gray-500">
+                    <span>Settled (£${settled.toFixed(0)})</span>
+                    <span>Pending (£${pending.toFixed(0)})</span>
+                </div>
+            `;
+        }
+
+        if (typeof renderWaitlistUI === "function") renderWaitlistUI(waitlist);
+        
+        if(document.getElementById('greeting-date')) {
+            document.getElementById('greeting-date').innerText = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+        }
+    } catch (e) { console.error("Dashboard error caught:", e); }
+}
+        
+        
     function closeDrawer() {
     const drawer = document.getElementById('editDrawer');
     if (drawer) {
