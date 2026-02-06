@@ -1,0 +1,96 @@
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+<body class="bg-[#fdfbfb]">
+    <nav class="p-6 bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-pink-50">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="font-black italic tracking-tighter text-xl">FINANCIAL DASHBOARD ♡</div>
+            <a href="admin.html" class="nav-btn nav-btn-mint">← Back to Admin</a>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-6 space-y-10">
+        <div id="financial-stats" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            </div>
+
+        <div class="glass-card p-8 bg-white/80">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Revenue Growth</h3>
+                <select id="taxYearFilter" class="text-[10px] font-bold border-none bg-pink-50 rounded-lg p-2 outline-none text-pink-500">
+                    <option value="2025-26">Tax Year 25/26</option>
+                    <option value="2024-25">Tax Year 24/25</option>
+                </select>
+            </div>
+            <div class="h-[350px]">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <div class="glass-card p-8">
+            <h3 class="text-xs font-black uppercase text-gray-400 mb-6 tracking-widest">Tax Categorized Expenses</h3>
+            <div id="expense-list" class="space-y-4">
+                <p class="text-gray-300 italic text-sm text-center py-10 underline">Expense tracking module coming soon...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function loadFinancialData() {
+            const { data: jobs } = await _supabase.from('commissions').select('*');
+            
+            const total = jobs.reduce((sum, j) => sum + (Number(j.price) || 0), 0);
+            
+            document.getElementById('financial-stats').innerHTML = `
+                <div class="glass-card p-8 border-l-4 border-pink-400">
+                    <p class="text-[10px] font-black uppercase text-gray-400">Gross Turnover</p>
+                    <p class="text-4xl font-black italic">£${total}</p>
+                </div>
+                `;
+
+            initChart(jobs);
+        }
+        
+        function initRevenueChart(jobs) {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthlyData = new Array(12).fill(0);
+
+    jobs.forEach(job => {
+        const date = new Date(job.created_at);
+        monthlyData[date.getMonth()] += (Number(job.price) || 0);
+    });
+
+      const currentMonth = new Date().getMonth();
+    const labels = months.slice(0, currentMonth + 1);
+    const data = monthlyData.slice(0, currentMonth + 1);
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Revenue £',
+                data: data,
+                borderColor: '#f472b6',
+                backgroundColor: 'rgba(244, 114, 182, 0.1)',
+                borderWidth: 4,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#f472b6',
+                pointRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { display: false } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+    </script>
+</body>
