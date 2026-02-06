@@ -68,16 +68,12 @@
     <button onclick="handleLogout()" class="nav-btn nav-btn-pink opacity-50 hover:opacity-100">Logout ⏻</button>
 </div>
 </nav>
-    <div id="loginGate" class="max-w-md mx-auto mt-20 p-10 glass-card text-center space-y-6">
-        <h2 class="text-2xl font-black italic">Artist Entrance</h2>
-        <div class="space-y-4">
-            <input type="email" id="adminEmail" placeholder="Studio Email" class="w-full p-4 rounded-2xl border border-pink-100 outline-none focus:ring-2 ring-pink-200 transition-all">
-            <input type="password" id="adminPassword" placeholder="Secret Key" class="w-full p-4 rounded-2xl border border-pink-100 outline-none focus:ring-2 ring-pink-200 transition-all">
-        </div>
-        <button onclick="handleLogin()" id="loginBtn" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all">Unlock Studio ♡</button>
+  <div id="loginGate" class="min-h-screen flex items-center justify-center">
+    <div class="text-center space-y-4">
+        <div class="animate-spin text-4xl">🌸</div>
+        <p class="text-[10px] font-black uppercase tracking-widest text-pink-400">Verifying Studio Access...</p>
     </div>
-
-    <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
+</div>
 
 <div id="view-summary" class="tab-content space-y-8 animate-fadeIn">
     <div class="px-4 flex justify-between items-end">
@@ -217,41 +213,27 @@
    const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        _supabase.auth.onAuthStateChange((event, session) => {
+    
+_supabase.auth.onAuthStateChange((event, session) => {
     const loginGate = document.getElementById('loginGate');
     const adminNav = document.getElementById('adminNav');
     const adminMain = document.getElementById('adminMain');
 
     if (session) {
-        if (loginGate) loginGate.style.display = 'none';
         
-        // Remove both hidden classes used in your file
-        if (adminNav) {
-            adminNav.classList.remove('auth-hidden', 'hidden');
-            adminNav.style.display = 'block';
-        }
-        if (adminMain) {
-            adminMain.classList.remove('auth-hidden', 'hidden');
-            adminMain.style.display = 'block';
-        }
-
+    if (loginGate) loginGate.style.display = 'none';
+        
+        adminNav?.classList.remove('auth-hidden', 'hidden');
+        adminMain?.classList.remove('auth-hidden', 'hidden');
+        
         const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
         switchTab(lastTab);
     } else {
-        if (loginGate) loginGate.style.display = 'flex';
-        if (adminNav) adminNav.classList.add('auth-hidden');
-        if (adminMain) adminMain.classList.add('auth-hidden');
+       
+        window.location.href = 'login.html'; 
     }
 });
-    
-    async function handleLogin() {
-        const email = document.getElementById('adminEmail').value;
-        const password = document.getElementById('adminPassword').value;
-        const { error } = await _supabase.auth.signInWithPassword({ email, password });
-        if (error) alert("Access Denied: " + error.message);
-    }
-
+       
     async function handleLogout() {
     const { error } = await _supabase.auth.signOut();
     if (error) {
