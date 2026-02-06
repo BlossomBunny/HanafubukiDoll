@@ -256,15 +256,16 @@ _supabase.auth.onAuthStateChange((event, session) => {
 async function switchTab(tab) {
     localStorage.setItem('hana_active_tab', tab);
     
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    const activeView = document.getElementById(`view-${tab}`);
-    if (activeView) activeView.classList.remove('hidden');
+    document.querySelectorAll('.tab-content').forEach(el => {
+    el.classList.add('hidden');
+    el.style.display = 'none';           // ← extra force
+});
 
-    // Always call render with sane defaults
-    if (tab === 'summary')    await renderSummary();
-    if (tab === 'workbench')  await renderWorkbench(false);       // ← add false explicitly
-    if (tab === 'planner')    await renderPlanner();
-    if (tab === 'inventory')  await renderInventory();
+const activeView = document.getElementById(`view-${tab}`);
+if (activeView) {
+    activeView.classList.remove('hidden');
+    activeView.style.display = 'block';  // ← force visible
+    console.log(`Activated tab: view-${tab}`);
 }
     
 let revenueChart = null;
