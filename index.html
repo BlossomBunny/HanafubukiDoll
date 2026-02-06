@@ -181,7 +181,7 @@ async function updateHomeBlinkers() {
                 const isLive = service.is_live;
                 const colorClass = isLive ? 'bg-emerald-400' : 'bg-amber-400';
                 return `
-                    <div class="flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm border border-pink-100 rounded-full shadow-sm">
+                    <div class="flex items-center gap-3 px-4 py-2 bg-white/80 backdrop-blur-sm border border-pink-100 rounded-full shadow-sm hover:scale-105 transition-transform">
                         <span class="relative flex h-2 w-2">
                             ${isLive ? `<span class="animate-pulse-custom absolute inline-flex h-full w-full rounded-full ${colorClass} opacity-75"></span>` : ''}
                             <span class="relative inline-flex rounded-full h-2 w-2 ${colorClass}"></span>
