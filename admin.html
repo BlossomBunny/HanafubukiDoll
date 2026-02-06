@@ -702,7 +702,6 @@ async function addNewStockItem() {
         </div>`;
 }
 
-        / --- RENDER SUMMARY --- /
 async function renderSummary() {
     try {
         const { data: jobs, error: jobErr } = await _supabase.from('commissions').select('*');
