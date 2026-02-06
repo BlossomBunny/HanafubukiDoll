@@ -176,10 +176,16 @@
     }
 
     async function handleLogout() {
-        await _supabase.auth.signOut();
-        window.location.reload();
+        const { error } = await _supabase.auth.signOut();
+    
+    if (error) {
+        console.error("Error logging out:", error.message);
     }
 
+    localStorage.removeItem('supabase.auth.token'); 
+
+    window.location.href = 'index.html';
+}
     // --- NAVIGATION ---
     async function switchTab(tab) {
         localStorage.setItem('hana_active_tab', tab);
