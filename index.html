@@ -21,32 +21,30 @@
     </style>
 </head>
 <body class="bg-[#fdfbfb]">
-  <div id="liveBanner" class="hidden fixed top-24 left-1/2 -translate-x-1/2 z-40 w-auto animate-fadeIn">
-    <div class="bg-white/40 backdrop-blur-md border border-pink-100/50 px-4 py-1.5 rounded-full shadow-[0_2px_15px_-3px_rgba(255,182,193,0.2)] flex items-center gap-2 transition-all hover:bg-white/60">
-        <span class="flex h-1.5 w-1.5">
-            <span class="animate-ping absolute inline-flex h-1.5 w-1.5 rounded-full bg-pink-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-pink-500"></span>
-        </span>
-        <p id="bannerText" class="text-[9px] font-bold uppercase tracking-[0.2em] text-pink-600/80 whitespace-nowrap"></p>
+    <div id="liveBanner" class="hidden bg-pink-500 text-white overflow-hidden transition-all duration-500 ease-in-out border-b border-pink-400/20" style="max-height: 0px;">
+        <div class="max-w-6xl mx-auto px-4 py-2 flex justify-center items-center gap-3">
+            <span class="text-[10px] animate-pulse">✨</span>
+            <p id="bannerText" class="text-[9px] font-black uppercase tracking-[0.3em] whitespace-nowrap"></p>
+            <span class="text-[10px] animate-pulse">✨</span>
+        </div>
     </div>
-</div>
 
     <div class="mesh-bg"></div>
     <div class="petals-container" id="petals"></div>
 
-  <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="text-xl md:text-2xl font-black tracking-tighter">
-            <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
+    <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-xl md:text-2xl font-black tracking-tighter">
+                <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
+                <a href="services.html" class="nav-btn nav-btn-mint">Services ♡</a>
+                <a href="tools.html" class="nav-btn nav-btn-pink">Studio Tools ♡</a>
+                <a href="contact.html" class="nav-btn nav-btn-mint">Contact ♡</a>
+            </div>
         </div>
-        <div class="flex flex-wrap justify-center gap-2 md:gap-4">
-            <a href="index.html" class="nav-btn nav-btn-pink">Home ♡</a>
-            <a href="services.html" class="nav-btn nav-btn-mint">Services ♡</a>
-            <a href="tools.html" class="nav-btn nav-btn-pink">Studio Tools ♡</a>
-            <a href="contact.html" class="nav-btn nav-btn-mint">Contact ♡</a>
-        </div>
-    </div>
-</nav>
+    </nav>
 
 <main class="max-w-6xl mx-auto px-4 py-12 relative z-10">
  
@@ -139,11 +137,9 @@
             container.appendChild(p);
         }
 
-// --- Live Status & Banner Logic ---
-// --- High-Frequency Update Logic ---
+// BLINKER FUNCTION //
 async function updateHomeBlinkers() {
     try {
-        // We only select the columns we need to keep the "check" super fast
         const { data: settings, error } = await _supabase
             .from('studio_settings')
             .select('id, is_live, banner_text');
@@ -153,25 +149,21 @@ async function updateHomeBlinkers() {
         const bannerData = settings.find(s => s.id === 'Banner');
         const services = settings.filter(s => s.id !== 'Banner');
 
-        // 1. Top Bar Banner Logic
+        // 1. Banner Animation Logic
         const bannerEl = document.getElementById('liveBanner');
         const bannerTxt = document.getElementById('bannerText');
         
         if (bannerData && bannerData.is_live && bannerData.banner_text) {
+            bannerTxt.innerText = bannerData.banner_text;
             if (bannerEl.classList.contains('hidden')) {
-                bannerTxt.innerText = bannerData.banner_text;
                 bannerEl.classList.remove('hidden');
-                // Use a tiny delay to trigger the height animation
-                setTimeout(() => bannerEl.style.maxHeight = '40px', 10);
-            } else {
-                // If already visible, just update text if it changed
-                if (bannerTxt.innerText !== bannerData.banner_text) {
-                    bannerTxt.innerText = bannerData.banner_text;
-                }
+                // Small delay to trigger the CSS max-height transition
+                setTimeout(() => { bannerEl.style.maxHeight = '40px'; }, 10);
             }
-        } else {
+        } else if (bannerEl) {
             bannerEl.style.maxHeight = '0px';
-            setTimeout(() => bannerEl.classList.add('hidden'), 500);
+            // Wait for transition to finish before hiding
+            setTimeout(() => { bannerEl.classList.add('hidden'); }, 500);
         }
 
         // 2. Service Status Pills
@@ -192,22 +184,21 @@ async function updateHomeBlinkers() {
                     </div>`;
             }).join('');
 
-            // Only update the innerHTML if it has actually changed to prevent flickering
             if (barContainer.innerHTML !== newHtml) {
                 barContainer.innerHTML = newHtml;
             }
         }
     } catch (err) {
-        console.error("Polling failed:", err);
+        console.error("Update failed:", err);
     }
 }
 
 // --- Initialize Polling ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Check immediately on load
+    // Initial fetch
     updateHomeBlinkers();
 
-    // Check every 5 seconds (Fast enough to feel live, slow enough to be safe)
+    // Check every 5 seconds since Realtime is in Alpha
     setInterval(updateHomeBlinkers, 5000);
 });
         
