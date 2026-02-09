@@ -203,3 +203,33 @@ body.high-contrast {
 body.high-contrast * {
     border-color: black !important;
 }
+
+/* In your <style type="text/tailwindcss"> or external style.css */
+#calendar .fc {
+    --fc-border-color: rgba(255, 182, 193, 0.3); /* Soft pink border */
+    --fc-daygrid-event-dot-width: 8px;
+}
+
+#calendar .fc-daygrid-day-frame {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 182, 193, 0.2);
+}
+
+#calendar .fc-daygrid-day-top {
+    color: #ec4899; /* Pink for day numbers */
+    font-weight: 600;
+}
+
+#calendar .fc-day-today {
+    background: rgba(236, 72, 153, 0.1) !important; /* Subtle pink highlight */
+}
+
+#calendar .fc-button {
+    @apply bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-full font-bold;
+}
+
+#calendar .fc-toolbar-title {
+    @apply text-2xl font-black italic text-gray-800;
+}
