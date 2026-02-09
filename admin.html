@@ -235,6 +235,7 @@
             <span>⚙️</span> <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Settings</span>
         </button>
     </div>
+    
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -521,6 +522,78 @@ async function renderWorkbench(showArchived = false) {
             </div>`;
     }).join('');
 }
+
+    let currentEventId = null;
+
+function showEventModal(id, event = null) {
+    currentEventId = id;
+    document.getElementById('eventModalTitle').textContent = id ? 'Edit Event' : 'Add Event';
+    document.getElementById('deleteEventBtn').classList.toggle('hidden', !id);
+
+    if (event) {
+        document.getElementById('eventTitle').value = event.title || '';
+        document.getElementById('eventType').value = event.extendedProps?.type || 'other';
+        document.getElementById('eventStart').value = event.start ? new Date(event.start).toISOString().slice(0,16) : '';
+        document.getElementById('eventEnd').value = event.end ? new Date(event.end).toISOString().slice(0,16) : '';
+        document.getElementById('eventDetails').value = event.extendedProps?.details || '';
+    } else {
+        document.getElementById('eventForm').reset();
+    }
+
+    document.getElementById('eventModal').classList.remove('hidden');
+}
+
+function closeEventModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+}
+
+async function saveEvent() {
+    const title = document.getElementById('eventTitle').value.trim();
+    const type = document.getElementById('eventType').value;
+    const start = document.getElementById('eventStart').value;
+    const end = document.getElementById('eventEnd').value || null;
+    const details = document.getElementById('eventDetails').value.trim();
+
+    if (!title || !start) {
+        alert("Title and start date are required.");
+        return;
+    }
+
+    try {
+        let error;
+        if (currentEventId) {
+            ({ error } = await _supabase.from('events').update({
+                title, type, start_date: start, end_date: end, details
+            }).eq('id', currentEventId));
+        } else {
+            ({ error } = await _supabase.from('events').insert({
+                title, type, start_date: start, end_date: end, details
+            }));
+        }
+
+        if (error) throw error;
+
+        closeEventModal();
+        renderPlanner(); // Refresh calendar
+    } catch (err) {
+        console.error("Save event error:", err);
+        alert("Failed to save: " + err.message);
+    }
+}
+
+async function deleteEvent() {
+    if (!confirm("Delete this event?")) return;
+
+    try {
+        const { error } = await _supabase.from('events').delete().eq('id', currentEventId);
+        if (error) throw error;
+        closeEventModal();
+        renderPlanner();
+    } catch (err) {
+        console.error("Delete error:", err);
+        alert("Failed to delete: " + err.message);
+    }
+}
     // --- PLANNER LOGIC --- //
   let currentEventId = null;
 
@@ -553,17 +626,19 @@ async function renderPlanner() {
             editable: true,
             selectable: true,
             events: [
-                ...jobs.map(job => ({
-                    id: `job-${job.id}`,
-                    title: `${job.social_handle || 'Client'} – ${job.doll_sculpt || '?'} (${job.status})`,
-                    start: job.created_at,
-                    end: job.due_date || null,
-                    allDay: true,                     // Force all-day so no time bars
-                    backgroundColor: getJobColor(job.status, job.is_urgent),
-                    borderColor: 'transparent',
-                    textColor: '#333',
-                    extendedProps: { type: 'job' }
-                })),
+...jobs
+        .filter(job => job.arrived_at && new Date(job.arrived_at) instanceof Date && !isNaN(new Date(job.arrived_at)))
+        .map(job => ({
+            id: `job-${job.id}`,
+            title: `${job.social_handle || 'Client'} – ${job.doll_sculpt || '?'} (${job.status})`,
+            start: new Date(job.arrived_at),
+            end: job.shipped_at ? new Date(job.shipped_at) : new Date(),
+            allDay: true,
+            backgroundColor: getJobColor(job.status, job.is_urgent),
+            borderColor: 'transparent',
+            textColor: '#333',
+            extendedProps: { type: 'job' }
+        })),
                 ...events.map(event => ({
                     id: event.id,
                     title: event.title,
