@@ -1146,6 +1146,25 @@ async function confirmDeclineAndSend() {
         alert("Something went wrong: " + err.message);
     }
 }
+
+    function getJobColor(status, isUrgent) {
+    const colors = {
+        'Enquiry': '#DDBDFC',    // light purple
+        'Quote':   '#A5D8FF',    // light blue
+        'Arrived': '#FFE3A3',    // light yellow
+        'Working': '#B5F5EC',    // mint
+        'Approved': '#BBF7D0',   // light green
+        'Photo':   '#FBCFE8'     // light pink
+    };
+    
+    // Urgent jobs override to red
+    if (isUrgent) {
+        return '#FCA5A5'; // rose/red
+    }
+    
+    // Return color for status, or fallback to gray
+    return colors[status] || '#E5E7EB';
+}
 </script>
     <div id="declineModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[999] hidden">
     <div class="bg-white rounded-3xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
