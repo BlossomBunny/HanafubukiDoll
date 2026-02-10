@@ -248,6 +248,7 @@ let currentDeclineJobId = null;
 let currentDeclineEmail = '';
 let currentDeclineHandle = '';
 let currentEventId = null;
+let activeJobId = null;  
 
 // Auth listener
 _supabase.auth.onAuthStateChange((event, session) => {
@@ -704,40 +705,78 @@ async function renderPlanner() {
     // --- DRAWER & PAYMENTS ---
 async function openDrawer(id) {
     activeJobId = id;
-    const { data: job } = await _supabase.from('commissions').select('*').eq('id', id).single();
-    const content = document.getElementById('drawerContent');
-    
-    const payments = job.payments || [];
-    const paidTotal = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-    const calculatedBalance = Math.max(0, (job.total_price || 0) - paidTotal);
 
-    content.innerHTML = `
-        <div class="space-y-10 pb-10">
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-    <div>
-        <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Order Info</h3>
-        <p class="text-sm font-bold text-gray-800">${job.social_handle || '@none'}</p>
-        <p class="text-[10px] text-pink-400 font-black uppercase mt-1">${job.doll_company} ${job.doll_sculpt}</p>
-    </div>
+    try {
+        const { data: job, error } = await _supabase
+            .from('commissions')
+            .select('*')
+            .eq('id', id)
+            .single();
 
-    <div>
-        <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Global Workflow</h3>
-        <select id="upStatus" class="w-full p-3 border border-pink-100 rounded-2xl text-xs font-bold bg-white">
-            ${['Enquiry','Quote','Declined','Arrived','Working','Approved','Photo','Shipped']
-                .map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`)
-                .join('')}
-        </select>
+        if (error || !job) {
+            console.error("Failed to load job:", error);
+            document.getElementById('drawerContent').innerHTML = `
+                <p class="text-rose-500 text-center p-10">Error loading order: ${error?.message || 'Not found'}</p>
+            `;
+            return;
+        }
 
-        ${['Enquiry', 'Quote'].includes(job.status) ? `
-    <div class="mt-6 text-right">
-        <button onclick="showDeclineModal('${job.id}', '${job.customer_email || ''}', '${job.social_handle || 'client'}')"
-                class="px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-sm font-black uppercase shadow-lg transition-all transform hover:scale-105">
-            Decline Job
-        </button>
-    </div>
-` : ''}
-    </div>
-</section>
+        const payments = job.payments || [];
+        const paidTotal = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+        const balance = Math.max(0, (job.total_price || 0) - paidTotal);
+
+        const content = document.getElementById('drawerContent');
+        content.innerHTML = `
+            <div class="space-y-10 pb-10">
+                <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Order Info</h3>
+                        <p class="text-sm font-bold text-gray-800">${job.social_handle || '@none'}</p>
+                        <p class="text-[10px] text-pink-400 font-black uppercase mt-1">${job.doll_company || ''} ${job.doll_sculpt || ''}</p>
+                    </div>
+
+                    <div>
+                        <h3 class="text-[10px] font-black uppercase text-gray-400 border-b pb-1 mb-2">Global Workflow</h3>
+                        <select id="upStatus" class="w-full p-3 border border-pink-100 rounded-2xl text-xs font-bold bg-white">
+                            ${['Enquiry','Quote','Declined','Arrived','Working','Approved','Photo','Shipped']
+                                .map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`)
+                                .join('')}
+                        </select>
+
+                        ${['Enquiry', 'Quote'].includes(job.status) ? `
+                            <div class="mt-6 text-right">
+                                <button onclick="showDeclineModal('${job.id}', '${job.customer_email || ''}', '${job.social_handle || 'client'}')"
+                                        class="px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-sm font-black uppercase shadow-lg transition-all transform hover:scale-105">
+                                    Decline Job
+                                </button>
+                            </div>
+                        ` : ''}
+
+                        <!-- Add balance display if useful -->
+                        <div class="mt-4 text-sm">
+                            <p>Paid: £${paidTotal.toFixed(2)}</p>
+                            <p class="font-bold">Balance: £${balance.toFixed(2)}</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Add more sections here (e.g. payments list, services, notes, images) -->
+                <!-- Example placeholder -->
+                <section>
+                    <h3 class="text-lg font-bold">Additional Details</h3>
+                    <p class="text-gray-600">Payments: ${payments.length}, Services: ...</p>
+                </section>
+
+                <!-- Save button is already in the drawer footer, no need to repeat -->
+            </div>
+        `;
+    } catch (err) {
+        console.error("Open drawer error:", err);
+        document.getElementById('drawerContent').innerHTML = `
+            <p class="text-rose-500 text-center p-10">Unexpected error: ${err.message}</p>
+        `;
+    }
+}
 
             <div class="bg-pink-50/50 p-6 rounded-[3rem] border border-pink-100 space-y-6">
                 <div class="flex justify-between items-center">
@@ -1179,6 +1218,43 @@ async function confirmDeclineAndSend() {
     
     // Return color for status, or fallback to gray
     return colors[status] || '#E5E7EB';
+}
+
+async function handleLogout() {
+    try {
+        const { error } = await _supabase.auth.signOut();
+        if (error) throw error;
+        localStorage.removeItem('hana_active_tab');
+        window.location.href = 'login.html';
+    } catch (err) {
+        console.error("Logout error:", err);
+        alert("Logout failed.");
+    }
+}
+
+async function handleArchive() {
+    if (!activeJobId) {
+        alert("No order selected.");
+        return;
+    }
+    if (!confirm("Archive this order?")) return;
+
+    try {
+        const { error } = await _supabase
+            .from('commissions')
+            .update({ archived: true })
+            .eq('id', activeJobId);
+
+        if (error) throw error;
+
+        alert("Archived!");
+        closeDrawer();
+        renderWorkbench(false);
+        renderSummary();
+    } catch (err) {
+        console.error("Archive error:", err);
+        alert("Failed to archive: " + err.message);
+    }
 }
 </script>
     <div id="declineModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[999] hidden">
