@@ -329,10 +329,10 @@ let revenueChart = null;
     
                                          // --- RENDERS FOR EACH TAB --- //
 // --- SUMMARY LOGIC --- //
-    async function renderSummary() {
+   // --- SUMMARY LOGIC --- //
+async function renderSummary() {
     try {
         const { data: jobs } = await _supabase.from('commissions').select('*');
-        const { data: waitlist } = await _supabase.from('waitlist').select('*').order('created_at');
         const { data: settings } = await _supabase.from('studio_settings').select('*');
 
         if (!jobs) return;
@@ -364,7 +364,7 @@ let revenueChart = null;
             `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
         }
 
-        // --- 3. SETTINGS (Blinkers & Banner) ---
+        // --- 3. SETTINGS ---
         if (settings) {
             const toggleContainer = document.getElementById('service-quick-toggles');
             const servicesOnly = settings.filter(s => s.id !== 'Banner');
@@ -377,24 +377,6 @@ let revenueChart = null;
                     </button>
                 `).join('');
             }
-
-            const bannerData = settings.find(s => s.id === 'Banner');
-            if (bannerData) {
-                const btn = document.getElementById('bannerToggleBtn');
-                const dot = btn?.querySelector('.dot');
-                const label = document.getElementById('bannerStatusLabel');
-                const input = document.getElementById('bannerMsgInput');
-                if (input && !input.matches(':focus')) input.value = bannerData.banner_text || "";
-                if (bannerData.is_live) {
-                    btn?.classList.replace('bg-gray-200', 'bg-pink-500');
-                    dot?.classList.add('translate-x-6');
-                    if(label) { label.innerText = "Banner Live ✨"; label.className = "text-[10px] font-black uppercase text-pink-500"; }
-                } else {
-                    btn?.classList.replace('bg-pink-500', 'bg-gray-200');
-                    dot?.classList.remove('translate-x-6');
-                    if(label) { label.innerText = "Banner Off"; label.className = "text-[10px] font-black uppercase text-gray-400"; }
-                }
-            }
         }
 
         // --- 4. REVENUE CHART ---
@@ -402,9 +384,7 @@ let revenueChart = null;
         if(chartCanvas) {
             const pending = totalBooked - totalPaid;
             const ctx = chartCanvas.getContext('2d');
-            
             if (revenueChart) revenueChart.destroy();
-            
             revenueChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -426,99 +406,54 @@ let revenueChart = null;
                 }
             });
         }
+    } catch (err) {
+        console.error("Summary error:", err);
+    }
+} // <--- Added missing closing brace
 
-        // --- 5. FULL WAITLIST TABLE ---
 async function renderWaitlist() {
     const countEl = document.getElementById('waitlist-count');
     const tableBody = document.getElementById('waitlist-table-body');
-
-    // Safety: if the elements don't exist on this page, silently skip
     if (!countEl || !tableBody) return;
 
     try {
         const { data: waitlist, error } = await _supabase
             .from('waitlist')
-            .select('created_at, name, email, service_requested, notes')
+            .select('*')
             .eq('status', 'pending')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-
         countEl.textContent = `${waitlist.length} Entries`;
-
-        if (waitlist.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase italic">
-                        Queue is clear! ✨
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
         tableBody.innerHTML = waitlist.map(entry => `
-            <tr class="hover:bg-amber-50/30 transition-colors">
-                <td class="p-4 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                    ${new Date(entry.created_at).toLocaleDateString('en-GB')}
-                </td>
-                <td class="p-4 text-sm font-black text-gray-700">
-                    ${entry.name || '—'}
-                </td>
-                <td class="p-4 text-sm font-black text-gray-700">
-                    ${entry.email}
-                </td>
-                <td class="p-4">
-                    <span class="px-3 py-1 bg-amber-100 text-amber-600 rounded-full text-[9px] font-black uppercase">
-                        ${entry.service_requested || 'General Service'}
-                    </span>
-                </td>
-                <td class="p-4 text-sm text-gray-600">
-                    ${entry.notes || '—'}
-                </td>
+            <tr>
+                <td class="p-4 text-[10px] font-bold text-gray-400 uppercase">${new Date(entry.created_at).toLocaleDateString()}</td>
+                <td class="p-4 text-sm font-black text-gray-700">${entry.email}</td>
+                <td class="p-4 text-sm font-black text-gray-700">${entry.service_requested}</td>
+                <td class="p-4 text-sm font-black text-gray-700">${entry.name}</td>
+                <td class="p-4 text-sm text-gray-600">${entry.notes || ''}</td>
             </tr>
         `).join('');
     } catch (err) {
-        console.error("Waitlist render error:", err);
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="5" class="p-10 text-center text-rose-500">
-                    Error loading waitlist
-                </td>
-            </tr>
-        `;
+        console.error("Waitlist error:", err);
     }
-}
+} // <--- Added missing closing brace
 
-// --- 6. INITIALIZATION ---
+// --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Check which tab was used last, or default to summary
     const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
     switchTab(lastTab);
 
-    // Setup Realtime Sync for all tables
-   _supabase
-    .channel('admin-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, (payload) => {
-        console.log('Commissions changed:', payload);
-        const current = localStorage.getItem('hana_active_tab');
-        if (current === 'summary') renderSummary();
-        if (current === 'workbench') renderWorkbench(false);
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, (payload) => {
-        console.log('Inventory changed:', payload);
-        if (localStorage.getItem('hana_active_tab') === 'inventory') renderInventory();
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'waitlist' }, (payload) => {
-        console.log('Waitlist changed:', payload);
-        if (localStorage.getItem('hana_active_tab') === 'summary') renderWaitlist();
-    })
-    .subscribe((status) => {
-        console.log('Realtime subscription status:', status);
-        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-            console.warn('Realtime channel issue — reconnecting...');
-        }
-    });
+    _supabase
+        .channel('admin-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, () => {
+            const current = localStorage.getItem('hana_active_tab');
+            if (current === 'summary') renderSummary();
+            if (current === 'workbench') renderWorkbench(false);
+        })
+        .subscribe();
+}); 
+    
     // --- WORKBENCH LOGIC --- //
 async function renderWorkbench(showArchived = false) {
     console.log(">>> Rendering Workbench, archived =", showArchived);
