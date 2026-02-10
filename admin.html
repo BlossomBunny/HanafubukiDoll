@@ -723,10 +723,9 @@ async function openDrawer(id) {
 
         const payments = job.payments || [];
         const paidTotal = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-        const balance = Math.max(0, (job.total_price || 0) - paidTotal);
+        const calculatedBalance = Math.max(0, (job.total_price || 0) - paidTotal);
 
-        const content = document.getElementById('drawerContent');
-        content.innerHTML = `
+        document.getElementById('drawerContent').innerHTML = `
             <div class="space-y-10 pb-10">
                 <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
@@ -752,101 +751,84 @@ async function openDrawer(id) {
                             </div>
                         ` : ''}
 
-                        <!-- Add balance display if useful -->
-                        <div class="mt-4 text-sm">
-                            <p>Paid: £${paidTotal.toFixed(2)}</p>
-                            <p class="font-bold">Balance: £${balance.toFixed(2)}</p>
+                        <!-- Payment / Balance UI -->
+                        <div class="bg-pink-50/50 p-6 rounded-[3rem] border border-pink-100 space-y-6">
+                            <div class="flex justify-between items-center">
+                                <select id="payType" onchange="togglePayUI()" class="bg-white border border-pink-100 rounded-xl text-[10px] font-black uppercase p-2">
+                                    <option value="Paid in Full" ${job.payment_method === 'Paid in Full' ? 'selected' : ''}>Paid in Full</option>
+                                    <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
+                                    <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
+                                    <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
+                                </select>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="isUrg" ${job.is_urgent ? 'checked' : ''} class="w-4 h-4 accent-red-500">
+                                    <span class="text-[10px] font-black uppercase text-red-500">🚨 Urgent</span>
+                                </label>
+                            </div>
+
+                            <div id="tradeUI" class="${job.payment_method === 'Trade' ? '' : 'hidden'} space-y-3">
+                                <label class="flex items-center justify-between p-3 bg-white rounded-xl border border-pink-100 cursor-pointer">
+                                    <span class="text-[10px] font-black uppercase text-gray-600">I have shipped ♡</span>
+                                    <input type="checkbox" id="artistShipped" ${job.artist_shipped ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
+                                </label>
+                                <label class="flex items-center justify-between p-3 bg-white rounded-xl border border-pink-100 cursor-pointer">
+                                    <span class="text-[10px] font-black uppercase text-gray-600">Partner has shipped ♡</span>
+                                    <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
+                                </label>
+                            </div>
+
+                            <div id="moneyRow" class="${['Trade','Gift'].includes(job.payment_method) ? 'hidden' : ''} space-y-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-white p-4 rounded-2xl border border-pink-100">
+                                        <label class="text-[9px] font-black uppercase text-gray-400">Total Studio Fee (£)</label>
+                                        <input type="number" id="tPrice" value="${job.total_price || 0}" class="w-full font-black text-lg outline-none bg-transparent">
+                                    </div>
+                                    <div class="bg-white p-4 rounded-2xl border border-pink-100">
+                                        <p class="text-[9px] font-black text-gray-400 uppercase">Balance Due</p>
+                                        <p id="balanceLabel" class="text-xl font-black ${calculatedBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${calculatedBalance.toFixed(2)}</p>
+                                    </div>
+                                </div>
+
+                                <div id="pifUI" class="${job.payment_method === 'Paid in Full' ? '' : 'hidden'} flex items-center gap-2 px-2">
+                                    <input type="checkbox" id="isPaidCheck" ${job.payment_status === 'Paid' ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
+                                    <label class="text-[10px] font-black uppercase text-emerald-600">Mark Paid in Full</label>
+                                </div>
+
+                                <div id="layawayUI" class="${job.payment_method === 'Layaway' ? '' : 'hidden'} space-y-3">
+                                    <div class="flex gap-2">
+                                        <input type="number" id="newPayAmt" placeholder="0.00" class="flex-1 p-3 bg-white border border-pink-100 rounded-xl text-xs font-bold">
+                                        <button onclick="handlePayAdd()" class="px-6 bg-pink-500 text-white rounded-xl text-[9px] font-black uppercase">Add Payment ♡</button>
+                                    </div>
+                                    <div class="max-h-32 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
+                                        ${payments.map(p => `
+                                            <div class="flex justify-between text-[10px] font-bold text-gray-400 bg-white/50 p-2 rounded-lg">
+                                                <span>${new Date(p.date).toLocaleDateString()}</span>
+                                                <span class="text-gray-600">£${parseFloat(p.amount).toFixed(2)}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            ${renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink')}
+                            ${renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')}
+                            ${renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')}
                         </div>
                     </div>
                 </section>
-
-                <!-- Add more sections here (e.g. payments list, services, notes, images) -->
-                <!-- Example placeholder -->
-                <section>
-                    <h3 class="text-lg font-bold">Additional Details</h3>
-                    <p class="text-gray-600">Payments: ${payments.length}, Services: ...</p>
-                </section>
-
-                </div>
+            </div>
         `;
+
+        document.getElementById('editDrawer').classList.remove('translate-x-full');
     } catch (err) {
         console.error("Open drawer error:", err);
         document.getElementById('drawerContent').innerHTML = `
             <p class="text-rose-500 text-center p-10">Unexpected error: ${err.message}</p>
         `;
     }
-}
-
-
- <div class="bg-pink-50/50 p-6 rounded-[3rem] border border-pink-100 space-y-6">
-                <div class="flex justify-between items-center">
-                    <select id="payType" onchange="togglePayUI()" class="bg-white border border-pink-100 rounded-xl text-[10px] font-black uppercase p-2">
-                        <option value="Paid in Full" ${job.payment_method === 'Paid in Full' ? 'selected' : ''}>Paid in Full</option>
-                        <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
-                        <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
-                        <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
-                    </select>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="isUrg" ${job.is_urgent ? 'checked' : ''} class="w-4 h-4 accent-red-500">
-                        <span class="text-[10px] font-black uppercase text-red-500">🚨 Urgent</span>
-                    </label>
-                </div>
-
-                <div id="tradeUI" class="${job.payment_method === 'Trade' ? '' : 'hidden'} space-y-3">
-                    <label class="flex items-center justify-between p-3 bg-white rounded-xl border border-pink-100 cursor-pointer">
-                        <span class="text-[10px] font-black uppercase text-gray-600">I have shipped ♡</span>
-                        <input type="checkbox" id="artistShipped" ${job.artist_shipped ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
-                    </label>
-                    <label class="flex items-center justify-between p-3 bg-white rounded-xl border border-pink-100 cursor-pointer">
-                        <span class="text-[10px] font-black uppercase text-gray-600">Partner has shipped ♡</span>
-                        <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
-                    </label>
-                </div>
-
-                <div id="moneyRow" class="${['Trade','Gift'].includes(job.payment_method) ? 'hidden' : ''} space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-white p-4 rounded-2xl border border-pink-100">
-                            <label class="text-[9px] font-black uppercase text-gray-400">Total Studio Fee (£)</label>
-                            <input type="number" id="tPrice" value="${job.total_price || 0}" class="w-full font-black text-lg outline-none bg-transparent">
-                        </div>
-                        <div class="bg-white p-4 rounded-2xl border border-pink-100">
-                            <p class="text-[9px] font-black text-gray-400 uppercase">Balance Due</p>
-                            <p id="balanceLabel" class="text-xl font-black ${calculatedBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${calculatedBalance.toFixed(2)}</p>
-                        </div>
-                    </div>
-
-                    <div id="pifUI" class="${job.payment_method === 'Paid in Full' ? '' : 'hidden'} flex items-center gap-2 px-2">
-                        <input type="checkbox" id="isPaidCheck" ${job.payment_status === 'Paid' ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
-                        <label class="text-[10px] font-black uppercase text-emerald-600">Mark Paid in Full</label>
-                    </div>
-
-                    <div id="layawayUI" class="${job.payment_method === 'Layaway' ? '' : 'hidden'} space-y-3">
-                        <div class="flex gap-2">
-                            <input type="number" id="newPayAmt" placeholder="0.00" class="flex-1 p-3 bg-white border border-pink-100 rounded-xl text-xs font-bold">
-                            <button onclick="handlePayAdd()" class="px-6 bg-pink-500 text-white rounded-xl text-[9px] font-black uppercase">Add Payment ♡</button>
-                        </div>
-                        <div class="max-h-32 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
-                            ${payments.map(p => `
-                                <div class="flex justify-between text-[10px] font-bold text-gray-400 bg-white/50 p-2 rounded-lg">
-                                    <span>${new Date(p.date).toLocaleDateString()}</span>
-                                    <span class="text-gray-600">£${parseFloat(p.amount).toFixed(2)}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="space-y-6">
-                ${renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink')}
-                ${renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')}
-                ${renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')}
-            </div>
-        </div>`;
-    document.getElementById('editDrawer').classList.remove('translate-x-full');
-}    
-    
-        
+}        
 function renderServiceBlock(job, key, title, color) {
     const data = job[`${key}_details`];
     if (!data) return '';
