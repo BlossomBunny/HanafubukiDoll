@@ -243,9 +243,15 @@ const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Global variables – only declare once
+let currentDeclineJobId = null;
+let currentDeclineEmail = '';
+let currentDeclineHandle = '';
+let currentEventId = null;
 
+// Auth listener
 _supabase.auth.onAuthStateChange((event, session) => {
-    console.log('Auth event:', event, session ? 'Logged in' : 'Not logged in'); 
+    console.log('Auth event:', event, session ? 'Logged in' : 'Not logged in');
 
     const adminNav = document.getElementById('adminNav');
     const adminMain = document.getElementById('adminMain');
@@ -261,9 +267,9 @@ _supabase.auth.onAuthStateChange((event, session) => {
     }
 });
 
-
+// Immediate session check on load
 _supabase.auth.getSession().then(({ data: { session } }) => {
-    console.log('Initial session check:', session ? 'Logged in' : 'No session'); 
+    console.log('Initial session:', session ? 'Logged in' : 'No session');
 
     const adminNav = document.getElementById('adminNav');
     const adminMain = document.getElementById('adminMain');
@@ -272,16 +278,11 @@ _supabase.auth.getSession().then(({ data: { session } }) => {
         adminNav?.classList.remove('auth-hidden');
         adminMain?.classList.remove('auth-hidden');
 
-     
         const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
         switchTab(lastTab);
-    } else {
-        // Optional: redirect if no session
-        // window.location.href = 'login.html';
     }
-}).catch(err => {
-    console.error('Initial session error:', err);
-});
+}).catch(err => console.error('Session check error:', err));
+  
     // --- NAVIGATION ---
 async function switchTab(tab) {
     // Remember last tab
@@ -536,8 +537,6 @@ async function renderWorkbench(showArchived = false) {
     }).join('');
 }
 
-    let currentEventId = null;
-
 function showEventModal(id, event = null) {
     currentEventId = id;
     document.getElementById('eventModalTitle').textContent = id ? 'Edit Event' : 'Add Event';
@@ -608,8 +607,6 @@ async function deleteEvent() {
     }
 }
     // --- PLANNER LOGIC --- //
-  let currentEventId = null;
-
 async function renderPlanner() {
     const container = document.getElementById('plannerContainer');
     container.innerHTML = `
