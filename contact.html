@@ -278,7 +278,7 @@ async function syncFormWithStock() {
 
 }
         async function checkServiceAvailability() {
-    const { data: settings, error } = await _supabase.from('studio_settings').select('*');
+    const { data: settings, error } = await _supabase.from('studio_settings').select('id, is_live, banner_text');
     if (error || !settings) {
         console.error("Failed to load service status:", error);
         return;
@@ -286,16 +286,20 @@ async function syncFormWithStock() {
 
     settings.forEach(service => {
         const section = document.getElementById(`${service.id}-section`);
-        if (!section) return;
+        if (!section) {
+            console.warn(`Section not found for service: ${service.id}`);
+            return;
+        }
 
         if (!service.is_live) {
-            // Service is full → completely replace section with waitlist UI
+         
+            const message = service.banner_text || "We're at maximum capacity right now, but you can join the waitlist!";
+
             section.innerHTML = `
                 <div class="p-10 md:p-12 text-center space-y-8 bg-pink-50/40 rounded-3xl border border-pink-200 shadow-sm animate-fadeIn">
-                    <h3 class="text-2xl md:text-3xl font-black text-pink-600">🌸 ${service.id.charAt(0).toUpperCase() + service.id.slice(1)} is currently full</h3>
+                    <h3 class="text-2xl md:text-3xl font-black text-pink-600">🌸 Sorry, our ${service.id.charAt(0).toUpperCase() + service.id.slice(1)} service is currently full!</h3>
                     <p class="text-base md:text-lg text-gray-700 max-w-2xl mx-auto">
-                        We're at maximum capacity right now, but you can join the waitlist!<br>
-                        We'll email you as soon as slots become available ♡
+                        ${message}
                     </p>
                     <button onclick="showWaitlistForm('${service.id}')"
                             class="px-10 py-5 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold uppercase text-lg shadow-md transition-all transform hover:scale-105">
@@ -304,15 +308,18 @@ async function syncFormWithStock() {
                 </div>
             `;
         } else {
-            // Service is live → ensure it's visible and has "None" option
-            section.style.display = 'block'; // Make sure it's not hidden
+          
+            section.style.display = 'block';
             const select = section.querySelector('select');
-            if (select && !select.querySelector('option[value="None"]')) {
-                const noneOption = document.createElement('option');
-                noneOption.value = 'None';
-                noneOption.textContent = `No ${service.id.charAt(0).toUpperCase() + service.id.slice(1)} Needed`;
-                select.insertBefore(noneOption, select.firstChild);
-                // Select "None" by default if service just turned on
+            if (select) {
+               
+                if (!select.querySelector('option[value="None"]')) {
+                    const noneOption = document.createElement('option');
+                    noneOption.value = 'None';
+                    noneOption.textContent = `No ${service.id.charAt(0).toUpperCase() + service.id.slice(1)} Needed`;
+                    select.insertBefore(noneOption, select.firstChild);
+                }
+               
                 if (!select.value) select.value = 'None';
             }
         }
