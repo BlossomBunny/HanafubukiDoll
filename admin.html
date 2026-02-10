@@ -250,6 +250,7 @@ let currentDeclineEmail = '';
 let currentDeclineHandle = '';
 let currentEventId = null;
 let activeJobId = null;  
+let revenueChart = null;    
 
 // Auth listener
 _supabase.auth.onAuthStateChange((event, session) => {
@@ -328,8 +329,7 @@ async function switchTab(tab) {
 let revenueChart = null;
     
                                          // --- RENDERS FOR EACH TAB --- //
-// --- SUMMARY LOGIC --- //
-   // --- SUMMARY LOGIC --- //
+ // --- SUMMARY LOGIC --- //
 async function renderSummary() {
     try {
         const { data: jobs } = await _supabase.from('commissions').select('*');
@@ -364,7 +364,7 @@ async function renderSummary() {
             `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
         }
 
-        // --- 3. SETTINGS ---
+        // --- 3. SETTINGS (Blinkers & Banner) ---
         if (settings) {
             const toggleContainer = document.getElementById('service-quick-toggles');
             const servicesOnly = settings.filter(s => s.id !== 'Banner');
@@ -376,6 +376,24 @@ async function renderSummary() {
                         ${s.id}: ${s.is_live ? 'OPEN ♡' : 'WAITLIST'}
                     </button>
                 `).join('');
+            }
+
+            const bannerData = settings.find(s => s.id === 'Banner');
+            if (bannerData) {
+                const btn = document.getElementById('bannerToggleBtn');
+                const dot = btn?.querySelector('.dot');
+                const label = document.getElementById('bannerStatusLabel');
+                const input = document.getElementById('bannerMsgInput');
+                if (input && !input.matches(':focus')) input.value = bannerData.banner_text || "";
+                if (bannerData.is_live) {
+                    btn?.classList.replace('bg-gray-200', 'bg-pink-500');
+                    dot?.classList.add('translate-x-6');
+                    if(label) { label.innerText = "Banner Live ✨"; label.className = "text-[10px] font-black uppercase text-pink-500"; }
+                } else {
+                    btn?.classList.replace('bg-pink-500', 'bg-gray-200');
+                    dot?.classList.remove('translate-x-6');
+                    if(label) { label.innerText = "Banner Off"; label.className = "text-[10px] font-black uppercase text-gray-400"; }
+                }
             }
         }
 
@@ -409,11 +427,13 @@ async function renderSummary() {
     } catch (err) {
         console.error("Summary error:", err);
     }
-} // <--- Added missing closing brace
-
+}
+    
+    // --- WAITLIST LOGIC --- //
 async function renderWaitlist() {
     const countEl = document.getElementById('waitlist-count');
     const tableBody = document.getElementById('waitlist-table-body');
+    
     if (!countEl || !tableBody) return;
 
     try {
@@ -424,36 +444,59 @@ async function renderWaitlist() {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
+
         countEl.textContent = `${waitlist.length} Entries`;
+        
         tableBody.innerHTML = waitlist.map(entry => `
-            <tr>
-                <td class="p-4 text-[10px] font-bold text-gray-400 uppercase">${new Date(entry.created_at).toLocaleDateString()}</td>
+            <tr class="hover:bg-amber-50/30 transition-colors border-b border-pink-50">
+                <td class="p-4 text-[10px] font-bold text-gray-400 uppercase">
+                    ${new Date(entry.created_at).toLocaleDateString()}
+                </td>
                 <td class="p-4 text-sm font-black text-gray-700">${entry.email}</td>
-                <td class="p-4 text-sm font-black text-gray-700">${entry.service_requested}</td>
-                <td class="p-4 text-sm font-black text-gray-700">${entry.name}</td>
+                <td class="p-4">
+                    <span class="px-3 py-1 bg-amber-100 text-amber-600 rounded-full text-[9px] font-black uppercase">
+                        ${entry.service_requested}
+                    </span>
+                </td>
+                <td class="p-4 text-sm font-black text-gray-700">${entry.name || '—'}</td>
                 <td class="p-4 text-sm text-gray-600">${entry.notes || ''}</td>
             </tr>
-        `).join('');
+        `).join('') || '<tr><td colspan="5" class="p-10 text-center text-gray-300 italic">No pending entries! ♡</td></tr>';
+        
     } catch (err) {
         console.error("Waitlist error:", err);
     }
-} // <--- Added missing closing brace
+}
 
-// --- INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', () => {
-    const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
-    switchTab(lastTab);
-
-    _supabase
-        .channel('admin-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, () => {
-            const current = localStorage.getItem('hana_active_tab');
-            if (current === 'summary') renderSummary();
-            if (current === 'workbench') renderWorkbench(false);
-        })
-        .subscribe();
-}); 
+    // --- INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Check if we have a session before doing anything
+    const { data: { session } } = await _supabase.auth.getSession();
     
+    if (session) {
+        // 2. Load the last tab or default to summary
+        const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
+        switchTab(lastTab);
+
+        // 3. Set up Realtime listener
+        _supabase
+            .channel('admin-changes')
+            .on('postgres_changes', { 
+                event: '*', 
+                schema: 'public', 
+                table: 'commissions' 
+            }, () => {
+                const current = localStorage.getItem('hana_active_tab');
+                if (current === 'summary') renderSummary();
+                if (current === 'workbench') renderWorkbench(false);
+            })
+            .subscribe();
+    } else {
+        // Optional: Redirect to login if no session is found
+        // window.location.href = 'login.html';
+    }
+}); 
+
     // --- WORKBENCH LOGIC --- //
 async function renderWorkbench(showArchived = false) {
     console.log(">>> Rendering Workbench, archived =", showArchived);
@@ -474,6 +517,8 @@ async function renderWorkbench(showArchived = false) {
     }
 
     const container = document.getElementById('commissionList');
+    if (!container) return; // Safety check
+
     const { data: jobs, error } = await _supabase
         .from('commissions')
         .select('*')
@@ -486,24 +531,29 @@ async function renderWorkbench(showArchived = false) {
     }
 
     const statusColors = { 
-    'Enquiry': 'bg-blue-50 text-blue-500', 
-    'Quote': 'bg-purple-50 text-purple-500', 
-    'Declined': 'bg-rose-50 text-rose-600 line-through', 
-    'Arrived': 'bg-amber-50 text-amber-600',
+        'Enquiry': 'bg-blue-50 text-blue-500', 
+        'Quote': 'bg-purple-50 text-purple-500', 
+        'Declined': 'bg-rose-50 text-rose-600 line-through', 
+        'Arrived': 'bg-amber-50 text-amber-600',
         'Working': 'bg-emerald-50 text-emerald-600', 
         'Approved': 'bg-cyan-50 text-cyan-600', 
         'Photo': 'bg-indigo-50 text-indigo-500', 
         'Shipped': 'bg-gray-100 text-gray-500' 
     };
 
+    if (jobs.length === 0) {
+        container.innerHTML = `<p class="p-20 text-center text-gray-300 italic font-medium">No ${showArchived ? 'archived' : 'active'} commissions found... ♡</p>`;
+        return;
+    }
+
     container.innerHTML = jobs.map(job => {
-    
         const requested = [
             job.faceup_details ? 'Faceup' : null,
             job.eye_details ? 'Eyes' : null,
             job.manicure_details ? 'Manicure' : null
         ].filter(Boolean).join(' • ');
 
+        // Safely extract thumbnail
         const thumb = job.faceup_details?.images?.[0] || job.eye_details?.images?.[0] || job.manicure_details?.images?.[0];
 
         return `
@@ -515,7 +565,7 @@ async function renderWorkbench(showArchived = false) {
                     <div>
                         <h4 class="font-black text-sm truncate">${job.social_handle || 'N/A'}</h4>
                         <p class="text-[10px] text-gray-400 font-bold">${job.customer_email || 'No Email'}</p>
-                        <p class="text-[9px] font-bold text-pink-400 uppercase tracking-tighter">${job.doll_company} ${job.doll_sculpt}</p>
+                        <p class="text-[9px] font-bold text-pink-400 uppercase tracking-tighter">${job.doll_company || ''} ${job.doll_sculpt || ''}</p>
                     </div>
                     <div class="hidden md:block">
                         <p class="text-[9px] font-black text-gray-300 uppercase">Requested</p>
@@ -534,6 +584,39 @@ async function renderWorkbench(showArchived = false) {
                 </div>
             </div>`;
     }).join('');
+} 
+
+ // --- PLANNER LOGIC --- //
+// Helper for Calendar Colors
+function getJobColor(status, isUrgent) {
+    if (isUrgent) return '#FDA4AF'; // Soft red for urgent
+    const colors = {
+        'Enquiry': '#DBEAFE', // Blue
+        'Arrived': '#FEF3C7', // Amber
+        'Working': '#D1FAE5', // Emerald
+        'Approved': '#CFFAFE', // Cyan
+        'Photo': '#E0E7FF',    // Indigo
+        'Shipped': '#F3F4F6'   // Gray
+    };
+    return colors[status] || '#FDF2F8'; // Default pink
+}
+
+// Helper to show the Event Modal (needed for the + button)
+function showEventModal(id, event = null) {
+    currentEventId = id;
+    const modal = document.getElementById('eventModal');
+    if (!modal) return;
+    
+    modal.classList.remove('hidden');
+    
+    if (event) {
+        document.getElementById('eventTitle').value = event.title;
+        document.getElementById('eventStart').value = event.start.toISOString().slice(0, 16);
+        if (event.end) document.getElementById('eventEnd').value = event.end.toISOString().slice(0, 16);
+        document.getElementById('eventDetails').value = event.extendedProps.details || '';
+    } else {
+        document.getElementById('eventForm').reset();
+    }
 }
 
 function showEventModal(id, event = null) {
@@ -605,7 +688,7 @@ async function deleteEvent() {
         alert("Failed to delete: " + err.message);
     }
 }
-    // --- PLANNER LOGIC --- //
+       
 async function renderPlanner() {
     const container = document.getElementById('plannerContainer');
     container.innerHTML = `
@@ -700,193 +783,202 @@ async function renderPlanner() {
         container.innerHTML += `<p class="text-rose-500 text-center p-10">Error loading planner: ${err.message}</p>`;
     }
 }
-    // --- DRAWER & PAYMENTS ---
+    
+// --- DRAWER & PAYMENTS --- //
 async function openDrawer(id) {
     activeJobId = id;
+    const content = document.getElementById('drawerContent');
+    const drawer = document.getElementById('editDrawer');
+    
+    if (!content || !drawer) return;
+
     try {
         const { data: job, error } = await _supabase
             .from('commissions')
             .select('*')
             .eq('id', id)
             .single();
+
         if (error || !job) {
-            console.error("Failed to load job:", error);
-            document.getElementById('drawerContent').innerHTML = `
-                <p class="text-rose-500 text-center p-10">Error loading order: ${error?.message || 'Not found'}</p>
-            `;
+            content.innerHTML = `<p class="text-rose-500 text-center p-10">Error loading order: ${error?.message || 'Not found'}</p>`;
             return;
         }
+
         const payments = job.payments || [];
         const paidTotal = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
         const calculatedBalance = Math.max(0, (job.total_price || 0) - paidTotal);
-       document.getElementById('drawerContent').innerHTML = `
-    <div class="space-y-12 pb-16 px-4 md:px-8"> <!-- Increased vertical spacing + horizontal padding -->
-        <!-- Payment / Workflow Section -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="space-y-6">
-                <h3 class="text-[11px] font-black uppercase text-gray-500 border-b pb-2">Order Info</h3>
-                <p class="text-lg font-bold text-gray-900">${job.social_handle || '@none'}</p>
-                <p class="text-sm text-pink-500 font-bold uppercase">${job.doll_company || ''} ${job.doll_sculpt || ''}</p>
-            </div>
-            <div class="space-y-6">
-                <h3 class="text-[11px] font-black uppercase text-gray-500 border-b pb-2">Global Workflow</h3>
-                <select id="upStatus" class="w-full p-4 border border-pink-200 rounded-2xl text-sm font-bold bg-white focus:ring-2 focus:ring-pink-300">
-                    ${['Enquiry','Quote','Declined','Arrived','Working','Approved','Photo','Shipped']
-                        .map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`)
-                        .join('')}
-                </select>
-                ${['Enquiry', 'Quote'].includes(job.status) ? `
-                    <div class="mt-8 text-right">
-                        <button onclick="showDeclineModal('${job.id}', '${job.customer_email || ''}', '${job.social_handle || 'client'}')"
-                                class="px-10 py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-base font-black uppercase shadow-lg transition-all transform hover:scale-105">
-                            Decline Order
-                        </button>
+
+        content.innerHTML = `
+            <div class="space-y-12 pb-16 px-4 md:px-8">
+                <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-2">
+                        <h3 class="text-[11px] font-black uppercase text-gray-500 border-b pb-2">Order Info</h3>
+                        <p class="text-lg font-bold text-gray-900">${job.social_handle || '@none'}</p>
+                        <p class="text-sm text-pink-500 font-bold uppercase">${job.doll_company || ''} ${job.doll_sculpt || ''}</p>
                     </div>
-                ` : ''}
-            </div>
-        </section>
-        <!-- Payment / Urgent / Trade UI – bigger, more spaced -->
-        <div class="bg-pink-50/60 p-8 rounded-3xl border border-pink-200 shadow-sm space-y-8">
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
-                <select id="payType" onchange="togglePayUI()" class="bg-white border border-pink-200 rounded-2xl text-sm font-black uppercase px-5 py-3 min-w-[180px]">
-                    <option value="Paid in Full" ${job.payment_method === 'Paid in Full' ? 'selected' : ''}>Paid in Full</option>
-                    <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
-                    <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
-                    <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
-                </select>
-                <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" id="isUrg" ${job.is_urgent ? 'checked' : ''} class="w-5 h-5 accent-red-500">
-                    <span class="text-sm font-black uppercase text-red-600">🚨 Urgent Order</span>
-                </label>
-            </div>
-            <!-- Trade UI -->
-            <div id="tradeUI" class="${job.payment_method === 'Trade' ? '' : 'hidden'} space-y-6 bg-white p-6 rounded-2xl border border-pink-100">
-                <label class="flex items-center justify-between text-sm font-medium">
-                    <span>I have shipped ♡</span>
-                    <input type="checkbox" id="weShipped" ${job.we_shipped ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
-                </label>
-                <label class="flex items-center justify-between text-sm font-medium">
-                    <span>Partner has shipped ♡</span>
-                    <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
-                </label>
-            </div>
-            <!-- Money Row -->
-            <div id="moneyRow" class="${['Trade','Gift'].includes(job.payment_method) ? 'hidden' : ''} space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-2xl border border-pink-200 shadow-sm">
-                        <label class="block text-[11px] font-black uppercase text-gray-500 mb-2">Total Studio Fee (£)</label>
-                        <input type="number" id="tPrice" value="${job.total_price || 0}" class="w-full text-2xl font-black outline-none bg-transparent">
+                    <div class="space-y-4">
+                        <h3 class="text-[11px] font-black uppercase text-gray-500 border-b pb-2">Status</h3>
+                        <select id="upStatus" class="w-full p-4 border border-pink-200 rounded-2xl text-sm font-bold bg-white focus:ring-2 focus:ring-pink-300">
+                            ${['Enquiry','Quote','Declined','Arrived','Working','Approved','Photo','Shipped']
+                                .map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`)
+                                .join('')}
+                        </select>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border border-pink-200 shadow-sm flex flex-col justify-center">
-                        <p class="text-[11px] font-black uppercase text-gray-500">Balance Due</p>
-                        <p id="balanceLabel" class="text-3xl font-black ${calculatedBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}">
-                            £${calculatedBalance.toFixed(2)}
-                        </p>
+                </section>
+
+                <div class="bg-pink-50/60 p-8 rounded-3xl border border-pink-200 space-y-8">
+                    <div class="flex flex-col sm:flex-row justify-between gap-6">
+                        <select id="payType" onchange="togglePayUI()" class="bg-white border border-pink-200 rounded-2xl text-sm font-black uppercase px-5 py-3">
+                            <option value="Paid in Full" ${job.payment_method === 'Paid in Full' ? 'selected' : ''}>Paid in Full</option>
+                            <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
+                            <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
+                            <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
+                        </select>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="isUrg" ${job.is_urgent ? 'checked' : ''} class="w-5 h-5 accent-red-500">
+                            <span class="text-sm font-black uppercase text-red-600">🚨 Urgent</span>
+                        </label>
                     </div>
-                </div>
-                <!-- Paid in Full UI -->
-                <div id="pifUI" class="${job.payment_method === 'Paid in Full' ? '' : 'hidden'} flex items-center gap-3">
-                    <input type="checkbox" id="isPaidCheck" ${job.payment_status === 'Paid' ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
-                    <label class="text-sm font-bold uppercase text-emerald-600">Mark as Paid in Full</label>
-                </div>
-                <!-- Layaway UI -->
-                <div id="layawayUI" class="${job.payment_method === 'Layaway' ? '' : 'hidden'} space-y-6">
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <input type="number" id="newPayAmt" placeholder="Add payment amount" class="flex-1 p-4 bg-white border border-pink-200 rounded-2xl text-base font-bold">
-                        <button onclick="handlePayAdd()" class="px-8 py-4 bg-pink-500 text-white rounded-2xl text-sm font-black uppercase hover:bg-pink-600 transition-colors">
-                            Add Payment ♡
-                        </button>
-                    </div>
-                    <div class="max-h-48 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                        ${payments.map(p => `
-                            <div class="flex justify-between items-center text-sm font-medium bg-white/70 p-4 rounded-xl border border-pink-100">
-                                <span class="text-gray-600">${new Date(p.date).toLocaleDateString()}</span>
-                                <span class="font-bold text-gray-800">£${parseFloat(p.amount).toFixed(2)}</span>
+
+                    <div id="moneyRow" class="${['Trade','Gift'].includes(job.payment_method) ? 'hidden' : ''} space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-2xl border border-pink-200">
+                                <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">Total Fee</label>
+                                <input type="number" id="tPrice" value="${job.total_price || 0}" class="w-full text-xl font-black outline-none">
                             </div>
-                        `).join('')}
+                            <div class="bg-white p-6 rounded-2xl border border-pink-200">
+                                <p class="text-[10px] font-black uppercase text-gray-400 mb-1">Balance</p>
+                                <p id="balanceLabel" class="text-xl font-black ${calculatedBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}">
+                                    £${calculatedBalance.toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="space-y-10">
+                    ${renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink')}
+                    ${renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')}
+                    ${renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')}
+                </div>
             </div>
-        </div>
-        <!-- Service Blocks – bigger spacing -->
-        <div class="space-y-10">
-            ${renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink')}
-            ${renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')}
-            ${renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')}
-        </div>
-    </div>
-`;
-        document.getElementById('editDrawer').classList.remove('translate-x-full');
+        `;
+        drawer.classList.remove('translate-x-full');
     } catch (err) {
         console.error("Open drawer error:", err);
-        document.getElementById('drawerContent').innerHTML = `
-            <p class="text-rose-500 text-center p-10">Unexpected error: ${err.message}</p>
-        `;
     }
 }
+
 function renderServiceBlock(job, key, title, color) {
-    const data = job[`${key}_details`];
-    if (!data) return '';
-   
-    // Logic to ensure the theme matches (pink, blue, or emerald)
-    const theme = color === 'pink' ? 'pink' : (color === 'blue' ? 'blue' : 'emerald');
-    return `
-        <div class="p-6 bg-white rounded-[2rem] border border-${theme}-50 space-y-4 shadow-sm">
-            <div class="flex justify-between items-center border-b border-${theme}-50 pb-2">
-                <h4 class="text-xs font-black uppercase text-${theme}-500">${title}</h4>
-                <select id="${key}Status" class="text-[9px] font-black uppercase bg-${theme}-50 p-1 rounded-md">
-                    <option value="Pending" ${data.status==='Pending'?'selected':''}>Pending</option>
-                    <option value="Working" ${data.status==='Working'?'selected':''}>Working</option>
-                    <option value="Completed" ${data.status==='Completed'?'selected':''}>Completed</option>
-                </select>
-            </div>
-           
-            ${data.images && data.images.length > 0 ? `
-                <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                    ${data.images.map(img => `
-                        <img src="${img}"
-                             class="w-24 h-24 object-cover rounded-2xl border-2 border-white shadow-sm cursor-zoom-in hover:scale-105 transition-transform"
-                             onclick="this.classList.toggle('img-enlarge')">
-                    `).join('')}
-                </div>` : `
-                <div class="py-4 text-center border-2 border-dashed border-gray-100 rounded-2xl">
-                    <p class="text-[10px] font-bold text-gray-300 uppercase">No Reference Images</p>
-                </div>
-            `}
-            <div class="p-4 bg-${theme}-50/30 rounded-2xl border border-${theme}-100">
-                <p class="text-[9px] font-black uppercase text-${theme}-400 mb-1">Client Request:</p>
-                <p class="text-[11px] text-gray-700 italic">"${data.notes || 'No instructions provided.'}"</p>
-            </div>
-            <div>
-                <p class="text-[9px] font-black uppercase text-gray-400 mb-1 ml-1">Internal Artist Notes:</p>
-                <textarea id="${key}Admin" class="w-full p-4 text-[11px] border border-gray-100 rounded-2xl h-24 outline-none focus:ring-2 ring-${theme}-50 bg-[#fafafa]" placeholder="Write notes here...">${data.admin_notes || ''}</textarea>
-            </div>
-        </div>`;
+    const data = job[`${key}_details`];
+    if (!data) return '';
+   
+    // Logic to ensure the theme matches (pink, blue, or emerald)
+    const theme = color === 'pink' ? 'pink' : (color === 'blue' ? 'blue' : 'emerald');
+    return `
+        <div class="p-6 bg-white rounded-[2rem] border border-${theme}-50 space-y-4 shadow-sm">
+            <div class="flex justify-between items-center border-b border-${theme}-50 pb-2">
+                <h4 class="text-xs font-black uppercase text-${theme}-500">${title}</h4>
+                <select id="${key}Status" class="text-[9px] font-black uppercase bg-${theme}-50 p-1 rounded-md">
+                    <option value="Pending" ${data.status==='Pending'?'selected':''}>Pending</option>
+                    <option value="Working" ${data.status==='Working'?'selected':''}>Working</option>
+                    <option value="Completed" ${data.status==='Completed'?'selected':''}>Completed</option>
+                </select>
+            </div>
+           
+            ${data.images && data.images.length > 0 ? `
+                <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                    ${data.images.map(img => `
+                        <img src="${img}"
+                             class="w-24 h-24 object-cover rounded-2xl border-2 border-white shadow-sm cursor-zoom-in hover:scale-105 transition-transform"
+                             onclick="this.classList.toggle('img-enlarge')">
+                    `).join('')}
+                </div>` : `
+                <div class="py-4 text-center border-2 border-dashed border-gray-100 rounded-2xl">
+                    <p class="text-[10px] font-bold text-gray-300 uppercase">No Reference Images</p>
+                </div>
+            `}
+            <div class="p-4 bg-${theme}-50/30 rounded-2xl border border-${theme}-100">
+                <p class="text-[9px] font-black uppercase text-${theme}-400 mb-1">Client Request:</p>
+                <p class="text-[11px] text-gray-700 italic">"${data.notes || 'No instructions provided.'}"</p>
+            </div>
+            <div>
+                <p class="text-[9px] font-black uppercase text-gray-400 mb-1 ml-1">Internal Artist Notes:</p>
+                <textarea id="${key}Admin" class="w-full p-4 text-[11px] border border-gray-100 rounded-2xl h-24 outline-none focus:ring-2 ring-${theme}-50 bg-[#fafafa]" placeholder="Write notes here...">${data.admin_notes || ''}</textarea>
+            </div>
+        </div>`;
 }
-// ----SAVE LOGIC---- //
-document.getElementById('saveBtn').onclick = async () => {
-    const btn = document.getElementById('saveBtn');
+
+    function togglePayUI() {
+    const type = document.getElementById('payType').value;
+    document.getElementById('moneyRow').classList.toggle('hidden', ['Trade', 'Gift'].includes(type));
+    document.getElementById('pifUI').classList.toggle('hidden', type !== 'Paid in Full');
+    document.getElementById('layawayUI').classList.toggle('hidden', type !== 'Layaway');
+    document.getElementById('tradeUI').classList.toggle('hidden', type !== 'Trade');
+}
+
+    // ---- SAVE LOGIC ---- //
+// We use a named function so we can call it easily from the button
+async function saveJobChanges() {
+    if (!activeJobId) return;
+
+    const btn = document.getElementById('saveBtn'); // Ensure your button has id="saveBtn"
+    if (!btn) return;
+
     btn.innerText = "Saving... ✨";
     btn.disabled = true;
+
     try {
+        // 1. Gather the basic updates
         const updates = {
-            status: document.getElementById('upStatus')?.value || job.status,
+            status: document.getElementById('upStatus')?.value,
             total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
-            payment_method: document.getElementById('payType')?.value || job.payment_method || 'Paid in Full',
+            payment_method: document.getElementById('payType')?.value,
             payment_status: document.getElementById('isPaidCheck')?.checked ? 'Paid' : 'Unpaid',
             is_urgent: document.getElementById('isUrg')?.checked ?? false,
-            // Trade-specific fields – only include if the trade UI is visible
             we_shipped: document.getElementById('weShipped')?.checked ?? false,
             partner_shipped: document.getElementById('partnerShipped')?.checked ?? false,
-            // Tracking & Shipping (optional fields)
             tracking_number: document.getElementById('trackNum')?.value || '',
             shipping_cost: parseFloat(document.getElementById('shipCost')?.value || 0)
         };
+
+        // 2. IMPORTANT: Capture the Service Details (Faceup, Eyes, Mani)
+        // We fetch the current job first to preserve images while updating status/notes
+        const { data: currentJob } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+
+        if (currentJob) {
+            if (currentJob.faceup_details) {
+                updates.faceup_details = {
+                    ...currentJob.faceup_details,
+                    status: document.getElementById('faceupStatus')?.value || currentJob.faceup_details.status,
+                    admin_notes: document.getElementById('faceupAdmin')?.value || currentJob.faceup_details.admin_notes
+                };
+            }
+            if (currentJob.eye_details) {
+                updates.eye_details = {
+                    ...currentJob.eye_details,
+                    status: document.getElementById('eyeStatus')?.value || currentJob.eye_details.status,
+                    admin_notes: document.getElementById('eyeAdmin')?.value || currentJob.eye_details.admin_notes
+                };
+            }
+            if (currentJob.manicure_details) {
+                updates.manicure_details = {
+                    ...currentJob.manicure_details,
+                    status: document.getElementById('manicureStatus')?.value || currentJob.manicure_details.status,
+                    admin_notes: document.getElementById('manicureAdmin')?.value || currentJob.manicure_details.admin_notes
+                };
+            }
+        }
+
+        // 3. Send to Supabase
         const { error } = await _supabase
             .from('commissions')
             .update(updates)
             .eq('id', activeJobId);
+
         if (error) throw error;
+
+        // 4. Success UI
         btn.innerText = "Saved! ♡";
         setTimeout(() => {
             closeDrawer();
@@ -895,13 +987,15 @@ document.getElementById('saveBtn').onclick = async () => {
             btn.innerText = "Save All Changes ♡";
             btn.disabled = false;
         }, 800);
+
     } catch (e) {
         console.error("Save error:", e);
         btn.innerText = "Error! ❌";
         btn.disabled = false;
         alert("Something went wrong: " + (e.message || "Failed to save"));
     }
-};
+}
+
     // --- ACCESSIBILITY ---
     const ComfortSettings = {
         toggleMenu: () => document.getElementById('accessMenu').classList.toggle('hidden'),
@@ -910,6 +1004,7 @@ document.getElementById('saveBtn').onclick = async () => {
             if (key === 'high-contrast') document.body.style.contrast = val ? '150%' : '100%';
         }
     };
+    
 async function renderInventory() {
     const container = document.getElementById('view-inventory');
     // Added a loading spinner so the screen doesn't just "pop" in
@@ -1010,16 +1105,34 @@ async function addNewStockItem() {
     if (!error) renderInventory();
     else alert("Error: " + error.message);
 }
-function closeDrawer() {
-    const drawer = document.getElementById('editDrawer');
-    if (drawer) drawer.classList.add('translate-x-full');
-}
+
 async function updateStock(id, change) {
     const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
     await _supabase.from('inventory').update({ quantity: Math.max(0, data.quantity + change) }).eq('id', id);
     renderInventory();
 }
-async function toggleServiceStatus(id, currentStatus) {
+
+async function deleteStockItem(id) {
+    if (!confirm("Are you sure you want to remove this item from the inventory list? ♡")) return;
+    
+    const { error } = await _supabase
+        .from('inventory')
+        .delete()
+        .eq('id', id);
+        
+    if (!error) {
+        renderInventory();
+    } else {
+        alert("Error deleting item: " + error.message);
+    }
+}
+    
+function closeDrawer() {
+    const drawer = document.getElementById('editDrawer');
+    if (drawer) drawer.classList.add('translate-x-full');
+}
+
+    async function toggleServiceStatus(id, currentStatus) {
     await _supabase.from('studio_settings').update({ is_live: !currentStatus }).eq('id', id);
     renderSummary();
 }
@@ -1078,6 +1191,8 @@ https://hanafubukidoll.co.uk`;
     document.getElementById('emailPreview').textContent = preview;
 }
 document.getElementById('declineNotes')?.addEventListener('input', updateEmailPreview);
+
+    
 async function confirmDeclineAndSend() {
     if (!currentDeclineJobId) return;
     const reasonSelect = document.getElementById('declineReason');
@@ -1136,24 +1251,6 @@ async function confirmDeclineAndSend() {
         console.error("Decline error:", err);
         alert("Something went wrong: " + err.message);
     }
-}
-    function getJobColor(status, isUrgent) {
-    const colors = {
-        'Enquiry': '#DDBDFC', // light purple
-        'Quote': '#A5D8FF', // light blue
-        'Arrived': '#FFE3A3', // light yellow
-        'Working': '#B5F5EC', // mint
-        'Approved': '#BBF7D0', // light green
-        'Photo': '#FBCFE8' // light pink
-    };
-   
-    // Urgent jobs override to red
-    if (isUrgent) {
-        return '#FCA5A5'; // rose/red
-    }
-   
-    // Return color for status, or fallback to gray
-    return colors[status] || '#E5E7EB';
 }
 async function handleLogout() {
     try {
