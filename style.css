@@ -233,3 +233,15 @@ body.high-contrast * {
 #calendar .fc-toolbar-title {
     @apply text-2xl font-black italic text-gray-800;
 }
+#editDrawer {
+    width: 90vw !important;
+    max-width: 1000px !important;  /* Wider drawer */
+    height: 100vh;
+    overflow-y: auto;
+    background: white;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+}
+
+#drawerContent {
+    padding: 2rem 1rem;  /* More inner padding */
+}
