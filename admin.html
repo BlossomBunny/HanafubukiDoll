@@ -110,7 +110,7 @@
                 <p id="stat-enquiries" class="text-2xl font-black tracking-tighter text-gray-800">0</p>
             </div>
             <div class="glass-card p-6 border-l-4 border-emerald-300">
-                <p class="text-[9px] font-black uppercase text-gray-400">Workbench</p>
+                <p class="text-[9px] font-black uppercase text-gray-400">workbench</p>
                 <p id="stat-workbench" class="text-2xl font-black tracking-tighter text-gray-800">0</p>
             </div>
             <div class="glass-card p-6 border-l-4 border-purple-300">
@@ -163,7 +163,7 @@
     </div>
 </div>
 
-    <!-- WORKBENCH TAB -->
+    <!-- workbench TAB -->
     <div id="view-workbench" class="tab-content hidden space-y-6">
  
     <div class="space-y-4">
@@ -173,8 +173,8 @@
                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Manage active & past commissions</p>
             </div>
             <div class="flex bg-gray-100 p-1 rounded-2xl border border-gray-200 self-start sm:self-auto">
-                <button onclick="renderWorkbench(false)" id="tab-live" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500">Live</button>
-                <button onclick="renderWorkbench(true)" id="tab-archived" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400">Archived</button>
+                <button onclick="renderworkbench(false)" id="tab-live" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500">Live</button>
+                <button onclick="renderworkbench(true)" id="tab-archived" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400">Archived</button>
             </div>
         </div>
     </div>
@@ -311,7 +311,7 @@ async function switchTab(tab) {
             await renderWaitlist();  // ← critical: add this
         }
         if (tab === 'workbench') {
-            await renderWorkbench(false); // Live by default; could remember archived state if needed
+            await renderworkbench(false); // Live by default; could remember archived state if needed
         }
         if (tab === 'planner') {
             await renderPlanner();
@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, () => {
                 const current = localStorage.getItem('hana_active_tab');
                 if (current === 'summary') renderSummary();
-                if (current === 'workbench') renderWorkbench(false);
+                if (current === 'workbench') renderworkbench(false);
             })
             .subscribe();
     } else {
@@ -495,9 +495,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 }); 
 
-    // --- WORKBENCH LOGIC --- //
-async function renderWorkbench(showArchived = false) {
-    console.log(">>> Rendering Workbench, archived =", showArchived);
+    // --- workbench LOGIC --- //
+async function renderworkbench(showArchived = false) {
+    console.log(">>> Rendering workbench, archived =", showArchived);
 
     // Toggle active tab styles
     const liveBtn = document.getElementById('tab-live');
@@ -980,7 +980,7 @@ async function saveJobChanges() {
         btn.innerText = "Saved! ♡";
         setTimeout(() => {
             closeDrawer();
-            renderWorkbench(false);
+            renderworkbench(false);
             renderSummary();
             btn.innerText = "Save All Changes ♡";
             btn.disabled = false;
@@ -1150,7 +1150,7 @@ function closeDrawer() {
         if (error) throw error;
         alert("Order declined and archived.");
         closeDrawer();
-        renderWorkbench(false);
+        renderworkbench(false);
         renderSummary();
     } catch (err) {
         console.error("Decline error:", err);
@@ -1243,7 +1243,7 @@ async function confirmDeclineAndSend() {
         }
         closeDeclineModal();
         closeDrawer();
-        renderWorkbench(false);
+        renderworkbench(false);
         renderSummary();
     } catch (err) {
         console.error("Decline error:", err);
@@ -1275,7 +1275,7 @@ async function handleArchive() {
         if (error) throw error;
         alert("Archived!");
         closeDrawer();
-        renderWorkbench(false);
+        renderworkbench(false);
         renderSummary();
     } catch (err) {
         console.error("Archive error:", err);
