@@ -1308,9 +1308,16 @@ async function handleArchive() {
         <textarea id="declineNotes" class="w-full p-4 border border-rose-100 rounded-2xl h-24 text-sm focus:ring-rose-200" placeholder="Extra context or personal touch..."></textarea>
 
         <div class="mt-8">
-            <h3 class="text-lg font-bold text-gray-800 mb-3">Email Preview to ${job.customer_email || 'client@example.com'}</h3>
-            <div id="emailPreview" class="bg-gray-50 p-6 rounded-2xl border border-gray-200 text-sm whitespace-pre-wrap font-mono leading-relaxed"></div>
-        </div>
+    <h3 id="emailPreviewTitle"
+        class="text-lg font-bold text-gray-800 mb-3">
+        Email Preview
+    </h3>
+
+    <div id="emailPreview"
+         class="bg-gray-50 p-6 rounded-2xl border border-gray-200 text-sm whitespace-pre-wrap font-mono leading-relaxed">
+    </div>
+</div>
+
 
         <div class="mt-8 flex gap-4 justify-end">
             <button onclick="closeDeclineModal()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-300">Cancel</button>
