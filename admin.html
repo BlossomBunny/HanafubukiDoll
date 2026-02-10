@@ -1112,8 +1112,7 @@ async function confirmDeclineAndSend() {
             .update({
                 status: 'Declined',
                 archived: true,
-                decline_reason: reasonSelect.value + (document.getElementById('declineNotes').value ? ' | ' + document.getElementById('declineNotes').value : ''),
-                updated_at: new Date().toISOString()
+                decline_reason: reasonSelect.value + (document.getElementById('declineNotes').value ? ' | ' + document.getElementById('declineNotes').value : '')
             })
             .eq('id', currentDeclineJobId);
 
