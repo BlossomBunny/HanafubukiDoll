@@ -1106,13 +1106,14 @@ async function confirmDeclineAndSend() {
     }
 
     try {
-        // 1. Update database
+        // 1. Update database – removed updated_at
         const { error: updateError } = await _supabase
             .from('commissions')
             .update({
                 status: 'Declined',
                 archived: true,
                 decline_reason: reasonSelect.value + (document.getElementById('declineNotes').value ? ' | ' + document.getElementById('declineNotes').value : '')
+                // No updated_at here anymore
             })
             .eq('id', currentDeclineJobId);
 
@@ -1161,7 +1162,6 @@ async function confirmDeclineAndSend() {
         alert("Something went wrong: " + err.message);
     }
 }
-
     function getJobColor(status, isUrgent) {
     const colors = {
         'Enquiry': '#DDBDFC',    // light purple
