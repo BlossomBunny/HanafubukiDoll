@@ -774,7 +774,7 @@ async function openDrawer(id) {
             <div id="tradeUI" class="${job.payment_method === 'Trade' ? '' : 'hidden'} space-y-6 bg-white p-6 rounded-2xl border border-pink-100">
                 <label class="flex items-center justify-between text-sm font-medium">
                     <span>I have shipped ♡</span>
-                    <input type="checkbox" id="artistShipped" ${job.we_shipped ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
+                    <input type="checkbox" id="weShipped" ${job.we_shipped ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
                 </label>
                 <label class="flex items-center justify-between text-sm font-medium">
                     <span>Partner has shipped ♡</span>
