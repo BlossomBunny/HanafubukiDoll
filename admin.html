@@ -774,7 +774,7 @@ async function openDrawer(id) {
             <div id="tradeUI" class="${job.payment_method === 'Trade' ? '' : 'hidden'} space-y-6 bg-white p-6 rounded-2xl border border-pink-100">
                 <label class="flex items-center justify-between text-sm font-medium">
                     <span>I have shipped ♡</span>
-                    <input type="checkbox" id="artistShipped" ${job.artist_shipped ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
+                    <input type="checkbox" id="artistShipped" ${job.we_shipped ? 'checked' : ''} class="w-5 h-5 accent-emerald-500">
                 </label>
                 <label class="flex items-center justify-between text-sm font-medium">
                     <span>Partner has shipped ♡</span>
@@ -891,39 +891,42 @@ document.getElementById('saveBtn').onclick = async () => {
 
     try {
         const updates = {
-            status: document.getElementById('upStatus').value,
+            status: document.getElementById('upStatus')?.value || job.status,
             total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
-            payment_method: document.getElementById('payType').value,
+            payment_method: document.getElementById('payType')?.value || job.payment_method || 'Paid in Full',
             payment_status: document.getElementById('isPaidCheck')?.checked ? 'Paid' : 'Unpaid',
-            is_urgent: document.getElementById('isUrg').checked,
-            // Trade-specific fields
-            artist_shipped: document.getElementById('artistShipped')?.checked || false,
-            partner_shipped: document.getElementById('partnerShipped')?.checked || false,
-            // Tracking & Shipping
+            is_urgent: document.getElementById('isUrg')?.checked ?? false,
+            // Trade-specific fields – only include if the trade UI is visible
+            we_shipped: document.getElementById('weShipped')?.checked ?? false,
+            partner_shipped: document.getElementById('partnerShipped')?.checked ?? false,
+            // Tracking & Shipping (optional fields)
             tracking_number: document.getElementById('trackNum')?.value || '',
             shipping_cost: parseFloat(document.getElementById('shipCost')?.value || 0)
         };
 
-        const { error } = await _supabase.from('commissions').update(updates).eq('id', activeJobId);
+        const { error } = await _supabase
+            .from('commissions')
+            .update(updates)
+            .eq('id', activeJobId);
+
         if (error) throw error;
 
         btn.innerText = "Saved! ♡";
-
-        setTimeout(() => { 
-            closeDrawer(); 
-            renderWorkbench(); 
-            renderSummary(); 
-            btn.innerText = "Save All Changes ♡"; 
-            btn.disabled = false; 
+        setTimeout(() => {
+            closeDrawer();
+            renderWorkbench(false);
+            renderSummary();
+            btn.innerText = "Save All Changes ♡";
+            btn.disabled = false;
         }, 800);
 
-    } catch (e) { 
+    } catch (e) {
         console.error("Save error:", e);
         btn.innerText = "Error! ❌";
         btn.disabled = false;
+        alert("Something went wrong: " + (e.message || "Failed to save"));
     }
 };
-    
     // --- ACCESSIBILITY ---
     const ComfortSettings = {
         toggleMenu: () => document.getElementById('accessMenu').classList.toggle('hidden'),
