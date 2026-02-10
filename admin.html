@@ -250,6 +250,7 @@ let currentDeclineEmail = '';
 let currentDeclineHandle = '';
 let currentEventId = null;
 let activeJobId = null;  
+let revenueChart = null;
 
 
 // Auth listener
@@ -325,9 +326,7 @@ async function switchTab(tab) {
         activeView.innerHTML += `<div class="p-6 text-red-500">Render error: ${err.message}</div>`;
     }
 }
-    
-let revenueChart = null;
-    
+       
                                          // --- RENDERS FOR EACH TAB --- //
  // --- SUMMARY LOGIC --- //
 async function renderSummary() {
