@@ -239,37 +239,49 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-   const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    
+const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
 _supabase.auth.onAuthStateChange((event, session) => {
-    const loginGate = document.getElementById('loginGate');
+    console.log('Auth event:', event, session ? 'Logged in' : 'Not logged in'); 
+
     const adminNav = document.getElementById('adminNav');
     const adminMain = document.getElementById('adminMain');
 
     if (session) {
-        
-    if (loginGate) loginGate.style.display = 'none';
-        
-        adminNav?.classList.remove('auth-hidden', 'hidden');
-        adminMain?.classList.remove('auth-hidden', 'hidden');
-        
+        adminNav?.classList.remove('auth-hidden');
+        adminMain?.classList.remove('auth-hidden');
+
         const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
         switchTab(lastTab);
     } else {
-       
-        window.location.href = 'login.html'; 
+        window.location.href = 'login.html';
     }
 });
-      
-    async function handleLogout() {
-    const { error } = await _supabase.auth.signOut();
-    if (error) {
-        console.error("Error logging out:", error.message);
+
+
+_supabase.auth.getSession().then(({ data: { session } }) => {
+    console.log('Initial session check:', session ? 'Logged in' : 'No session'); 
+
+    const adminNav = document.getElementById('adminNav');
+    const adminMain = document.getElementById('adminMain');
+
+    if (session) {
+        adminNav?.classList.remove('auth-hidden');
+        adminMain?.classList.remove('auth-hidden');
+
+     
+        const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
+        switchTab(lastTab);
+    } else {
+        // Optional: redirect if no session
+        // window.location.href = 'login.html';
     }
- }
-  
+}).catch(err => {
+    console.error('Initial session error:', err);
+});
     // --- NAVIGATION ---
 async function switchTab(tab) {
     // Remember last tab
@@ -280,19 +292,19 @@ async function switchTab(tab) {
         el.classList.add('hidden');
     });
 
-    // Show the requested one
+ 
     const activeView = document.getElementById(`view-${tab}`);
     if (activeView) {
         activeView.classList.remove('hidden');
         console.log(`Tab switched to: ${tab} (element found: yes)`);
     } else {
         console.error(`Tab element not found: view-${tab}`);
-        // Optional: show error in UI
+      
         document.getElementById('adminMain').innerHTML += 
             `<div class="p-6 text-red-600 font-bold">Error: Tab "${tab}" content is missing from HTML!</div>`;
     }
 
-    // Load data for that tab
+
     try {
         if (tab === 'summary')    await renderSummary();
         if (tab === 'workbench')  await renderWorkbench(false);  // default to Live
@@ -304,6 +316,7 @@ async function switchTab(tab) {
 }
     
 let revenueChart = null;
+    
                                          // --- RENDERS FOR EACH TAB --- //
 // --- SUMMARY LOGIC --- //
     async function renderSummary() {
