@@ -140,27 +140,28 @@
             </div>
         </div>
 
-        <div class="px-4 mb-12">
-            <div class="glass-card overflow-hidden border-l-4 border-amber-400">
-                <div class="p-6 border-b border-pink-50 bg-amber-50/10 flex justify-between items-center">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-amber-600">Active Waitlist Table</h3>
-                    <span id="waitlist-count" class="text-[10px] font-bold text-amber-500 bg-white px-3 py-1 rounded-full shadow-sm">0 Entries</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-50/50">
-                            <tr>
-                                <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Date</th>
-                                <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Client Email</th>
-                                <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Service</th>
-                            </tr>
-                        </thead>
-                        <tbody id="waitlist-table-body" class="divide-y divide-pink-50"></tbody>
-                    </table>
-                </div>
-            </div>
+       <div class="px-4 mb-12">
+    <div class="glass-card overflow-hidden border-l-4 border-amber-400">
+        <div class="p-6 border-b border-pink-50 bg-amber-50/10 flex justify-between items-center">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-amber-600">Active Waitlist Entries</h3>
+            <span id="waitlist-count" class="text-[10px] font-bold text-amber-500 bg-white px-3 py-1 rounded-full shadow-sm">0 Entries</span>
         </div>
-    </div> 
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50/50">
+                    <tr>
+                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Date</th>
+                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Email</th>
+                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Service</th>
+                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Name</th>
+                        <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="waitlist-table-body" class="divide-y divide-pink-50"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
     <!-- WORKBENCH TAB -->
     <div id="view-workbench" class="tab-content hidden space-y-6">
@@ -286,34 +287,41 @@ _supabase.auth.getSession().then(({ data: { session } }) => {
   
     // --- NAVIGATION ---
 async function switchTab(tab) {
-    // Remember last tab
-    localStorage.setItem('hana_active_tab', tab);
-
     // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(el => {
-        el.classList.add('hidden');
-    });
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
 
- 
     const activeView = document.getElementById(`view-${tab}`);
     if (activeView) {
         activeView.classList.remove('hidden');
         console.log(`Tab switched to: ${tab} (element found: yes)`);
     } else {
         console.error(`Tab element not found: view-${tab}`);
-      
         document.getElementById('adminMain').innerHTML += 
-            `<div class="p-6 text-red-600 font-bold">Error: Tab "${tab}" content is missing from HTML!</div>`;
+            `<div class="p-6 text-red-600 font-bold">Error: Tab "${tab}" content is missing!</div>`;
+        return;
     }
 
+    // Save current tab
+    localStorage.setItem('hana_active_tab', tab);
 
     try {
-        if (tab === 'summary')    await renderSummary();
-        if (tab === 'workbench')  await renderWorkbench(false);  // default to Live
-        if (tab === 'planner')    await renderPlanner();
-        if (tab === 'inventory')  await renderInventory();
+        if (tab === 'summary') {
+            await renderSummary();
+            await renderWaitlist();  // ← critical: add this
+        }
+        if (tab === 'workbench') {
+            await renderWorkbench(false); // Live by default; could remember archived state if needed
+        }
+        if (tab === 'planner') {
+            await renderPlanner();
+        }
+        if (tab === 'inventory') {
+            await renderInventory();
+        }
     } catch (err) {
         console.error(`Render failed for ${tab}:`, err);
+        // Optional: show error in UI
+        activeView.innerHTML += `<div class="p-6 text-red-500">Render error: ${err.message}</div>`;
     }
 }
     
@@ -420,20 +428,66 @@ let revenueChart = null;
         }
 
         // --- 5. FULL WAITLIST TABLE ---
-        const waitlistTable = document.getElementById('waitlist-table-body');
-        if (waitlistTable && waitlist) {
-            waitlistTable.innerHTML = waitlist.length > 0 ? waitlist.map(entry => `
-                <tr class="hover:bg-amber-50/30 transition-colors">
-                    <td class="p-4 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${new Date(entry.created_at).toLocaleDateString('en-GB')}</td>
-                    <td class="p-4 text-sm font-black text-gray-700">${entry.email}</td>
-                    <td class="p-4">
-                        <span class="px-3 py-1 bg-amber-100 text-amber-600 rounded-full text-[9px] font-black uppercase">
-                            ${entry.service_requested || 'General Service'}
-                        </span>
+async function renderWaitlist() {
+    const countEl = document.getElementById('waitlist-count');
+    const tableBody = document.getElementById('waitlist-table-body');
+
+    // Safety: if the elements don't exist on this page, silently skip
+    if (!countEl || !tableBody) return;
+
+    try {
+        const { data: waitlist, error } = await _supabase
+            .from('waitlist')
+            .select('created_at, name, email, service_requested, notes')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        countEl.textContent = `${waitlist.length} Entries`;
+
+        if (waitlist.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase italic">
+                        Queue is clear! ✨
                     </td>
-                </tr>`).join('') : `<tr><td colspan="3" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase italic">Queue is clear! ✨</td></tr>`;
+                </tr>
+            `;
+            return;
         }
-    } catch (e) { console.error("Summary Error:", e); }
+
+        tableBody.innerHTML = waitlist.map(entry => `
+            <tr class="hover:bg-amber-50/30 transition-colors">
+                <td class="p-4 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                    ${new Date(entry.created_at).toLocaleDateString('en-GB')}
+                </td>
+                <td class="p-4 text-sm font-black text-gray-700">
+                    ${entry.name || '—'}
+                </td>
+                <td class="p-4 text-sm font-black text-gray-700">
+                    ${entry.email}
+                </td>
+                <td class="p-4">
+                    <span class="px-3 py-1 bg-amber-100 text-amber-600 rounded-full text-[9px] font-black uppercase">
+                        ${entry.service_requested || 'General Service'}
+                    </span>
+                </td>
+                <td class="p-4 text-sm text-gray-600">
+                    ${entry.notes || '—'}
+                </td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        console.error("Waitlist render error:", err);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="p-10 text-center text-rose-500">
+                    Error loading waitlist
+                </td>
+            </tr>
+        `;
+    }
 }
 
 // --- 6. INITIALIZATION ---
@@ -443,19 +497,28 @@ document.addEventListener('DOMContentLoaded', () => {
     switchTab(lastTab);
 
     // Setup Realtime Sync for all tables
-    _supabase.channel('admin-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, () => {
-             // Only re-render if we are actually looking at those tabs
-             const current = localStorage.getItem('hana_active_tab');
-             if(current === 'summary') renderSummary();
-             if(current === 'workbench') renderWorkbench();
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => {
-             if(localStorage.getItem('hana_active_tab') === 'inventory') renderInventory();
-        })
-        .subscribe();
-});
-    
+   _supabase
+    .channel('admin-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'commissions' }, (payload) => {
+        console.log('Commissions changed:', payload);
+        const current = localStorage.getItem('hana_active_tab');
+        if (current === 'summary') renderSummary();
+        if (current === 'workbench') renderWorkbench(false);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, (payload) => {
+        console.log('Inventory changed:', payload);
+        if (localStorage.getItem('hana_active_tab') === 'inventory') renderInventory();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'waitlist' }, (payload) => {
+        console.log('Waitlist changed:', payload);
+        if (localStorage.getItem('hana_active_tab') === 'summary') renderWaitlist();
+    })
+    .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+            console.warn('Realtime channel issue — reconnecting...');
+        }
+    });
     // --- WORKBENCH LOGIC --- //
 async function renderWorkbench(showArchived = false) {
     console.log(">>> Rendering Workbench, archived =", showArchived);
