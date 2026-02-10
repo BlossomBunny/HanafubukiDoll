@@ -201,7 +201,6 @@
     </div>
 
 </main>
-    </main>
 
     <div id="editDrawer" class="fixed inset-y-0 right-0 w-full md:w-[650px] bg-white z-[100] transform translate-x-full transition-transform duration-500 border-l flex flex-col shadow-2xl">
         <div class="p-6 border-b flex justify-between items-center bg-white">
@@ -211,7 +210,7 @@
         <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-8 bg-[#fafafa]"></div>
         <div class="p-6 border-t bg-white flex gap-4">
             <button onclick="handleArchive()" class="text-[10px] font-black uppercase text-red-400">Archive Order</button>
-            <button id="saveBtn" class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg">Save All Changes ♡</button>
+           <button id="saveBtn" onclick="saveJobChanges()" class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg">Save All Changes ♡</button>
         </div>
     </div>
 
