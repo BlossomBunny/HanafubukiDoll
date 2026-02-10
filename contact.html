@@ -188,7 +188,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
+const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -200,7 +200,7 @@ async function syncFormWithStock() {
         return;
     }
 
-    // Smartdoll Heads bundles
+    // Smartdoll Heads
     const smHeads = stock.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0);
     const smBundleOpt = document.getElementById('opt-sm-bundle');
     const smSelect = document.getElementById('sm-head-sculpt-select');
@@ -210,7 +210,6 @@ async function syncFormWithStock() {
             smBundleOpt.textContent = 'Face-Up + Smartdoll Head (SOLD OUT)';
             smBundleOpt.style.color = '#ef4444'; // red
             smBundleOpt.style.opacity = '0.6';
-            smSelect.innerHTML = '<option disabled>No stock available</option>';
         } else {
             smBundleOpt.disabled = false;
             smBundleOpt.textContent = 'Face-Up + Smartdoll Head (Bundle)';
@@ -220,7 +219,7 @@ async function syncFormWithStock() {
         }
     }
 
-    // Dollfie Dream Heads bundles
+    // Dollfie Dream Heads
     const ddHeads = stock.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0);
     const ddBundleOpt = document.getElementById('opt-dd-bundle');
     const ddSelect = document.getElementById('dd-head-sculpt-select');
@@ -230,7 +229,6 @@ async function syncFormWithStock() {
             ddBundleOpt.textContent = 'Face-Up + Dollfie Dream Head (SOLD OUT)';
             ddBundleOpt.style.color = '#ef4444';
             ddBundleOpt.style.opacity = '0.6';
-            ddSelect.innerHTML = '<option disabled>No stock available</option>';
         } else {
             ddBundleOpt.disabled = false;
             ddBundleOpt.textContent = 'Face-Up + Dollfie Dream Head (Bundle)';
@@ -240,39 +238,7 @@ async function syncFormWithStock() {
         }
     }
 
-    // Smartdoll Decora Hands (for mani)
-    const smHands = stock.filter(i => i.category === 'Smartdoll Hands' && i.quantity > 0);
-    const smManiOpt = document.getElementById('opt-sm-mani');
-    if (smManiOpt) {
-        if (smHands.length === 0) {
-            smManiOpt.disabled = true;
-            smManiOpt.textContent = 'Smartdoll Decora Hands (SOLD OUT)';
-            smManiOpt.style.color = '#ef4444';
-            smManiOpt.style.opacity = '0.6';
-        } else {
-            smManiOpt.disabled = false;
-            smManiOpt.textContent = 'Smartdoll Decora Hands';
-            smManiOpt.style.color = '';
-            smManiOpt.style.opacity = '';
-        }
-    }
-
-    // Dollfie Dream Decora Hands (for mani)
-    const ddHands = stock.filter(i => i.category === 'Dollfie Dream Hands' && i.quantity > 0);
-    const ddManiOpt = document.getElementById('opt-dd-mani');
-    if (ddManiOpt) {
-        if (ddHands.length === 0) {
-            ddManiOpt.disabled = true;
-            ddManiOpt.textContent = 'Dollfie Dream Decora Hands (SOLD OUT)';
-            ddManiOpt.style.color = '#ef4444';
-            ddManiOpt.style.opacity = '0.6';
-        } else {
-            ddManiOpt.disabled = false;
-            ddManiOpt.textContent = 'Dollfie Dream Decora Hands';
-            ddManiOpt.style.color = '';
-            ddManiOpt.style.opacity = '';
-        }
-    }
+    // You can add for mani hands similarly if needed
 }
 
 function startBooking() {
@@ -300,6 +266,107 @@ function toggleDollDetails() {
         ddBundleBox?.classList.remove('hidden');
         skintoneInput?.closest('.space-y-4')?.classList.add('hidden'); // Hide skintone for bundle
     }
+}
+
+async function checkServiceAvailability() {
+    const { data: settings, error } = await _supabase.from('studio_settings').select('*');
+    if (error || !settings) {
+        console.error("Failed to load service status:", error);
+        return;
+    }
+
+    settings.forEach(service => {
+        const section = document.getElementById(`${service.id}-section`);
+        if (!section) return;
+
+        if (!service.is_live) {
+            // Service is off → replace with waitlist UI
+            const message = service.banner_text || "We're at maximum capacity right now, but you can join the waitlist!";
+            section.innerHTML = `
+                <div class="p-10 text-center space-y-8 bg-pink-50/40 rounded-3xl border border-pink-200 shadow-sm animate-fadeIn">
+                    <h3 class="text-2xl font-black text-pink-600">🌸 ${service.id.charAt(0).toUpperCase() + service.id.slice(1)} is currently full</h3>
+                    <p class="text-base text-gray-700 max-w-2xl mx-auto">${message}</p>
+                    <button onclick="showWaitlistForm('${service.id}')"
+                            class="px-10 py-5 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold uppercase text-lg shadow-md transition-all transform hover:scale-105">
+                        Join ${service.id} Waitlist ♡
+                    </button>
+                </div>
+            `;
+        } else {
+            // Service is live → ensure visible and has "None" option
+            section.style.display = 'block';
+            const select = section.querySelector('select');
+            if (select && !select.querySelector('option[value="None"]')) {
+                const noneOption = document.createElement('option');
+                noneOption.value = 'None';
+                noneOption.textContent = `No ${service.id.charAt(0).toUpperCase() + service.id.slice(1)} Needed`;
+                select.insertBefore(noneOption, select.firstChild);
+            }
+        }
+    });
+}
+
+// Waitlist modal & submission
+function showWaitlistForm(serviceId) {
+    const modalId = 'waitlistModal';
+    document.getElementById(modalId)?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[999]';
+    modal.innerHTML = `
+        <div class="bg-white rounded-3xl p-8 max-w-lg w-full mx-4 shadow-2xl animate-fadeIn">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-pink-600">Join the ${serviceId} Waitlist ♡</h2>
+                <button onclick="this.closest('#${modalId}').remove()" class="text-3xl text-gray-400 hover:text-rose-600">&times;</button>
+            </div>
+            <p class="text-gray-600 mb-6">We'll email you as soon as slots open up!</p>
+            <form id="waitlistForm" class="space-y-6">
+                <input type="email" id="waitlistEmail" placeholder="Your Email Address *" required class="w-full p-4 border border-pink-100 rounded-2xl focus:ring-2 focus:ring-pink-300">
+                <input type="text" id="waitlistName" placeholder="Your Name (optional)" class="w-full p-4 border border-pink-100 rounded-2xl">
+                <textarea id="waitlistNotes" placeholder="Any notes or preferred timeline (optional)" class="w-full p-4 border border-pink-100 rounded-2xl h-32"></textarea>
+                <div class="flex gap-4 justify-end">
+                    <button type="button" onclick="document.getElementById('${modalId}').remove()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl hover:bg-gray-300">Cancel</button>
+                    <button type="submit" class="px-8 py-3 bg-pink-500 text-white rounded-2xl font-bold hover:bg-pink-600">Join Waitlist</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('waitlistForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Joining... ♡";
+
+        try {
+            const email = document.getElementById('waitlistEmail').value.trim();
+            if (!email) throw new Error("Email is required");
+
+            const { error } = await _supabase.from('waitlist').insert([{
+                email: email,
+                service_requested: serviceId,
+                status: 'pending',
+                name: document.getElementById('waitlistName').value.trim() || null,
+                notes: document.getElementById('waitlistNotes').value.trim() || null,
+                created_at: new Date().toISOString()
+            }]);
+
+            if (error) throw error;
+
+            alert(`Thank you! You've been added to the ${serviceId} waitlist ♡ We'll email you when slots open.`);
+            document.getElementById(modalId).remove();
+        } catch (err) {
+            console.error("Waitlist error:", err);
+            alert("Failed to join waitlist: " + (err.message || "Unknown error"));
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Join Waitlist";
+        }
+    });
 }
 
 document.getElementById('bookingForm').addEventListener('submit', async (e) => {
