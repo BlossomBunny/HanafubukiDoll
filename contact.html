@@ -189,231 +189,171 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- STOCK LOGIC ---
-        
-        function startBooking() {
-            document.getElementById('entryChoice').classList.add('step-hidden');
-            document.getElementById('bookingForm').classList.remove('step-hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+// --- STOCK LOGIC ---
+async function syncFormWithStock() {
+    const { data: stock, error } = await _supabase.from('inventory').select('*');
+    if (error) {
+        console.error("Stock sync failed:", error);
+        return;
+    }
+
+    // Smartdoll Heads bundles
+    const smHeads = stock.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0);
+    const smBundleOpt = document.getElementById('opt-sm-bundle');
+    const smSelect = document.getElementById('sm-head-sculpt-select');
+    if (smBundleOpt && smSelect) {
+        if (smHeads.length === 0) {
+            smBundleOpt.disabled = true;
+            smBundleOpt.textContent = 'Face-Up + Smartdoll Head (SOLD OUT)';
+            smBundleOpt.style.color = '#ef4444'; // red
+            smBundleOpt.style.opacity = '0.6';
+            smSelect.innerHTML = '<option disabled>No stock available</option>';
+        } else {
+            smBundleOpt.disabled = false;
+            smBundleOpt.textContent = 'Face-Up + Smartdoll Head (Bundle)';
+            smBundleOpt.style.color = '';
+            smBundleOpt.style.opacity = '';
+            smSelect.innerHTML = smHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
         }
+    }
 
-       function toggleDollDetails() {
+    // Dollfie Dream Heads bundles
+    const ddHeads = stock.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0);
+    const ddBundleOpt = document.getElementById('opt-dd-bundle');
+    const ddSelect = document.getElementById('dd-head-sculpt-select');
+    if (ddBundleOpt && ddSelect) {
+        if (ddHeads.length === 0) {
+            ddBundleOpt.disabled = true;
+            ddBundleOpt.textContent = 'Face-Up + Dollfie Dream Head (SOLD OUT)';
+            ddBundleOpt.style.color = '#ef4444';
+            ddBundleOpt.style.opacity = '0.6';
+            ddSelect.innerHTML = '<option disabled>No stock available</option>';
+        } else {
+            ddBundleOpt.disabled = false;
+            ddBundleOpt.textContent = 'Face-Up + Dollfie Dream Head (Bundle)';
+            ddBundleOpt.style.color = '';
+            ddBundleOpt.style.opacity = '';
+            ddSelect.innerHTML = ddHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
+        }
+    }
+
+    // Smartdoll Decora Hands (for mani)
+    const smHands = stock.filter(i => i.category === 'Smartdoll Hands' && i.quantity > 0);
+    const smManiOpt = document.getElementById('opt-sm-mani');
+    if (smManiOpt) {
+        if (smHands.length === 0) {
+            smManiOpt.disabled = true;
+            smManiOpt.textContent = 'Smartdoll Decora Hands (SOLD OUT)';
+            smManiOpt.style.color = '#ef4444';
+            smManiOpt.style.opacity = '0.6';
+        } else {
+            smManiOpt.disabled = false;
+            smManiOpt.textContent = 'Smartdoll Decora Hands';
+            smManiOpt.style.color = '';
+            smManiOpt.style.opacity = '';
+        }
+    }
+
+    // Dollfie Dream Decora Hands (for mani)
+    const ddHands = stock.filter(i => i.category === 'Dollfie Dream Hands' && i.quantity > 0);
+    const ddManiOpt = document.getElementById('opt-dd-mani');
+    if (ddManiOpt) {
+        if (ddHands.length === 0) {
+            ddManiOpt.disabled = true;
+            ddManiOpt.textContent = 'Dollfie Dream Decora Hands (SOLD OUT)';
+            ddManiOpt.style.color = '#ef4444';
+            ddManiOpt.style.opacity = '0.6';
+        } else {
+            ddManiOpt.disabled = false;
+            ddManiOpt.textContent = 'Dollfie Dream Decora Hands';
+            ddManiOpt.style.color = '';
+            ddManiOpt.style.opacity = '';
+        }
+    }
+}
+
+function startBooking() {
+    document.getElementById('entryChoice').classList.add('step-hidden');
+    document.getElementById('bookingForm').classList.remove('step-hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleDollDetails() {
     const selection = document.getElementById('faceupBase').value;
     const dollDetailsBox = document.getElementById('dollDetails');
     const smBundleBox = document.getElementById('bundle-sm-head');
     const ddBundleBox = document.getElementById('bundle-dd-head');
     const skintoneInput = document.getElementById('dollSkintone');
 
-    // Reset visibility
     [dollDetailsBox, smBundleBox, ddBundleBox].forEach(el => el?.classList.add('hidden'));
-    if (skintoneInput) skintoneInput.closest('div')?.classList.remove('hidden'); // Show skintone by default
 
     if (selection === 'Standard Face-Up') {
         dollDetailsBox?.classList.remove('hidden');
+        skintoneInput?.closest('.space-y-4')?.classList.remove('hidden'); // Show skintone
     } else if (selection === 'Face-Up + Smartdoll Head (Bundle)') {
         smBundleBox?.classList.remove('hidden');
-        // Bundle selected → hide skintone (it's defined by stock)
-        if (skintoneInput) skintoneInput.closest('div')?.classList.add('hidden');
+        skintoneInput?.closest('.space-y-4')?.classList.add('hidden'); // Hide skintone for bundle
     } else if (selection === 'Face-Up + Dollfie Dream Head (Bundle)') {
         ddBundleBox?.classList.remove('hidden');
-        // Same for Dollfie
-        if (skintoneInput) skintoneInput.closest('div')?.classList.add('hidden');
+        skintoneInput?.closest('.space-y-4')?.classList.add('hidden'); // Hide skintone for bundle
     }
 }
 
-// Also listen for changes on bundle selects (in case user changes head)
-document.addEventListener('DOMContentLoaded', () => {
-    ['sm-head-sculpt-select', 'dd-head-sculpt-select'].forEach(id => {
-        const select = document.getElementById(id);
-        if (select) select.addEventListener('change', toggleDollDetails);
-    });
+document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.innerText = "Sending... ✨";
+    btn.disabled = true;
+    const uploadSet = async (fileInputId) => {
+        const files = document.getElementById(fileInputId)?.files;
+        if (!files || files.length === 0) return [];
+        const urls = [];
+        for (const file of files) {
+            const path = `refs/${Date.now()}-${file.name}`;
+            const { data } = await _supabase.storage.from('references').upload(path, file);
+            if (data) {
+                const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
+                urls.push(pUrl.publicUrl);
+            }
+        }
+        return urls;
+    };
+    const fBase = document.getElementById('faceupBase').value;
+    let finalSculpt = document.getElementById('dollSculpt').value;
+    let finalCompany = document.getElementById('dollCompany').value;
+    if (fBase.includes('Smartdoll')) {
+        finalSculpt = document.getElementById('sm-head-sculpt-select').value;
+        finalCompany = "Smartdoll";
+    } else if (fBase.includes('Dollfie')) {
+        finalSculpt = document.getElementById('dd-head-sculpt-select').value;
+        finalCompany = "Volks";
+    }
+    const faceupDetails = (fBase !== "None") ? { base: fBase, notes: document.getElementById('faceupNotes')?.value, images: await uploadSet('faceupFiles') } : null;
+    const maniDetails = (document.getElementById('maniBase').value !== "None") ? { base: document.getElementById('maniBase').value, addons: document.getElementById('pediAddon').checked ? ['Pedicure'] : [], notes: document.getElementById('maniNotes')?.value, images: await uploadSet('maniFiles') } : null;
+    const eyeDetails = (document.getElementById('eyeBase').value !== "None") ? { base: document.getElementById('eyeBase').value, notes: document.getElementById('eyeNotes')?.value, images: await uploadSet('eyeFiles') } : null;
+    const { error } = await _supabase.from('commissions').insert([{
+        customer_name: document.getElementById('custName').value,
+        customer_email: document.getElementById('custEmail').value,
+        social_handle: document.getElementById('socialHandle').value,
+        country: document.getElementById('Country').value,
+        doll_company: finalCompany,
+        doll_sculpt: finalSculpt,
+        doll_skintone: document.getElementById('dollSkintone').value || 'N/A',
+        faceup_details: faceupDetails,
+        manicure_details: maniDetails,
+        eye_details: eyeDetails,
+        status: 'Enquiry'
+    }]);
+    if (!error) { alert("Request Sent! ♡"); window.location.href = "index.html"; }
+    else { alert("Error: " + error.message); btn.disabled = false; btn.innerText = "Submit ✨"; }
 });
-        
-async function syncFormWithStock() {
-    const { data: stock, error } = await _supabase.from('inventory').select('*');
-    if (error || !stock) {
-        console.error("Stock sync failed:", error);
-        return;
-    }
-
-    // Smartdoll Head bundles
-    const smHeads = stock.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0);
-    const smSelect = document.getElementById('sm-head-sculpt-select');
-    if (smSelect) {
-        if (smHeads.length === 0) {
-            // No stock → disable bundle option
-            const bundleOpt = document.getElementById('opt-sm-bundle');
-            if (bundleOpt) {
-                bundleOpt.disabled = true;
-                bundleOpt.textContent = 'Face-Up + Smartdoll Head (SOLD OUT)';
-                bundleOpt.style.color = '#ef4444';
-            }
-        } else {
-            smSelect.innerHTML = smHeads.map(h => 
-                `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone || 'Standard'}) - ${h.quantity} in stock</option>`
-            ).join('');
-        }
-    }
-
-    // Dollfie Dream Head bundles
-    const ddHeads = stock.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0);
-    const ddSelect = document.getElementById('dd-head-sculpt-select');
-    if (ddSelect) {
-        if (ddHeads.length === 0) {
-            const bundleOpt = document.getElementById('opt-dd-bundle');
-            if (bundleOpt) {
-                bundleOpt.disabled = true;
-                bundleOpt.textContent = 'Face-Up + Dollfie Dream Head (SOLD OUT)';
-                bundleOpt.style.color = '#ef4444';
-            }
-        } else {
-            ddSelect.innerHTML = ddHeads.map(h => 
-                `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone || 'Standard'}) - ${h.quantity} in stock</option>`
-            ).join('');
-        }
-    }
-
-}
-        async function checkServiceAvailability() {
-    const { data: settings, error } = await _supabase.from('studio_settings').select('id, is_live, banner_text');
-    if (error || !settings) {
-        console.error("Failed to load service status:", error);
-        return;
-    }
-
-    settings.forEach(service => {
-        const section = document.getElementById(`${service.id}-section`);
-        if (!section) {
-            console.warn(`Section not found for service: ${service.id}`);
-            return;
-        }
-
-        if (!service.is_live) {
-         
-            const message = service.banner_text || "We're at maximum capacity right now, but you can join the waitlist!";
-
-            section.innerHTML = `
-                <div class="p-10 md:p-12 text-center space-y-8 bg-pink-50/40 rounded-3xl border border-pink-200 shadow-sm animate-fadeIn">
-                    <h3 class="text-2xl md:text-3xl font-black text-pink-600">🌸 Sorry, our ${service.id.charAt(0).toUpperCase() + service.id.slice(1)} service is currently full!</h3>
-                    <p class="text-base md:text-lg text-gray-700 max-w-2xl mx-auto">
-                        ${message}
-                    </p>
-                    <button onclick="showWaitlistForm('${service.id}')"
-                            class="px-10 py-5 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold uppercase text-lg shadow-md transition-all transform hover:scale-105">
-                        Join ${service.id} Waitlist ♡
-                    </button>
-                </div>
-            `;
-        } else {
-          
-            section.style.display = 'block';
-            const select = section.querySelector('select');
-            if (select) {
-               
-                if (!select.querySelector('option[value="None"]')) {
-                    const noneOption = document.createElement('option');
-                    noneOption.value = 'None';
-                    noneOption.textContent = `No ${service.id.charAt(0).toUpperCase() + service.id.slice(1)} Needed`;
-                    select.insertBefore(noneOption, select.firstChild);
-                }
-               
-                if (!select.value) select.value = 'None';
-            }
-        }
-    });
-}
-
-// Waitlist modal & submission
-function showWaitlistForm(serviceId) {
-    const modalId = 'waitlistModal';
-    // Remove any existing modal to prevent duplicates
-    document.getElementById(modalId)?.remove();
-
-    const modal = document.createElement('div');
-    modal.id = modalId;
-    modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[999]';
-    modal.innerHTML = `
-        <div class="bg-white rounded-3xl p-8 md:p-10 max-w-lg w-full mx-4 shadow-2xl animate-fadeIn">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl md:text-3xl font-black text-pink-600">Join the ${serviceId} Waitlist ♡</h2>
-                <button onclick="this.closest('#${modalId}').remove()" 
-                        class="text-3xl text-gray-400 hover:text-rose-600 transition-colors">
-                    ×
-                </button>
-            </div>
-            <p class="text-gray-600 mb-8 text-center md:text-left">
-                We'll email you as soon as slots open up! ♡
-            </p>
-            <form id="waitlistForm" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Email Address *</label>
-                    <input type="email" id="waitlistEmail" placeholder="your.email@example.com" required 
-                           class="w-full p-4 border border-pink-100 rounded-2xl focus:ring-2 focus:ring-pink-300 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Your Name (optional)</label>
-                    <input type="text" id="waitlistName" placeholder="Optional" 
-                           class="w-full p-4 border border-pink-100 rounded-2xl focus:ring-2 focus:ring-pink-300 outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Notes / Preferred Timeline (optional)</label>
-                    <textarea id="waitlistNotes" placeholder="Any additional info..." 
-                              class="w-full p-4 border border-pink-100 rounded-2xl h-32 focus:ring-2 focus:ring-pink-300 outline-none"></textarea>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-4 justify-end">
-                    <button type="button" onclick="document.getElementById('${modalId}').remove()" 
-                            class="px-8 py-4 bg-gray-200 text-gray-700 rounded-2xl hover:bg-gray-300 transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit" 
-                            class="px-8 py-4 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold uppercase transition-colors">
-                        Join Waitlist
-                    </button>
-                </div>
-            </form>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    // Handle form submission
-    document.getElementById('waitlistForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Joining... ♡";
-
-        try {
-            const email = document.getElementById('waitlistEmail').value.trim();
-            if (!email) throw new Error("Email is required");
-
-            const { error } = await _supabase.from('waitlist').insert([{
-                email: email,
-                service_requested: serviceId,
-                status: 'pending',
-                name: document.getElementById('waitlistName').value.trim() || null,
-                notes: document.getElementById('waitlistNotes').value.trim() || null,
-                created_at: new Date().toISOString()
-            }]);
-
-            if (error) throw error;
-
-            alert(`Thank you! You've been added to the ${serviceId} waitlist ♡ We'll email you when slots open.`);
-            document.getElementById(modalId).remove();
-        } catch (err) {
-            console.error("Waitlist error:", err);
-            alert("Failed to join waitlist: " + (err.message || "Unknown error"));
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Join Waitlist";
-        }
-    });
-}
-        
+window.onload = () => {
+    syncFormWithStock();
+    checkServiceAvailability();
+};
     </script>
    <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
     
