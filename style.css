@@ -233,15 +233,46 @@ body.high-contrast * {
 #calendar .fc-toolbar-title {
     @apply text-2xl font-black italic text-gray-800;
 }
-#editDrawer {
-    width: 90vw !important;
-    max-width: 1000px !important;  /* Wider drawer */
-    height: 100vh;
-    overflow-y: auto;
-    background: white;
-    box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+/* Container for the horizontal scroll */
+.ref-gallery {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #fce7f3 transparent;
 }
 
-#drawerContent {
-    padding: 2rem 1rem;  /* More inner padding */
+/* Force images to stay as consistent small squares */
+.ref-img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 1rem;
+    flex-shrink: 0; /* Prevents images from squishing */
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    cursor: zoom-in;
+    transition: transform 0.2s;
+}
+
+.ref-img:hover {
+    transform: scale(1.05);
+}
+
+/* Simple zoom effect when clicked */
+.ref-img.is-zoomed {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(4);
+    z-index: 1000;
+    width: auto;
+    height: auto;
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    cursor: zoom-out;
+    box-shadow: 0 0 100px rgba(0,0,0,0.5);
+    border: none;
 }
