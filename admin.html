@@ -1467,7 +1467,7 @@ async function deleteWaitlistEntry(id, handle) {
         `Are you sure you want to remove ${handle}?`, 
         'confirm', 
         async () => {
-          
+         
             const { error } = await _supabase
                 .from('waitlist')
                 .delete()
@@ -1477,20 +1477,15 @@ async function deleteWaitlistEntry(id, handle) {
                 console.error("Delete error:", error);
                 showMagicAlert("Oops!", "Database refused to delete: " + error.message, "error");
             } else {
-              
-                showMagicAlert("Gone!", `${handle} has been removed.`, "success");
+                // 1. Show the success modal
+                showMagicAlert("Removed!", "The entry has been deleted. ♡", "success");
                 
-
-                if (typeof renderWaitlist === "function") {
-                    renderWaitlist();
-                } else if (typeof fetchWaitlist === "function") {
-                    fetchWaitlist();
-                }
+                // 2. Immediately refresh the table using the function name we verified
+                renderWaitlist();
             }
         }
     );
 }
-   
 </script>
     
     <div id="declineModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[999] hidden">
