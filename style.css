@@ -112,6 +112,34 @@ body {
     border-color: var(--card-border-mint) !important;
 }
 
+/* --- HOVER EFFECTS --- */
+
+/* Targets glass cards inside the Experience section */
+.glass-card {
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                box-shadow 0.4s ease, 
+                border-color 0.4s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-10px); /* Lifts the card up */
+    box-shadow: 0 15px 45px 0 rgba(247, 143, 179, 0.2); /* Deepens the shadow */
+    border-color: var(--accent-pink); /* Softly highlights the border */
+    cursor: default;
+}
+
+/* Special interaction for the Mint-bordered card */
+.glass-card.border-mint:hover {
+    border-color: var(--accent-mint);
+    box-shadow: 0 15px 45px 0 rgba(167, 233, 208, 0.2);
+}
+
+/* Makes the numbers/titles inside pop when the card is hovered */
+.glass-card:hover .text-3xl {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+}
+
 /* --- LAYOUT & GRID FIXES --- */
 main {
     max-width: 1200px;
