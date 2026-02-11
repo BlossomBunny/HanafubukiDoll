@@ -48,8 +48,14 @@ function showMagicAlert(title, message, type = 'success', onConfirm = null) {
     }
 }
 
-async function resizeImage(file, maxWidth = 1200, quality = 0.8) {
-    return new Promise((resolve) => {
+/**
+ * Resizes an image to prevent high-resolution uploads from failing
+ * @param {File} file - The original image file
+ * @param {number} maxWidth - Max width in pixels
+ * @returns {Promise<Blob>} - The resized image blob
+ */
+async function resizeImage(file, maxWidth = 1024) {
+    return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (event) => {
@@ -57,25 +63,29 @@ async function resizeImage(file, maxWidth = 1200, quality = 0.8) {
             img.src = event.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-
-                // Only resize if the image is actually wider than our max
-                if (width > maxWidth) {
-                    height = (maxWidth / width) * height;
-                    width = maxWidth;
+                const scale = maxWidth / img.width;
+                
+                // Only resize if the image is actually wider than maxWidth
+                if (scale < 1) {
+                    canvas.width = maxWidth;
+                    canvas.height = img.height * scale;
+                } else {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
                 }
 
-                canvas.width = width;
-                canvas.height = height;
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Convert canvas back to a Blob (file format)
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
                 canvas.toBlob((blob) => {
-                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                }, 'image/jpeg', quality);
+                    resolve(blob);
+                }, file.type, 0.8); // 0.8 quality to keep file size tiny
             };
+            img.onerror = reject;
         };
+        reader.onerror = reject;
     });
 }
+
+// Make it globally available just in case
+window.resizeImage = resizeImage;
