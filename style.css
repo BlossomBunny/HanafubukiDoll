@@ -142,6 +142,57 @@ body {
     padding: 40px;
 }
 
+/* --- RESTORING HOMEPAGE STRUCTURE --- */
+
+/* This fixes the header alignment (Logo left, Nav right) */
+.studio-header {
+    width: 100%;
+    padding: 1.5rem 2.5rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #fce7f3;
+}
+
+/* This fixes the "Hi There" mint stripe on the left */
+.border-mint {
+    border-left: 8px solid var(--accent-mint) !important;
+}
+
+/* This fixes your pink and mint pill buttons */
+.nav-btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 14px; /* Matches your text-sm */
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.nav-btn-pink {
+    background-color: #fdf2f8; /* pink-50 */
+    color: #ec4899;            /* pink-500 */
+}
+
+.nav-btn-mint {
+    background-color: #ecfdf5; /* emerald-50 */
+    color: #059669;            /* emerald-600 */
+}
+
+/* Spacing fix for the main content container */
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 1rem;
+}
+
 /* --- ACCESSIBILITY --- */
 @import url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic.min.css');
 
