@@ -909,11 +909,7 @@ async function openDrawer(id) {
 
                 <div class="flex items-center justify-between gap-4 pt-8 border-t border-gray-100">
                     <div class="flex gap-3">
-                        <button onclick="archiveOrder('${job.id}')" 
-                                class="text-[10px] font-black uppercase text-rose-400 hover:text-rose-600 transition-colors">
-                            Archive Order
-                        </button>
-
+                        
                         ${['Enquiry', 'Quote'].includes(job.status) ? `
                             <button onclick="showDeclineModal('${job.id}', '${job.email || ''}', '${job.social_handle || ''}')" 
                                     class="px-4 py-2 bg-rose-50 text-rose-500 rounded-xl font-black text-[10px] uppercase border border-rose-100 hover:bg-rose-100 transition-colors">
@@ -921,20 +917,17 @@ async function openDrawer(id) {
                             </button>
                         ` : ''}
                     </div>
-
-                    <button id="saveBtn" onclick="saveJobChanges()" 
-                            class="flex-1 max-w-[240px] bg-pink-500 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all">
-                        Save All Changes ♡
-                    </button>
-                </div>
-            </div>`; // Dynamic content ends here
+                    </div>
+            </div>`;
 
         drawer.classList.remove('translate-x-full');
-    } catch (err) { 
+   } catch (err) { 
         console.error("Open drawer error:", err); 
+        if (typeof showMagicAlert === 'function') {
+            showMagicAlert("Drawer Error", "Couldn't load job details.", "error");
+        }
     }
 }
-
     function renderServiceBlock(job, key, title, color) {
     const data = job[`${key}_details`];
     if (!data) return '';
