@@ -40,11 +40,11 @@
                 <div class="glass-card p-6 border-l-4 border-pink-400">
                     <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest mb-4">Face-Up & Doll Info</h3>
                     <select id="faceupBase" onchange="toggleDollDetails()" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
-                        <option value="None">No Faceup Needed</option>
-                        <option value="Standard Face-Up">Standard Face-Up</option>
-                        <option value="Face-Up + Smartdoll Head (Bundle)">Face-Up + Smartdoll Head (Bundle)</option>
-                        <option value="Face-Up + Dollfie Dream Head (Bundle)">Face-Up + Dollfie Dream Head (Bundle)</option>
-                    </select>
+    <option value="None">No Faceup Needed</option>
+    <option value="Standard Face-Up">Standard Face-Up</option>
+    <option id="opt-sm-bundle" value="Face-Up + Smartdoll Head (Bundle)">Face-Up + Smartdoll Head (Bundle)</option>
+    <option id="opt-dd-bundle" value="Face-Up + Dollfie Dream Head (Bundle)">Face-Up + Dollfie Dream Head (Bundle)</option>
+</select>
                     <div id="bundle-sm-head" class="hidden mb-4"><select id="sm-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100"></select></div>
                     <div id="bundle-dd-head" class="hidden mb-4"><select id="dd-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100"></select></div>
                     
@@ -56,8 +56,32 @@
                     <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
                     <input type="file" id="faceupFiles" multiple class="mt-4 text-[10px]">
                 </div>
-
                 </div>
+            <div class="glass-card p-6 border-l-4 border-pink-400 mt-6">
+    <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest mb-4">Manicure & Hand Blushing</h3>
+    <select id="maniBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
+        <option value="None">No Manicure Needed</option>
+        <option value="Standard Manicure">Standard Manicure (Blushing + Gloss)</option>
+        <option value="Detailed Manicure">Detailed Manicure (Nail Art/French)</option>
+    </select>
+    <label class="flex items-center space-x-2 mb-4 px-2">
+        <input type="checkbox" id="pediAddon" class="accent-pink-500">
+        <span class="text-xs text-gray-600 font-medium uppercase">Add matching Pedicure?</span>
+    </label>
+    <textarea id="maniNotes" placeholder="Manicure colors/style notes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
+    <input type="file" id="maniFiles" multiple class="mt-4 text-[10px]">
+</div>
+
+<div class="glass-card p-6 border-l-4 border-pink-400 mt-6">
+    <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest mb-4">Custom Resin Eyes</h3>
+    <select id="eyeBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
+        <option value="None">No Eyes Needed</option>
+        <option value="Standard Eyes">Standard 18mm/20mm Eyes</option>
+        <option value="Special Effect Eyes">Special Effect (Holographic/Glow)</option>
+    </select>
+    <textarea id="eyeNotes" placeholder="Eye colors, iris style, etc..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
+    <input type="file" id="eyeFiles" multiple class="mt-4 text-[10px]">
+</div>
 
             <button type="submit" id="submitBtn" class="w-full bg-pink-500 text-white py-5 rounded-3xl font-black shadow-xl hover:scale-[1.02] transition-all">
                 Submit Request ✨
@@ -72,7 +96,6 @@ const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- STOCK LOGIC ---
-// Keeps the bundle options synced with what you actually have in stock
 async function syncFormWithStock() {
     const { data: stock, error } = await _supabase.from('inventory').select('*');
     if (error) {
@@ -138,7 +161,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     btn.innerText = "Sending... ✨";
     btn.disabled = true;
 
-    // Utility to handle multiple image uploads to Supabase Storage
+
     const uploadSet = async (fileInputId) => {
         const files = document.getElementById(fileInputId)?.files;
         if (!files || files.length === 0) return [];
@@ -154,7 +177,6 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         return urls;
     };
 
-    // Determine final sculpt/company based on bundle selection
     const fBase = document.getElementById('faceupBase').value;
     let finalSculpt = document.getElementById('dollSculpt').value;
     let finalCompany = document.getElementById('dollCompany').value;
@@ -167,7 +189,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         finalCompany = "Volks";
     }
 
-    // Build detail objects only if services are selected
+   
     const faceupDetails = (fBase !== "None") ? { 
         base: fBase, 
         notes: document.getElementById('faceupNotes')?.value, 
@@ -187,7 +209,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         images: await uploadSet('eyeFiles') 
     } : null;
 
-    // Send the full request to Supabase
+   // Send the full request to Supabase
     const { error } = await _supabase.from('commissions').insert([{
         customer_name: document.getElementById('custName').value,
         customer_email: document.getElementById('custEmail').value,
@@ -199,23 +221,18 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         faceup_details: faceupDetails,
         manicure_details: maniDetails,
         eye_details: eyeDetails,
-        status: 'Enquiry' / Stays as a standard Enquiry
+        status: 'Enquiry' // Fixed syntax error here
     }]);
 
     if (!error) { 
-        alert("Thank you! Your request has been sent. ♡"); 
+        alert("✨ Thank you! Your request has been sent successfully. We will be in contact shortly via email. ♡"); 
         window.location.href = "index.html"; 
     } else { 
-        alert("Error: " + error.message); 
+        console.error("Submission error:", error);
+        alert("Oops! Submission failed: " + error.message); 
         btn.disabled = false; 
         btn.innerText = "Submit ✨"; 
     }
-});
-
-// Run sync on load
-window.onload = () => {
-    syncFormWithStock();
-};
     </script>
 </body>
 </html>
