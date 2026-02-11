@@ -1398,12 +1398,7 @@ async function handleArchive() {
     }
 }
    async function promoteWaitlist(id, email, handle) {
-    if (!confirm(`Send priority access link to ${handle}?`)) return;
-    
-    const btn = event.target;
-    const originalText = btn.innerText;
-    btn.innerText = "Sending... ✨";
-    btn.disabled = true;
+    if (!confirm(`Send invite to ${handle}?`)) return;
 
     try {
         const response = await fetch('https://hxqxinfdeyprkuvvyqet.supabase.co/functions/v1/hyper-handler', {
@@ -1413,41 +1408,25 @@ async function handleArchive() {
                 'Authorization': `Bearer ${SUPABASE_KEY}` 
             },
             body: JSON.stringify({
-                to: email, // Must match "to" in index.ts
-                subject: "🌸 Your HanafubukiDoll Priority Access", // Must match "subject"
-                html: `
-                    <div style="font-family: sans-serif;">
-                        <h2 style="color: #ec4899;">Hi ${handle}! ♡</h2>
-                        <p>Your priority booking slot is now ready.</p>
-                        <p><a href="https://hanafubukidoll.co.uk/priority-request.html" style="color: #ec4899; font-weight: bold;">Click here to open the Priority Form</a></p>
-                    </div>
-                ` // Must match "html"
+                to: email,
+                subject: "🌸 Your HanafubukiDoll Priority Access",
+                html: `<h3>Hi ${handle}! ♡</h3><p>Your priority booking link is now active: <a href="https://hanafubukidoll.co.uk/priority-request.html">Click here to book</a></p>`
             })
         });
 
         const result = await response.json();
 
         if (!response.ok) {
-            // This will tell us if Resend rejected it or if the Function crashed
-            throw new Error(result.error || result.message || "Unknown Error");
+            console.error("Function Error Detail:", result);
+            throw new Error(result.error?.message || result.error || "Bad Request");
         }
 
-        // Only update the database if the email actually sent
-        const { error: dbError } = await _supabase
-            .from('waitlist')
-            .update({ status: 'Email Sent!' })
-            .eq('id', id);
-
-        if (dbError) throw dbError;
-
-        alert("Invite sent successfully! ✨");
+        await _supabase.from('waitlist').update({ status: 'Email Sent!' }).eq('id', id);
+        alert("Invite sent! ✨");
         renderWaitlist(); 
         
     } catch (err) {
-        console.error("Detailed Error:", err);
-        alert("Error: " + err.message);
-        btn.innerText = originalText;
-        btn.disabled = false;
+        alert("Invite failed: " + err.message);
     }
 }
 async function deleteWaitlistEntry(id) {
