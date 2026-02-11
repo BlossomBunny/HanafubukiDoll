@@ -1400,47 +1400,34 @@ async function handleArchive() {
    async function promoteWaitlist(id, email, handle) {
     if (!confirm(`Send priority access link to ${handle}?`)) return;
 
-    // Change this to YOUR actual project URL if it's different
     const FUNCTION_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co/functions/v1/hyper-handler';
     
     try {
-        // 1. Send Email
         const response = await fetch(FUNCTION_URL, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                // Adding the API key here helps prevent "Failed to Fetch" / CORS issues
+                // Using the SUPABASE_KEY you defined at the top of your file
                 'Authorization': `Bearer ${SUPABASE_KEY}` 
             },
             body: JSON.stringify({
                 to: email,
                 subject: "🌸 Your HanafubukiDoll Priority Access",
-                // Note: Ensure your Edge Function is set up to handle these specific fields
                 handle: handle, 
-                type: 'priority-invite', 
                 link: "https://hanafubukidoll.co.uk/priority-request.html"
             })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Email handler failed");
-        }
+        if (!response.ok) throw new Error("Check Edge Function logs in Supabase");
 
-        // 2. Update status in the waitlist table
-        const { error: updateError } = await _supabase
-            .from('waitlist')
-            .update({ status: 'Email Sent!' })
-            .eq('id', id);
+        // Update the database status
+        await _supabase.from('waitlist').update({ status: 'Email Sent!' }).eq('id', id);
 
-        if (updateError) throw updateError;
-
-        alert("Invite sent successfully! ✨");
+        alert("Invite sent! ✨");
         renderWaitlist(); 
         
     } catch (err) {
-        console.error("Invite Error:", err);
-        alert("Invite failed: " + err.message + ". Check the console for details.");
+        alert("Fetch failed. Ensure you deployed the Edge Function and check the console.");
     }
 }
 async function deleteWaitlistEntry(id) {
