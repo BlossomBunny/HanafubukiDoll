@@ -16,6 +16,7 @@ body {
     background: var(--bg-main);
     color: var(--text-main);
     overflow-x: hidden;
+    margin: 0;
 }
 
 /* --- MESH & ANIMATIONS --- */
@@ -48,13 +49,38 @@ body {
     100% { transform: translateY(110vh) rotate(720deg); }
 }
 
+/* --- HOMEPAGE LAYOUT FIXES (RESTORED) --- */
+
+/* Fix for the "Hi There" card size and spacing */
+main {
+    position: relative;
+    z-index: 10;
+    padding: 2rem 1rem;
+}
+
+/* Restores the border-left and layout of the intro card */
+.intro-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-cols: 1fr;
+    gap: 2rem;
+}
+
 /* --- REUSABLE COMPONENTS --- */
 .glass-card {
-    background: rgba(255, 251, 253, 0.6); 
+    background: var(--card-bg); 
     backdrop-filter: blur(16px); 
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--card-border);
+    border-radius: 2.5rem;
     box-shadow: 0 8px 32px 0 rgba(247, 143, 179, 0.1);
+    transition: transform 0.3s ease;
+}
+
+/* The mint border-left visible in your screenshot */
+.border-mint {
+    border-left: 4px solid var(--accent-mint);
 }
 
 .pulse-dot {
@@ -80,7 +106,20 @@ body {
     60% { transform: translateY(-3px); }
 }
 
-/* --- CUSTOM SCROLLBAR (Unified) --- */
+/* --- NAVIGATION --- */
+nav a {
+    font-weight: 700;
+    text-transform: lowercase; /* Matches your 'Services' 'Home' style */
+    font-size: 0.85rem;
+    color: var(--text-main);
+    transition: opacity 0.3s ease;
+}
+
+nav a:hover {
+    opacity: 0.7;
+}
+
+/* --- CUSTOM SCROLLBAR --- */
 .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
     height: 4px;
@@ -102,15 +141,7 @@ body {
     animation: slideInUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* For errors, we'll add a subtle shake */
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-}
-.error-shake { animation: shake 0.2s ease-in-out 0s 2; }
-
-/* --- IMAGE LIGHTBOX (The Fix) --- */
+/* --- IMAGE LIGHTBOX --- */
 .img-enlarge {
     position: fixed !important;
     top: 0 !important;
@@ -126,8 +157,6 @@ body {
 }
 
 /* --- ACCESSIBILITY --- */
-@import url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic.min.css');
-
 body.dark-theme { background-color: #121212 !important; color: #f3f4f6 !important; }
 body.dark-theme .glass-card { background-color: #1e1e1e !important; border-color: #333 !important; }
 body.reduced-motion * { animation: none !important; transition: none !important; }
