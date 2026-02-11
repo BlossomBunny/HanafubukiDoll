@@ -1462,29 +1462,33 @@ async function handleArchive() {
 }
     
 async function deleteWaitlistEntry(id, handle) {
-    if (!confirm(`Permanently remove ${handle} from the database?`)) return;
+    showMagicAlert(
+        "Remove Entry?", 
+        `Are you sure you want to remove ${handle}?`, 
+        'confirm', 
+        async () => {
+          
+            const { error } = await _supabase
+                .from('waitlist')
+                .delete()
+                .eq('id', id);
 
-    try {
-        const { error, count } = await _supabase
-            .from('waitlist')
-            .delete()
-            .eq('id', id)
-            .select(); // This is the magic part to verify it worked
+            if (error) {
+                console.error("Delete error:", error);
+                showMagicAlert("Oops!", "Database refused to delete: " + error.message, "error");
+            } else {
+              
+                showMagicAlert("Gone!", `${handle} has been removed.`, "success");
+                
 
-        if (error) throw error;
-
-        if (count && count.length > 0) {
-            alert("✨ Successfully deleted from the database!");
-        } else {
-            alert("⚠️ The request went through, but no row was deleted. Check your RLS policy!");
+                if (typeof renderWaitlist === "function") {
+                    renderWaitlist();
+                } else if (typeof fetchWaitlist === "function") {
+                    fetchWaitlist();
+                }
+            }
         }
-
-        fetchWaitlist(); 
-
-    } catch (err) {
-        console.error("Delete failed:", err);
-        alert("Error: " + err.message);
-    }
+    );
 }
    
 </script>
