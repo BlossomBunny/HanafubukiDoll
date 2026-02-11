@@ -1399,35 +1399,55 @@ async function handleArchive() {
 }
    async function promoteWaitlist(id, email, handle) {
     if (!confirm(`Send priority access link to ${handle}?`)) return;
-
-    const FUNCTION_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co/functions/v1/hyper-handler';
     
+    const btn = event.target;
+    const originalText = btn.innerText;
+    btn.innerText = "Sending... ✨";
+    btn.disabled = true;
+
     try {
-        const response = await fetch(FUNCTION_URL, {
+        const response = await fetch('https://hxqxinfdeyprkuvvyqet.supabase.co/functions/v1/hyper-handler', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                // Using the SUPABASE_KEY you defined at the top of your file
                 'Authorization': `Bearer ${SUPABASE_KEY}` 
             },
             body: JSON.stringify({
-                to: email,
-                subject: "🌸 Your HanafubukiDoll Priority Access",
-                handle: handle, 
-                link: "https://hanafubukidoll.co.uk/priority-request.html"
+                to: email, // Must match "to" in index.ts
+                subject: "🌸 Your HanafubukiDoll Priority Access", // Must match "subject"
+                html: `
+                    <div style="font-family: sans-serif;">
+                        <h2 style="color: #ec4899;">Hi ${handle}! ♡</h2>
+                        <p>Your priority booking slot is now ready.</p>
+                        <p><a href="https://hanafubukidoll.co.uk/priority-request.html" style="color: #ec4899; font-weight: bold;">Click here to open the Priority Form</a></p>
+                    </div>
+                ` // Must match "html"
             })
         });
 
-        if (!response.ok) throw new Error("Check Edge Function logs in Supabase");
+        const result = await response.json();
 
-        // Update the database status
-        await _supabase.from('waitlist').update({ status: 'Email Sent!' }).eq('id', id);
+        if (!response.ok) {
+            // This will tell us if Resend rejected it or if the Function crashed
+            throw new Error(result.error || result.message || "Unknown Error");
+        }
 
-        alert("Invite sent! ✨");
+        // Only update the database if the email actually sent
+        const { error: dbError } = await _supabase
+            .from('waitlist')
+            .update({ status: 'Email Sent!' })
+            .eq('id', id);
+
+        if (dbError) throw dbError;
+
+        alert("Invite sent successfully! ✨");
         renderWaitlist(); 
         
     } catch (err) {
-        alert("Fetch failed. Ensure you deployed the Edge Function and check the console.");
+        console.error("Detailed Error:", err);
+        alert("Error: " + err.message);
+        btn.innerText = originalText;
+        btn.disabled = false;
     }
 }
 async function deleteWaitlistEntry(id) {
