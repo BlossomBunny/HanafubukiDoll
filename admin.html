@@ -877,35 +877,36 @@ async function openDrawer(id) {
                     ${renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')}
                     ${renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')}
                 </div>
+/* ... rest of the code above remains the same ... */
 
-               <div class="flex flex-col gap-3 pt-4">
-    <div class="flex gap-3">
+                <div class="flex items-center justify-between gap-4 pt-8 border-t border-gray-100">
+                    <div class="flex gap-3">
+                        <button onclick="archiveOrder('${job.id}')" 
+                                class="text-[10px] font-black uppercase text-rose-400 hover:text-rose-600 transition-colors">
+                            Archive Order
+                        </button>
 
-${['Enquiry', 'Quote'].includes(job.status) ? `
-    <button onclick="showDeclineModal('${job.id}', '${job.email || ''}', '${job.social_handle || ''}')" 
-            class="px-6 py-4 bg-rose-50 text-rose-500 rounded-2xl font-black text-[10px] uppercase border border-rose-100 hover:bg-rose-100 transition-colors">
-        Decline & Archive
-    </button>
-` : ''}
-        
-        <button id="saveBtn" onclick="saveJobChanges()" 
-                class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all">
-            Save Changes ♡
-        </button>
-    </div>
-            <button onclick="closeDrawer()" 
-                    class="w-full py-3 bg-gray-100 text-gray-400 rounded-2xl font-black text-[10px] uppercase">
-                Cancel
-            </button>
-        </div>`; // Make sure the backtick for innerHTML is closed here
+                        ${['Enquiry', 'Quote'].includes(job.status) ? `
+                            <button onclick="showDeclineModal('${job.id}', '${job.email || ''}', '${job.social_handle || ''}')" 
+                                    class="px-4 py-2 bg-rose-50 text-rose-500 rounded-xl font-black text-[10px] uppercase border border-rose-100 hover:bg-rose-100 transition-colors">
+                                Decline & Email
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <button id="saveBtn" onclick="saveJobChanges()" 
+                            class="flex-1 max-w-[240px] bg-pink-500 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all">
+                        Save All Changes ♡
+                    </button>
+                </div>
+            </div>`; // Dynamic content ends here
 
         drawer.classList.remove('translate-x-full');
-
     } catch (err) { 
         console.error("Open drawer error:", err); 
     }
 }
-    
+
     function renderServiceBlock(job, key, title, color) {
     const data = job[`${key}_details`];
     if (!data) return '';
