@@ -310,10 +310,10 @@ async function switchTab(tab) {
     try {
         if (tab === 'summary') {
             await renderSummary();
-            await renderWaitlist();  // ← critical: add this
+            await renderWaitlist(); 
         }
         if (tab === 'workbench') {
-            await renderworkbench(false); // Live by default; could remember archived state if needed
+            await renderworkbench(false);
         }
         if (tab === 'planner') {
             await renderPlanner();
@@ -323,7 +323,7 @@ async function switchTab(tab) {
         }
     } catch (err) {
         console.error(`Render failed for ${tab}:`, err);
-        // Optional: show error in UI
+  
         activeView.innerHTML += `<div class="p-6 text-red-500">Render error: ${err.message}</div>`;
     }
 }
@@ -447,52 +447,48 @@ async function renderWaitlist() {
         countEl.textContent = `${waitlist.length} Entries`;
         
         tableBody.innerHTML = waitlist.map(entry => {
-            const isSent = entry.status === 'Email Sent!';
+    const isSent = entry.status === 'Email Sent!';
 
-            return `
-            <tr class="hover:bg-amber-50/30 transition-colors">
-                <td class="p-4 text-[10px] font-bold text-gray-400 uppercase">
-                    ${new Date(entry.created_at).toLocaleDateString()}
-                </td>
-                
-                <td class="p-4 text-sm font-black text-gray-700">
-                    ${entry.name || '—'}
-                </td>
-
-                <td class="p-4">
-                    <div class="text-sm font-medium text-gray-600">${entry.email}</div>
-                    <div class="text-[9px] font-black uppercase tracking-tighter ${isSent ? 'text-blue-400' : 'text-amber-400'}">
-                        ${isSent ? '✓ Email Sent' : '○ Pending'}
-                    </div>
-                </td>
-
-                <td class="p-4">
-                    <span class="px-3 py-1 bg-pink-50 text-pink-500 rounded-full text-[9px] font-black uppercase tracking-widest border border-pink-100">
-                        ${entry.service_requested}
-                    </span>
-                </td>
-
-                <td class="p-4 text-xs text-gray-500 max-w-xs truncate" title="${entry.notes || ''}">
-                    ${entry.notes || '<span class="italic opacity-30">No notes</span>'}
-                </td>
-                
-                <td class="p-4 text-right space-x-2">
-                    ${!isSent ? `
-                        <button onclick="promoteWaitlist('${entry.id}', '${entry.email}', '${entry.name || 'Valued Client'}')" 
-                                class="px-4 py-2 bg-pink-500 text-white rounded-xl font-black text-[10px] uppercase shadow-sm hover:bg-pink-600 transition-all">
-                            ✨ Invite
-                        </button>
-                    ` : `
-                        <span class="px-4 py-2 text-[10px] font-black uppercase text-gray-300 italic">Invited</span>
-                    `}
-
-                   <button 
-    onclick="deleteWaitlistEntry('${item.id}', '${item.handle}')"
-    style="background-color: #fee2e2; color: #ef4444; padding: 4px 8px; border-radius: 6px; font-size: 12px;"
->🗑️</button>
-            </td>
-            </tr>
-        `}).join('') || '<tr><td colspan="6" class="p-10 text-center text-gray-300 italic">The waitlist is empty! ♡</td></tr>';
+    return `
+    <tr class="hover:bg-amber-50/30 transition-colors">
+        <td class="p-4 text-[10px] font-bold text-gray-400 uppercase">
+            ${new Date(entry.created_at).toLocaleDateString()}
+        </td>
+        <td class="p-4 text-sm font-black text-gray-700">
+            ${entry.name || '—'}
+        </td>
+        <td class="p-4">
+            <div class="text-sm font-medium text-gray-600">${entry.email}</div>
+            <div class="text-[9px] font-black uppercase tracking-tighter ${isSent ? 'text-blue-400' : 'text-amber-400'}">
+                ${isSent ? '✓ Email Sent' : '○ Pending'}
+            </div>
+        </td>
+        <td class="p-4">
+            <span class="px-3 py-1 bg-pink-50 text-pink-500 rounded-full text-[9px] font-black uppercase tracking-widest border border-pink-100">
+                ${entry.service_requested}
+            </span>
+        </td>
+        <td class="p-4 text-xs text-gray-500 max-w-xs truncate" title="${entry.notes || ''}">
+            ${entry.notes || '<span class="italic opacity-30">No notes</span>'}
+        </td>
+        <td class="p-4 text-right space-x-2">
+            ${!isSent ? `
+                <button onclick="promoteWaitlist('${entry.id}', '${entry.email}', '${entry.name || 'Valued Client'}')" 
+                        class="px-4 py-2 bg-pink-500 text-white rounded-xl font-black text-[10px] uppercase shadow-sm hover:bg-pink-600 transition-all">
+                    ✨ Invite
+                </button>
+            ` : `
+                <span class="px-4 py-2 text-[10px] font-black uppercase text-gray-300 italic">Invited</span>
+            `}
+            <button 
+                onclick="deleteWaitlistEntry('${entry.id}', '${entry.name || 'Client'}')"
+                class="inline-block p-2 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100"
+            >
+                🗑️
+            </button>
+        </td>
+    </tr>`;
+}).join('') || '<tr><td colspan="6" class="p-10 text-center text-gray-300 italic">The waitlist is empty! ♡</td></tr>';
         
     } catch (err) {
         console.error("Waitlist error:", err);
