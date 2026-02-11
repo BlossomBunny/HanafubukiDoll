@@ -790,7 +790,6 @@ async function openDrawer(id) {
     const drawer = document.getElementById('editDrawer');
     
     if (!content || !drawer) return;
-    drawer.classList.remove('translate-x-full');
 
     try {
         const { data: job, error } = await _supabase
@@ -804,35 +803,27 @@ async function openDrawer(id) {
             return;
         }
 
-        const payments = job.payments || [];
-        const paidTotal = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-        const calculatedBalance = Math.max(0, (job.total_price || 0) - paidTotal);
-
         content.innerHTML = `
             <div class="max-w-2xl mx-auto space-y-6 pb-24 px-4 md:px-6">
                 <section class="flex flex-wrap items-end justify-between gap-4 border-b border-gray-100 pb-4">
                     <div class="space-y-1">
                         <p class="text-[10px] font-black uppercase text-pink-400 tracking-widest">Commission Detail</p>
                         <h3 class="text-xl font-black text-gray-900 leading-tight">${job.social_handle || '@none'}</h3>
-                        <p class="text-xs font-bold text-gray-500">${job.doll_company || ''} ${job.doll_sculpt || ''}</p>
+                        <p class="text-xs font-bold text-gray-400">${job.doll_company || ''} ${job.doll_sculpt || ''}</p>
                     </div>
-                    <div class="flex items-center gap-2">
-                         <select id="upStatus" class="text-xs font-black uppercase bg-gray-100 px-4 py-2 rounded-xl border-none outline-none cursor-pointer hover:bg-gray-200 transition-colors">
-                            ${['Enquiry','Quote','Declined','Arrived','Working','Approved','Photo','Shipped']
-                                .map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`)
-                                .join('')}
-                        </select>
-                    </div>
+                    <select id="upStatus" class="text-xs font-black uppercase bg-gray-100 px-4 py-2 rounded-xl border-none outline-none cursor-pointer">
+                        ${['Enquiry','Quote','Declined','Arrived','Working','Approved','Photo','Shipped']
+                            .map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
                 </section>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                        <label class="block text-[8px] font-black uppercase text-gray-400 mb-1">Payment Method</label>
+                        <label class="block text-[8px] font-black uppercase text-gray-400 mb-1">Payment</label>
                         <select id="payType" onchange="togglePayUI()" class="w-full bg-transparent text-xs font-bold outline-none border-none p-0">
                             <option value="Paid in Full" ${job.payment_method === 'Paid in Full' ? 'selected' : ''}>Paid in Full</option>
                             <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
                             <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
-                            <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
                         </select>
                     </div>
                     <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
@@ -845,50 +836,31 @@ async function openDrawer(id) {
                     <div class="bg-pink-50/50 p-4 rounded-2xl border border-pink-100 flex items-center justify-between">
                          <div>
                             <label class="block text-[8px] font-black uppercase text-pink-400 mb-1">Priority</label>
-                            <span class="text-[10px] font-black uppercase ${job.is_urgent ? 'text-rose-500' : 'text-gray-400'}">Urgent</span>
+                            <span class="text-[10px] font-black uppercase ${job.is_urgent ? 'text-rose-500' : 'text-gray-400'}">Urgent Status</span>
                          </div>
                          <input type="checkbox" id="isUrg" ${job.is_urgent ? 'checked' : ''} class="w-4 h-4 accent-pink-500">
                     </div>
                 </div>
 
                 <div class="space-y-4">
-                    ${renderServiceBlock(job, 'faceup', 'Faceup Service', 'pink')}
-                    ${renderServiceBlock(job, 'eye', 'Eye Customization', 'blue')}
-                    ${renderServiceBlock(job, 'manicure', 'Hand/Foot Mani', 'emerald')}
-                </div>
-
-                <div class="p-5 bg-white rounded-3xl border border-gray-100 space-y-3">
-                    <h4 class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Shipping & Tracking</h4>
-                    <div class="grid grid-cols-2 gap-4">
-                        <input id="trackNum" type="text" placeholder="Tracking Number" value="${job.tracking_number || ''}" class="p-3 bg-gray-50 rounded-xl text-xs border-none outline-none focus:ring-1 ring-pink-100">
-                        <input id="shipCost" type="number" placeholder="Shipping Cost" value="${job.shipping_cost || 0}" class="p-3 bg-gray-50 rounded-xl text-xs border-none outline-none focus:ring-1 ring-pink-100">
-                    </div>
-                </div>
-
-                <div class="flex gap-3 pt-4">
-                    <button id="saveBtn" onclick="saveJobChanges()" class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all">Save Changes ♡</button>
-                    <button onclick="closeDrawer()" class="px-6 py-4 bg-gray-100 text-gray-400 rounded-2xl font-black text-xs uppercase">Cancel</button>
-                </div>
-            </div>
-        `;
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-                <div class="space-y-10">
                     ${renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink')}
                     ${renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')}
                     ${renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')}
                 </div>
-            </div>
-        `;
+
+                <div class="flex gap-3 pt-4">
+                    <button id="saveBtn" onclick="saveJobChanges()" class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-pink-100">Save Changes ♡</button>
+                    <button onclick="closeDrawer()" class="px-6 py-4 bg-gray-100 text-gray-400 rounded-2xl font-black text-xs uppercase">Cancel</button>
+                </div>
+            </div>`; 
+
         drawer.classList.remove('translate-x-full');
+
     } catch (err) {
         console.error("Open drawer error:", err);
+        content.innerHTML = `<p class="p-10 text-center text-red-500">Error: ${err.message}</p>`;
     }
 }
-
     function renderServiceBlock(job, key, title, color) {
     const data = job[`${key}_details`];
     if (!data) return '';
