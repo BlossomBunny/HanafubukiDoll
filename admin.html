@@ -155,6 +155,7 @@
                         <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Email</th>
                         <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Service</th>
                         <th class="p-4 text-[9px] font-black uppercase text-gray-400 tracking-widest">Notes</th>
+                        <th class="p-4 text-[10px] font-black uppercase text-gray-400 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="waitlist-table-body" class="divide-y divide-pink-50"></tbody>
@@ -428,7 +429,7 @@ async function renderSummary() {
     }
 }
     
-    // --- WAITLIST LOGIC --- //
+   // --- WAITLIST LOGIC --- //
 async function renderWaitlist() {
     const countEl = document.getElementById('waitlist-count');
     const tableBody = document.getElementById('waitlist-table-body');
@@ -436,31 +437,64 @@ async function renderWaitlist() {
     if (!countEl || !tableBody) return;
 
     try {
+        // Fetch all entries so we can see both 'pending' and 'Email Sent!'
         const { data: waitlist, error } = await _supabase
             .from('waitlist')
             .select('*')
-            .eq('status', 'pending')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
 
         countEl.textContent = `${waitlist.length} Entries`;
         
-        tableBody.innerHTML = waitlist.map(entry => `
-            <tr class="hover:bg-amber-50/30 transition-colors border-b border-pink-50">
+        tableBody.innerHTML = waitlist.map(entry => {
+            const isSent = entry.status === 'Email Sent!';
+
+            return `
+            <tr class="hover:bg-amber-50/30 transition-colors">
                 <td class="p-4 text-[10px] font-bold text-gray-400 uppercase">
                     ${new Date(entry.created_at).toLocaleDateString()}
                 </td>
-                <td class="p-4 text-sm font-black text-gray-700">${entry.email}</td>
+                
+                <td class="p-4 text-sm font-black text-gray-700">
+                    ${entry.name || '—'}
+                </td>
+
                 <td class="p-4">
-                    <span class="px-3 py-1 bg-amber-100 text-amber-600 rounded-full text-[9px] font-black uppercase">
+                    <div class="text-sm font-medium text-gray-600">${entry.email}</div>
+                    <div class="text-[9px] font-black uppercase tracking-tighter ${isSent ? 'text-blue-400' : 'text-amber-400'}">
+                        ${isSent ? '✓ Email Sent' : '○ Pending'}
+                    </div>
+                </td>
+
+                <td class="p-4">
+                    <span class="px-3 py-1 bg-pink-50 text-pink-500 rounded-full text-[9px] font-black uppercase tracking-widest border border-pink-100">
                         ${entry.service_requested}
                     </span>
                 </td>
-                <td class="p-4 text-sm font-black text-gray-700">${entry.name || '—'}</td>
-                <td class="p-4 text-sm text-gray-600">${entry.notes || ''}</td>
+
+                <td class="p-4 text-xs text-gray-500 max-w-xs truncate" title="${entry.notes || ''}">
+                    ${entry.notes || '<span class="italic opacity-30">No notes</span>'}
+                </td>
+                
+                <td class="p-4 text-right space-x-2">
+                    ${!isSent ? `
+                        <button onclick="promoteWaitlist('${entry.id}', '${entry.email}', '${entry.name || 'Valued Client'}')" 
+                                class="px-4 py-2 bg-pink-500 text-white rounded-xl font-black text-[10px] uppercase shadow-sm hover:bg-pink-600 transition-all">
+                            ✨ Invite
+                        </button>
+                    ` : `
+                        <span class="px-4 py-2 text-[10px] font-black uppercase text-gray-300 italic">Invited</span>
+                    `}
+
+                    <button onclick="deleteWaitlistEntry('${entry.id}')" 
+                            class="p-2 text-gray-300 hover:text-rose-500 transition-colors"
+                            title="Delete Entry">
+                        🗑️
+                    </button>
+                </td>
             </tr>
-        `).join('') || '<tr><td colspan="5" class="p-10 text-center text-gray-300 italic">No pending entries! ♡</td></tr>';
+        `}).join('') || '<tr><td colspan="6" class="p-10 text-center text-gray-300 italic">The waitlist is empty! ♡</td></tr>';
         
     } catch (err) {
         console.error("Waitlist error:", err);
@@ -1362,6 +1396,41 @@ async function handleArchive() {
         console.error("Archive error:", err);
         alert("Failed to archive: " + err.message);
     }
+}
+   async function promoteWaitlist(id, email, handle) {
+    if (!confirm(`Send priority access link to ${handle}?`)) return;
+
+    try {
+        // 1. Send Email (Replace with your actual Edge Function URL)
+        const response = await fetch('https://hxqxinfdeyprkuvvyqet.supabase.co/functions/v1/hyper-handler', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                to: email,
+                subject: "🌸 Your HanafubukiDoll Waitlist Slot",
+                html: `<h3>Hi ${handle}!</h3><p>Slots are now open for your priority booking. Please use the link below to submit your details:</p><p><a href="https://hanafubukidoll.co.uk/priority-request.html">Access Priority Form</a> We kindly ask that you do not provide this link to anyone else as it is exclusively for waitlist customers!</p>`
+            })
+        });
+
+        if (!response.ok) throw new Error("Email handler failed");
+
+        // 2. Update status so they don't get emailed twice
+        const { error } = await _supabase
+            .from('waitlist')
+            .update({ status: 'Email Sent!' })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        renderWaitlist(); // Refresh table
+    } catch (err) {
+        alert("Invite failed: " + err.message);
+    }
+}
+async function deleteWaitlistEntry(id) {
+    if (!confirm("Remove this person from the waitlist?")) return;
+    const { error } = await _supabase.from('waitlist').delete().eq('id', id);
+    if (!error) renderWorkbench();
 }
    
 </script>
