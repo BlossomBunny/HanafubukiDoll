@@ -1,3 +1,32 @@
+/* --- GLOBAL HEADER STYLING (Restored) --- */
+.studio-header {
+    width: 100%;
+    padding: 1.5rem 2.5rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #fce7f3;
+}
+
+.nav-link {
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #1f2937;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: #f472b6;
+}
+
 /* --- BRAND VARIABLES --- */
 :root {
     --bg-main: #ffffff;
@@ -16,10 +45,9 @@ body {
     background: var(--bg-main);
     color: var(--text-main);
     overflow-x: hidden;
-    margin: 0;
 }
 
-/* --- MESH & ANIMATIONS --- */
+/* --- MESH BACKGROUND --- */
 .mesh-bg {
     position: fixed;
     inset: 0;
@@ -30,6 +58,7 @@ body {
     pointer-events: none;
 }
 
+/* --- FALLING PETALS --- */
 .petals-container {
     position: fixed;
     inset: 0;
@@ -49,36 +78,17 @@ body {
     100% { transform: translateY(110vh) rotate(720deg); }
 }
 
-/* --- HOMEPAGE LAYOUT FIXES (RESTORED) --- */
-
-/* Fix for the "Hi There" card size and spacing */
-main {
-    position: relative;
-    z-index: 10;
-    padding: 2rem 1rem;
-}
-
-/* Restores the border-left and layout of the intro card */
-.intro-section {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-cols: 1fr;
-    gap: 2rem;
-}
-
-/* --- REUSABLE COMPONENTS --- */
+/* --- REUSABLE GLASS COMPONENTS --- */
 .glass-card {
     background: var(--card-bg); 
     backdrop-filter: blur(16px); 
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--card-border);
-    border-radius: 2.5rem;
+    border-radius: 2rem;
     box-shadow: 0 8px 32px 0 rgba(247, 143, 179, 0.1);
-    transition: transform 0.3s ease;
 }
 
-/* The mint border-left visible in your screenshot */
+/* The mint border-left from your homepage cards */
 .border-mint {
     border-left: 4px solid var(--accent-mint);
 }
@@ -106,23 +116,9 @@ main {
     60% { transform: translateY(-3px); }
 }
 
-/* --- NAVIGATION --- */
-nav a {
-    font-weight: 700;
-    text-transform: lowercase; /* Matches your 'Services' 'Home' style */
-    font-size: 0.85rem;
-    color: var(--text-main);
-    transition: opacity 0.3s ease;
-}
-
-nav a:hover {
-    opacity: 0.7;
-}
-
-/* --- CUSTOM SCROLLBAR --- */
+/* --- ADMIN & UTILITY STYLES --- */
 .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
-    height: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
     background: #fff1f2;
@@ -132,16 +128,7 @@ nav a:hover {
     border-radius: 10px;
 }
 
-@keyframes slideInUp {
-    from { transform: translateY(100%) scale(0.9); opacity: 0; }
-    to { transform: translateY(0) scale(1); opacity: 1; }
-}
-
-.animate-pop {
-    animation: slideInUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-/* --- IMAGE LIGHTBOX --- */
+/* High-Quality Image Box (Replaces the "Hideous" Zoom) */
 .img-enlarge {
     position: fixed !important;
     top: 0 !important;
@@ -153,12 +140,12 @@ nav a:hover {
     z-index: 9999;
     cursor: zoom-out;
     padding: 40px;
-    transform: none !important;
 }
 
 /* --- ACCESSIBILITY --- */
+@import url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic.min.css');
+
 body.dark-theme { background-color: #121212 !important; color: #f3f4f6 !important; }
-body.dark-theme .glass-card { background-color: #1e1e1e !important; border-color: #333 !important; }
 body.reduced-motion * { animation: none !important; transition: none !important; }
 body.dyslexia-mode, body.dyslexia-mode * { font-family: 'OpenDyslexic', sans-serif !important; }
 body.high-contrast { filter: contrast(1.5); }
