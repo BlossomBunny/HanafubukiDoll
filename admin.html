@@ -1472,25 +1472,28 @@ async function handleArchive() {
 }
     
 async function deleteWaitlistEntry(id, handle) {
-    // 1. Safety check
-    if (!confirm(`Are you sure you want to remove ${handle} from the waitlist? This cannot be undone.`)) return;
+    if (!confirm(`Permanently remove ${handle} from the database?`)) return;
 
     try {
-        // 2. Delete from Supabase
-        const { error } = await _supabase
+        const { error, count } = await _supabase
             .from('waitlist')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .select(); // This is the magic part to verify it worked
 
         if (error) throw error;
 
-        // 3. Success! Refresh the table
-        alert(`${handle} has been removed.`);
-        renderWaitlist(); // This re-draws your list so the row disappears
+        if (count && count.length > 0) {
+            alert("✨ Successfully deleted from the database!");
+        } else {
+            alert("⚠️ The request went through, but no row was deleted. Check your RLS policy!");
+        }
+
+        fetchWaitlist(); 
 
     } catch (err) {
-        console.error("Delete Error:", err);
-        alert("Failed to delete: " + err.message);
+        console.error("Delete failed:", err);
+        alert("Error: " + err.message);
     }
 }
    
