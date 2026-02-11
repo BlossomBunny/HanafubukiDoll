@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priority Booking - HanafubukiDoll</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#fdfbfb]">
+    <div class="mesh-bg"></div>
+
+    <nav class="p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="text-2xl font-black tracking-tighter">🐰 HanafubukiDoll 🌸</div>
+        </div>
+    </nav>
+        
+    <main class="max-w-3xl mx-auto relative z-10 p-6 md:p-10">
+        <div class="glass-card p-8 mb-10 text-center border-b-4 border-pink-400">
+            <h1 class="text-3xl font-black tracking-tighter text-gray-800">Priority Commission Slot ✨</h1>
+            <p class="text-sm text-pink-500 font-bold mt-2 uppercase tracking-widest">Thank you so much for your patience on our waitlist! ♡</p>
+            <p class="text-xs text-gray-500 mt-4 leading-relaxed">Please fill out your details below to convert your waitlist spot into an active enquiry. We'll review this and get back to you shortly.</p>
+        </div>
+
+        <form id="bookingForm" class="space-y-8 pb-20 animate-fadeIn">
+            <div class="glass-card p-8 space-y-6">
+                <h2 class="text-2xl font-black tracking-tighter">1. Your Details</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="custName" placeholder="Full Name*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none focus:ring-2 ring-pink-200">
+                    <input type="text" id="socialHandle" placeholder="Social Handle (@...)" class="w-full p-4 rounded-xl border border-pink-100 outline-none">
+                    <input type="text" id="Country" placeholder="Country (e.g. USA)" required class="w-full p-4 rounded-xl border border-pink-100 outline-none">
+                    <input type="email" id="custEmail" placeholder="Email Address*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <h2 class="text-2xl font-black tracking-tighter px-4">2. Service Details</h2>
+                <div class="glass-card p-6 border-l-4 border-pink-400">
+                    <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest mb-4">Face-Up & Doll Info</h3>
+                    <select id="faceupBase" onchange="toggleDollDetails()" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
+                        <option value="None">No Faceup Needed</option>
+                        <option value="Standard Face-Up">Standard Face-Up</option>
+                        <option value="Face-Up + Smartdoll Head (Bundle)">Face-Up + Smartdoll Head (Bundle)</option>
+                        <option value="Face-Up + Dollfie Dream Head (Bundle)">Face-Up + Dollfie Dream Head (Bundle)</option>
+                    </select>
+                    <div id="bundle-sm-head" class="hidden mb-4"><select id="sm-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100"></select></div>
+                    <div id="bundle-dd-head" class="hidden mb-4"><select id="dd-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100"></select></div>
+                    
+                    <div id="dollDetails" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <input type="text" id="dollCompany" placeholder="Doll Company*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20">
+                        <input type="text" id="dollSculpt" placeholder="Doll Sculpt*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20">
+                    </div>
+                    <input type="text" id="dollSkintone" placeholder="Skintone*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20 mb-4">
+                    <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
+                    <input type="file" id="faceupFiles" multiple class="mt-4 text-[10px]">
+                </div>
+
+                </div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-pink-500 text-white py-5 rounded-3xl font-black shadow-xl hover:scale-[1.02] transition-all">
+                Submit Request ✨
+            </button>
+        </form>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+   const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// --- STOCK LOGIC ---
+// Keeps the bundle options synced with what you actually have in stock
+async function syncFormWithStock() {
+    const { data: stock, error } = await _supabase.from('inventory').select('*');
+    if (error) {
+        console.error("Stock sync failed:", error);
+        return;
+    }
+
+    // Sync Smartdoll Bundle Options
+    const smHeads = stock.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0);
+    const smBundleOpt = document.getElementById('opt-sm-bundle');
+    const smSelect = document.getElementById('sm-head-sculpt-select');
+    if (smBundleOpt && smSelect) {
+        if (smHeads.length === 0) {
+            smBundleOpt.disabled = true;
+            smBundleOpt.textContent = 'Face-Up + Smartdoll Head (SOLD OUT)';
+            smBundleOpt.style.opacity = '0.6';
+        } else {
+            smSelect.innerHTML = smHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
+        }
+    }
+
+    // Sync Dollfie Dream Bundle Options
+    const ddHeads = stock.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0);
+    const ddBundleOpt = document.getElementById('opt-dd-bundle');
+    const ddSelect = document.getElementById('dd-head-sculpt-select');
+    if (ddBundleOpt && ddSelect) {
+        if (ddHeads.length === 0) {
+            ddBundleOpt.disabled = true;
+            ddBundleOpt.textContent = 'Face-Up + Dollfie Dream Head (SOLD OUT)';
+            ddBundleOpt.style.opacity = '0.6';
+        } else {
+            ddSelect.innerHTML = ddHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
+        }
+    }
+}
+
+// Simple toggle for the doll detail fields
+function toggleDollDetails() {
+    const selection = document.getElementById('faceupBase').value;
+    const dollDetailsBox = document.getElementById('dollDetails');
+    const smBundleBox = document.getElementById('bundle-sm-head');
+    const ddBundleBox = document.getElementById('bundle-dd-head');
+    const skintoneInput = document.getElementById('dollSkintone');
+
+    [dollDetailsBox, smBundleBox, ddBundleBox].forEach(el => el?.classList.add('hidden'));
+
+    if (selection === 'Standard Face-Up') {
+        dollDetailsBox?.classList.remove('hidden');
+        skintoneInput?.closest('.space-y-4')?.classList.remove('hidden'); 
+    } else if (selection === 'Face-Up + Smartdoll Head (Bundle)') {
+        smBundleBox?.classList.remove('hidden');
+        skintoneInput?.closest('.space-y-4')?.classList.add('hidden'); 
+    } else if (selection === 'Face-Up + Dollfie Dream Head (Bundle)') {
+        ddBundleBox?.classList.remove('hidden');
+        skintoneInput?.closest('.space-y-4')?.classList.add('hidden'); 
+    }
+}
+
+// --- SUBMISSION LOGIC ---
+document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.innerText = "Sending... ✨";
+    btn.disabled = true;
+
+    // Utility to handle multiple image uploads to Supabase Storage
+    const uploadSet = async (fileInputId) => {
+        const files = document.getElementById(fileInputId)?.files;
+        if (!files || files.length === 0) return [];
+        const urls = [];
+        for (const file of files) {
+            const path = `refs/${Date.now()}-${file.name}`;
+            const { data } = await _supabase.storage.from('references').upload(path, file);
+            if (data) {
+                const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
+                urls.push(pUrl.publicUrl);
+            }
+        }
+        return urls;
+    };
+
+    // Determine final sculpt/company based on bundle selection
+    const fBase = document.getElementById('faceupBase').value;
+    let finalSculpt = document.getElementById('dollSculpt').value;
+    let finalCompany = document.getElementById('dollCompany').value;
+
+    if (fBase.includes('Smartdoll')) {
+        finalSculpt = document.getElementById('sm-head-sculpt-select').value;
+        finalCompany = "Smartdoll";
+    } else if (fBase.includes('Dollfie')) {
+        finalSculpt = document.getElementById('dd-head-sculpt-select').value;
+        finalCompany = "Volks";
+    }
+
+    // Build detail objects only if services are selected
+    const faceupDetails = (fBase !== "None") ? { 
+        base: fBase, 
+        notes: document.getElementById('faceupNotes')?.value, 
+        images: await uploadSet('faceupFiles') 
+    } : null;
+
+    const maniDetails = (document.getElementById('maniBase').value !== "None") ? { 
+        base: document.getElementById('maniBase').value, 
+        addons: document.getElementById('pediAddon').checked ? ['Pedicure'] : [], 
+        notes: document.getElementById('maniNotes')?.value, 
+        images: await uploadSet('maniFiles') 
+    } : null;
+
+    const eyeDetails = (document.getElementById('eyeBase').value !== "None") ? { 
+        base: document.getElementById('eyeBase').value, 
+        notes: document.getElementById('eyeNotes')?.value, 
+        images: await uploadSet('eyeFiles') 
+    } : null;
+
+    // Send the full request to Supabase
+    const { error } = await _supabase.from('commissions').insert([{
+        customer_name: document.getElementById('custName').value,
+        customer_email: document.getElementById('custEmail').value,
+        social_handle: document.getElementById('socialHandle').value,
+        country: document.getElementById('Country').value,
+        doll_company: finalCompany,
+        doll_sculpt: finalSculpt,
+        doll_skintone: document.getElementById('dollSkintone').value || 'N/A',
+        faceup_details: faceupDetails,
+        manicure_details: maniDetails,
+        eye_details: eyeDetails,
+        status: 'Enquiry' / Stays as a standard Enquiry
+    }]);
+
+    if (!error) { 
+        alert("Thank you! Your request has been sent. ♡"); 
+        window.location.href = "index.html"; 
+    } else { 
+        alert("Error: " + error.message); 
+        btn.disabled = false; 
+        btn.innerText = "Submit ✨"; 
+    }
+});
+
+// Run sync on load
+window.onload = () => {
+    syncFormWithStock();
+};
+    </script>
+</body>
+</html>
