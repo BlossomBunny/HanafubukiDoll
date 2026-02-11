@@ -169,21 +169,18 @@
         <p class="text-[9px] text-gray-300 mt-2 uppercase font-bold">Returning home...</p>
     </div>
 </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-   const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
+const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
-// --- STOCK LOGIC ---
+
+// --- 1. Stock Sync Logic ---
 async function syncFormWithStock() {
     const { data: stock, error } = await _supabase.from('inventory').select('*');
-    if (error) {
-        console.error("Stock sync failed:", error);
-        return;
-    }
+    if (error) return console.error("Stock sync failed:", error);
 
-    // Sync Smartdoll Bundle Options
+    // Smartdoll Heads
     const smHeads = stock.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0);
     const smBundleOpt = document.getElementById('opt-sm-bundle');
     const smSelect = document.getElementById('sm-head-sculpt-select');
@@ -191,13 +188,12 @@ async function syncFormWithStock() {
         if (smHeads.length === 0) {
             smBundleOpt.disabled = true;
             smBundleOpt.textContent = 'Face-Up + Smartdoll Head (SOLD OUT)';
-            smBundleOpt.style.opacity = '0.6';
         } else {
             smSelect.innerHTML = smHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
         }
     }
 
-    // Sync Dollfie Dream Bundle Options
+    // Dollfie Dream Heads
     const ddHeads = stock.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0);
     const ddBundleOpt = document.getElementById('opt-dd-bundle');
     const ddSelect = document.getElementById('dd-head-sculpt-select');
@@ -205,50 +201,46 @@ async function syncFormWithStock() {
         if (ddHeads.length === 0) {
             ddBundleOpt.disabled = true;
             ddBundleOpt.textContent = 'Face-Up + Dollfie Dream Head (SOLD OUT)';
-            ddBundleOpt.style.opacity = '0.6';
         } else {
             ddSelect.innerHTML = ddHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
         }
     }
 }
 
-// Simple toggle for the doll detail fields
+// --- 2. UI Toggles ---
 function toggleDollDetails() {
     const selection = document.getElementById('faceupBase').value;
     const dollDetailsBox = document.getElementById('dollDetails');
     const smBundleBox = document.getElementById('bundle-sm-head');
     const ddBundleBox = document.getElementById('bundle-dd-head');
-    const skintoneInput = document.getElementById('dollSkintone');
 
+    // Reset visibility
     [dollDetailsBox, smBundleBox, ddBundleBox].forEach(el => el?.classList.add('hidden'));
 
     if (selection === 'Standard Face-Up') {
         dollDetailsBox?.classList.remove('hidden');
-        skintoneInput?.closest('.space-y-4')?.classList.remove('hidden'); 
     } else if (selection === 'Face-Up + Smartdoll Head (Bundle)') {
         smBundleBox?.classList.remove('hidden');
-        skintoneInput?.closest('.space-y-4')?.classList.add('hidden'); 
     } else if (selection === 'Face-Up + Dollfie Dream Head (Bundle)') {
         ddBundleBox?.classList.remove('hidden');
-        skintoneInput?.closest('.space-y-4')?.classList.add('hidden'); 
     }
 }
 
-// --- SUBMISSION LOGIC ---
+// --- 3. Submission Logic ---
 document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
     btn.innerText = "Sending... ✨";
     btn.disabled = true;
 
-
+    // Helper for file uploads
     const uploadSet = async (fileInputId) => {
         const files = document.getElementById(fileInputId)?.files;
         if (!files || files.length === 0) return [];
         const urls = [];
         for (const file of files) {
             const path = `refs/${Date.now()}-${file.name}`;
-            const { data } = await _supabase.storage.from('references').upload(path, file);
+            const { data, error } = await _supabase.storage.from('references').upload(path, file);
             if (data) {
                 const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
                 urls.push(pUrl.publicUrl);
@@ -257,62 +249,72 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         return urls;
     };
 
-    const fBase = document.getElementById('faceupBase').value;
-    let finalSculpt = document.getElementById('dollSculpt').value;
-    let finalCompany = document.getElementById('dollCompany').value;
+    try {
+        const fBase = document.getElementById('faceupBase').value;
+        let finalSculpt = document.getElementById('dollSculpt').value;
+        let finalCompany = document.getElementById('dollCompany').value;
+        let finalSkintone = document.getElementById('dollSkintone').value || 'Included in Bundle';
 
-    if (fBase.includes('Smartdoll')) {
-        finalSculpt = document.getElementById('sm-head-sculpt-select').value;
-        finalCompany = "Smartdoll";
-    } else if (fBase.includes('Dollfie')) {
-        finalSculpt = document.getElementById('dd-head-sculpt-select').value;
-        finalCompany = "Volks";
+        // Override if bundle is selected
+        if (fBase.includes('Smartdoll')) {
+            finalSculpt = document.getElementById('sm-head-sculpt-select').value;
+            finalCompany = "Smartdoll";
+        } else if (fBase.includes('Dollfie')) {
+            finalSculpt = document.getElementById('dd-head-sculpt-select').value;
+            finalCompany = "Volks";
+        }
+
+        const faceupDetails = (fBase !== "None") ? { 
+            base: fBase, 
+            notes: document.getElementById('faceupNotes')?.value, 
+            images: await uploadSet('faceupFiles') 
+        } : null;
+
+        const maniDetails = (document.getElementById('maniBase').value !== "None") ? { 
+            base: document.getElementById('maniBase').value, 
+            addons: document.getElementById('pediAddon').checked ? ['Pedicure'] : [], 
+            notes: document.getElementById('maniNotes')?.value, 
+            images: await uploadSet('maniFiles') 
+        } : null;
+
+        const eyeDetails = (document.getElementById('eyeBase').value !== "None") ? { 
+            base: document.getElementById('eyeBase').value, 
+            notes: document.getElementById('eyeNotes')?.value, 
+            images: await uploadSet('eyeFiles') 
+        } : null;
+
+        const { error } = await _supabase.from('commissions').insert([{
+            customer_name: document.getElementById('custName').value,
+            customer_email: document.getElementById('custEmail').value,
+            social_handle: document.getElementById('socialHandle').value,
+            country: document.getElementById('Country').value,
+            doll_company: finalCompany,
+            doll_sculpt: finalSculpt,
+            doll_skintone: finalSkintone,
+            faceup_details: faceupDetails,
+            manicure_details: maniDetails,
+            eye_details: eyeDetails,
+            status: 'Enquiry'
+        }]);
+
+        if (error) throw error;
+
+        // --- Trigger Cute Sparkle Modal ---
+        const modal = document.getElementById('successModal');
+        const progressBar = document.getElementById('redirectProgress');
+        modal.classList.remove('hidden');
+        setTimeout(() => { progressBar.style.width = '100%'; }, 100);
+        setTimeout(() => { window.location.href = "index.html"; }, 3500);
+
+    } catch (err) {
+        console.error("Submission Error:", err);
+        alert("Oops! " + err.message); // Using standard alert here as a backup for errors
+        btn.disabled = false;
+        btn.innerText = "Submit Commission Request ✨";
     }
+});
 
-   
-    const faceupDetails = (fBase !== "None") ? { 
-        base: fBase, 
-        notes: document.getElementById('faceupNotes')?.value, 
-        images: await uploadSet('faceupFiles') 
-    } : null;
-
-    const maniDetails = (document.getElementById('maniBase').value !== "None") ? { 
-        base: document.getElementById('maniBase').value, 
-        addons: document.getElementById('pediAddon').checked ? ['Pedicure'] : [], 
-        notes: document.getElementById('maniNotes')?.value, 
-        images: await uploadSet('maniFiles') 
-    } : null;
-
-    const eyeDetails = (document.getElementById('eyeBase').value !== "None") ? { 
-        base: document.getElementById('eyeBase').value, 
-        notes: document.getElementById('eyeNotes')?.value, 
-        images: await uploadSet('eyeFiles') 
-    } : null;
-
-   // Send the full request to Supabase
-    const { error } = await _supabase.from('commissions').insert([{
-        customer_name: document.getElementById('custName').value,
-        customer_email: document.getElementById('custEmail').value,
-        social_handle: document.getElementById('socialHandle').value,
-        country: document.getElementById('Country').value,
-        doll_company: finalCompany,
-        doll_sculpt: finalSculpt,
-        doll_skintone: document.getElementById('dollSkintone').value || 'N/A',
-        faceup_details: faceupDetails,
-        manicure_details: maniDetails,
-        eye_details: eyeDetails,
-        status: 'Enquiry' // Fixed syntax error here
-    }]);
-
-    if (!error) { 
-        alert("✨ Thank you! Your request has been sent successfully. We will be in contact shortly via email. ♡"); 
-        window.location.href = "index.html"; 
-    } else { 
-        console.error("Submission error:", error);
-        alert("Oops! Submission failed: " + error.message); 
-        btn.disabled = false; 
-        btn.innerText = "Submit ✨"; 
-    }
+window.onload = syncFormWithStock;
     </script>
 </body>
 </html>
