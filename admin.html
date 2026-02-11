@@ -878,9 +878,27 @@ async function openDrawer(id) {
                     ${renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')}
                 </div>
 
-                <button id="saveBtn" onclick="saveJobChanges()" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-black text-xs uppercase">Save Changes ♡</button>
-            </div>`;
+               <div class="flex flex-col gap-3 pt-4">
+    <div class="flex gap-3">
 
+${['Enquiry', 'Quote'].includes(job.status) ? `
+    <button onclick="showDeclineModal('${job.id}', '${job.email || ''}', '${job.social_handle || ''}')" 
+            class="px-6 py-4 bg-rose-50 text-rose-500 rounded-2xl font-black text-[10px] uppercase border border-rose-100 hover:bg-rose-100 transition-colors">
+        Decline & Archive
+    </button>
+` : ''}
+        
+        <button id="saveBtn" onclick="saveJobChanges()" 
+                class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all">
+            Save Changes ♡
+        </button>
+    </div>
+    
+    <button onclick="closeDrawer()" 
+            class="w-full py-3 bg-gray-100 text-gray-400 rounded-2xl font-black text-[10px] uppercase">
+        Cancel
+    </button>
+</div>
         drawer.classList.remove('translate-x-full');
     } catch (err) { console.error(err); }
 }
@@ -1270,7 +1288,7 @@ async function confirmDeclineAndSend() {
                 status: 'Declined',
                 archived: true,
                 decline_reason: reasonSelect.value + (document.getElementById('declineNotes').value ? ' | ' + document.getElementById('declineNotes').value : '')
-                // No updated_at here anymore
+            
             })
             .eq('id', currentDeclineJobId);
         if (updateError) throw updateError;
@@ -1386,7 +1404,7 @@ async function handleArchive() {
         </div>
     </div>
 </div>
-    <!-- Add this new modal HTML right after the declineModal (before </body>) -->
+
 <div id="eventModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[999] hidden">
     <div class="bg-white rounded-3xl p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
         <div class="flex justify-between items-center mb-6">
