@@ -437,8 +437,7 @@ async function renderWaitlist() {
     if (!countEl || !tableBody) return;
 
     try {
-        // Fetch all entries so we can see both 'pending' and 'Email Sent!'
-        const { data: waitlist, error } = await _supabase
+               const { data: waitlist, error } = await _supabase
             .from('waitlist')
             .select('*')
             .order('created_at', { ascending: false });
@@ -487,12 +486,11 @@ async function renderWaitlist() {
                         <span class="px-4 py-2 text-[10px] font-black uppercase text-gray-300 italic">Invited</span>
                     `}
 
-                    <button onclick="deleteWaitlistEntry('${entry.id}')" 
-                            class="p-2 text-gray-300 hover:text-rose-500 transition-colors"
-                            title="Delete Entry">
-                        🗑️
-                    </button>
-                </td>
+                   <button 
+    onclick="deleteWaitlistEntry('${item.id}', '${item.handle}')"
+    style="background-color: #fee2e2; color: #ef4444; padding: 4px 8px; border-radius: 6px; font-size: 12px;"
+>🗑️</button>
+            </td>
             </tr>
         `}).join('') || '<tr><td colspan="6" class="p-10 text-center text-gray-300 italic">The waitlist is empty! ♡</td></tr>';
         
@@ -1473,10 +1471,27 @@ async function handleArchive() {
     }
 }
     
-async function deleteWaitlistEntry(id) {
-    if (!confirm("Remove this person from the waitlist?")) return;
-    const { error } = await _supabase.from('waitlist').delete().eq('id', id);
-    if (!error) renderWorkbench();
+async function deleteWaitlistEntry(id, handle) {
+    // 1. Safety check
+    if (!confirm(`Are you sure you want to remove ${handle} from the waitlist? This cannot be undone.`)) return;
+
+    try {
+        // 2. Delete from Supabase
+        const { error } = await _supabase
+            .from('waitlist')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        // 3. Success! Refresh the table
+        alert(`${handle} has been removed.`);
+        renderWaitlist(); // This re-draws your list so the row disappears
+
+    } catch (err) {
+        console.error("Delete Error:", err);
+        alert("Failed to delete: " + err.message);
+    }
 }
    
 </script>
