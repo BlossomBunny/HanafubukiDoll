@@ -1,41 +1,10 @@
-/* Global Header Styling */
-.studio-header {
-    width: 100%;
-    padding: 1.5rem 2.5rem;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(12px);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    border-bottom: 1px solid #fce7f3;
-}
-
-.nav-link {
-    font-size: 10px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #1f2937;
-    transition: color 0.2s;
-}
-
-.nav-link:hover {
-    color: #f472b6;
-}
-
-
 /* --- BRAND VARIABLES --- */
 :root {
     --bg-main: #ffffff;
-    --text-main: #e84a7c;          /* Sakura-rose pink */
-    --text-muted: #f4a3c9;         /* Lighter muted pink */
-    --accent-pink: #f78fb3;        /* Primary pastel pink */
-    --accent-mint: #a7e9d0;        /* Your pastel mint */
-    /* UPDATED: Lowered alpha to 0.6 for better glass transparency */
+    --text-main: #e84a7c;
+    --text-muted: #f4a3c9;
+    --accent-pink: #f78fb3;
+    --accent-mint: #a7e9d0;
     --card-bg: rgba(255, 251, 253, 0.6); 
     --card-border: rgba(255, 200, 230, 0.5);
     --mesh-opacity: 0.04;
@@ -49,7 +18,7 @@ body {
     overflow-x: hidden;
 }
 
-/* --- MESH BACKGROUND --- */
+/* --- MESH & ANIMATIONS --- */
 .mesh-bg {
     position: fixed;
     inset: 0;
@@ -60,7 +29,6 @@ body {
     pointer-events: none;
 }
 
-/* --- FALLING PETALS ANIMATION --- */
 .petals-container {
     position: fixed;
     inset: 0;
@@ -70,7 +38,6 @@ body {
 
 .petal {
     position: absolute;
-    /* UPDATED: Lowered to 0.35 for a subtle background feel */
     opacity: 0.35; 
     animation: fall 22s linear infinite;
     will-change: transform;
@@ -81,49 +48,13 @@ body {
     100% { transform: translateY(110vh) rotate(720deg); }
 }
 
-/* --- BUTTON COMPONENTS --- */
-.nav-btn {
-    font-weight: 700;
-    /* Updated: using 'clamp' to make font size fluid between mobile and desktop */
-    font-size: clamp(0.65rem, 2vw, 0.75rem); 
-    padding: 0.5rem 1rem;
-    border-radius: 9999px;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    white-space: nowrap; /* Prevents the text inside the button from breaking */
-}
-
-@media (min-width: 768px) {
-    .nav-btn {
-        padding: 0.6rem 1.25rem;
-    }
-}
-
-/* --- REUSABLE GLASS COMPONENTS --- */
+/* --- REUSABLE COMPONENTS --- */
 .glass-card {
-    /* Lower opacity (0.6) allows you to see the blurred background petals through the box */
     background: rgba(255, 251, 253, 0.6); 
     backdrop-filter: blur(16px); 
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--card-border);
-    border-radius: 2rem;
     box-shadow: 0 8px 32px 0 rgba(247, 143, 179, 0.1);
-}
-.gallery-placeholder {
-    background: linear-gradient(135deg, rgba(255,240,247,0.4), rgba(240,255,249,0.4));
-    backdrop-filter: blur(4px);
-    border-radius: 2rem;
-    aspect-ratio: 1 / 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.4s ease;
-    border: 1px solid var(--card-border);
 }
 
 .pulse-dot {
@@ -138,11 +69,9 @@ body {
     70%      { transform: scale(1.15); box-shadow: 0 0 0 10px rgba(167,233,208,0); }
 }
 
-/* --- BUNNY BOUNCE ANIMATION --- */
 .bounce-bunny {
     display: inline-block;
     animation: bunny-hop 3s ease-in-out infinite;
-    cursor: default;
 }
 
 @keyframes bunny-hop {
@@ -151,15 +80,10 @@ body {
     60% { transform: translateY(-3px); }
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.animate-fadeIn {
-    animation: fadeIn 0.4s ease-out forwards;
-}
+/* --- CUSTOM SCROLLBAR (Unified) --- */
 .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
+    height: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
     background: #fff1f2;
@@ -168,133 +92,27 @@ body {
     background: #f472b6;
     border-radius: 10px;
 }
-/* --- Accessibility Styles --- */
-@import url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic.min.css');
 
-/* Dark Mode */
-body.dark-theme {
-    background-color: #121212 !important;
-    color: #f3f4f6 !important;
-}
-body.dark-theme .glass-card, 
-body.dark-theme nav, 
-body.dark-theme #accessMenu {
-    background-color: #1e1e1e !important;
-    border-color: #333 !important;
-    color: white !important;
-}
-
-/* Reduced Motion */
-body.reduced-motion * {
-    animation: none !important;
-    transition: none !important;
-}
-
-/* Dyslexia Font */
-body.dyslexia-mode, body.dyslexia-mode * {
-    font-family: 'OpenDyslexic', sans-serif !important;
-}
-
-/* High Contrast */
-body.high-contrast {
-    filter: contrast(1.5);
-    background: white;
-}
-body.high-contrast * {
-    border-color: black !important;
-}
-
-/* In your <style type="text/tailwindcss"> or external style.css */
-#calendar .fc {
-    --fc-border-color: rgba(255, 182, 193, 0.3); /* Soft pink border */
-    --fc-daygrid-event-dot-width: 8px;
-}
-
-#calendar .fc-daygrid-day-frame {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(8px);
-    border-radius: 1rem;
-    border: 1px solid rgba(255, 182, 193, 0.2);
-}
-
-#calendar .fc-daygrid-day-top {
-    color: #ec4899; /* Pink for day numbers */
-    font-weight: 600;
-}
-
-#calendar .fc-day-today {
-    background: rgba(236, 72, 153, 0.1) !important; /* Subtle pink highlight */
-}
-
-#calendar .fc-button {
-    @apply bg-pink-50 text-pink-600 hover:bg-pink-100 rounded-full font-bold;
-}
-
-#calendar .fc-toolbar-title {
-    @apply text-2xl font-black italic text-gray-800;
-}
-/* Container for the horizontal scroll */
-.ref-gallery {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    scrollbar-width: thin;
-    scrollbar-color: #fce7f3 transparent;
-}
-
-/* Force images to stay as consistent small squares */
-.ref-img {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 1rem;
-    flex-shrink: 0; /* Prevents images from squishing */
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    cursor: zoom-in;
-    transition: transform 0.2s;
-}
-
-.ref-img:hover {
-    transform: scale(1.05);
-}
-
-/* Simple zoom effect when clicked */
-.ref-img.is-zoomed {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(4);
-    z-index: 1000;
-    width: auto;
-    height: auto;
-    max-width: 90vw;
-    max-height: 90vh;
-    object-fit: contain;
-    cursor: zoom-out;
-    box-shadow: 0 0 100px rgba(0,0,0,0.5);
-    border: none;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-    height: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #fce7f3;
-    border-radius: 10px;
-}
+/* --- IMAGE LIGHTBOX (The Fix) --- */
 .img-enlarge {
     position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) scale(4) !important;
-    z-index: 9999;
-    width: auto !important;
-    height: auto !important;
-    max-width: 90vw;
-    max-height: 90vh;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
     object-fit: contain !important;
-    box-shadow: 0 0 100px rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.9);
+    z-index: 9999;
     cursor: zoom-out;
+    padding: 40px;
+    transform: none !important;
 }
+
+/* --- ACCESSIBILITY --- */
+@import url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic.min.css');
+
+body.dark-theme { background-color: #121212 !important; color: #f3f4f6 !important; }
+body.dark-theme .glass-card { background-color: #1e1e1e !important; border-color: #333 !important; }
+body.reduced-motion * { animation: none !important; transition: none !important; }
+body.dyslexia-mode, body.dyslexia-mode * { font-family: 'OpenDyslexic', sans-serif !important; }
+body.high-contrast { filter: contrast(1.5); }
