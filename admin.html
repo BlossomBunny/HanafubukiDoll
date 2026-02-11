@@ -893,16 +893,18 @@ ${['Enquiry', 'Quote'].includes(job.status) ? `
             Save Changes ♡
         </button>
     </div>
-    
-    <button onclick="closeDrawer()" 
-            class="w-full py-3 bg-gray-100 text-gray-400 rounded-2xl font-black text-[10px] uppercase">
-        Cancel
-    </button>
-</div>
+            <button onclick="closeDrawer()" 
+                    class="w-full py-3 bg-gray-100 text-gray-400 rounded-2xl font-black text-[10px] uppercase">
+                Cancel
+            </button>
+        </div>`; // Make sure the backtick for innerHTML is closed here
+
         drawer.classList.remove('translate-x-full');
-    } catch (err) { console.error(err); }
+
+    } catch (err) { 
+        console.error("Open drawer error:", err); 
+    }
 }
-    
     
     function renderServiceBlock(job, key, title, color) {
     const data = job[`${key}_details`];
