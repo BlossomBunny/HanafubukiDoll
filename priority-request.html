@@ -234,20 +234,28 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     btn.disabled = true;
 
     // Helper for file uploads
-    const uploadSet = async (fileInputId) => {
-        const files = document.getElementById(fileInputId)?.files;
-        if (!files || files.length === 0) return [];
-        const urls = [];
-        for (const file of files) {
-            const path = `refs/${Date.now()}-${file.name}`;
-            const { data, error } = await _supabase.storage.from('references').upload(path, file);
-            if (data) {
-                const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
-                urls.push(pUrl.publicUrl);
-            }
+   const uploadSet = async (fileInputId) => {
+    const files = document.getElementById(fileInputId)?.files;
+    if (!files || files.length === 0) return [];
+    
+    const urls = [];
+    for (let file of files) {
+  
+        if (file.type.startsWith('image/')) {
+            console.log(`Shrinking ${file.name}...`);
+            file = await resizeImage(file, 1200, 0.7); 
         }
-        return urls;
-    };
+
+        const path = `refs/${Date.now()}-${file.name}`;
+        const { data, error } = await _supabase.storage.from('references').upload(path, file);
+        
+        if (data) {
+            const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
+            urls.push(pUrl.publicUrl);
+        }
+    }
+    return urls;
+};
 
     try {
         const fBase = document.getElementById('faceupBase').value;
