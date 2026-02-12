@@ -205,4 +205,19 @@ main {
 body.dark-theme { background-color: #121212 !important; color: #f3f4f6 !important; }
 body.reduced-motion * { animation: none !important; transition: none !important; }
 body.dyslexia-mode, body.dyslexia-mode * { font-family: 'OpenDyslexic', sans-serif !important; }
-body.high-contrast { filter: contrast(1.5); }
+body.high-contrast { 
+    background-color: #ffffff !important; 
+    color: #000000 !important;
+}
+
+body.high-contrast #accessMenu,
+body.high-contrast .access-btn,
+body.high-contrast .fixed {
+    position: fixed !important;
+    transform: translateZ(0); 
+}
+
+body.high-contrast * {
+    border-color: #000 !important;
+    text-shadow: none !important;
+}
