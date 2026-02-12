@@ -260,6 +260,13 @@ async function openDrawer(id) {
         }
     }
 }
+        function closeDrawer() {
+    const drawer = document.getElementById('editDrawer');
+    if (drawer) {
+        drawer.classList.add('translate-x-full');
+    }
+    activeJobId = null;
+}
     function renderServiceBlock(job, key, title, color) {
     const data = job[`${key}_details`];
     if (!data) return '';
@@ -445,14 +452,13 @@ async function saveJobChanges() {
             "success"
         );
 
-        setTimeout(() => {
+       setTimeout(() => {
             closeDrawer();
             renderworkbench(false);
-            renderSummary();
+            
             btn.innerText = "Save All Changes ♡";
             btn.disabled = false;
         }, 800);
-
     } catch (e) {
         console.error("Save error:", e);
         btn.innerText = "Error! ❌";
@@ -473,7 +479,6 @@ async function saveJobChanges() {
             renderworkbench(false);
         }
 
-        // Init
         document.addEventListener('DOMContentLoaded', () => renderworkbench(false));
     </script>
 </body>
