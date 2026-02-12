@@ -597,9 +597,93 @@ async function confirmDeclineAndSend() {
         alert("Something went wrong: " + err.message);
     }
 }
+        async function handleLogout() {
+    try {
+        const { error } = await _supabase.auth.signOut();
+        if (error) throw error;
+        localStorage.removeItem('hana_active_tab');
+        window.location.href = 'login.html';
+    } catch (err) {
+        console.error("Logout error:", err);
+        alert("Logout failed.");
+    }
+}
 
         document.addEventListener('DOMContentLoaded', () => renderworkbench(false));
     </script>
+     <div id="declineModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[999] hidden">
+    <div class="bg-white rounded-3xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-black italic text-rose-600">Decline Order</h2>
+            <button onclick="closeDeclineModal()" class="text-3xl text-gray-400 hover:text-rose-600">&times;</button>
+        </div>
+
+        <p class="text-gray-600 mb-6">This will set status to <strong>Declined</strong>, archive the order, and (optionally) send a polite email to the client.</p>
+
+        <label class="block text-[11px] font-black uppercase text-gray-500 mb-2">Reason for Decline</label>
+        <select id="declineReason" class="w-full p-4 border border-rose-100 rounded-2xl text-sm mb-6 focus:ring-rose-200" onchange="updateEmailPreview()">
+            <option value="">-- Select a reason --</option>
+            <option value="capacity">Currently at full capacity / waitlist closed</option>
+            <option value="scope">Project scope or requirements not a good fit for our services</option>
+            <option value="timing">Timeline does not align with current schedule</option>
+            <option value="complexity">Complexity exceeds our current capabilities</option>
+            <option value="other">Other (please specify below)</option>
+        </select>
+
+        <label class="block text-[11px] font-black uppercase text-gray-500 mb-2 mt-4">Additional notes / custom message (optional)</label>
+        <textarea id="declineNotes" class="w-full p-4 border border-rose-100 rounded-2xl h-24 text-sm focus:ring-rose-200" placeholder="Extra context or personal touch..."></textarea>
+
+        <div class="mt-8">
+    <h3 id="emailPreviewTitle"
+        class="text-lg font-bold text-gray-800 mb-3">
+        Email Preview
+    </h3>
+
+    <div id="emailPreview"
+         class="bg-gray-50 p-6 rounded-2xl border border-gray-200 text-sm whitespace-pre-wrap font-mono leading-relaxed">
+    </div>
+</div>
+
+        <div class="mt-8 flex gap-4 justify-end">
+            <button onclick="closeDeclineModal()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-300">Cancel</button>
+            <button onclick="confirmDeclineAndSend()" class="px-8 py-3 bg-rose-600 text-white rounded-2xl font-black uppercase hover:bg-rose-700 shadow-lg">Send Email & Decline</button>
+        </div>
+    </div>
+</div>
+  <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
+        <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Studio Management</p>
+        <p class="text-[9px] text-gray-300 uppercase tracking-widest font-bold">Internal Use Only 🌸</p>
+    </footer>
+
+    <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
+        <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden animate-fadeIn mb-2">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility Settings</h3>
+                <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 hover:text-pink-500 text-2xl">&times;</button>
+            </div>
+            <div class="space-y-5">
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dark Mode</span>
+                    <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
+                </label>
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Reduce Motion</span>
+                    <input type="checkbox" id="motionToggle" onchange="ComfortSettings.update('reduced-motion', this.checked)" class="w-5 h-5 accent-pink-500">
+                </label>
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dyslexia Font</span>
+                    <input type="checkbox" id="dyslexiaToggle" onchange="ComfortSettings.update('dyslexia-mode', this.checked)" class="w-5 h-5 accent-pink-500">
+                </label>
+            </div>
+        </div>
+        <button onclick="ComfortSettings.toggleMenu()" class="access-btn flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all">
+            <span>⚙️</span>
+            <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Settings</span>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="global-scripts.js"></script>
 </body>
 </html>
   
