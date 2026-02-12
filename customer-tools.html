@@ -138,39 +138,6 @@
         </div>
     </main>
 
-    <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
-        <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Aesthetic Studio</p>
-        <a href="login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors uppercase tracking-widest font-bold">Staff Access 🔒</a>
-    </footer>
-
-    <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
-        <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden mb-2 animate-fadeIn">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility Settings</h3>
-                <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 text-2xl">&times;</button>
-            </div>
-            <div class="space-y-5">
-                <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dark Mode</span>
-                    <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
-                <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dyslexia Font</span>
-                    <input type="checkbox" id="dyslexiaToggle" onchange="ComfortSettings.update('dyslexia-mode', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
-                <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">High Contrast</span>
-                    <input type="checkbox" id="contrastToggle" onchange="ComfortSettings.update('high-contrast', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
-            </div>
-        </div>
-        <button onclick="ComfortSettings.toggleMenu()" class="access-btn flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all">
-            <span>⚙️</span>
-            <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Accessibility Settings</span>
-        </button>
-    </div>
-
-    <script src="globalscripts.js"></script>
     <script>
         let selectedElement = null;
         let topZIndex = 100;
@@ -284,10 +251,13 @@
             if (selectedElement) selectedElement.classList.add('selected');
         }
     </script>
-    <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
-    <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Aesthetic Studio</p>
-    <a href="admin-login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors uppercase tracking-widest font-bold">Staff Access 🔒</a>        
-</footer>
+    <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
+        <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
+        <p class="text-[var(--text-muted)] text-sm mb-6">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
+        <a href="admin-login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors duration-300 uppercase tracking-widest font-bold">
+    Staff Access 🔒
+</a>
+    </footer>
 
 <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
     <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden animate-fadeIn mb-2">
