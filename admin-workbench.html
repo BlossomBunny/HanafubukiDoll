@@ -81,10 +81,24 @@
 
         let activeJobId = null;
 
-        // --- AUTH CHECK ---
-        _supabase.auth.onAuthStateChange((event, session) => {
-            if (!session) window.location.href = 'login.html';
-        });
+// --- AUTH CHECK ---
+ _supabase.auth.onAuthStateChange((event, session) => {
+    if (!session) {
+        window.location.href = 'login.html';
+    } else {
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('id');
+        
+        if (jobId) {
+      
+            setTimeout(() => {
+                if (typeof openDrawer === "function") {
+                    openDrawer(jobId);
+                }
+            }, 800); 
+        }
+    }
+ });
 
         // --- RENDER WORKBENCH ---
         async function renderworkbench(showArchived = false) {
