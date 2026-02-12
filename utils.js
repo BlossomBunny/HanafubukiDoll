@@ -38,10 +38,15 @@ function showMagicAlert(title, message, type = 'success', onConfirm = null) {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
     // Event Listeners
-    document.getElementById('alert-close').onclick = () => document.getElementById('magic-alert').remove();
+const closeBtn = document.getElementById('alert-close');
+    if (closeBtn) {
+        closeBtn.onclick = () => document.getElementById('magic-alert').remove();
+    }
     
-    if (onConfirm) {
-        document.getElementById('alert-confirm').onclick = () => {
+ 
+    const confirmBtn = document.getElementById('alert-confirm');
+    if (onConfirm && confirmBtn) {
+        confirmBtn.onclick = () => {
             onConfirm();
             document.getElementById('magic-alert').remove();
         };
