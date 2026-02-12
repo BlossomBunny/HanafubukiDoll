@@ -182,13 +182,7 @@
         </form>
     </main>
 
-    <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
-        <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Aesthetic Studio</p>
-        <a href="login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors uppercase tracking-widest font-bold">Staff Access 🔒</a>        
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
+     <script>
 const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -431,10 +425,13 @@ window.onload = () => {
     checkServiceAvailability();
 };
     </script>
- <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
-    <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Aesthetic Studio</p>
-    <a href="admin-login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors uppercase tracking-widest font-bold">Staff Access 🔒</a>        
-</footer>
+<footer class="py-20 text-center border-t border-pink-50 bg-white/30">
+        <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
+        <p class="text-[var(--text-muted)] text-sm mb-6">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
+        <a href="admin-login.html" class="text-[9px] text-gray-300 hover:text-pink-300 transition-colors duration-300 uppercase tracking-widest font-bold">
+    Staff Access 🔒
+</a>
+    </footer>
 
 <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
     <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden animate-fadeIn mb-2">
@@ -465,10 +462,6 @@ window.onload = () => {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="global-scripts.js"></script>
-    </button>
-</div>
-
 <script src="global-scripts.js"></script>
 </body>
 </html>
