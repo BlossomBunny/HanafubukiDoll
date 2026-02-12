@@ -1,3 +1,25 @@
+
+const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Auth listener - Protects all admin pages
+_supabase.auth.onAuthStateChange((event, session) => {
+    if (!session) {
+        window.location.href = 'login.html';
+    } else {
+        // Handle global UI reveals
+        document.getElementById('adminNav')?.classList.remove('auth-hidden');
+        document.getElementById('adminMain')?.classList.remove('auth-hidden');
+        
+        // Custom page logic: If the page has a 'initPage' function, run it
+        if (typeof initPage === 'function') {
+            initPage(session);
+        }
+    }
+});
+
+
 /* --- Hanafubuki Studio Global Accessibility Script --- */
 
 const ComfortSettings = {
