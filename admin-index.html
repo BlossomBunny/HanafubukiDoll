@@ -6,9 +6,9 @@
     <title>Admin - HanafubukiDoll</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="utils.js"></script>
+    <script src="global-utils.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="global-style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.css' rel='stylesheet' />
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
@@ -25,8 +25,7 @@
                 @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; 
             }
 
-            /* Admin Specifics that don't break the buttons */
-            .auth-hidden { @apply hidden !important; }
+          .auth-hidden { @apply hidden !important; }
             
             .glass-card { 
                 background: rgba(255, 255, 255, 0.8); 
@@ -64,7 +63,7 @@
     <button onclick="switchTab('workbench')" class="nav-btn nav-btn-mint">Commissions ♡</button>
     <button onclick="switchTab('planner')" class="nav-btn nav-btn-pink">Planner ♡</button>
     <button onclick="switchTab('inventory')" class="nav-btn nav-btn-mint">Stock ♡</button>
-    <a href="financial.html" class="nav-btn nav-btn-pink flex items-center gap-2">
+    <a href="admin-financial.html" class="nav-btn nav-btn-pink flex items-center gap-2">
     P&L Sheet 📊
 </a>
     <button onclick="handleLogout()" class="nav-btn nav-btn-pink opacity-50 hover:opacity-100">Logout ⏻</button>
@@ -217,30 +216,6 @@
         </div>
     </div>
 
-    <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
-        <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden mb-2">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility</h3>
-                <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 hover:text-pink-500 text-2xl">&times;</button>
-            </div>
-            <div class="space-y-5">
-                <label class="flex justify-between items-center cursor-pointer">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase">Dark Mode</span>
-                    <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
-                <label class="flex justify-between items-center cursor-pointer">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase">High Contrast</span>
-                    <input type="checkbox" id="contrastToggle" onchange="ComfortSettings.update('high-contrast', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
-            </div>
-        </div>
-        <button onclick="ComfortSettings.toggleMenu()" class="flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg">
-            <span>⚙️</span> <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Settings</span>
-        </button>
-    </div>
-    
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
@@ -1599,7 +1574,6 @@ async function deleteWaitlistEntry(id, handle) {
     </div>
 </div>
 
-
         <div class="mt-8 flex gap-4 justify-end">
             <button onclick="closeDeclineModal()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-300">Cancel</button>
             <button onclick="confirmDeclineAndSend()" class="px-8 py-3 bg-rose-600 text-white rounded-2xl font-black uppercase hover:bg-rose-700 shadow-lg">Send Email & Decline</button>
@@ -1642,6 +1616,40 @@ async function deleteWaitlistEntry(id, handle) {
         </div>
     </div>
 </div>
+    <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
+        <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Studio Management</p>
+        <p class="text-[9px] text-gray-300 uppercase tracking-widest font-bold">Internal Use Only 🌸</p>
+    </footer>
+
+    <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
+        <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden animate-fadeIn mb-2">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility Settings</h3>
+                <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 hover:text-pink-500 text-2xl">&times;</button>
+            </div>
+            <div class="space-y-5">
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dark Mode</span>
+                    <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
+                </label>
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Reduce Motion</span>
+                    <input type="checkbox" id="motionToggle" onchange="ComfortSettings.update('reduced-motion', this.checked)" class="w-5 h-5 accent-pink-500">
+                </label>
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dyslexia Font</span>
+                    <input type="checkbox" id="dyslexiaToggle" onchange="ComfortSettings.update('dyslexia-mode', this.checked)" class="w-5 h-5 accent-pink-500">
+                </label>
+            </div>
+        </div>
+        <button onclick="ComfortSettings.toggleMenu()" class="access-btn flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all">
+            <span>⚙️</span>
+            <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Settings</span>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="global-scripts.js"></script>
 </body>
 </html>
        
