@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commissions Workbench - HanafubukiDoll</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="global-utils.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="global-style.css">
+    
+    <style type="text/tailwindcss">
+        @layer components {
+            .nav-btn { @apply px-5 py-2 rounded-full font-bold text-sm transition-all cursor-pointer inline-block; }
+            .nav-btn-pink { @apply bg-pink-50 text-pink-500 hover:bg-pink-100; }
+            .nav-btn-mint { @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; }
+            .auth-hidden { @apply hidden !important; }
+            .glass-card { 
+                background: rgba(255, 255, 255, 0.8); 
+                backdrop-filter: blur(12px); 
+                @apply rounded-[2rem] border border-pink-100/20; 
+            }
+            .img-enlarge { @apply fixed inset-0 z-[200] w-full h-full object-contain bg-black/90 cursor-zoom-out p-5; }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #fbcfe8; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
+
+    <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-xl md:text-2xl font-black tracking-tighter">🐰 HanafubukiDoll 🌸</div>
+            <div id="adminNav" class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="admin-index.html" class="nav-btn nav-btn-pink">Dashboard ♡</a>
+                <button class="nav-btn nav-btn-mint ring-2 ring-emerald-200">Commissions ♡</button>
+                <a href="planner.html" class="nav-btn nav-btn-pink">Planner ♡</a>
+                <button onclick="handleLogout()" class="nav-btn nav-btn-pink opacity-50">Logout ⏻</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-4 md:p-10">
+        <div class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-black italic text-gray-800">Client Inbox</h2>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Manage active & past commissions</p>
+                </div>
+                <div class="flex bg-gray-100 p-1 rounded-2xl border border-gray-200">
+                    <button onclick="renderworkbench(false)" id="tab-live" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all bg-white shadow-sm text-pink-500">Live</button>
+                    <button onclick="renderworkbench(true)" id="tab-archived" class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all text-gray-400">Archived</button>
+                </div>
+            </div>
+
+            <div id="commissionList" class="space-y-3">
+                </div>
+        </div>
+    </main>
+
+    <div id="editDrawer" class="fixed inset-y-0 right-0 w-full md:w-[650px] bg-white z-[100] transform translate-x-full transition-transform duration-500 border-l flex flex-col shadow-2xl">
+        <div class="p-6 border-b flex justify-between items-center bg-white">
+            <h2 class="font-black text-xl italic">Order Details</h2>
+            <button onclick="closeDrawer()" class="text-3xl text-gray-400 hover:text-pink-500">&times;</button>
+        </div>
+        <div id="drawerContent" class="p-8 flex-1 overflow-y-auto space-y-8 bg-[#fafafa] custom-scrollbar"></div>
+        <div class="p-6 border-t bg-white flex gap-4">
+            <button onclick="handleArchive()" class="text-[10px] font-black uppercase text-red-400">Archive Order</button>
+            <button id="saveBtn" onclick="saveJobChanges()" class="flex-1 bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all">Save All Changes ♡</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let activeJobId = null;
+
+        // --- AUTH CHECK ---
+        _supabase.auth.onAuthStateChange((event, session) => {
+            if (!session) window.location.href = 'login.html';
+        });
+
+        // --- RENDER WORKBENCH ---
+        async function renderworkbench(showArchived = false) {
+            const liveBtn = document.getElementById('tab-live');
+            const archBtn = document.getElementById('tab-archived');
+            
+            // UI Toggle
+            if (showArchived) {
+                liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
+                archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
+            } else {
+                liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
+                archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
+            }
+
+            const { data: jobs, error } = await _supabase
+                .from('commissions')
+                .select('*')
+                .eq('archived', showArchived)
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('commissionList');
+            if (error || !jobs) return;
+
+            const statusColors = { 
+                'Enquiry': 'bg-blue-50 text-blue-500', 
+                'Arrived': 'bg-amber-50 text-amber-600',
+                'Working': 'bg-emerald-50 text-emerald-600', 
+                'Approved': 'bg-cyan-50 text-cyan-600', 
+                'Shipped': 'bg-gray-100 text-gray-500' 
+            };
+
+            container.innerHTML = jobs.map(job => `
+                <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
+                    <div class="w-12 h-12 bg-pink-50 rounded-full shrink-0 flex items-center justify-center overflow-hidden border border-pink-100">
+                        <span class="text-xl">🎨</span>
+                    </div>
+                    <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
+                        <div>
+                            <h4 class="font-black text-sm truncate">${job.social_handle || 'N/A'}</h4>
+                            <p class="text-[10px] text-gray-400 font-bold">${job.customer_email || ''}</p>
+                        </div>
+                        <div class="hidden md:block">
+                            <p class="text-[9px] font-black text-gray-300 uppercase">Sculpt</p>
+                            <p class="text-[10px] text-gray-500 truncate">${job.doll_sculpt || '—'}</p>
+                        </div>
+                        <div>
+                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColors[job.status] || 'bg-gray-50 text-gray-400'}">
+                                ${job.status}
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <button onclick="openDrawer('${job.id}')" class="px-4 py-2 bg-pink-50 text-pink-500 rounded-xl text-[10px] font-black uppercase hover:bg-pink-100">
+                                Open Order ♡
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('') || '<p class="text-center p-10 text-gray-300 italic">No orders found.</p>';
+        }
+
+      // --- DRAWER & PAYMENTS --- //
+async function openDrawer(id) {
+    activeJobId = id;
+    const content = document.getElementById('drawerContent');
+    const drawer = document.getElementById('editDrawer');
+    if (!content || !drawer) return;
+
+    try {
+        const { data: job, error } = await _supabase.from('commissions').select('*').eq('id', id).single();
+        if (error || !job) return;
+
+        const payments = job.payments || [];
+        const paidTotal = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+        const balance = Math.max(0, (job.total_price || 0) - paidTotal);
+
+        content.innerHTML = `
+            <div class="max-w-2xl mx-auto space-y-6 pb-24 px-4">
+                <section class="flex justify-between items-center border-b pb-4">
+                    <div>
+                        <h3 class="text-xl font-black text-gray-900">${job.social_handle || '@none'}</h3>
+                        <p class="text-xs font-bold text-gray-400 uppercase">${job.doll_company || ''} ${job.doll_sculpt || ''}</p>
+                    </div>
+                    <select id="upStatus" class="text-xs font-black uppercase bg-gray-100 px-4 py-2 rounded-xl">
+                        ${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped'].map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
+                </section>
+
+                <div class="bg-gray-50 p-5 rounded-[2.5rem] border border-gray-100 space-y-4">
+                    <div class="flex justify-between items-center px-2">
+                        <select id="payType" onchange="togglePayUI()" class="bg-white border-none rounded-xl text-[10px] font-black uppercase px-3 py-2 shadow-sm">
+                            <option value="Paid in Full" ${job.payment_method === 'Paid in Full' ? 'selected' : ''}>Paid in Full</option>
+                            <option value="Layaway" ${job.payment_method === 'Layaway' ? 'selected' : ''}>Layaway</option>
+                            <option value="Trade" ${job.payment_method === 'Trade' ? 'selected' : ''}>Trade</option>
+                            <option value="Gift" ${job.payment_method === 'Gift' ? 'selected' : ''}>Gift</option>
+                        </select>
+                        <label class="flex items-center gap-2 cursor-pointer bg-white px-3 py-2 rounded-xl shadow-sm">
+                            <input type="checkbox" id="isUrg" ${job.is_urgent ? 'checked' : ''} class="w-3 h-3 accent-pink-500">
+                            <span class="text-[9px] font-black uppercase text-pink-500">Urgent</span>
+                        </label>
+                    </div>
+
+                    <div id="tradeUI" class="${['Trade', 'Gift'].includes(job.payment_method) ? '' : 'hidden'} flex gap-3">
+                        <div class="flex-1 flex items-center justify-between bg-white p-3 rounded-2xl border border-gray-100">
+                            <span class="text-[9px] font-black uppercase text-gray-400">We Shipped</span>
+                            <input type="checkbox" id="weShipped" ${job.we_shipped ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
+                        </div>
+                        <div class="flex-1 flex items-center justify-between bg-white p-3 rounded-2xl border border-gray-100">
+                            <span class="text-[9px] font-black uppercase text-gray-400">Partner Shipped</span>
+                            <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
+                        </div>
+                    </div>
+
+                    <div id="moneyUI" class="${['Trade', 'Gift'].includes(job.payment_method) ? 'hidden' : ''} space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-white p-4 rounded-2xl border border-gray-100">
+                                <label class="text-[8px] font-black uppercase text-gray-400 block mb-1">Total Fee</label>
+                                <div class="flex items-center gap-1 font-black text-gray-800">
+                                    <span>£</span><input type="number" id="tPrice" value="${job.total_price || 0}" class="w-full outline-none">
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl border border-gray-100">
+                                <label class="text-[8px] font-black uppercase text-gray-400 block mb-1">Outstanding</label>
+                                <p class="font-black ${balance > 0 ? 'text-rose-500' : 'text-emerald-500'}">£${balance.toFixed(2)}</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white/50 p-4 rounded-2xl border border-dashed border-gray-200">
+                            <p class="text-[9px] font-black uppercase text-gray-400 mb-3">Payment History</p>
+                            <div class="space-y-2 mb-3 max-h-32 overflow-y-auto custom-scrollbar">
+                                ${payments.length ? payments.map(p => `
+                                    <div class="flex justify-between text-[10px] font-bold text-gray-600 bg-white p-2 rounded-lg border border-gray-50">
+                                        <span>${new Date(p.date).toLocaleDateString()}</span>
+                                        <span class="text-emerald-600">+£${p.amount}</span>
+                                    </div>
+                                `).join('') : '<p class="text-[10px] text-gray-300 italic">No payments yet</p>'}
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="number" id="newPayAmt" placeholder="Add Amount" class="flex-1 p-2 rounded-xl bg-white border border-gray-100 text-[10px] font-bold outline-none">
+                                <button onclick="addLayawayPayment()" class="px-4 py-2 bg-emerald-500 text-white text-[9px] font-black uppercase rounded-xl">Add +</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-white rounded-3xl border border-gray-100 grid grid-cols-2 gap-3">
+                    <input id="trackNum" type="text" value="${job.tracking_number || ''}" placeholder="Tracking Number" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
+                    <input id="shipCost" type="number" value="${job.shipping_cost || 0}" placeholder="Ship Cost £" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
+                </div>
+
+                <div class="space-y-4">
+                    ${renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink')}
+                    ${renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')}
+                    ${renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')}
+                </div>
+
+                <div class="flex items-center justify-between gap-4 pt-8 border-t border-gray-100">
+                    <div class="flex gap-3">
+                        
+                        ${['Enquiry', 'Quote'].includes(job.status) ? `
+                            <button onclick="showDeclineModal('${job.id}', '${job.email || ''}', '${job.social_handle || ''}')" 
+                                    class="px-4 py-2 bg-rose-50 text-rose-500 rounded-xl font-black text-[10px] uppercase border border-rose-100 hover:bg-rose-100 transition-colors">
+                                Decline & Email
+                            </button>
+                        ` : ''}
+                    </div>
+                    </div>
+            </div>`;
+
+        drawer.classList.remove('translate-x-full');
+   } catch (err) { 
+        console.error("Open drawer error:", err); 
+        if (typeof showMagicAlert === 'function') {
+            showMagicAlert("Drawer Error", "Couldn't load job details.", "error");
+        }
+    }
+}
+    function renderServiceBlock(job, key, title, color) {
+    const data = job[`${key}_details`];
+    if (!data) return '';
+    const theme = color === 'pink' ? 'pink' : (color === 'blue' ? 'blue' : 'emerald');
+
+    return `
+        <div class="p-5 bg-white rounded-[2rem] border border-${theme}-50 space-y-4 shadow-sm">
+            <div class="flex justify-between items-center border-b border-${theme}-50/50 pb-2">
+                <h4 class="text-[11px] font-black uppercase text-${theme}-500 tracking-wider">${title}</h4>
+                <select id="${key}Status" class="text-[10px] font-black uppercase bg-${theme}-50 px-2 py-1 rounded-lg border-none">
+                    <option value="Pending" ${data.status==='Pending'?'selected':''}>Pending</option>
+                    <option value="Working" ${data.status==='Working'?'selected':''}>Working</option>
+                    <option value="Completed" ${data.status==='Completed'?'selected':''}>Completed</option>
+                </select>
+            </div>
+            
+            ${data.images && data.images.length > 0 ? `
+                <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                    ${data.images.map(img => `
+                        <img src="${img}" class="w-24 h-24 object-cover rounded-2xl border-2 border-white shadow-sm shrink-0 cursor-zoom-in" onclick="this.classList.toggle('img-enlarge')">
+                    `).join('')}
+                </div>` : ''}
+
+            <div class="space-y-3">
+                <div class="p-3 bg-${theme}-50/30 rounded-2xl border border-${theme}-100/50">
+                    <p class="text-[8px] font-black uppercase text-${theme}-400 mb-1">Client Request:</p>
+                    <p class="text-[10px] text-gray-600 italic">"${data.notes || 'No instructions.'}"</p>
+                </div>
+                <div>
+                    <p class="text-[8px] font-black uppercase text-gray-400 mb-1 ml-1">Artist Notes:</p>
+                    <textarea id="${key}Admin" class="w-full p-3 text-[10px] border border-gray-100 rounded-2xl h-20 bg-[#fafafa] resize-none" placeholder="Notes...">${data.admin_notes || ''}</textarea>
+                </div>
+            </div>
+        </div>`;
+}
+
+function togglePayUI() {
+    const type = document.getElementById('payType').value;
+    
+    // 1. Get the two main containers
+    const moneyUI = document.getElementById('moneyUI');
+    const tradeUI = document.getElementById('tradeUI');
+    
+    if (!moneyUI || !tradeUI) return;
+
+    // 2. Logic: If it's Trade or Gift, hide money tools and show trade tools
+    if (type === 'Trade' || type === 'Gift') {
+        moneyUI.classList.add('hidden');
+        tradeUI.classList.remove('hidden');
+    } else {
+        // Otherwise (Paid in Full or Layaway), show money tools and hide trade
+        moneyUI.classList.remove('hidden');
+        tradeUI.classList.add('hidden');
+    }
+}
+
+  async function addLayawayPayment() {
+    const amtInput = document.getElementById('newPayAmt');
+    const amount = parseFloat(amtInput.value);
+    
+    if (!amount || amount <= 0) {
+        showMagicAlert(
+            "Invalid Amount ☁️", 
+            "Please enter a valid amount greater than zero to process the payment.", 
+            "error"
+        );
+        return;
+    }
+
+    try {
+        // 1. Get current job data
+        const { data: job, error: fetchError } = await _supabase
+            .from('commissions')
+            .select('payments')
+            .eq('id', activeJobId)
+            .single();
+
+        if (fetchError) throw fetchError;
+        
+        // 2. Create new payment object
+        const newPayment = {
+            amount: amount,
+            date: new Date().toISOString(),
+            note: "Layaway installment"
+        };
+
+        // 3. Update Supabase
+        const updatedPayments = [...(job.payments || []), newPayment];
+        const { error: updateError } = await _supabase
+            .from('commissions')
+            .update({ payments: updatedPayments })
+            .eq('id', activeJobId);
+
+        if (updateError) throw updateError;
+
+        // --- SUCCESS STATE ---
+        amtInput.value = ''; // Clear input
+        
+        showMagicAlert(
+            "Payment Received! 🌸", 
+            `A payment of $${amount.toFixed(2)} has been added to the layaway plan.`, 
+            "success"
+        );
+
+        openDrawer(activeJobId); // Refresh drawer to show new balance
+
+    } catch (err) {
+        console.error("Layaway error:", err);
+        showMagicAlert(
+            "Payment Failed ☁️", 
+            "We couldn't process that payment: " + err.message, 
+            "error"
+        );
+    }
+}
+
+    // ---- SAVE LOGIC ---- //
+async function saveJobChanges() {
+    if (!activeJobId) return;
+
+    const btn = document.getElementById('saveBtn'); 
+    if (!btn) return;
+
+    btn.innerText = "Saving... ✨";
+    btn.disabled = true;
+
+    try {
+        // 1. Gather the basic updates
+        const updates = {
+            status: document.getElementById('upStatus')?.value,
+            total_price: parseFloat(document.getElementById('tPrice')?.value || 0),
+            payment_method: document.getElementById('payType')?.value,
+            payment_status: document.getElementById('isPaidCheck')?.checked ? 'Paid' : 'Unpaid',
+            is_urgent: document.getElementById('isUrg')?.checked ?? false,
+            we_shipped: document.getElementById('weShipped')?.checked ?? false,
+            partner_shipped: document.getElementById('partnerShipped')?.checked ?? false,
+            tracking_number: document.getElementById('trackNum')?.value || '',
+            shipping_cost: parseFloat(document.getElementById('shipCost')?.value || 0)
+        };
+
+        // 2. Capture Service Details
+        const { data: currentJob, error: fetchError } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+        if (fetchError) throw fetchError;
+
+        if (currentJob) {
+            if (currentJob.faceup_details) {
+                updates.faceup_details = {
+                    ...currentJob.faceup_details,
+                    status: document.getElementById('faceupStatus')?.value || currentJob.faceup_details.status,
+                    admin_notes: document.getElementById('faceupAdmin')?.value || currentJob.faceup_details.admin_notes
+                };
+            }
+            if (currentJob.eye_details) {
+                updates.eye_details = {
+                    ...currentJob.eye_details,
+                    status: document.getElementById('eyeStatus')?.value || currentJob.eye_details.status,
+                    admin_notes: document.getElementById('eyeAdmin')?.value || currentJob.eye_details.admin_notes
+                };
+            }
+            if (currentJob.manicure_details) {
+                updates.manicure_details = {
+                    ...currentJob.manicure_details,
+                    status: document.getElementById('manicureStatus')?.value || currentJob.manicure_details.status,
+                    admin_notes: document.getElementById('manicureAdmin')?.value || currentJob.manicure_details.admin_notes
+                };
+            }
+        }
+
+        // 3. Send to Supabase
+        const { error: updateError } = await _supabase
+            .from('commissions')
+            .update(updates)
+            .eq('id', activeJobId);
+
+        if (updateError) throw updateError;
+
+        // 4. Success UI with Magic Alert
+        btn.innerText = "Saved! ♡";
+        
+        showMagicAlert(
+            "Changes Saved! 🌸", 
+            "The commission details have been successfully updated in your records.", 
+            "success"
+        );
+
+        setTimeout(() => {
+            closeDrawer();
+            renderworkbench(false);
+            renderSummary();
+            btn.innerText = "Save All Changes ♡";
+            btn.disabled = false;
+        }, 800);
+
+    } catch (e) {
+        console.error("Save error:", e);
+        btn.innerText = "Error! ❌";
+        btn.disabled = false;
+
+        // Aesthetic Error Alert
+        showMagicAlert(
+            "Oh no! ☁️", 
+            "Something went wrong while saving: " + (e.message || "Failed to update the database."), 
+            "error"
+        );
+    }
+}
+      async function handleArchive() {
+            if(!confirm("Archive this order?")) return;
+            await _supabase.from('commissions').update({ archived: true }).eq('id', activeJobId);
+            closeDrawer();
+            renderworkbench(false);
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => renderworkbench(false));
+    </script>
+</body>
+</html>
+  
