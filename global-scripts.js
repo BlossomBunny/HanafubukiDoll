@@ -9,14 +9,11 @@ const ComfortSettings = {
     ],
 
     init() {
-        // Apply saved classes immediately to prevent "flash"
         this.applySaved();
         
-        // Sync the checkboxes once the HTML has loaded
         document.addEventListener('DOMContentLoaded', () => {
             this.syncUI();
             
-            // Optional: Close menu when clicking outside
             window.addEventListener('click', (e) => {
                 const menu = document.getElementById('accessMenu');
                 const btn = document.querySelector('.access-btn');
