@@ -170,53 +170,7 @@
 </main>
 
 <script>
-const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Global variables – only declare once
-let currentDeclineJobId = null;
-let currentDeclineEmail = '';
-let currentDeclineHandle = '';
-let currentEventId = null;
-let activeJobId = null;  
-let revenueChart = null;
-
-
-// Auth listener
-_supabase.auth.onAuthStateChange((event, session) => {
-    console.log('Auth event:', event, session ? 'Logged in' : 'Not logged in');
-
-    const adminNav = document.getElementById('adminNav');
-    const adminMain = document.getElementById('adminMain');
-
-    if (session) {
-        adminNav?.classList.remove('auth-hidden');
-        adminMain?.classList.remove('auth-hidden');
-
-        const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
-        switchTab(lastTab);
-    } else {
-        window.location.href = 'login.html';
-    }
-});
-
-// Immediate session check on load
-_supabase.auth.getSession().then(({ data: { session } }) => {
-    console.log('Initial session:', session ? 'Logged in' : 'No session');
-
-    const adminNav = document.getElementById('adminNav');
-    const adminMain = document.getElementById('adminMain');
-
-    if (session) {
-        adminNav?.classList.remove('auth-hidden');
-        adminMain?.classList.remove('auth-hidden');
-
-        const lastTab = localStorage.getItem('hana_active_tab') || 'summary';
-        switchTab(lastTab);
-    }
-}).catch(err => console.error('Session check error:', err));
-  
     // --- NAVIGATION ---
 async function switchTab(tab) {
     // Hide all tabs
