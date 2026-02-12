@@ -78,7 +78,8 @@
 
   <script>
  // --- PLANNER LOGIC --- //
-// Helper for Calendar Colors
+let currentEventId = null;
+      
 function getJobColor(status, isUrgent) {
     if (isUrgent) return '#FDA4AF'; // Soft red for urgent
     const colors = {
@@ -90,24 +91,6 @@ function getJobColor(status, isUrgent) {
         'Shipped': '#F3F4F6'   // Gray
     };
     return colors[status] || '#FDF2F8'; // Default pink
-}
-
-// Helper to show the Event Modal (needed for the + button)
-function showEventModal(id, event = null) {
-    currentEventId = id;
-    const modal = document.getElementById('eventModal');
-    if (!modal) return;
-    
-    modal.classList.remove('hidden');
-    
-    if (event) {
-        document.getElementById('eventTitle').value = event.title;
-        document.getElementById('eventStart').value = event.start.toISOString().slice(0, 16);
-        if (event.end) document.getElementById('eventEnd').value = event.end.toISOString().slice(0, 16);
-        document.getElementById('eventDetails').value = event.extendedProps.details || '';
-    } else {
-        document.getElementById('eventForm').reset();
-    }
 }
 
 function showEventModal(id, event = null) {
@@ -250,11 +233,10 @@ async function renderPlanner() {
             ],
             eventClick: function(info) {
                 if (info.event.extendedProps.type === 'job') {
-                    const jobId = info.event.id.replace('job-', '');
-                    openDrawer(jobId);
-                } else {
-                    showEventModal(info.event.id, info.event);
-                }
+    const jobId = info.event.id.replace('job-', '');
+
+    window.location.href = `admin-workbench.html?id=${jobId}`;
+}
             },
             eventDrop: async function(info) {
                 if (info.event.extendedProps.type === 'event') {
@@ -331,9 +313,48 @@ async function renderPlanner() {
             <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Settings</span>
         </button>
     </div>
+
+      document.addEventListener('DOMContentLoaded', () => {
+    _supabase.auth.onAuthStateChange((event, session) => {
+        if (session) {
+            // Show the main content and the specific planner view
+            document.getElementById('adminMain').classList.remove('auth-hidden');
+            document.getElementById('view-planner').classList.remove('hidden');
+            renderPlanner();
+        } else {
+            window.location.href = 'login.html';
+        }
+    });
+});
        </script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="global-scripts.js"></script>
+    
+<div id="eventModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-pink-100">
+        <h3 id="eventModalTitle" class="text-2xl font-black italic mb-6">Add Event</h3>
+        <form id="eventForm" class="space-y-4">
+            <input type="text" id="eventTitle" placeholder="Event Title" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-200 transition-all">
+            <select id="eventType" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none">
+                <option value="holiday">🌸 Holiday/Time Off</option>
+                <option value="personal">✨ Personal/Admin</option>
+                <option value="other">🎀 Other</option>
+            </select>
+            <div class="grid grid-cols-2 gap-3">
+                <input type="datetime-local" id="eventStart" class="p-4 bg-gray-50 rounded-2xl border-none text-xs font-bold">
+                <input type="datetime-local" id="eventEnd" class="p-4 bg-gray-50 rounded-2xl border-none text-xs font-bold">
+            </div>
+            <textarea id="eventDetails" placeholder="Extra notes..." class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold h-24 resize-none"></textarea>
+            
+            <div class="flex gap-3 pt-4">
+                <button type="button" id="deleteEventBtn" onclick="deleteEvent()" class="px-6 py-4 text-rose-400 font-black text-[10px] uppercase hidden">Delete</button>
+                <button type="button" onclick="closeEventModal()" class="flex-1 py-4 text-gray-400 font-black text-[10px] uppercase">Cancel</button>
+                <button type="button" onclick="saveEvent()" class="flex-[2] bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all">Save ♡</button>
+            </div>
+        </form>
+    </div>
+</div>
+    
 </body>
 </html>
