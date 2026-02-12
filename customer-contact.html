@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact - HanafubukiDoll</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="global-utils.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -185,8 +186,135 @@
      <script>
 const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let _supabase;
 
+// Helper function to handle image resizing if not in global-utils
+async function resizeImage(file, maxWidth, quality) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                }, 'image/jpeg', quality);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// Initialize everything on load
+window.onload = async () => {
+    // 1. Initialize Supabase
+    _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 2. Run your UI syncs
+    syncFormWithStock();
+    checkServiceAvailability();
+
+    // 3. Attach the form listener AFTER supabase is ready
+    const bookingForm = document.getElementById('bookingForm');
+    if (bookingForm) {
+        bookingForm.addEventListener('submit', handleFormSubmit);
+    }
+};
+
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.innerText = "Sending... ✨";
+    btn.disabled = true;
+
+    try {
+        const uploadSet = async (fileInputId) => {
+            const files = document.getElementById(fileInputId)?.files;
+            if (!files || files.length === 0) return [];
+            
+            const urls = [];
+            for (let file of files) {
+                if (file.type.startsWith('image/')) {
+                    file = await resizeImage(file, 1200, 0.7); 
+                }
+                const path = `refs/${Date.now()}-${file.name}`;
+                const { data, error } = await _supabase.storage.from('references').upload(path, file);
+                if (data) {
+                    const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
+                    urls.push(pUrl.publicUrl);
+                }
+            }
+            return urls;
+        };
+
+        const fBase = document.getElementById('faceupBase').value;
+        let finalSculpt = document.getElementById('dollSculpt').value;
+        let finalCompany = document.getElementById('dollCompany').value;
+
+        if (fBase.includes('Smartdoll')) {
+            finalSculpt = document.getElementById('sm-head-sculpt-select').value;
+            finalCompany = "Smartdoll";
+        } else if (fBase.includes('Dollfie')) {
+            finalSculpt = document.getElementById('dd-head-sculpt-select').value;
+            finalCompany = "Volks";
+        }
+
+        const faceupDetails = (fBase !== "None") ? { 
+            base: fBase, 
+            notes: document.getElementById('faceupNotes')?.value, 
+            images: await uploadSet('faceupFiles') 
+        } : null;
+
+        const maniDetails = (document.getElementById('maniBase').value !== "None") ? { 
+            base: document.getElementById('maniBase').value, 
+            addons: document.getElementById('pediAddon').checked ? ['Pedicure'] : [], 
+            notes: document.getElementById('maniNotes')?.value, 
+            images: await uploadSet('maniFiles') 
+        } : null;
+
+        const eyeDetails = (document.getElementById('eyeBase').value !== "None") ? { 
+            base: document.getElementById('eyeBase').value, 
+            notes: document.getElementById('eyeNotes')?.value, 
+            images: await uploadSet('eyeFiles') 
+        } : null;
+
+        const { error } = await _supabase.from('commissions').insert([{
+            customer_name: document.getElementById('custName').value,
+            customer_email: document.getElementById('custEmail').value,
+            social_handle: document.getElementById('socialHandle').value,
+            country: document.getElementById('Country').value,
+            doll_company: finalCompany,
+            doll_sculpt: finalSculpt,
+            doll_skintone: document.getElementById('dollSkintone').value || 'N/A',
+            faceup_details: faceupDetails,
+            manicure_details: maniDetails,
+            eye_details: eyeDetails,
+            status: 'Enquiry'
+        }]);
+
+        if (error) throw error;
+
+        alert("Request Sent! ♡");
+        window.location.href = "customer-index.html"; // Ensure this matches your home page file
+
+    } catch (err) {
+        console.error("Submission Error:", err);
+        alert("Error: " + (err.message || "Something went wrong"));
+        btn.disabled = false;
+        btn.innerText = "Submit ✨";
+    }
+}
 // --- STOCK LOGIC ---
 async function syncFormWithStock() {
     const { data: stock, error } = await _supabase.from('inventory').select('*');
@@ -232,8 +360,6 @@ async function syncFormWithStock() {
             ddSelect.innerHTML = ddHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
         }
     }
-
-    // You can add for mani hands similarly if needed
 }
 
 function startBooking() {
@@ -364,62 +490,6 @@ function showWaitlistForm(serviceId) {
     });
 }
 
-document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    btn.innerText = "Sending... ✨";
-    btn.disabled = true;
-    const uploadSet = async (fileInputId) => {
-    const files = document.getElementById(fileInputId)?.files;
-    if (!files || files.length === 0) return [];
-    
-    const urls = [];
-    for (let file of files) {
-     
-        if (file.type.startsWith('image/')) {
-            console.log(`Shrinking ${file.name}...`);
-            file = await resizeImage(file, 1200, 0.7); 
-        }
-
-        const path = `refs/${Date.now()}-${file.name}`;
-        const { data, error } = await _supabase.storage.from('references').upload(path, file);
-        
-        if (data) {
-            const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
-            urls.push(pUrl.publicUrl);
-        }
-    }
-    return urls;
-};
-    const fBase = document.getElementById('faceupBase').value;
-    let finalSculpt = document.getElementById('dollSculpt').value;
-    let finalCompany = document.getElementById('dollCompany').value;
-    if (fBase.includes('Smartdoll')) {
-        finalSculpt = document.getElementById('sm-head-sculpt-select').value;
-        finalCompany = "Smartdoll";
-    } else if (fBase.includes('Dollfie')) {
-        finalSculpt = document.getElementById('dd-head-sculpt-select').value;
-        finalCompany = "Volks";
-    }
-    const faceupDetails = (fBase !== "None") ? { base: fBase, notes: document.getElementById('faceupNotes')?.value, images: await uploadSet('faceupFiles') } : null;
-    const maniDetails = (document.getElementById('maniBase').value !== "None") ? { base: document.getElementById('maniBase').value, addons: document.getElementById('pediAddon').checked ? ['Pedicure'] : [], notes: document.getElementById('maniNotes')?.value, images: await uploadSet('maniFiles') } : null;
-    const eyeDetails = (document.getElementById('eyeBase').value !== "None") ? { base: document.getElementById('eyeBase').value, notes: document.getElementById('eyeNotes')?.value, images: await uploadSet('eyeFiles') } : null;
-    const { error } = await _supabase.from('commissions').insert([{
-        customer_name: document.getElementById('custName').value,
-        customer_email: document.getElementById('custEmail').value,
-        social_handle: document.getElementById('socialHandle').value,
-        country: document.getElementById('Country').value,
-        doll_company: finalCompany,
-        doll_sculpt: finalSculpt,
-        doll_skintone: document.getElementById('dollSkintone').value || 'N/A',
-        faceup_details: faceupDetails,
-        manicure_details: maniDetails,
-        eye_details: eyeDetails,
-        status: 'Enquiry'
-    }]);
-    if (!error) { alert("Request Sent! ♡"); window.location.href = "index.html"; }
-    else { alert("Error: " + error.message); btn.disabled = false; btn.innerText = "Submit ✨"; }
-});
 window.onload = () => {
     syncFormWithStock();
     checkServiceAvailability();
@@ -461,7 +531,6 @@ window.onload = () => {
     </button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="global-scripts.js"></script>
 </body>
 </html>
