@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commissions Workbench - HanafubukiDoll</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="global-utils.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="global-style.css">
+    
+    <style type="text/tailwindcss">
+        @layer components {
+            .nav-btn { @apply px-5 py-2 rounded-full font-bold text-sm transition-all cursor-pointer inline-block; }
+            .nav-btn-pink { @apply bg-pink-50 text-pink-500 hover:bg-pink-100; }
+            .nav-btn-mint { @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; }
+            .auth-hidden { @apply hidden !important; }
+            .glass-card { 
+                background: rgba(255, 255, 255, 0.8); 
+                backdrop-filter: blur(12px); 
+                @apply rounded-[2rem] border border-pink-100/20; 
+            }
+            .img-enlarge { @apply fixed inset-0 z-[200] w-full h-full object-contain bg-black/90 cursor-zoom-out p-5; }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #fbcfe8; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
+
+    <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-xl md:text-2xl font-black tracking-tighter">🐰 HanafubukiDoll 🌸</div>
+            <div id="adminNav" class="flex flex-wrap justify-center gap-2 md:gap-4">
+    <a href="admin-index.html" class="nav-btn nav-btn-pink">Dashboard ♡</a>
+    <a href="admin-workbench.html" class="nav-btn nav-btn-pink">Workbench ♡</a>
+    <a href="admin-planner.html" class="nav-btn nav-btn-pink">Planner ♡</a>
+    <a href="admin-inventory.html" class="nav-btn nav-btn-pink">Inventory ♡</a>
+    <a href="admin-financial.html" class="nav-btn nav-btn-mint">Financials ♡</a>
+    <button onclick="handleLogout()" class="nav-btn nav-btn-pink opacity-50">Logout ⏻</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- INVENTORY TAB -->
+    <div id="view-inventory" class="tab-content hidden space-y-12 pb-20">
+        <!-- inventory content will be injected here -->
+    </div>
+
+<script>
+function initPage(session) {
+    document.getElementById('view-inventory').classList.remove('hidden');
+    renderInventory();
+}
+
+async function renderInventory() {
+    const container = document.getElementById('view-inventory');
+    container.innerHTML = `<div class="flex justify-center py-20"><span class="animate-bounce text-2xl">🌸</span></div>`;
+    
+    const { data: items, error } = await _supabase.from('inventory').select('*').order('sculpt_size', { ascending: true });
+    
+    if (error) {
+        container.innerHTML = `<p class="text-center text-rose-500 p-10">Error loading inventory: ${error.message}</p>`;
+        return;
+    }
+
+    const categories = [
+        { title: "Smartdoll Hands (Pairs)", key: "Smartdoll Hands" },
+        { title: "Dollfie Dream Hands (Pairs)", key: "Dollfie Dream Hands" },
+        { title: "Smartdoll Heads", key: "Smartdoll Heads" },
+        { title: "Dollfie Dream Heads", key: "Dollfie Dream Heads" },
+        { title: "Eye Bases (mm)", key: "Eye Bases" }
+    ];
+
+    container.innerHTML = `
+        <div class="max-w-6xl mx-auto space-y-10 pb-20 animate-fadeIn p-4 md:p-10">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h2 class="text-3xl font-black italic tracking-tighter text-gray-800">Studio Inventory ♡</h2>
+                    <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Stock Management</p>
+                </div>
+                <button onclick="openStockModal()" class="nav-btn nav-btn-pink shadow-sm hover:shadow-pink-100">+ Add New Stock</button>
+            </div>
+
+            ${categories.map(cat => {
+                const filtered = items.filter(i => i.category === cat.key);
+                return `
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center ml-6 mr-4">
+                        <h3 class="text-[11px] font-black uppercase text-gray-400 tracking-widest">${cat.title}</h3>
+                        <button onclick="openStockModal(null, '${cat.key}')" 
+                                class="text-[9px] font-black uppercase text-pink-400 hover:text-pink-600 transition-all bg-pink-50/50 px-3 py-1 rounded-full">
+                            + Add ${cat.key}
+                        </button>
+                    </div>
+                    <div class="glass-card overflow-hidden border border-pink-100/30 shadow-sm">
+                        <table class="w-full text-left">
+                            <thead class="bg-pink-50/40 border-b border-pink-50">
+                                <tr>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">Sculpt / Size</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">Skintone</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70 text-center">Qty</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70 text-right">Adjust</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-pink-50/50">
+                                ${filtered.length ? filtered.map(item => {
+                                    // Stringify the item safely for the onclick attribute
+                                    const itemData = JSON.stringify(item).replace(/'/g, "\\'");
+                                    return `
+                                    <tr class="hover:bg-white/60 transition-colors">
+                                        <td class="p-4 text-sm font-bold text-gray-700">${item.sculpt_size}</td>
+                                        <td class="p-4">
+                                            <span class="px-3 py-1 bg-white border border-pink-100 rounded-full text-[10px] font-black text-pink-400 uppercase">
+                                                ${item.skintone || '---'}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <span class="text-sm font-black ${item.quantity === 0 ? 'text-gray-300' : (item.quantity < 2 ? 'text-rose-500 animate-pulse' : 'text-gray-600')}">
+                                                ${item.quantity}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-right">
+                                            <div class="flex justify-end gap-3 items-center">
+                                                <div class="flex gap-1 mr-2">
+                                                    <button onclick="updateStock('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 font-bold transition-all shadow-sm">－</button>
+                                                    <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 font-bold transition-all shadow-sm">＋</button>
+                                                </div>
+                                                <button onclick='openStockModal(${itemData})' class="text-gray-300 hover:text-pink-400 transition-colors" title="Edit Item">✎</button>
+                                                <button onclick="deleteStockItem('${item.id}')" class="text-gray-200 hover:text-rose-400 transition-colors" title="Delete Item">🗑️</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `}).join('') : `
+                                    <tr>
+                                        <td colspan="4" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase tracking-widest italic">No items recorded in ${cat.key}</td>
+                                    </tr>`}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>`;
+}
+async function updateStock(id, change) {
+    const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
+    const newQty = Math.max(0, data.quantity + change);
+    await _supabase.from('inventory').update({ quantity: newQty }).eq('id', id);
+    renderInventory();
+}
+
+function openStockModal(item = null, categoryHint = '') {
+    const modal = document.getElementById('stockModal');
+    const form = document.getElementById('stockForm');
+    
+    document.getElementById('stockModalTitle').textContent = item ? 'Edit Stock Item ♡' : 'Add New Stock ♡';
+    document.getElementById('stockId').value = item?.id || '';
+    document.getElementById('stockCategory').value = item?.category || categoryHint || 'Smartdoll Hands';
+    document.getElementById('stockSculpt').value = item?.sculpt_size || '';
+    document.getElementById('stockSkintone').value = item?.skintone || '';
+    document.getElementById('stockQty').value = item?.quantity || 0;
+
+    modal.classList.remove('hidden');
+}
+
+function closeStockModal() {
+    document.getElementById('stockModal').classList.add('hidden');
+}
+
+async function saveStockItem() {
+    const id = document.getElementById('stockId').value;
+    const payload = {
+        category: document.getElementById('stockCategory').value,
+        sculpt_size: document.getElementById('stockSculpt').value.trim(),
+        skintone: document.getElementById('stockSkintone').value.trim() || 'Standard',
+        quantity: parseInt(document.getElementById('stockQty').value)
+    };
+
+    if (!payload.sculpt_size) {
+        showMagicAlert("Missing Info! ☁️", "Please enter a sculpt or size name.", "error");
+        return;
+    }
+
+    try {
+        let error;
+        if (id) {
+            ({ error } = await _supabase.from('inventory').update(payload).eq('id', id));
+        } else {
+            ({ error } = await _supabase.from('inventory').insert([payload]));
+        }
+
+        if (error) throw error;
+        
+        showMagicAlert("Inventory Updated! 🌸", "Stock levels have been safely recorded.", "success");
+        closeStockModal();
+        renderInventory();
+    } catch (err) {
+        showMagicAlert("Save Failed ☁️", err.message, "error");
+    }
+}
+
+async function deleteStockItem(id) {
+    showMagicAlert("Delete Item? 🎀", "Are you sure you want to remove this stock record?", "confirm", async () => {
+        const { error } = await _supabase.from('inventory').delete().eq('id', id);
+        if (!error) renderInventory();
+    });
+}
+
+async function handleLogout() {
+    await _supabase.auth.signOut();
+    window.location.href = 'login.html';
+}
+</script>
+
+<script src="global-scripts.js"></script>
+  <div id="stockModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-pink-100">
+        <h3 id="stockModalTitle" class="text-2xl font-black italic mb-6 text-gray-800">Update Stock ♡</h3>
+        <form id="stockForm" class="space-y-4">
+            <input type="hidden" id="stockId">
+            
+            <div>
+                <label class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Category</label>
+                <select id="stockCategory" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all">
+                    <option value="Smartdoll Hands">Smartdoll Hands</option>
+                    <option value="Dollfie Dream Hands">Dollfie Dream Hands</option>
+                    <option value="Smartdoll Heads">Smartdoll Heads</option>
+                    <option value="Dollfie Dream Heads">Dollfie Dream Heads</option>
+                    <option value="Eye Bases">Eye Bases</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Sculpt/Size</label>
+                    <input type="text" id="stockSculpt" placeholder="e.g. Kizuna" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Skintone</label>
+                    <input type="text" id="stockSkintone" placeholder="e.g. Milk" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all">
+                </div>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Quantity</label>
+                <input type="number" id="stockQty" value="0" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all">
+            </div>
+            
+            <div class="flex gap-3 pt-4">
+                <button type="button" onclick="closeStockModal()" class="flex-1 py-4 text-gray-400 font-black text-[10px] uppercase">Cancel</button>
+                <button type="button" onclick="saveStockItem()" class="flex-[2] bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all">Save Stock ♡</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
+  
