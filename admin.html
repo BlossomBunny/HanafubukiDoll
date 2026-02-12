@@ -676,8 +676,9 @@ async function saveEvent() {
     const end = document.getElementById('eventEnd').value || null;
     const details = document.getElementById('eventDetails').value.trim();
 
+    // Verification Alert
     if (!title || !start) {
-        alert("Title and start date are required.");
+        showMagicAlert("Missing Info! ☁️", "Title and start date are required to save an event.", "error");
         return;
     }
 
@@ -695,26 +696,39 @@ async function saveEvent() {
 
         if (error) throw error;
 
+        // Optional Success Alert - You can comment this out if you prefer it just closing silently
+        showMagicAlert("Planner Updated! 🌸", "Your event has been safely tucked into the calendar.", "success");
+
         closeEventModal();
         renderPlanner(); // Refresh calendar
     } catch (err) {
         console.error("Save event error:", err);
-        alert("Failed to save: " + err.message);
+        // Error Alert
+        showMagicAlert("Save Failed ☁️", "Oh no! We couldn't save that: " + err.message, "error");
     }
 }
-
+    
 async function deleteEvent() {
-    if (!confirm("Delete this event?")) return;
-
-    try {
-        const { error } = await _supabase.from('events').delete().eq('id', currentEventId);
-        if (error) throw error;
-        closeEventModal();
-        renderPlanner();
-    } catch (err) {
-        console.error("Delete error:", err);
-        alert("Failed to delete: " + err.message);
-    }
+    showMagicAlert(
+        "Delete Event? 🎀", 
+        "Are you sure you want to remove this from the calendar? This cannot be undone.", 
+        "confirm", 
+        async () => {
+            try {
+                const { error } = await _supabase.from('events').delete().eq('id', currentEventId);
+                if (error) throw error;
+                
+                // Success feedback
+                showMagicAlert("Gone! ☁️", "The event has been cleared from your planner.", "success");
+                
+                closeEventModal();
+                renderPlanner();
+            } catch (err) {
+                console.error("Delete error:", err);
+                showMagicAlert("Error ☁️", "Failed to delete: " + err.message, "error");
+            }
+        }
+    );
 }
        
 async function renderPlanner() {
@@ -984,46 +998,71 @@ function togglePayUI() {
     }
 }
 
-    async function addLayawayPayment() {
+  async function addLayawayPayment() {
     const amtInput = document.getElementById('newPayAmt');
     const amount = parseFloat(amtInput.value);
     
     if (!amount || amount <= 0) {
-        alert("Please enter a valid amount");
+        showMagicAlert(
+            "Invalid Amount ☁️", 
+            "Please enter a valid amount greater than zero to process the payment.", 
+            "error"
+        );
         return;
     }
 
-    // 1. Get current job data
-    const { data: job } = await _supabase.from('commissions').select('payments').eq('id', activeJobId).single();
-    
-    // 2. Create new payment object
-    const newPayment = {
-        amount: amount,
-        date: new Date().toISOString(),
-        note: "Layaway installment"
-    };
+    try {
+        // 1. Get current job data
+        const { data: job, error: fetchError } = await _supabase
+            .from('commissions')
+            .select('payments')
+            .eq('id', activeJobId)
+            .single();
 
-    // 3. Update Supabase
-    const updatedPayments = [...(job.payments || []), newPayment];
-    const { error } = await _supabase
-        .from('commissions')
-        .update({ payments: updatedPayments })
-        .eq('id', activeJobId);
+        if (fetchError) throw fetchError;
+        
+        // 2. Create new payment object
+        const newPayment = {
+            amount: amount,
+            date: new Date().toISOString(),
+            note: "Layaway installment"
+        };
 
-    if (error) {
-        alert("Error saving payment");
-    } else {
+        // 3. Update Supabase
+        const updatedPayments = [...(job.payments || []), newPayment];
+        const { error: updateError } = await _supabase
+            .from('commissions')
+            .update({ payments: updatedPayments })
+            .eq('id', activeJobId);
+
+        if (updateError) throw updateError;
+
+        // --- SUCCESS STATE ---
         amtInput.value = ''; // Clear input
+        
+        showMagicAlert(
+            "Payment Received! 🌸", 
+            `A payment of $${amount.toFixed(2)} has been added to the layaway plan.`, 
+            "success"
+        );
+
         openDrawer(activeJobId); // Refresh drawer to show new balance
+
+    } catch (err) {
+        console.error("Layaway error:", err);
+        showMagicAlert(
+            "Payment Failed ☁️", 
+            "We couldn't process that payment: " + err.message, 
+            "error"
+        );
     }
 }
 
     // ---- SAVE LOGIC ---- //
-// We use a named function so we can call it easily from the button
 async function saveJobChanges() {
     if (!activeJobId) return;
 
-    const btn = document.getElementById('saveBtn'); // Ensure your button has id="saveBtn"
+    const btn = document.getElementById('saveBtn'); 
     if (!btn) return;
 
     btn.innerText = "Saving... ✨";
@@ -1043,9 +1082,9 @@ async function saveJobChanges() {
             shipping_cost: parseFloat(document.getElementById('shipCost')?.value || 0)
         };
 
-        // 2. IMPORTANT: Capture the Service Details (Faceup, Eyes, Mani)
-        // We fetch the current job first to preserve images while updating status/notes
-        const { data: currentJob } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+        // 2. Capture Service Details
+        const { data: currentJob, error: fetchError } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+        if (fetchError) throw fetchError;
 
         if (currentJob) {
             if (currentJob.faceup_details) {
@@ -1072,15 +1111,22 @@ async function saveJobChanges() {
         }
 
         // 3. Send to Supabase
-        const { error } = await _supabase
+        const { error: updateError } = await _supabase
             .from('commissions')
             .update(updates)
             .eq('id', activeJobId);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
 
-        // 4. Success UI
+        // 4. Success UI with Magic Alert
         btn.innerText = "Saved! ♡";
+        
+        showMagicAlert(
+            "Changes Saved! 🌸", 
+            "The commission details have been successfully updated in your records.", 
+            "success"
+        );
+
         setTimeout(() => {
             closeDrawer();
             renderworkbench(false);
@@ -1093,10 +1139,16 @@ async function saveJobChanges() {
         console.error("Save error:", e);
         btn.innerText = "Error! ❌";
         btn.disabled = false;
-        alert("Something went wrong: " + (e.message || "Failed to save"));
+
+        // Aesthetic Error Alert
+        showMagicAlert(
+            "Oh no! ☁️", 
+            "Something went wrong while saving: " + (e.message || "Failed to update the database."), 
+            "error"
+        );
     }
 }
-
+    
     // --- ACCESSIBILITY ---
     const ComfortSettings = {
         toggleMenu: () => document.getElementById('accessMenu').classList.toggle('hidden'),
@@ -1182,31 +1234,57 @@ async function renderInventory() {
             }).join('')}
         </div>`;
 }
+
 async function addNewStockItem() {
     const categories = ["Smartdoll Hands", "Dollfie Dream Hands", "Smartdoll Heads", "Dollfie Dream Heads", "Eye Bases"];
+
     const catChoice = prompt(`Select Category:\n1. Smartdoll Hands\n2. Dollfie Dream Hands\n3. Smartdoll Heads\n4. Dollfie Dream Heads\n5. Eye Bases`);
-   
     if (!catChoice || catChoice < 1 || catChoice > 5) return;
-   
+
     const category = categories[catChoice - 1];
     const sculpt_size = prompt("Sculpt or Size (e.g. Kizuna, Style 01, 14mm):");
     const skintone = prompt("Skintone (e.g. Milk, Cinnamon, Semi-White, Tan):");
     let quantity = parseInt(prompt("Initial Quantity:", "0"));
-    // Validation to prevent empty database rows or NaN quantities
+
+    // 1. Validation Acknowledgment
     if (!sculpt_size || isNaN(quantity)) {
-        alert("Invalid input. Sculpt name and a valid number for quantity are required.");
+        showMagicAlert(
+            "Invalid Entry ☁️", 
+            "A sculpt name and a valid number for quantity are required to update the inventory.", 
+            "error"
+        );
         return;
     }
-    const { error } = await _supabase.from('inventory').insert([{
-        category,
-        sculpt_size,
-        skintone: skintone || 'Standard',
-        quantity
-    }]);
-    if (!error) renderInventory();
-    else alert("Error: " + error.message);
-}
 
+     try {
+        const { error } = await _supabase.from('inventory').insert([{
+            category,
+            sculpt_size,
+            skintone: skintone || 'Standard',
+            quantity
+        }]);
+
+        if (error) throw error;
+
+        // 2. Success Acknowledgment
+        showMagicAlert(
+            "Stock Added! 🌸", 
+            `${quantity}x ${sculpt_size} (${skintone || 'Standard'}) has been added to ${category}.`, 
+            "success"
+        );
+
+        renderInventory();
+
+    } catch (err) {
+        console.error("Inventory Error:", err);
+        showMagicAlert(
+            "Update Failed ☁️", 
+            "We couldn't add that item to the database: " + err.message, 
+            "error"
+        );
+    }
+}    
+    
 async function updateStock(id, change) {
     const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
     await _supabase.from('inventory').update({ quantity: Math.max(0, data.quantity + change) }).eq('id', id);
