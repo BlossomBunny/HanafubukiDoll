@@ -251,6 +251,88 @@
             await _supabase.from('studio_settings').update({ is_live: !current }).eq('id', id);
             renderSummary();
         }
+
+        // --- BANNER MANAGEMENT FUNCTIONS ---
+
+async function toggleBanner() {
+    const btn = document.getElementById('bannerToggleBtn');
+    const label = document.getElementById('bannerStatusLabel');
+    const dot = btn.querySelector('.dot');
+    
+    // 1. Get current state from the database first to ensure toggle is accurate
+    const { data, error } = await _supabase
+        .from('studio_settings')
+        .select('is_live')
+        .eq('id', 'Banner')
+        .single();
+
+    if (error) return console.error("Error fetching banner state:", error);
+
+    const newStatus = !data.is_live;
+
+    // 2. Update Supabase
+    const { error: updateError } = await _supabase
+        .from('studio_settings')
+        .update({ is_live: newStatus })
+        .eq('id', 'Banner');
+
+    if (updateError) return console.error("Update failed:", updateError);
+
+    // 3. Update UI Visuals
+    updateBannerUI(newStatus);
+}
+
+async function updateBanner() {
+    const msgInput = document.getElementById('bannerMsgInput');
+    const newText = msgInput.value.trim();
+
+    if (!newText) return alert("Please enter a message for the banner! ♡");
+
+    const { error } = await _supabase
+        .from('studio_settings')
+        .update({ banner_text: newText })
+        .eq('id', 'Banner');
+
+    if (error) {
+        alert("Failed to update banner text.");
+    } else {
+        alert("Banner updated successfully! ✨");
+    }
+}
+
+// Helper to handle the button's "sliding" look
+function updateBannerUI(isLive) {
+    const btn = document.getElementById('bannerToggleBtn');
+    const label = document.getElementById('bannerStatusLabel');
+    const dot = btn.querySelector('.dot');
+
+    if (isLive) {
+        btn.classList.replace('bg-gray-200', 'bg-pink-500');
+        dot.classList.replace('left-1', 'left-7');
+        label.innerText = "Banner Live ✨";
+        label.classList.replace('text-gray-400', 'text-pink-500');
+    } else {
+        btn.classList.replace('bg-pink-500', 'bg-gray-200');
+        dot.classList.replace('left-7', 'left-1');
+        label.innerText = "Banner Off";
+        label.classList.replace('text-pink-500', 'text-gray-400');
+    }
+}
+
+// Ensure the UI matches the DB state on page load
+async function syncBannerUI() {
+    const { data } = await _supabase.from('studio_settings').select('*').eq('id', 'Banner').single();
+    if (data) {
+        document.getElementById('bannerMsgInput').value = data.banner_text || "";
+        updateBannerUI(data.is_live);
+    }
+}
+
+// Add syncBannerUI() to your existing DOMContentLoaded listener
+document.addEventListener('DOMContentLoaded', async () => {
+    // ... your existing auth check ...
+    syncBannerUI(); 
+});
     </script>
 
       <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
