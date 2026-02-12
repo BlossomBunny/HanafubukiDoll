@@ -1,21 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HanafubukiDoll Aesthetic Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="global-utils.js"></script> 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    </head>
+    <script src="global-utils.js"></script>
+<link rel="stylesheet" href="global-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        @keyframes pulse-custom {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0; }
+        }
+        .animate-pulse-custom {
+            animation: pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .nav-btn { @apply px-5 py-2 rounded-full font-bold text-sm transition-all; }
+        .nav-btn-pink { @apply bg-pink-50 text-pink-500 hover:bg-pink-100; }
+        .nav-btn-mint { @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; }
+    </style>
+</head>
 <body class="bg-[#fdfbfb]">
-    <nav class="p-6 bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-pink-50">
-                   <div id="adminNav" class="flex flex-wrap justify-center gap-2 md:gap-4">
-    <a href="admin-index.html" class="nav-btn nav-btn-pink">Dashboard ♡</a>
-    <a href="admin-workbench.html" class="nav-btn nav-btn-pink">Workbench ♡</a>
-    <a href="admin-planner.html" class="nav-btn nav-btn-pink">Planner ♡</a>
-    <a href="admin-inventory.html" class="nav-btn nav-btn-pink">Inventory ♡</a>
-    <a href="admin-financial.html" class="nav-btn nav-btn-mint">Financials ♡</a>
-    <button onclick="handleLogout()" class="nav-btn nav-btn-pink opacity-50">Logout ⏻</button>
+    <div id="liveBanner" class="hidden bg-pink-500 text-white overflow-hidden transition-all duration-500 ease-in-out border-b border-pink-400/20" style="max-height: 0px;">
+        <div class="max-w-6xl mx-auto px-4 py-2 flex justify-center items-center gap-3">
+            <span class="text-[10px] animate-pulse">✨</span>
+            <p id="bannerText" class="text-[9px] font-black uppercase tracking-[0.3em] whitespace-nowrap"></p>
+            <span class="text-[10px] animate-pulse">✨</span>
+        </div>
+    </div>
+
+    <div class="mesh-bg"></div>
+    <div class="petals-container" id="petals"></div>
+
+    <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-xl md:text-2xl font-black tracking-tighter">
+                <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
             </div>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+    <a href="customer-index.html" class="nav-btn nav-btn-pink">Home ♡</a>
+    <a href="customer-services.html" class="nav-btn nav-btn-mint">Services ♡</a>
+    <a href="customer-tools.html" class="nav-btn nav-btn-pink">Studio Tools ♡</a>
+    <a href="customer-contact.html" class="nav-btn nav-btn-mint">Contact ♡</a>
+</div>
         </div>
     </nav>
-
 
     <main class="max-w-6xl mx-auto p-6 space-y-10">
         <div id="financial-stats" class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -101,38 +131,40 @@
     });
 }
     </script>
-    <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
-        <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Studio Management</p>
-        <p class="text-[9px] text-gray-300 uppercase tracking-widest font-bold">Internal Use Only 🌸</p>
-    </footer>
+     <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
+        <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
+        <p class="text-[var(--text-muted)] text-sm mb-6">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
+        </footer>
 
-    <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
-        <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden animate-fadeIn mb-2">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility Settings</h3>
-                <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 hover:text-pink-500 text-2xl">&times;</button>
-            </div>
-            <div class="space-y-5">
-                <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dark Mode</span>
-                    <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
-                <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Reduce Motion</span>
-                    <input type="checkbox" id="motionToggle" onchange="ComfortSettings.update('reduced-motion', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
-                <label class="flex justify-between items-center cursor-pointer group">
-                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dyslexia Font</span>
-                    <input type="checkbox" id="dyslexiaToggle" onchange="ComfortSettings.update('dyslexia-mode', this.checked)" class="w-5 h-5 accent-pink-500">
-                </label>
-            </div>
+<div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
+    <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden animate-fadeIn mb-2">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility Settings</h3>
+            <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 hover:text-pink-500 text-2xl" aria-label="Close Menu">&times;</button>
         </div>
-        <button onclick="ComfortSettings.toggleMenu()" class="access-btn flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all">
-            <span>⚙️</span>
-            <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Settings</span>
-        </button>
+        <div class="space-y-5">
+            <label class="flex justify-between items-center cursor-pointer group">
+                <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Dark Mode</span>
+                <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
+            </label>
+            <label class="flex justify-between items-center cursor-pointer group">
+                <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Reduce Motion</span>
+                <input type="checkbox" id="motionToggle" onchange="ComfortSettings.update('reduced-motion', this.checked)" class="w-5 h-5 accent-pink-500">
+            </label>
+            <label class="flex justify-between items-center cursor-pointer group">
+                <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Dyslexia Font</span>
+                <input type="checkbox" id="dyslexiaToggle" onchange="ComfortSettings.update('dyslexia-mode', this.checked)" class="w-5 h-5 accent-pink-500">
+            </label>
+        </div>
     </div>
+    
+    <button onclick="ComfortSettings.toggleMenu()" class="access-btn flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all" aria-label="Accessibility Settings">
+        <span>⚙️</span>
+        <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Accessibility Settings</span>
+    </button>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="global-scripts.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="global-scripts.js"></script>
 </body>
+</html>
