@@ -205,19 +205,33 @@ main {
 body.dark-theme { background-color: #121212 !important; color: #f3f4f6 !important; }
 body.reduced-motion * { animation: none !important; transition: none !important; }
 body.dyslexia-mode, body.dyslexia-mode * { font-family: 'OpenDyslexic', sans-serif !important; }
-body.high-contrast { 
-    background-color: #ffffff !important; 
+body.high-contrast {
+    filter: none !important; 
+    background-color: #ffffff !important;
     color: #000000 !important;
 }
 
-body.high-contrast #accessMenu,
-body.high-contrast .access-btn,
-body.high-contrast .fixed {
-    position: fixed !important;
-    transform: translateZ(0); 
+body.high-contrast .glass-card,
+body.high-contrast .studio-header,
+body.high-contrast nav {
+    background: #fff !important;
+    border: 3px solid #000 !important;
+    box-shadow: none !important;
 }
 
-body.high-contrast * {
-    border-color: #000 !important;
-    text-shadow: none !important;
+body.high-contrast .nav-link,
+body.high-contrast h1,
+body.high-contrast h2,
+body.high-contrast h3,
+body.high-contrast p {
+    color: #000 !important;
+    font-weight: 800 !important;
+}
+
+body.high-contrast #accessMenu,
+body.high-contrast .access-btn {
+    position: fixed !important;
+    bottom: 24px !important;
+    left: 24px !important;
+    z-index: 99999 !important;
 }
