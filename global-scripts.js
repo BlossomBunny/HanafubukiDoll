@@ -4,8 +4,7 @@ const ComfortSettings = {
     settings: [
         { id: 'dark-theme', toggle: 'darkToggle' },
         { id: 'reduced-motion', toggle: 'motionToggle' },
-        { id: 'dyslexia-mode', toggle: 'dyslexiaToggle' },
-        { id: 'high-contrast', toggle: 'high-contrast' }
+        { id: 'dyslexia-mode', toggle: 'dyslexiaToggle' }
     ],
 
     init() {
