@@ -481,6 +481,123 @@ async function saveJobChanges() {
             renderworkbench(false);
         }
 
+          async function declineOrder(id) {
+    if (!confirm("Are you sure you want to decline this enquiry/quote? This will archive the order and cannot be undone.")) {
+        return;
+    }
+    try {
+        const { error } = await _supabase
+            .from('commissions')
+            .update({
+                status: 'Declined',
+                archived: true,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+        if (error) throw error;
+        alert("Order declined and archived.");
+        closeDrawer();
+        renderworkbench(false);
+        renderSummary();
+    } catch (err) {
+        console.error("Decline error:", err);
+        alert("Failed to decline order: " + err.message);
+    }
+}
+ 
+function showDeclineModal(id, email, handle) {
+    currentDeclineJobId = id;
+    currentDeclineEmail = email;
+    currentDeclineHandle = handle;
+    document.getElementById('declineModal').classList.remove('hidden');
+    document.getElementById('declineReason').value = '';
+    document.getElementById('declineNotes').value = '';
+    updateEmailPreview();
+}
+function closeDeclineModal() {
+    document.getElementById('declineModal').classList.add('hidden');
+}
+function updateEmailPreview() {
+    const reasonSelect = document.getElementById('declineReason');
+    const notes = document.getElementById('declineNotes').value.trim();
+    const reasonText = reasonSelect.options[reasonSelect.selectedIndex]?.text || '[reason not selected]';
+    const preview =
+`Subject: Update on Your HanafubukiDoll Commission Enquiry
+Dear ${currentDeclineHandle || 'valued client'},
+Thank you so much for reaching out and for your interest in HanafubukiDoll ♡
+After carefully reviewing your request, We are really sorry to let you know that we're unable to accept this commission at this time.
+Reason: ${reasonText}
+${notes ? `\nAdditional note: ${notes}` : ''}
+We truly appreciate you considering us and wish you the very best in finding the perfect artist for your project.
+Warmest regards,
+Dani & Jas
+HanafubukiDoll 🌸
+https://hanafubukidoll.co.uk`;
+    document.getElementById('emailPreview').textContent = preview;
+}
+document.getElementById('declineNotes')?.addEventListener('input', updateEmailPreview);
+
+    
+async function confirmDeclineAndSend() {
+    if (!currentDeclineJobId) return;
+    const reasonSelect = document.getElementById('declineReason');
+    if (!reasonSelect.value) {
+        alert("Please select a reason for declining.");
+        return;
+    }
+    if (!confirm("This will decline & archive the order.\n\nSend the previewed email to " + currentDeclineEmail + "?\n\nThis cannot be undone.")) {
+        return;
+    }
+    try {
+        // 1. Update database – removed updated_at
+        const { error: updateError } = await _supabase
+            .from('commissions')
+            .update({
+                status: 'Declined',
+                archived: true,
+                decline_reason: reasonSelect.value + (document.getElementById('declineNotes').value ? ' | ' + document.getElementById('declineNotes').value : '')
+            
+            })
+            .eq('id', currentDeclineJobId);
+        if (updateError) throw updateError;
+        // 2. Attempt to send email via Edge Function
+        if (currentDeclineEmail) {
+            const previewText = document.getElementById('emailPreview').textContent;
+            const subject = previewText.split('\n')[0].replace('Subject: ', '');
+            const response = await fetch('https://hxqxinfdeyprkuvvyqet.supabase.co/functions/v1/hyper-handler', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: currentDeclineEmail,
+                    subject: subject,
+                    html: previewText.replace(/\n/g, '<br>')
+                })
+            });
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                console.error("Edge Function error:", response.status, errData);
+                throw new Error(`Email send failed (status ${response.status})`);
+            }
+            const result = await response.json();
+            if (result.error) {
+                console.warn("Email send failed:", result.error);
+                alert("Order declined & archived, but email failed to send. Please send manually.");
+            } else {
+                alert("Order declined, archived, and email sent successfully! ♡");
+            }
+        } else {
+            alert("Order declined & archived (no email was sent - no address on file).");
+        }
+        closeDeclineModal();
+        closeDrawer();
+        renderworkbench(false);
+        renderSummary();
+    } catch (err) {
+        console.error("Decline error:", err);
+        alert("Something went wrong: " + err.message);
+    }
+}
+
         document.addEventListener('DOMContentLoaded', () => renderworkbench(false));
     </script>
 </body>
