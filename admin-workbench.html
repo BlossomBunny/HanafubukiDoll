@@ -79,7 +79,10 @@
         const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let activeJobId = null;
+       let activeJobId = null;        // For the drawer
+    let currentDeclineJobId = null; // For the decline modal
+    let currentDeclineEmail = '';
+    let currentDeclineHandle = '';
 
 // --- AUTH CHECK ---
  _supabase.auth.onAuthStateChange((event, session) => {
