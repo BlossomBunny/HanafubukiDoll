@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - HanafubukiDoll</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="global-utils.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="global-style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
+
+    <style type="text/tailwindcss">
+             @layer components {
+            .nav-btn { 
+                @apply px-5 py-2 rounded-full font-bold text-sm transition-all cursor-pointer inline-block; 
+            }
+            .nav-btn-pink { 
+                @apply bg-pink-50 text-pink-500 hover:bg-pink-100; 
+            }
+            .nav-btn-mint { 
+                @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; 
+            }
+
+          .auth-hidden { @apply hidden !important; }
+            
+            .glass-card { 
+                background: rgba(255, 255, 255, 0.8); 
+                backdrop-filter: blur(12px); 
+                @apply rounded-[2rem] border border-pink-100/20; 
+            }
+
+            .img-enlarge { 
+                @apply fixed inset-0 z-[200] w-full h-full object-contain bg-black/90 cursor-zoom-out p-5;
+            }
+        }
+
+        @keyframes pulse-custom {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0; }
+        }
+        .animate-pulse-custom {
+            animation: pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .bounce-bunny { display: inline-block; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    </style>
+</head>
+<body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
+
+    <nav class="p-4 md:p-6 sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-pink-50">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="text-xl md:text-2xl font-black tracking-tighter">
+            <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
+        </div>
+        
+    <div id="adminNav" class="flex flex-wrap justify-center gap-2 md:gap-4">
+    <a href="admin-index.html" class="nav-btn nav-btn-pink">Dashboard ♡</a>
+    <a href="admin-workbench.html" class="nav-btn nav-btn-pink">Workbench ♡</a>
+    <a href="admin-planner.html" class="nav-btn nav-btn-pink">Planner ♡</a>
+    <a href="admin-financial.html" class="nav-btn nav-btn-mint">Financials ♡</a> <button onclick="handleLogout()" class="nav-btn nav-btn-pink opacity-50">Logout ⏻</button>
+</div>
+<main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
+<!-- PLANNER TAB -->
+    <div id="view-planner" class="tab-content hidden space-y-6">
+    <div class="mb-8">
+        <h2 class="text-3xl font-black italic">Priority Planner</h2>
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Weighted by age and urgency status</p>
+    </div>
+    <div id="plannerContainer" class="space-y-4">
+        <div id="calendar" class="glass-card p-4 rounded-[2rem] border border-pink-100/20"></div> <!-- Calendar goes here -->
+    </div>
+</div>
+
+  <script>
+ // --- PLANNER LOGIC --- //
+// Helper for Calendar Colors
+function getJobColor(status, isUrgent) {
+    if (isUrgent) return '#FDA4AF'; // Soft red for urgent
+    const colors = {
+        'Enquiry': '#DBEAFE', // Blue
+        'Arrived': '#FEF3C7', // Amber
+        'Working': '#D1FAE5', // Emerald
+        'Approved': '#CFFAFE', // Cyan
+        'Photo': '#E0E7FF',    // Indigo
+        'Shipped': '#F3F4F6'   // Gray
+    };
+    return colors[status] || '#FDF2F8'; // Default pink
+}
+
+// Helper to show the Event Modal (needed for the + button)
+function showEventModal(id, event = null) {
+    currentEventId = id;
+    const modal = document.getElementById('eventModal');
+    if (!modal) return;
+    
+    modal.classList.remove('hidden');
+    
+    if (event) {
+        document.getElementById('eventTitle').value = event.title;
+        document.getElementById('eventStart').value = event.start.toISOString().slice(0, 16);
+        if (event.end) document.getElementById('eventEnd').value = event.end.toISOString().slice(0, 16);
+        document.getElementById('eventDetails').value = event.extendedProps.details || '';
+    } else {
+        document.getElementById('eventForm').reset();
+    }
+}
+
+function showEventModal(id, event = null) {
+    currentEventId = id;
+    document.getElementById('eventModalTitle').textContent = id ? 'Edit Event' : 'Add Event';
+    document.getElementById('deleteEventBtn').classList.toggle('hidden', !id);
+
+    if (event) {
+        document.getElementById('eventTitle').value = event.title || '';
+        document.getElementById('eventType').value = event.extendedProps?.type || 'other';
+        document.getElementById('eventStart').value = event.start ? new Date(event.start).toISOString().slice(0,16) : '';
+        document.getElementById('eventEnd').value = event.end ? new Date(event.end).toISOString().slice(0,16) : '';
+        document.getElementById('eventDetails').value = event.extendedProps?.details || '';
+    } else {
+        document.getElementById('eventForm').reset();
+    }
+
+    document.getElementById('eventModal').classList.remove('hidden');
+}
+
+function closeEventModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+}
+
+async function saveEvent() {
+    const title = document.getElementById('eventTitle').value.trim();
+    const type = document.getElementById('eventType').value;
+    const start = document.getElementById('eventStart').value;
+    const end = document.getElementById('eventEnd').value || null;
+    const details = document.getElementById('eventDetails').value.trim();
+
+    // Verification Alert
+    if (!title || !start) {
+        showMagicAlert("Missing Info! ☁️", "Title and start date are required to save an event.", "error");
+        return;
+    }
+
+    try {
+        let error;
+        if (currentEventId) {
+            ({ error } = await _supabase.from('events').update({
+                title, type, start_date: start, end_date: end, details
+            }).eq('id', currentEventId));
+        } else {
+            ({ error } = await _supabase.from('events').insert({
+                title, type, start_date: start, end_date: end, details
+            }));
+        }
+
+        if (error) throw error;
+
+        // Optional Success Alert - You can comment this out if you prefer it just closing silently
+        showMagicAlert("Planner Updated! 🌸", "Your event has been safely tucked into the calendar.", "success");
+
+        closeEventModal();
+        renderPlanner(); // Refresh calendar
+    } catch (err) {
+        console.error("Save event error:", err);
+        // Error Alert
+        showMagicAlert("Save Failed ☁️", "Oh no! We couldn't save that: " + err.message, "error");
+    }
+}
+    
+async function deleteEvent() {
+    showMagicAlert(
+        "Delete Event? 🎀", 
+        "Are you sure you want to remove this from the calendar? This cannot be undone.", 
+        "confirm", 
+        async () => {
+            try {
+                const { error } = await _supabase.from('events').delete().eq('id', currentEventId);
+                if (error) throw error;
+                
+                // Success feedback
+                showMagicAlert("Gone! ☁️", "The event has been cleared from your planner.", "success");
+                
+                closeEventModal();
+                renderPlanner();
+            } catch (err) {
+                console.error("Delete error:", err);
+                showMagicAlert("Error ☁️", "Failed to delete: " + err.message, "error");
+            }
+        }
+    );
+}
+       
+async function renderPlanner() {
+    const container = document.getElementById('plannerContainer');
+    container.innerHTML = `
+        <div class="flex justify-end mb-6">
+            <button onclick="showEventModal(null)" class="nav-btn nav-btn-pink px-6 py-3">+ Add Holiday/Event ♡</button>
+        </div>
+        <div id="calendar" class="glass-card p-6 rounded-[2rem] border border-pink-100/30 shadow-sm overflow-hidden"></div>
+    `;
+
+    try {
+        const { data: jobs } = await _supabase.from('commissions').select('*')
+            .in('status', ['Enquiry', 'Quote', 'Arrived', 'Working', 'Approved', 'Photo'])
+            .order('created_at');
+
+        const { data: events } = await _supabase.from('events').select('*').order('start_date');
+
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',          // Simple monthly grid – no hours/time slots
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,dayGridWeek' // Month + week (dayGrid = no time axis)
+            },
+            weekends: true,
+            firstDay: 1,                          // Start week on Monday (change to 0 for Sunday)
+            editable: true,
+            selectable: true,
+            events: [
+...jobs
+        .filter(job => job.arrived_at && new Date(job.arrived_at) instanceof Date && !isNaN(new Date(job.arrived_at)))
+        .map(job => ({
+            id: `job-${job.id}`,
+            title: `${job.social_handle || 'Client'} – ${job.doll_sculpt || '?'} (${job.status})`,
+            start: new Date(job.arrived_at),
+            end: job.shipped_at ? new Date(job.shipped_at) : new Date(),
+            allDay: true,
+            backgroundColor: getJobColor(job.status, job.is_urgent),
+            borderColor: 'transparent',
+            textColor: '#333',
+            extendedProps: { type: 'job' }
+        })),
+                ...events.map(event => ({
+                    id: event.id,
+                    title: event.title,
+                    start: event.start_date,
+                    end: event.end_date,
+                    allDay: true,
+                    backgroundColor: event.type === 'holiday' ? '#FFB3BA' : '#BAE1FF',
+                    borderColor: 'transparent',
+                    textColor: '#333',
+                    extendedProps: { type: 'event', details: event.details || '' }
+                }))
+            ],
+            eventClick: function(info) {
+                if (info.event.extendedProps.type === 'job') {
+                    const jobId = info.event.id.replace('job-', '');
+                    openDrawer(jobId);
+                } else {
+                    showEventModal(info.event.id, info.event);
+                }
+            },
+            eventDrop: async function(info) {
+                if (info.event.extendedProps.type === 'event') {
+                    await _supabase.from('events').update({
+                        start_date: info.event.start.toISOString(),
+                        end_date: info.event.end ? info.event.end.toISOString() : null
+                    }).eq('id', info.event.id);
+                }
+            },
+            eventResize: async function(info) {
+                if (info.event.extendedProps.type === 'event') {
+                    await _supabase.from('events').update({
+                        end_date: info.event.end.toISOString()
+                    }).eq('id', info.event.id);
+                }
+            },
+            height: 'auto',
+            // Hide any lingering time elements
+            displayEventTime: false,
+            eventTimeFormat: { hour: 'numeric', minute: '2-digit', omitZeroMinute: true },
+            // Clean look: no extra slot lines
+            slotMinTime: '00:00:00',
+            slotMaxTime: '24:00:00',
+            allDaySlot: false, // No separate all-day row needed since everything is allDay
+            dayHeaderFormat: { weekday: 'short', day: 'numeric' } // Compact headers
+        });
+
+        calendar.render();
+    } catch (err) {
+        console.error("Planner error:", err);
+        container.innerHTML += `<p class="text-rose-500 text-center p-10">Error loading planner: ${err.message}</p>`;
+    }
+}
+  async function handleLogout() {
+    try {
+        const { error } = await _supabase.auth.signOut();
+        if (error) throw error;
+        localStorage.removeItem('hana_active_tab');
+        window.location.href = 'login.html';
+    } catch (err) {
+        console.error("Logout error:", err);
+        alert("Logout failed.");
+    }
+}
+
+     <footer class="py-20 text-center border-t border-pink-50 bg-white/30 relative z-10">
+        <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Studio Management</p>
+        <p class="text-[9px] text-gray-300 uppercase tracking-widest font-bold">Internal Use Only 🌸</p>
+    </footer>
+
+    <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
+        <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden animate-fadeIn mb-2">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility Settings</h3>
+                <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 hover:text-pink-500 text-2xl">&times;</button>
+            </div>
+            <div class="space-y-5">
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dark Mode</span>
+                    <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
+                </label>
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Reduce Motion</span>
+                    <input type="checkbox" id="motionToggle" onchange="ComfortSettings.update('reduced-motion', this.checked)" class="w-5 h-5 accent-pink-500">
+                </label>
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400">Dyslexia Font</span>
+                    <input type="checkbox" id="dyslexiaToggle" onchange="ComfortSettings.update('dyslexia-mode', this.checked)" class="w-5 h-5 accent-pink-500">
+                </label>
+            </div>
+        </div>
+        <button onclick="ComfortSettings.toggleMenu()" class="access-btn flex items-center gap-2 px-5 py-3 bg-white border-2 border-pink-100 rounded-full shadow-lg hover:scale-105 transition-all">
+            <span>⚙️</span>
+            <span class="text-[11px] font-black uppercase tracking-widest text-gray-700">Settings</span>
+        </button>
+    </div>
+       </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="global-scripts.js"></script>
+</body>
+</html>
