@@ -74,91 +74,86 @@
         </div>
     </div>
     <script>
-      
-    let activeJobId = null;        // For the drawer
-    let currentDeclineJobId = null; // For the decline modal
-    let currentDeclineEmail = '';
-    let currentDeclineHandle = '';
+      let activeJobId = null;        // For the drawer
+let currentDeclineJobId = null; // For the decline modal
+let currentDeclineEmail = '';
+let currentDeclineHandle = '';
 
-// --- AUTH CHECK ---
- _supabase.auth.onAuthStateChange((event, session) => {
-    if (!session) {
-        window.location.href = 'login.html';
+// --- RENDER WORKBENCH (Called by global-scripts.js) ---
+async function renderworkbench(showArchived = false) {
+    const container = document.getElementById('commissionList');
+    if (!container) return;
+
+    // Show loading state
+    container.innerHTML = `<div class="flex justify-center py-10"><span class="animate-bounce text-2xl">🌸</span></div>`;
+
+    const liveBtn = document.getElementById('tab-live');
+    const archBtn = document.getElementById('tab-archived');
+    
+    // UI Toggle
+    if (showArchived) {
+        liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
+        archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
     } else {
-        const urlParams = new URLSearchParams(window.location.search);
-        const jobId = urlParams.get('id');
-        
-        if (jobId) {
-      
-            setTimeout(() => {
-                if (typeof openDrawer === "function") {
-                    openDrawer(jobId);
-                }
-            }, 800); 
-        }
+        liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
+        archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
     }
- });
 
-        // --- RENDER WORKBENCH ---
-        async function renderworkbench(showArchived = false) {
-            const liveBtn = document.getElementById('tab-live');
-            const archBtn = document.getElementById('tab-archived');
-            
-            // UI Toggle
-            if (showArchived) {
-                liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
-                archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
-            } else {
-                liveBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-white shadow-sm text-pink-500";
-                archBtn.className = "px-6 py-2 text-[10px] font-black uppercase rounded-xl text-gray-400";
-            }
+    const { data: jobs, error } = await _supabase
+        .from('commissions')
+        .select('*')
+        .eq('archived', showArchived)
+        .order('created_at', { ascending: false });
 
-            const { data: jobs, error } = await _supabase
-                .from('commissions')
-                .select('*')
-                .eq('archived', showArchived)
-                .order('created_at', { ascending: false });
+    if (error) {
+        container.innerHTML = `<p class="text-rose-500 text-center">Error: ${error.message}</p>`;
+        return;
+    }
 
-            const container = document.getElementById('commissionList');
-            if (error || !jobs) return;
+    const statusColors = { 
+        'Enquiry': 'bg-blue-50 text-blue-500', 
+        'Arrived': 'bg-amber-50 text-amber-600',
+        'Working': 'bg-emerald-50 text-emerald-600', 
+        'Approved': 'bg-cyan-50 text-cyan-600', 
+        'Shipped': 'bg-gray-100 text-gray-500' 
+    };
 
-            const statusColors = { 
-                'Enquiry': 'bg-blue-50 text-blue-500', 
-                'Arrived': 'bg-amber-50 text-amber-600',
-                'Working': 'bg-emerald-50 text-emerald-600', 
-                'Approved': 'bg-cyan-50 text-cyan-600', 
-                'Shipped': 'bg-gray-100 text-gray-500' 
-            };
-
-            container.innerHTML = jobs.map(job => `
-                <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
-                    <div class="w-12 h-12 bg-pink-50 rounded-full shrink-0 flex items-center justify-center overflow-hidden border border-pink-100">
-                        <span class="text-xl">🎨</span>
-                    </div>
-                    <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
-                        <div>
-                            <h4 class="font-black text-sm truncate">${job.social_handle || 'N/A'}</h4>
-                            <p class="text-[10px] text-gray-400 font-bold">${job.customer_email || ''}</p>
-                        </div>
-                        <div class="hidden md:block">
-                            <p class="text-[9px] font-black text-gray-300 uppercase">Sculpt</p>
-                            <p class="text-[10px] text-gray-500 truncate">${job.doll_sculpt || '—'}</p>
-                        </div>
-                        <div>
-                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColors[job.status] || 'bg-gray-50 text-gray-400'}">
-                                ${job.status}
-                            </span>
-                        </div>
-                        <div class="text-right">
-                            <button onclick="openDrawer('${job.id}')" class="px-4 py-2 bg-pink-50 text-pink-500 rounded-xl text-[10px] font-black uppercase hover:bg-pink-100">
-                                Open Order ♡
-                            </button>
-                        </div>
-                    </div>
+    container.innerHTML = jobs.map(job => `
+        <div class="bg-white border border-pink-50 rounded-2xl p-4 flex items-center gap-4 hover:shadow-sm transition-all">
+            <div class="w-12 h-12 bg-pink-50 rounded-full shrink-0 flex items-center justify-center overflow-hidden border border-pink-100">
+                <span class="text-xl">🎨</span>
+            </div>
+            <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
+                <div>
+                    <h4 class="font-black text-sm truncate">${job.social_handle || 'N/A'}</h4>
+                    <p class="text-[10px] text-gray-400 font-bold">${job.customer_email || ''}</p>
                 </div>
-            `).join('') || '<p class="text-center p-10 text-gray-300 italic">No orders found.</p>';
-        }
+                <div class="hidden md:block">
+                    <p class="text-[9px] font-black text-gray-300 uppercase">Sculpt</p>
+                    <p class="text-[10px] text-gray-500 truncate">${job.doll_sculpt || '—'}</p>
+                </div>
+                <div>
+                    <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColors[job.status] || 'bg-gray-50 text-gray-400'}">
+                        ${job.status}
+                    </span>
+                </div>
+                <div class="text-right">
+                    <button onclick="openDrawer('${job.id}')" class="px-4 py-2 bg-pink-50 text-pink-500 rounded-xl text-[10px] font-black uppercase hover:bg-pink-100">
+                        Open Order ♡
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('') || '<p class="text-center p-10 text-gray-300 italic">No orders found.</p>';
 
+    // --- NEW: URL AUTO-OPEN LOGIC ---
+    // This part handles opening the drawer if there is an ID in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const jobId = urlParams.get('id');
+    if (jobId && !activeJobId) {
+        openDrawer(jobId);
+    }
+}
       // --- DRAWER & PAYMENTS --- //
 async function openDrawer(id) {
     activeJobId = id;
