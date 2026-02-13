@@ -172,18 +172,18 @@ async function openDrawer(id) {
 
         content.innerHTML = `
             <div class="max-w-2xl mx-auto space-y-6 pb-24 px-4">
-                <section class="flex justify-between items-center border-b pb-4">
+                <section class="flex justify-between items-start border-b border-pink-50 pb-6">
                     <div>
                         <h3 class="text-xl font-black text-gray-700 italic leading-tight">${job.social_handle || '@none'}</h3>
                         <p class="text-[11px] font-bold text-pink-400 uppercase tracking-wider mb-1">${job.customer_email || 'No email provided'}</p>
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${job.doll_company || ''} ${job.doll_sculpt || ''}</p>
                     </div>
-                    <select id="upStatus" class="text-xs font-black uppercase bg-gray-100 px-4 py-2 rounded-xl">
+                    <select id="upStatus" class="text-[10px] font-black uppercase bg-gray-100 px-4 py-2 rounded-xl text-gray-600 border-none outline-none">
                         ${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped'].map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`).join('')}
                     </select>
                 </section>
 
-               <div class="bg-gray-50/50 p-5 rounded-[2.5rem] border border-gray-100 space-y-4">
+                <div class="bg-gray-50/50 p-5 rounded-[2.5rem] border border-gray-100 space-y-4">
                     <div class="flex justify-between items-center px-2">
                         <select id="payType" onchange="updatePayMethod(this.value)" class="bg-white border-none rounded-xl text-[10px] font-black uppercase px-3 py-2 shadow-sm text-gray-500">
                             <option value="Paid in Full" ${isPaidInFull ? 'selected' : ''}>Paid in Full</option>
@@ -228,7 +228,24 @@ async function openDrawer(id) {
                         </div>
                     </div>
                 </div>
-                
+
+                <div class="p-4 bg-white rounded-3xl border border-gray-100 grid grid-cols-2 gap-3 text-gray-600">
+                    <input id="trackNum" type="text" value="${job.tracking_number || ''}" placeholder="Tracking Number" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
+                    <input id="shipCost" type="number" value="${job.shipping_cost || 0}" placeholder="Ship Cost £" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
+                </div>
+
+                <div class="space-y-4">
+                    ${renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink')}
+                    ${renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')}
+                    ${renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')}
+                </div>
+            </div>`;
+
+        drawer.classList.remove('translate-x-full');
+    } catch (err) { 
+        console.error("Open drawer error:", err); 
+    }
+}
                 <div class="p-4 bg-white rounded-3xl border border-gray-100 grid grid-cols-2 gap-3">
                     <input id="trackNum" type="text" value="${job.tracking_number || ''}" placeholder="Tracking Number" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
                     <input id="shipCost" type="number" value="${job.shipping_cost || 0}" placeholder="Ship Cost £" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
@@ -268,15 +285,45 @@ async function openDrawer(id) {
     }
     activeJobId = null;
 }
-        function recalcBalance() {
+       // Switches the UI between Paid in Full, Layaway, and Trade
+function updatePayMethod(val) {
+    const moneyUI = document.getElementById('moneyUI');
+    const layawayExtra = document.getElementById('layawayExtra');
+    const tradeUI = document.getElementById('tradeUI');
+
+    if (val === 'Trade' || val === 'Gift') {
+        moneyUI.classList.add('hidden');
+        tradeUI.classList.remove('hidden');
+    } else {
+        moneyUI.classList.remove('hidden');
+        tradeUI.classList.add('hidden');
+        
+        // Hide/Show the payment history & "Add" button based on Paid in Full
+        if (val === 'Paid in Full') {
+            layawayExtra.classList.add('hidden');
+        } else {
+            layawayExtra.classList.remove('hidden');
+        }
+    }
+}
+
+// Recalculates the balance text color and amount instantly
+function recalcBalance() {
     const total = parseFloat(document.getElementById('tPrice').value) || 0;
-    // Collect current payments from the historyList (or keep a local array)
-    const paid = Array.from(document.querySelectorAll('#historyList span.text-emerald-500'))
-                      .reduce((sum, el) => sum + parseFloat(el.innerText.replace('+£', '')), 0);
-    const bal = Math.max(0, total - paid);
+    const historyRows = document.querySelectorAll('#historyList span.text-emerald-500');
+    
+    let paidTotal = 0;
+    historyRows.forEach(el => {
+        paidTotal += parseFloat(el.innerText.replace('+£', '')) || 0;
+    });
+
+    const balance = Math.max(0, total - paidTotal);
     const display = document.getElementById('balanceDisplay');
-    display.innerText = `£${bal.toFixed(2)}`;
-    display.className = `font-black ${bal > 0 ? 'text-rose-400' : 'text-emerald-400'}`;
+    
+    if (display) {
+        display.innerText = `£${balance.toFixed(2)}`;
+        display.className = `font-black ${balance > 0 ? 'text-rose-400' : 'text-emerald-400'}`;
+    }
 }
     function renderServiceBlock(job, key, title, color) {
     const data = job[`${key}_details`];
@@ -336,64 +383,33 @@ function togglePayUI() {
 
   async function addLayawayPayment() {
     const amtInput = document.getElementById('newPayAmt');
-    const amount = parseFloat(amtInput.value);
+    const amt = parseFloat(amtInput.value);
+    if (!amt || !activeJobId) return;
+
+    // 1. Get current data from DB
+    const { data: job } = await _supabase.from('commissions').select('payments').eq('id', activeJobId).single();
+    const payments = job.payments || [];
     
-    if (!amount || amount <= 0) {
-        showMagicAlert(
-            "Invalid Amount ☁️", 
-            "Please enter a valid amount greater than zero to process the payment.", 
-            "error"
-        );
-        return;
-    }
+    const newEntry = { date: new Date().toISOString(), amount: amt };
+    payments.push(newEntry);
 
-    try {
-        // 1. Get current job data
-        const { data: job, error: fetchError } = await _supabase
-            .from('commissions')
-            .select('payments')
-            .eq('id', activeJobId)
-            .single();
+    // 2. Update DB
+    const { error } = await _supabase.from('commissions').update({ payments }).eq('id', activeJobId);
 
-        if (fetchError) throw fetchError;
+    if (!error) {
+        // 3. Update the UI List without refreshing!
+        const historyList = document.getElementById('historyList');
+        const newRow = document.createElement('div');
+        newRow.className = "flex justify-between text-[10px] font-bold text-gray-500 bg-white p-2 rounded-lg border border-gray-50";
+        newRow.innerHTML = `<span>${new Date().toLocaleDateString()}</span><span class="text-emerald-500">+£${amt}</span>`;
         
-        // 2. Create new payment object
-        const newPayment = {
-            amount: amount,
-            date: new Date().toISOString(),
-            note: "Layaway installment"
-        };
-
-        // 3. Update Supabase
-        const updatedPayments = [...(job.payments || []), newPayment];
-        const { error: updateError } = await _supabase
-            .from('commissions')
-            .update({ payments: updatedPayments })
-            .eq('id', activeJobId);
-
-        if (updateError) throw updateError;
-
-        // --- SUCCESS STATE ---
+        if (historyList.querySelector('p')) historyList.innerHTML = ''; // Clear "No payments" text
+        historyList.appendChild(newRow);
+        
         amtInput.value = ''; // Clear input
-        
-        showMagicAlert(
-            "Payment Received! 🌸", 
-            `A payment of $${amount.toFixed(2)} has been added to the layaway plan.`, 
-            "success"
-        );
-
-        openDrawer(activeJobId); // Refresh drawer to show new balance
-
-    } catch (err) {
-        console.error("Layaway error:", err);
-        showMagicAlert(
-            "Payment Failed ☁️", 
-            "We couldn't process that payment: " + err.message, 
-            "error"
-        );
+        recalcBalance();    // Refresh the Outstanding total
     }
 }
-
     // ---- SAVE LOGIC ---- //
 async function saveJobChanges() {
     if (!activeJobId) return;
