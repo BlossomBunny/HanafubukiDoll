@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Commissions Workbench - HanafubukiDoll</title>
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="global-utils.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -499,28 +500,39 @@ async function saveJobChanges() {
             renderworkbench(false);
         }
 
-          async function declineOrder(id) {
-    if (!confirm("Are you sure you want to decline this enquiry/quote? This will archive the order and cannot be undone.")) {
-        return;
-    }
-    try {
-        const { error } = await _supabase
-            .from('commissions')
-            .update({
-                status: 'Declined',
-                archived: true,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', id);
-        if (error) throw error;
-        alert("Order declined and archived.");
-        closeDrawer();
-        renderworkbench(false);
-        renderSummary();
-    } catch (err) {
-        console.error("Decline error:", err);
-        alert("Failed to decline order: " + err.message);
-    }
+       async function declineOrder(id) {
+    // 1. Trigger the Magic Confirm Alert
+    showMagicAlert(
+        "Decline Order?", 
+        "This will archive the enquiry and cannot be undone. Are you sure you want to proceed? 🎀", 
+        "confirm", 
+        async () => {
+            // 2. This logic only runs if the user clicks "Yes, Proceed ♡"
+            try {
+                const { error } = await _supabase
+                    .from('commissions')
+                    .update({
+                        status: 'Declined',
+                        archived: true,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                // Success Feedback
+                showMagicAlert("Archived", "The order has been declined and moved to archives. 🌸", "success");
+                
+                closeDrawer();
+                renderworkbench(false);
+                renderSummary();
+
+            } catch (err) {
+                console.error("Decline error:", err);
+                showMagicAlert("Error", "Failed to decline order: " + err.message, "error");
+            }
+        }
+    );
 }
  
 function showDeclineModal(id, email, handle) {
@@ -558,72 +570,92 @@ document.getElementById('declineNotes')?.addEventListener('input', updateEmailPr
     
 async function confirmDeclineAndSend() {
     if (!currentDeclineJobId) return;
+
     const reasonSelect = document.getElementById('declineReason');
+    const declineNotes = document.getElementById('declineNotes')?.value;
+
+    // 1. Validation Check
     if (!reasonSelect.value) {
-        alert("Please select a reason for declining.");
-        return;
+        return showMagicAlert("Wait! 🎀", "Please select a reason for declining before proceeding.", "error");
     }
-    if (!confirm("This will decline & archive the order.\n\nSend the previewed email to " + currentDeclineEmail + "?\n\nThis cannot be undone.")) {
-        return;
-    }
-    try {
-        // 1. Update database – removed updated_at
-        const { error: updateError } = await _supabase
-            .from('commissions')
-            .update({
-                status: 'Declined',
-                archived: true,
-                decline_reason: reasonSelect.value + (document.getElementById('declineNotes').value ? ' | ' + document.getElementById('declineNotes').value : '')
-            
-            })
-            .eq('id', currentDeclineJobId);
-        if (updateError) throw updateError;
-        // 2. Attempt to send email via Edge Function
-        if (currentDeclineEmail) {
-            const previewText = document.getElementById('emailPreview').textContent;
-            const subject = previewText.split('\n')[0].replace('Subject: ', '');
-            const response = await fetch('https://hxqxinfdeyprkuvvyqet.supabase.co/functions/v1/hyper-handler', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    to: currentDeclineEmail,
-                    subject: subject,
-                    html: previewText.replace(/\n/g, '<br>')
-                })
-            });
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                console.error("Edge Function error:", response.status, errData);
-                throw new Error(`Email send failed (status ${response.status})`);
+
+    // 2. The Big Confirmation
+    showMagicAlert(
+        "Final Confirmation",
+        `This will decline & archive the order.\n\nSend the previewed email to ${currentDeclineEmail}?\n\nThis cannot be undone. ♡`,
+        "confirm",
+        async () => {
+            try {
+                // 3. Update Database
+                const { error: updateError } = await _supabase
+                    .from('commissions')
+                    .update({
+                        status: 'Declined',
+                        archived: true,
+                        decline_reason: reasonSelect.value + (declineNotes ? ' | ' + declineNotes : '')
+                    })
+                    .eq('id', currentDeclineJobId);
+
+                if (updateError) throw updateError;
+
+                // 4. Handle Email Logic
+                if (currentDeclineEmail) {
+                    const previewText = document.getElementById('emailPreview').textContent;
+                    const subject = previewText.split('\n')[0].replace('Subject: ', '');
+                    
+                    const response = await fetch('https://hxqxinfdeyprkuvvyqet.supabase.co/functions/v1/hyper-handler', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            to: currentDeclineEmail,
+                            subject: subject,
+                            html: previewText.replace(/\n/g, '<br>')
+                        })
+                    });
+
+                    if (!response.ok) throw new Error(`Email service status ${response.status}`);
+                    
+                    const result = await response.json();
+
+                    if (result.error) {
+                        showMagicAlert("Partial Success", "Order declined & archived, but the email failed. Please send manually. ☁️", "error");
+                    } else {
+                        showMagicAlert("Success! 🌸", "Order declined, archived, and farewell email sent successfully!", "success");
+                    }
+                } else {
+                    showMagicAlert("Archived", "Order declined & archived. No email was sent as there is no address on file. 🎀", "success");
+                }
+
+                // 5. Cleanup UI
+                closeDeclineModal();
+                closeDrawer();
+                renderworkbench(false);
+                renderSummary();
+
+            } catch (err) {
+                console.error("Decline error:", err);
+                showMagicAlert("Something went wrong", "Error: " + err.message, "error");
             }
-            const result = await response.json();
-            if (result.error) {
-                console.warn("Email send failed:", result.error);
-                alert("Order declined & archived, but email failed to send. Please send manually.");
-            } else {
-                alert("Order declined, archived, and email sent successfully! ♡");
-            }
-        } else {
-            alert("Order declined & archived (no email was sent - no address on file).");
         }
-        closeDeclineModal();
-        closeDrawer();
-        renderworkbench(false);
-        renderSummary();
-    } catch (err) {
-        console.error("Decline error:", err);
-        alert("Something went wrong: " + err.message);
-    }
+    );
 }
-        async function handleLogout() {
+        
+     async function handleLogout() {
     try {
         const { error } = await _supabase.auth.signOut();
         if (error) throw error;
+
         localStorage.removeItem('hana_active_tab');
-        window.location.href = 'login.html';
+        
+        window.location.href = 'admin-login.html'; 
+        
     } catch (err) {
         console.error("Logout error:", err);
-        alert("Logout failed.");
+        showMagicAlert(
+            "Logout Failed", 
+            "We couldn't sign you out properly. Please try again! ☁️", 
+            "error"
+        );
     }
 }
 
@@ -703,7 +735,6 @@ async function confirmDeclineAndSend() {
     </button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="global-scripts.js"></script>
 </body>
 </html>
