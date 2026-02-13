@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Commissions Workbench - HanafubukiDoll</title>
+    <title>Inventory - HanafubukiDoll</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -52,13 +52,20 @@
 <script>
 function initPage(session) {
     document.getElementById('view-inventory').classList.remove('hidden');
-    renderInventory();
+    renderinventory();
 }
 
-async function renderInventory() {
+async function renderinventory() {
     const container = document.getElementById('view-inventory');
+    if (!container) return;
+
+    // 1. MAKE IT VISIBLE: This replaces the need for initPage
+    container.classList.remove('hidden');
+
+    // 2. SHOW LOADING STATE
     container.innerHTML = `<div class="flex justify-center py-20"><span class="animate-bounce text-2xl">🌸</span></div>`;
     
+    // 3. FETCH DATA
     const { data: items, error } = await _supabase.from('inventory').select('*').order('sculpt_size', { ascending: true });
     
     if (error) {
