@@ -285,9 +285,15 @@ async function toggleBanner() {
 
 async function updateBanner() {
     const msgInput = document.getElementById('bannerMsgInput');
-    const newText = msgInput.value.trim();
+    const newText = msgInput?.value.trim();
 
-    if (!newText) return alert("Please enter a message for the banner! ♡");
+    if (!newText) {
+        return showMagicAlert(
+            "Empty Message", 
+            "Please enter a message for the banner! ♡", 
+            "error"
+        );
+    }
 
     const { error } = await _supabase
         .from('studio_settings')
@@ -295,9 +301,19 @@ async function updateBanner() {
         .eq('id', 'Banner');
 
     if (error) {
-        alert("Failed to update banner text.");
+        showMagicAlert(
+            "Update Failed", 
+            "We couldn't update the banner right now. ☁️", 
+            "error"
+        );
     } else {
-        alert("Banner updated successfully! ✨");
+        showMagicAlert(
+            "Banner Updated", 
+            "Your new announcement is now live for all customers! ✨", 
+            "success"
+        );
+        // Optional: clear the input after success
+        if (msgInput) msgInput.value = "";
     }
 }
 
@@ -320,7 +336,6 @@ function updateBannerUI(isLive) {
     }
 }
 
-// Ensure the UI matches the DB state on page load
 async function syncBannerUI() {
     const { data } = await _supabase.from('studio_settings').select('*').eq('id', 'Banner').single();
     if (data) {
@@ -329,9 +344,7 @@ async function syncBannerUI() {
     }
 }
 
-// Add syncBannerUI() to your existing DOMContentLoaded listener
 document.addEventListener('DOMContentLoaded', async () => {
-    // ... your existing auth check ...
     syncBannerUI(); 
 });
     </script>
