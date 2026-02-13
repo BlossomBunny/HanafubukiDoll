@@ -127,6 +127,9 @@
                         <div class="grid grid-cols-2 gap-2 pt-2">
                             <button onclick="bringToFront()" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">🔝 Front</button>
                             <button onclick="deleteSelected()" class="bg-white border border-red-50 p-2 rounded-xl text-[10px] font-bold text-red-400">🗑️ Remove</button>
+                            <button onclick="clearCanvas()" class="w-full bg-white border-2 border-red-100 p-4 rounded-2xl font-bold text-xs hover:bg-red-50 text-red-500 transition-all mt-2">
+    🗑️ Clear Workspace
+</button>
                         </div>
                     </div>
 
@@ -279,6 +282,25 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.innerHTML = originalText;
         }
     };
+    window.clearCanvas = () => {
+    // 1. Confirm with the user so they don't accidentally wipe their work
+    if (confirm("Are you sure you want to clear the entire workspace? ♡")) {
+        const canvas = document.getElementById('collage-canvas');
+        const placeholder = document.getElementById('placeholder');
+
+        // 2. Remove all children of the canvas EXCEPT the placeholder
+        // We look for everything with the 'draggable' class and delete it
+        const items = canvas.querySelectorAll('.draggable');
+        items.forEach(item => item.remove());
+
+        // 3. Bring the placeholder back so it doesn't look like a void
+        if (placeholder) placeholder.style.display = 'flex';
+        
+        // 4. Reset selection
+        selectedElement = null;
+        document.getElementById('noteExtras')?.classList.add('hidden');
+    }
+};
 
     // 4. CANVAS CLICK-AWAY
     document.getElementById('collage-canvas').addEventListener('mousedown', (e) => {
