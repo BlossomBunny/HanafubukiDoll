@@ -420,10 +420,24 @@ async function renderPlanner() {
         }
     });
 });
-       async function handleLogout() {
-            await _supabase.auth.signOut();
-            window.location.href = 'customer-index.html';
-        }
+    async function handleLogout() {
+    try {
+        const { error } = await _supabase.auth.signOut();
+        if (error) throw error;
+
+        localStorage.removeItem('hana_active_tab');
+        
+        window.location.href = 'admin-login.html'; 
+        
+    } catch (err) {
+        console.error("Logout error:", err);
+        showMagicAlert(
+            "Logout Failed", 
+            "We couldn't sign you out properly. Please try again! ☁️", 
+            "error"
+        );
+    }
+}
        </script>
     
 <div id="eventModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
