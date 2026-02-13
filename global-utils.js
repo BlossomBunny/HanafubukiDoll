@@ -53,13 +53,7 @@ const closeBtn = document.getElementById('alert-close');
     }
 }
 
-/**
- * Resizes an image to prevent high-resolution uploads from failing
- * @param {File} file - The original image file
- * @param {number} maxWidth - Max width in pixels
- * @returns {Promise<Blob>} - The resized image blob
- */
-async function resizeImage(file, maxWidth = 1024) {
+async function resizeImage(file, maxWidth = 1024, quality = 0.8) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -70,7 +64,6 @@ async function resizeImage(file, maxWidth = 1024) {
                 const canvas = document.createElement('canvas');
                 const scale = maxWidth / img.width;
                 
-                // Only resize if the image is actually wider than maxWidth
                 if (scale < 1) {
                     canvas.width = maxWidth;
                     canvas.height = img.height * scale;
@@ -80,17 +73,23 @@ async function resizeImage(file, maxWidth = 1024) {
                 }
 
                 const ctx = canvas.getContext('2d');
+                // Improve scaling quality
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 
                 canvas.toBlob((blob) => {
-                    resolve(blob);
-                }, file.type, 0.8); // 0.8 quality to keep file size tiny
+                    // Create a new File object from the blob to preserve the original filename
+                    const resizedFile = new File([blob], file.name, {
+                        type: file.type,
+                        lastModified: Date.now()
+                    });
+                    resolve(resizedFile);
+                }, file.type, quality); 
             };
             img.onerror = reject;
         };
         reader.onerror = reject;
     });
 }
-
-// Make it globally available just in case
-window.resizeImage = resizeImage;
