@@ -408,16 +408,6 @@ async function renderPlanner() {
     }
 }
       
-  async function handleLogout() {
-            await _supabase.auth.signOut();
-            window.location.href = 'customer-index.html';
-        }
-
-        async function toggleServiceStatus(id, current) {
-            await _supabase.from('studio_settings').update({ is_live: !current }).eq('id', id);
-            renderSummary();
-        }
-}
       document.addEventListener('DOMContentLoaded', () => {
     _supabase.auth.onAuthStateChange((event, session) => {
         if (session) {
@@ -426,10 +416,14 @@ async function renderPlanner() {
             document.getElementById('view-planner').classList.remove('hidden');
             renderPlanner();
         } else {
-            window.location.href = 'login.html';
+            window.location.href = 'admin-login.html';
         }
     });
 });
+       async function handleLogout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'customer-index.html';
+        }
        </script>
     
 <div id="eventModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
