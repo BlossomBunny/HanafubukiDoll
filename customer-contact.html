@@ -288,8 +288,7 @@ async function handleFormSubmit(e) {
             notes: document.getElementById('eyeNotes')?.value, 
             images: await uploadSet('eyeFiles') 
         } : null;
-
-        const { error } = await _supabase.from('commissions').insert([{
+const { error } = await _supabase.from('commissions').insert([{
             customer_name: document.getElementById('custName').value,
             customer_email: document.getElementById('custEmail').value,
             social_handle: document.getElementById('socialHandle').value,
@@ -305,16 +304,30 @@ async function handleFormSubmit(e) {
 
         if (error) throw error;
 
-        alert("Request Sent! ♡");
-        window.location.href = "customer-index.html"; // Ensure this matches your home page file
+        showMagicAlert(
+            "Request Sent! ♡", 
+            "Your enquiry has hopped away to the studio. We'll be in touch soon! ✨", 
+            "success"
+        );
+
+        setTimeout(() => {
+            window.location.href = "customer-index.html"; 
+        }, 2500);
 
     } catch (err) {
         console.error("Submission Error:", err);
-        alert("Error: " + (err.message || "Something went wrong"));
+        
+        showMagicAlert(
+            "Submission Error", 
+            "Oh no! " + (err.message || "Something went wrong while sending your request. ☁️"), 
+            "error"
+        );
+
         btn.disabled = false;
         btn.innerText = "Submit ✨";
     }
 }
+        
 // --- STOCK LOGIC ---
 async function syncFormWithStock() {
     const { data: stock, error } = await _supabase.from('inventory').select('*');
@@ -456,16 +469,18 @@ function showWaitlistForm(serviceId) {
 
     document.body.appendChild(modal);
 
-    document.getElementById('waitlistForm').addEventListener('submit', async (e) => {
+   document.getElementById('waitlistForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerText;
+        
         submitBtn.disabled = true;
         submitBtn.innerText = "Joining... ♡";
 
         try {
             const email = document.getElementById('waitlistEmail').value.trim();
-            if (!email) throw new Error("Email is required");
+            if (!email) throw new Error("Please enter your email address! ♡");
 
             const { error } = await _supabase.from('waitlist').insert([{
                 email: email,
@@ -478,17 +493,29 @@ function showWaitlistForm(serviceId) {
 
             if (error) throw error;
 
-            alert(`Thank you! You've been added to the ${serviceId} waitlist ♡ We'll email you when slots open.`);
-            document.getElementById(modalId).remove();
+            showMagicAlert(
+                "You're on the list! 🌸", 
+                `Thank you! You've been added to the ${serviceId} waitlist. We'll email you as soon as slots open up!`, 
+                "success"
+            );
+
+            const modal = document.getElementById(modalId);
+            if (modal) modal.remove();
+
         } catch (err) {
             console.error("Waitlist error:", err);
-            alert("Failed to join waitlist: " + (err.message || "Unknown error"));
-        } finally {
+            
+            showMagicAlert(
+                "Waitlist Error", 
+                err.message || "Something went wrong while joining the list. ☁️", 
+                "error"
+            );
+            
+            // Only reset the button on error so they can try again
             submitBtn.disabled = false;
-            submitBtn.innerText = "Join Waitlist";
+            submitBtn.innerText = originalText;
         }
     });
-}
 
 window.onload = () => {
     syncFormWithStock();
