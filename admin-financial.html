@@ -39,17 +39,18 @@
             <div class="text-xl md:text-2xl font-black tracking-tighter">
                 <span class="bounce-bunny">🐰</span> HanafubukiDoll 🌸
             </div>
-            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
-    <a href="customer-index.html" class="nav-btn nav-btn-pink">Home ♡</a>
-    <a href="customer-services.html" class="nav-btn nav-btn-mint">Services ♡</a>
-    <a href="customer-tools.html" class="nav-btn nav-btn-pink">Studio Tools ♡</a>
-    <a href="customer-contact.html" class="nav-btn nav-btn-mint">Contact ♡</a>
-</div>
+            <div id="adminNav" class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <a href="admin-index.html" class="nav-btn nav-btn-pink border-2 border-pink-200">Dashboard ♡</a>
+                <a href="admin-workbench.html" class="nav-btn nav-btn-mint">Workbench ♡</a>
+                <a href="admin-planner.html" class="nav-btn nav-btn-pink">Planner ♡</a>
+                <a href="admin-inventory.html" class="nav-btn nav-btn-mint">Inventory ♡</a>
+                <a href="admin-financial.html" class="nav-btn nav-btn-pink">Financials ♡</a>
+                <button onclick="handleLogout()" class="nav-btn nav-btn-mint opacity-50">Logout ⏻</button>
+            </div>
         </div>
-    </nav>
-
-    <main class="max-w-6xl mx-auto p-6 space-y-10">
-        <div id="financial-stats" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+       </nav>
+<main id="adminMain" class="auth-hidden hidden max-w-6xl mx-auto p-6 space-y-10">
+         <div id="financial-stats" class="grid grid-cols-1 md:grid-cols-3 gap-6">
             </div>
 
         <div class="glass-card p-8 bg-white/80">
