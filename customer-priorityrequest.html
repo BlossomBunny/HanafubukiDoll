@@ -154,7 +154,7 @@
             </button>
         </form>
     </main>
-    </main>
+
 <div id="successModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6">
     <div class="absolute inset-0 bg-pink-100/40 backdrop-blur-sm"></div>
     
@@ -317,13 +317,18 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         setTimeout(() => { progressBar.style.width = '100%'; }, 100);
         setTimeout(() => { window.location.href = "index.html"; }, 3500);
 
-    } catch (err) {
-        console.error("Submission Error:", err);
-        alert("Oops! " + err.message); // Using standard alert here as a backup for errors
-        btn.disabled = false;
-        btn.innerText = "Submit Commission Request ✨";
-    }
-});
+   } catch (err) {
+    console.error("Submission Error:", err);
+    
+    showMagicAlert(
+        "Submission Error", 
+        "Oh no! " + (err.message || "Something went wrong when submitting your request! ☁️"), 
+        "error"
+    );
+
+    btn.disabled = false;
+    btn.innerText = "Submit Commission Request ✨";
+}
 
 window.onload = syncFormWithStock;
     </script>
