@@ -77,11 +77,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-       let activeJobId = null;        // For the drawer
+      
+    let activeJobId = null;        // For the drawer
     let currentDeclineJobId = null; // For the decline modal
     let currentDeclineEmail = '';
     let currentDeclineHandle = '';
