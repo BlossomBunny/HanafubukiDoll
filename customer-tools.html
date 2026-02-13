@@ -111,8 +111,6 @@
                         <div class="grid grid-cols-2 gap-2">
                             <button onclick="changeWidth(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">➕ Wider</button>
                             <button onclick="changeWidth(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">➖ Thinner</button>
-                            <button onclick="changeHeight(1.1)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">↕️ Taller</button>
-                            <button onclick="changeHeight(0.9)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">↔️ Shorter</button>
                             <button onclick="changeRotation(-15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">⟲ Left</button>
                             <button onclick="changeRotation(15)" class="bg-white border border-pink-100 p-2 rounded-xl text-[10px] font-bold">⟳ Right</button>
                         </div>
@@ -232,8 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.changeWidth = (factor) => { if (selectedElement) selectedElement.style.width = (selectedElement.offsetWidth * factor) + "px"; };
-    window.changeHeight = (factor) => { if (selectedElement) selectedElement.style.height = (selectedElement.offsetHeight * factor) + "px"; };
-    
+       
     window.changeRotation = (deg) => {
         if (selectedElement) {
             let r = (parseInt(selectedElement.dataset.rot) || 0) + deg;
