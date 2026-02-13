@@ -16,13 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('adminMain')?.classList.remove('auth-hidden', 'hidden');
 
             // Page-Specific Initializers (Only runs if the function exists on that page)
-            if (typeof renderPlanner === 'function' && document.getElementById('calendar')) {
+            if (typeof renderplanner === 'function' && document.getElementById('calendar')) {
                 renderPlanner();
             }
-            if (typeof renderDashboard === 'function') renderDashboard();
-            if (typeof loadWorkbench === 'function') loadWorkbench();
-            if (typeof renderInventory === 'function') renderInventory();
-            if (typeof renderFinancials === 'function') renderFinancials();
+            if (typeof renderdashboard === 'function') renderdashboard();
+            if (typeof loadworkbench === 'function') renderworkbench();
+            if (typeof renderinventory === 'function') renderinventory();
+            if (typeof renderfinancials === 'function') renderfinancials();
 
         } else if (isAdminPage) {
             // Kick to login ONLY if they are trying to access an admin page
