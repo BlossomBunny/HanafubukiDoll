@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Priority Booking - HanafubukiDoll</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="global-utils.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -136,7 +138,7 @@
             <div class="p-5 bg-pink-50/50 rounded-2xl border border-pink-100 text-[11px] h-48 overflow-y-auto text-gray-600 leading-relaxed custom-scrollbar">
                 <p class="font-black mb-3 uppercase tracking-widest text-pink-500 border-b border-pink-100 pb-1">Studio Terms of Service</p>
                 <div class="space-y-3">
-                    <p><strong>♡ Payments:</strong> Payment is required in full before work can begin. Layaway is accepted but should be discussed prior to submitting a commission form.</p>
+                    <p><strong>♡ Payments:</strong> A form of Payment is required in before work can begin. Deposit/Layaway is accepted but should be discussed prior to submitting a commission form.</p>
                     <p><strong>♡ Shipping:</strong> Client covers all shipping/insurance costs. We will discuss shipping needs individually. We are not responsible for lost parcels, but will always assist in the claim process for loss or damage.</p>
                     <p><strong>♡ Customs Fees:</strong> Shipments from outside of the UK will collect a customs charge if above £39. We will inform you of this charge and you will be responsible for paying it.</p>
                     <p><strong>♡ Artistic Freedom:</strong> By booking with us you acknowledge our individual style and accept this for your commissioned piece.</p>
@@ -158,10 +160,10 @@
     
     <div class="relative bg-white p-10 rounded-[40px] shadow-2xl border-4 border-white max-w-sm w-full text-center animate-bounce-in">
         <div class="text-6xl mb-4">🌸</div>
-        <h2 class="text-3xl font-black tracking-tighter text-gray-800">Sent with Sparkles!</h2>
+        <h2 class="text-3xl font-black tracking-tighter text-gray-800">Sent!</h2>
         <p class="text-pink-500 font-bold mt-2 uppercase tracking-widest text-[10px]">Thank you so much ♡</p>
         <p class="text-gray-500 text-xs mt-4 leading-relaxed">
-            Your priority request has been received. We'll review your details and email you shortly!
+            Your request has been received. We'll review your details and email you shortly!
         </p>
         
         <div class="mt-8 w-full bg-pink-50 h-1.5 rounded-full overflow-hidden">
@@ -170,7 +172,7 @@
         <p class="text-[9px] text-gray-300 mt-2 uppercase font-bold">Returning home...</p>
     </div>
 </div>
-      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
 const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
@@ -361,7 +363,6 @@ window.onload = syncFormWithStock;
     </button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="global-scripts.js"></script>
 </body>
 </html>
