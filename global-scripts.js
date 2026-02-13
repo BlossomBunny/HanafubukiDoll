@@ -3,31 +3,44 @@ const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Auth listener - Protects ONLY admin pages
-_supabase.auth.onAuthStateChange((event, session) => {
-    // Check if the current page filename starts with "admin-"
-    const isAdminPage = window.location.pathname.includes('admin-');
+// global-scripts.js
 
-    if (!session) {
-        // If there is no session AND they are on an admin page, redirect them
-        if (isAdminPage) {
-            console.log("Access denied: Admin session required.");
+// 1. The Universal Auth Guard
+document.addEventListener('DOMContentLoaded', () => {
+    _supabase.auth.onAuthStateChange((event, session) => {
+        const isAdminPage = window.location.pathname.includes('admin-');
+
+        if (session) {
+            // Reveal UI elements if they exist on the current page
+            document.getElementById('adminNav')?.classList.remove('auth-hidden', 'hidden');
+            document.getElementById('adminMain')?.classList.remove('auth-hidden', 'hidden');
+
+            // Page-Specific Initializers (Only runs if the function exists on that page)
+            if (typeof renderPlanner === 'function' && document.getElementById('calendar')) {
+                renderPlanner();
+            }
+            if (typeof renderDashboard === 'function') renderDashboard();
+            if (typeof loadWorkbench === 'function') loadWorkbench();
+            if (typeof renderInventory === 'function') renderInventory();
+            if (typeof renderFinancials === 'function') renderFinancials();
+
+        } else if (isAdminPage) {
+            // Kick to login ONLY if they are trying to access an admin page
             window.location.href = 'admin-login.html'; 
         }
-        // If they are on a customer page and NOT logged in, we do nothing! 
-        // This stops the "random" redirects.
-    } else {
-        // If they ARE logged in (Admin is active)
-        // Handle global UI reveals
-        document.getElementById('adminNav')?.classList.remove('auth-hidden');
-        document.getElementById('adminMain')?.classList.remove('auth-hidden');
-        
-        // Custom page logic: If the page has an 'initPage' function, run it
-        if (typeof initPage === 'function') {
-            initPage(session);
-        }
-    }
+    });
 });
+
+// 2. The Universal Logout (Call this from any "Logout" button)
+async function handleLogout() {
+    try {
+        await _supabase.auth.signOut();
+        localStorage.removeItem('hana_active_tab'); // Clean up session data
+        window.location.href = 'admin-login.html';
+    } catch (err) {
+        console.error("Logout error:", err);
+    }
+}
 
 /* --- Hanafubuki Studio Global Accessibility Script --- */
 
