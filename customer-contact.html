@@ -46,6 +46,14 @@
                     <h3 class="font-bold mt-4">General Inquiry</h3>
                     <p class="text-[10px] uppercase tracking-widest opacity-50 mt-2">Questions or Collabs</p>
                 </a>
+<div id="loadingOverlay" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+    <div class="relative">
+        <div class="w-20 h-20 border-4 border-pink-100 border-t-pink-500 rounded-full animate-spin"></div>
+        <div class="absolute inset-0 flex items-center justify-center text-2xl">✨</div>
+    </div>
+    <p class="mt-4 font-black text-[10px] uppercase tracking-[0.2em] text-pink-500 animate-pulse">Whisking your request away...</p>
+</div>
+                
                 <button onclick="startBooking()" class="p-8 border-2 border-pink-100 rounded-3xl hover:bg-pink-100 transition-all group shadow-sm">
                     <span class="text-4xl">🎨</span>
                     <h3 class="font-bold mt-4">Book a Slot</h3>
@@ -188,33 +196,6 @@ const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
 let _supabase;
 
-// Helper function to handle image resizing if not in global-utils
-async function resizeImage(file, maxWidth, quality) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                if (width > maxWidth) {
-                    height = (maxWidth / width) * height;
-                    width = maxWidth;
-                }
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                canvas.toBlob((blob) => {
-                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                }, 'image/jpeg', quality);
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
-}
 
 // Initialize everything on load
 window.onload = async () => {
@@ -235,28 +216,56 @@ window.onload = async () => {
 async function handleFormSubmit(e) {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
+    const overlay = document.getElementById('loadingOverlay');
+
+   
     btn.innerText = "Sending... ✨";
     btn.disabled = true;
+    
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.add('opacity-100'), 10);
+    }
 
-    try {
-        const uploadSet = async (fileInputId) => {
-            const files = document.getElementById(fileInputId)?.files;
-            if (!files || files.length === 0) return [];
-            
-            const urls = [];
-            for (let file of files) {
-                if (file.type.startsWith('image/')) {
-                    file = await resizeImage(file, 1200, 0.7); 
-                }
-                const path = `refs/${Date.now()}-${file.name}`;
-                const { data, error } = await _supabase.storage.from('references').upload(path, file);
-                if (data) {
-                    const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
-                    urls.push(pUrl.publicUrl);
-                }
+    const uploadSet = async (fileInputId) => {
+    const files = document.getElementById(fileInputId)?.files;
+    if (!files || files.length === 0) return [];
+    
+    const urls = [];
+    // Identify folder name (e.g., 'faceupFiles' becomes 'faceup')
+    const folder = fileInputId.replace('Files', ''); 
+
+    for (let file of files) {
+        try {
+            // 1. Resize images using the improved global-utils logic
+            if (file.type.startsWith('image/')) {
+                file = await resizeImage(file, 1200, 0.7); 
             }
-            return urls;
-        };
+
+            // 2. Create organized path: folder/timestamp-name
+            const path = `${folder}/${Date.now()}-${file.name}`;
+            
+            // 3. Upload to 'references' bucket
+            const { data, error } = await _supabase.storage
+                .from('references')
+                .upload(path, file);
+                
+            if (error) throw error;
+
+            // 4. Grab Public URL
+            const { data: pUrl } = _supabase.storage
+                .from('references')
+                .getPublicUrl(path);
+
+            if (pUrl?.publicUrl) urls.push(pUrl.publicUrl);
+
+        } catch (uploadErr) {
+            console.error(`Error uploading ${file.name}:`, uploadErr);
+            // Optionally: showMagicAlert("Upload Error", `Failed to upload ${file.name}`, "error");
+        }
+    }
+    return urls;
+};
 
         const fBase = document.getElementById('faceupBase').value;
         let finalSculpt = document.getElementById('dollSculpt').value;
@@ -304,18 +313,20 @@ const { error } = await _supabase.from('commissions').insert([{
 
         if (error) throw error;
 
-        showMagicAlert(
-            "Request Sent! ♡", 
-            "Your enquiry has hopped away to the studio. We'll be in touch soon! ✨", 
-            "success"
-        );
+        // 2. Cleanup Overlay on Success
+        if (overlay) {
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
 
-        setTimeout(() => {
-            window.location.href = "customer-index.html"; 
-        }, 2500);
-
+        showMagicAlert("Request Sent! ♡", "...", "success");
+   
     } catch (err) {
-        console.error("Submission Error:", err);
+        // 3. Cleanup Overlay on Error
+        if (overlay) {
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
         
         showMagicAlert(
             "Submission Error", 
@@ -517,10 +528,6 @@ function showWaitlistForm(serviceId) {
         }
     });
 
-window.onload = () => {
-    syncFormWithStock();
-    checkServiceAvailability();
-};
     </script>
 <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
         <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
