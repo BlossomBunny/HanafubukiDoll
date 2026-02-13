@@ -76,7 +76,7 @@
     </main>
 
     <script>
-        async function loadFinancialData() {
+        async function renderfinancials() {
             const { data: jobs } = await _supabase.from('commissions').select('*');
             
             const total = jobs.reduce((sum, j) => sum + (Number(j.price) || 0), 0);
