@@ -27,6 +27,16 @@
             <p class="text-xs text-gray-500 mt-4 leading-relaxed">Please fill out your details below to convert your waitlist spot into an active enquiry. We'll review this and get back to you shortly.</p>
         </div>
 
+<div id="loadingOverlay" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+    <div class="relative">
+        <div class="w-20 h-20 border-4 border-pink-100 border-t-pink-500 rounded-full animate-spin"></div>
+        <div class="absolute inset-0 flex items-center justify-center text-2xl">✨</div>
+    </div>
+    <p class="mt-4 font-black text-[10px] uppercase tracking-[0.2em] text-pink-500 animate-pulse">
+        Whisking your request away...
+    </p>
+</div>
+        
         <form id="bookingForm" class="step-hidden space-y-8 pb-20 animate-fadeIn">
            
             <div class="glass-card p-8 space-y-6">
@@ -232,33 +242,15 @@ function toggleDollDetails() {
 // --- 3. Submission Logic ---
 document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    btn.innerText = "Sending... ✨";
-    btn.disabled = true;
-
-    // Helper for file uploads
-   const uploadSet = async (fileInputId) => {
-    const files = document.getElementById(fileInputId)?.files;
-    if (!files || files.length === 0) return [];
     
-    const urls = [];
-    for (let file of files) {
-  
-        if (file.type.startsWith('image/')) {
-            console.log(`Shrinking ${file.name}...`);
-            file = await resizeImage(file, 1200, 0.7); 
-        }
-
-        const path = `refs/${Date.now()}-${file.name}`;
-        const { data, error } = await _supabase.storage.from('references').upload(path, file);
-        
-        if (data) {
-            const { data: pUrl } = _supabase.storage.from('references').getPublicUrl(path);
-            urls.push(pUrl.publicUrl);
-        }
-    }
-    return urls;
-};
+    const btn = document.getElementById('submitBtn');
+    const overlay = document.getElementById('loadingOverlay');
+    
+    // 1. Enter Loading State
+    btn.disabled = true;
+    btn.innerText = "Processing... ♡";
+    overlay.classList.remove('hidden');
+    setTimeout(() => overlay.classList.add('opacity-100'), 10);
 
     try {
         const fBase = document.getElementById('faceupBase').value;
@@ -266,7 +258,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         let finalCompany = document.getElementById('dollCompany').value;
         let finalSkintone = document.getElementById('dollSkintone').value || 'Included in Bundle';
 
-        // Override if bundle is selected
+        // Bundle Logic
         if (fBase.includes('Smartdoll')) {
             finalSculpt = document.getElementById('sm-head-sculpt-select').value;
             finalCompany = "Smartdoll";
@@ -275,6 +267,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
             finalCompany = "Volks";
         }
 
+        // 2. Data Gathering (This triggers the image resizing/uploading)
         const faceupDetails = (fBase !== "None") ? { 
             base: fBase, 
             notes: document.getElementById('faceupNotes')?.value, 
@@ -294,6 +287,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
             images: await uploadSet('eyeFiles') 
         } : null;
 
+        // 3. Database Submission
         const { error } = await _supabase.from('commissions').insert([{
             customer_name: document.getElementById('custName').value,
             customer_email: document.getElementById('custEmail').value,
@@ -310,27 +304,36 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
 
         if (error) throw error;
 
-        // --- Trigger Cute Sparkle Modal ---
+        // 4. Success Hand-off
+       overlay.classList.remove('opacity-100');
+        
         const modal = document.getElementById('successModal');
         const progressBar = document.getElementById('redirectProgress');
+        
         modal.classList.remove('hidden');
+        
+        // Cleanup overlay after fade
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+
+        // Progress bar and redirect
         setTimeout(() => { progressBar.style.width = '100%'; }, 100);
         setTimeout(() => { window.location.href = "index.html"; }, 3500);
 
-   } catch (err) {
-    console.error("Submission Error:", err);
-    
-    showMagicAlert(
-        "Submission Error", 
-        "Oh no! " + (err.message || "Something went wrong when submitting your request! ☁️"), 
-        "error"
-    );
-
-    btn.disabled = false;
-    btn.innerText = "Submit Commission Request ✨";
-}
-
+    } catch (err) {
+        // 5. Error Recovery
+        overlay.classList.remove('opacity-100');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+        
+        console.error("Submission Error:", err);
+        showMagicAlert("Submission Error", err.message, "error");
+        
+        btn.disabled = false;
+        btn.innerText = "Submit Commission Request ✨";
+    }
+});
+        
 window.onload = syncFormWithStock;
+        
     </script>
 <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
         <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
