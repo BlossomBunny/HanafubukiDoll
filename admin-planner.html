@@ -409,15 +409,14 @@ async function renderPlanner() {
 }
       
   async function handleLogout() {
-    try {
-        const { error } = await _supabase.auth.signOut();
-        if (error) throw error;
-        localStorage.removeItem('hana_active_tab');
-        window.location.href = 'login.html';
-    } catch (err) {
-        console.error("Logout error:", err);
-        alert("Logout failed.");
-    }
+            await _supabase.auth.signOut();
+            window.location.href = 'customer-index.html';
+        }
+
+        async function toggleServiceStatus(id, current) {
+            await _supabase.from('studio_settings').update({ is_live: !current }).eq('id', id);
+            renderSummary();
+        }
 }
       document.addEventListener('DOMContentLoaded', () => {
     _supabase.auth.onAuthStateChange((event, session) => {
