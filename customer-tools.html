@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
             link.href = result.toDataURL("image/jpeg", 0.9);
             link.click();
         } catch (err) {
-            alert("Please wait a moment for the studio to fully load! ✨");
+        showMagicAlert("Oh No!", "The export failed. Please try again! ☁️", "error");
         } finally {
             document.body.classList.remove('exporting');
             if (selectedElement) selectedElement.classList.add('selected');
