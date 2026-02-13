@@ -408,18 +408,7 @@ async function renderPlanner() {
     }
 }
       
-      document.addEventListener('DOMContentLoaded', () => {
-    _supabase.auth.onAuthStateChange((event, session) => {
-        if (session) {
-            // Show the main content and the specific planner view
-            document.getElementById('adminMain').classList.remove('auth-hidden');
-            document.getElementById('view-planner').classList.remove('hidden');
-            renderPlanner();
-        } else {
-            window.location.href = 'admin-login.html';
-        }
-    });
-});
+     
     async function handleLogout() {
     try {
         const { error } = await _supabase.auth.signOut();
