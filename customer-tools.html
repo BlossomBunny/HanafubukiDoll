@@ -283,25 +283,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     window.clearCanvas = () => {
-    // 1. Confirm with the user so they don't accidentally wipe their work
-    if (confirm("Are you sure you want to clear the entire workspace? ♡")) {
-        const canvas = document.getElementById('collage-canvas');
-        const placeholder = document.getElementById('placeholder');
+      showMagicAlert(
+        "Clear Workspace?", 
+        "Your progress will be lost! Are you sure you want to start again? ♡", 
+        "confirm", 
+        () => {
+            const canvas = document.getElementById('collage-canvas');
+            const placeholder = document.getElementById('placeholder');
+           
+            const items = canvas.querySelectorAll('.draggable');
+            items.forEach(item => item.remove());
 
-        // 2. Remove all children of the canvas EXCEPT the placeholder
-        // We look for everything with the 'draggable' class and delete it
-        const items = canvas.querySelectorAll('.draggable');
-        items.forEach(item => item.remove());
-
-        // 3. Bring the placeholder back so it doesn't look like a void
-        if (placeholder) placeholder.style.display = 'flex';
-        
-        // 4. Reset selection
-        selectedElement = null;
-        document.getElementById('noteExtras')?.classList.add('hidden');
-    }
+            if (placeholder) placeholder.style.display = 'flex';
+            
+            selectedElement = null;
+            const noteExtras = document.getElementById('noteExtras');
+            if (noteExtras) noteExtras.classList.add('hidden');
+        }
+    );
 };
-
     // 4. CANVAS CLICK-AWAY
     document.getElementById('collage-canvas').addEventListener('mousedown', (e) => {
         if (e.target.id === 'collage-canvas' || e.target.id === 'placeholder') {
