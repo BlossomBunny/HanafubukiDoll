@@ -239,6 +239,48 @@ function toggleDollDetails() {
     }
 }
 
+const uploadSet = async (fileInputId) => {
+    const fileInput = document.getElementById(fileInputId);
+    const files = fileInput?.files;
+    
+    if (!files || files.length === 0) return [];
+    
+    const urls = [];
+    
+    for (let file of files) {
+        try {
+            // 1. Resize if it's an image to save space/time
+            if (file.type.startsWith('image/')) {
+                console.log(`Shrinking ${file.name} for ${fileInputId}...`);
+                file = await resizeImage(file, 1200, 0.7);
+            }
+
+            // 2. Generate a unique path: category/timestamp-name
+            // This helps keep the storage bucket slightly more organized
+            const folder = fileInputId.replace('Files', ''); // e.g., 'faceup'
+            const filePath = `${folder}/${Date.now()}-${file.name}`;
+
+            // 3. Upload to Supabase 'references' bucket
+            const { data, error } = await _supabase.storage
+                .from('references')
+                .upload(filePath, file);
+
+            if (error) throw error;
+
+            // 4. Get the Public URL
+            const { data: { publicUrl } } = _supabase.storage
+                .from('references')
+                .getPublicUrl(filePath);
+
+            urls.push(publicUrl);
+            
+        } catch (err) {
+            console.error(`Upload failed for ${file.name}:`, err);
+        }
+    }
+    return urls;
+};
+        
 // --- 3. Submission Logic ---
 document.getElementById('bookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
