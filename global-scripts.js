@@ -3,22 +3,31 @@ const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Auth listener - Protects all admin pages
+// Auth listener - Protects ONLY admin pages
 _supabase.auth.onAuthStateChange((event, session) => {
+    // Check if the current page filename starts with "admin-"
+    const isAdminPage = window.location.pathname.includes('admin-');
+
     if (!session) {
-        window.location.href = 'login.html';
+        // If there is no session AND they are on an admin page, redirect them
+        if (isAdminPage) {
+            console.log("Access denied: Admin session required.");
+            window.location.href = 'admin-login.html'; 
+        }
+        // If they are on a customer page and NOT logged in, we do nothing! 
+        // This stops the "random" redirects.
     } else {
+        // If they ARE logged in (Admin is active)
         // Handle global UI reveals
         document.getElementById('adminNav')?.classList.remove('auth-hidden');
         document.getElementById('adminMain')?.classList.remove('auth-hidden');
         
-        // Custom page logic: If the page has a 'initPage' function, run it
+        // Custom page logic: If the page has an 'initPage' function, run it
         if (typeof initPage === 'function') {
             initPage(session);
         }
     }
 });
-
 
 /* --- Hanafubuki Studio Global Accessibility Script --- */
 
