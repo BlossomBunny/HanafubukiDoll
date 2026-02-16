@@ -211,10 +211,6 @@
 
 // Initialize everything on load
 window.onload = async () => {
-    // 1. Initialize Supabase
-    _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // 2. Run your UI syncs
     syncFormWithStock();
     checkServiceAvailability();
 
