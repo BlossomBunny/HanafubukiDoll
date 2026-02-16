@@ -296,25 +296,45 @@ const uploadSet = async (fileInputId) => {
 
 // --- 4. NAVIGATION & SERVICE LOGIC ---
 async function checkServiceAvailability() {
+    // 1. Fetch Studio Settings for Live/Waitlist status
     const { data: settings } = await _supabase.from('studio_settings').select('*');
-    if (!settings) return;
+    
+    // 2. Fetch Inventory to check if Bundles have physical stock
+    const { data: stock } = await _supabase.from('inventory').select('*');
 
-    settings.forEach(service => {
-        const checkbox = document.getElementById(`check${service.id.charAt(0).toUpperCase() + service.id.slice(1)}`);
-        const label = checkbox?.closest('label');
-        
-        if (!service.is_live && checkbox) {
-            checkbox.disabled = true;
-            if (label) {
+    if (settings) {
+        settings.forEach(service => {
+            // Match ID (faceup, mani, eyes) to your checkbox IDs
+            const id = service.id.toLowerCase();
+            const checkbox = document.getElementById(`check${id.charAt(0).toUpperCase() + id.slice(1)}`);
+            const label = checkbox?.closest('label');
+            
+            if (!service.is_live && checkbox && label) {
+                checkbox.disabled = true;
                 label.style.opacity = '0.5';
-                const statusText = label.querySelector('span:last-child');
-                if (statusText) statusText.textContent = 'WAITLIST ♡';
+                label.querySelector('span:last-child').textContent = 'WAITLIST ♡';
                 label.onclick = (e) => { e.preventDefault(); showWaitlistForm(service.id); };
             }
-        }
-    });
-}
+        });
+    }
 
+    // 3. Handle Bundles specifically based on Inventory stock
+    const smStock = stock?.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0) || [];
+    const ddStock = stock?.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0) || [];
+
+    const smOpt = document.getElementById('opt-sm-bundle');
+    const ddOpt = document.getElementById('opt-dd-bundle');
+
+    // If no stock, disable the bundle options in the dropdown
+    if (smOpt && smStock.length === 0) {
+        smOpt.disabled = true;
+        smOpt.textContent = "Face-Up + Smartdoll Head (SOLD OUT)";
+    }
+    if (ddOpt && ddStock.length === 0) {
+        ddOpt.disabled = true;
+        ddOpt.textContent = "Face-Up + Dollfie Dream Head (SOLD OUT)";
+    }
+}
 function processSelection() {
     const isFaceup = document.getElementById('checkFaceup').checked;
     const isMani = document.getElementById('checkMani').checked;
@@ -442,29 +462,60 @@ async function syncFormWithStock() {
 function showWaitlistForm(serviceId) {
     const modalId = 'waitlistModal';
     document.getElementById(modalId)?.remove();
+
     const modal = document.createElement('div');
     modal.id = modalId;
     modal.className = 'fixed inset-0 bg-rose-900/20 backdrop-blur-sm flex items-center justify-center z-[999] p-4';
+    
     modal.innerHTML = `
-        <div class="bg-white rounded-[40px] p-10 max-w-lg w-full shadow-2xl border border-pink-50 animate-fadeIn space-y-6">
-            <div class="text-center space-y-2">
-                <h2 class="text-2xl font-black text-pink-400 tracking-tighter">Join the Waitlist ♡</h2>
-                <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-black">${serviceId} is currently full</p>
+        <div class="bg-white rounded-[40px] p-8 max-w-lg w-full shadow-2xl border border-pink-50 animate-fadeIn space-y-6">
+            <div class="text-center">
+                <h2 class="text-2xl font-black text-pink-400">Join the ${serviceId} Waitlist ♡</h2>
+                <p class="text-[10px] uppercase tracking-widest text-emerald-400 font-black mt-2">We'll notify you when slots open!</p>
             </div>
+
             <form id="waitlistForm" class="space-y-4">
-                <input type="email" id="waitlistEmail" placeholder="Email Address*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600">
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="document.getElementById('${modalId}').remove()" class="flex-1 py-4 text-[10px] font-black uppercase text-pink-300">Cancel</button>
-                    <button type="submit" class="flex-[2] bg-emerald-400 text-white py-4 rounded-full font-black uppercase text-[10px]">Join List ✨</button>
+                <input type="text" id="w-name" placeholder="Full Name*" required 
+                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200">
+                
+                <input type="email" id="w-email" placeholder="Email Address*" required 
+                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200">
+                
+                <textarea id="w-notes" placeholder="Notes (Sculpt name, specific requests, etc.)" 
+                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200 h-24"></textarea>
+                
+                <div class="flex gap-3">
+                    <button type="button" onclick="document.getElementById('${modalId}').remove()" 
+                        class="flex-1 py-4 text-[10px] font-black uppercase text-pink-300">Cancel</button>
+                    <button type="submit" 
+                        class="flex-[2] bg-emerald-400 text-white py-4 rounded-full font-black uppercase text-[10px] shadow-lg">Join Waitlist ✨</button>
                 </div>
             </form>
         </div>
     `;
+
     document.body.appendChild(modal);
+
     document.getElementById('waitlistForm').onsubmit = async (e) => {
         e.preventDefault();
-        const { error } = await _supabase.from('waitlist').insert([{ email: document.getElementById('waitlistEmail').value, service_requested: serviceId }]);
-        if (!error) { showMagicAlert("Added! 🌸", "I'll be in touch!", "success"); modal.remove(); }
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.innerText = "Processing... ♡";
+
+        const { error } = await _supabase.from('waitlist').insert([{
+            name: document.getElementById('w-name').value,
+            email: document.getElementById('w-email').value,
+            notes: document.getElementById('w-notes').value,
+            service_requested: serviceId,
+            status: 'pending' // Matches your table requirements
+        }]);
+
+        if (!error) {
+            showMagicAlert("Added! 🌸", "Check your email for updates soon!", "success");
+            modal.remove();
+        } else {
+            showMagicAlert("Error", "Could not join waitlist. Please try again.", "error");
+            btn.innerText = "Join Waitlist ✨";
+        }
     };
 }
 
