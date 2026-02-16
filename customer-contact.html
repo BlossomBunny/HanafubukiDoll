@@ -77,7 +77,8 @@
     </div>
 </div>
 
-   <div id="commissionContainer" class="max-w-2xl mx-auto pb-20">
+   
+<div id="commissionContainer" class="hidden max-w-2xl mx-auto pb-20">
        
     <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-md z-[1000] flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-300">
     <div class="relative">
@@ -290,45 +291,40 @@ const uploadSet = async (fileInputId) => {
 
 // --- 4. NAVIGATION & SERVICE LOGIC ---
 async function checkServiceAvailability() {
-    // 1. Fetch Studio Settings for Live/Waitlist status
     const { data: settings } = await _supabase.from('studio_settings').select('*');
-    
-    // 2. Fetch Inventory to check if Bundles have physical stock
-    const { data: stock } = await _supabase.from('inventory').select('*');
+    if (!settings) return;
 
-    if (settings) {
-        settings.forEach(service => {
-            // Match ID (faceup, mani, eyes) to your checkbox IDs
-            const id = service.id.toLowerCase();
-            const checkbox = document.getElementById(`check${id.charAt(0).toUpperCase() + id.slice(1)}`);
-            const label = checkbox?.closest('label');
+    // A map to ensure the database "id" finds the right HTML "checkbox"
+    const idMap = {
+        'faceup': 'checkFaceup',
+        'mani': 'checkMani',
+        'eyes': 'checkEyes'
+    };
+
+    settings.forEach(service => {
+        const dbId = service.id.toLowerCase();
+        const checkboxId = idMap[dbId];
+        const checkbox = document.getElementById(checkboxId);
+        const label = checkbox?.closest('label');
+        
+        // If not live, disable it and set the waitlist trigger
+        if (!service.is_live && checkbox && label) {
+            checkbox.disabled = true;
+            label.style.opacity = '0.5';
+            label.style.cursor = 'pointer';
             
-            if (!service.is_live && checkbox && label) {
-                checkbox.disabled = true;
-                label.style.opacity = '0.5';
-                label.querySelector('span:last-child').textContent = 'WAITLIST ♡';
-                label.onclick = (e) => { e.preventDefault(); showWaitlistForm(service.id); };
-            }
-        });
-    }
-
-    // 3. Handle Bundles specifically based on Inventory stock
-    const smStock = stock?.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0) || [];
-    const ddStock = stock?.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0) || [];
-
-    const smOpt = document.getElementById('opt-sm-bundle');
-    const ddOpt = document.getElementById('opt-dd-bundle');
-
-    // If no stock, disable the bundle options in the dropdown
-    if (smOpt && smStock.length === 0) {
-        smOpt.disabled = true;
-        smOpt.textContent = "Face-Up + Smartdoll Head (SOLD OUT)";
-    }
-    if (ddOpt && ddStock.length === 0) {
-        ddOpt.disabled = true;
-        ddOpt.textContent = "Face-Up + Dollfie Dream Head (SOLD OUT)";
-    }
+            const statusText = label.querySelector('span:last-child');
+            if (statusText) statusText.textContent = 'WAITLIST ♡';
+            
+            // Override the click to open waitlist instead of checking box
+            label.onclick = (e) => {
+                e.preventDefault();
+                showWaitlistForm(service.id);
+            };
+        }
+    });
 }
+    
 function processSelection() {
     const isFaceup = document.getElementById('checkFaceup').checked;
     const isMani = document.getElementById('checkMani').checked;
@@ -446,9 +442,22 @@ async function syncFormWithStock() {
     const smHeads = stock.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0);
     const ddHeads = stock.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0);
 
+    const smOpt = document.getElementById('opt-sm-bundle');
+    const ddOpt = document.getElementById('opt-dd-bundle');
+
+    // Disable the options in the select menu if stock is 0
+    if (smOpt && smHeads.length === 0) {
+        smOpt.disabled = true;
+        smOpt.textContent = "Face-Up + Smartdoll Head (SOLD OUT)";
+    }
+    if (ddOpt && ddHeads.length === 0) {
+        ddOpt.disabled = true;
+        ddOpt.textContent = "Face-Up + Dollfie Dream Head (SOLD OUT)";
+    }
+
+    // Populate the sub-dropdowns in case they are needed later
     const smSelect = document.getElementById('sm-head-sculpt-select');
     const ddSelect = document.getElementById('dd-head-sculpt-select');
-
     if (smSelect) smSelect.innerHTML = smHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
     if (ddSelect) ddSelect.innerHTML = ddHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
 }
@@ -456,7 +465,6 @@ async function syncFormWithStock() {
 function showWaitlistForm(serviceId) {
     const modalId = 'waitlistModal';
     document.getElementById(modalId)?.remove();
-
     const modal = document.createElement('div');
     modal.id = modalId;
     modal.className = 'fixed inset-0 bg-rose-900/20 backdrop-blur-sm flex items-center justify-center z-[999] p-4';
@@ -464,29 +472,43 @@ function showWaitlistForm(serviceId) {
     modal.innerHTML = `
         <div class="bg-white rounded-[40px] p-8 max-w-lg w-full shadow-2xl border border-pink-50 animate-fadeIn space-y-6">
             <div class="text-center">
-                <h2 class="text-2xl font-black text-pink-400">Join the ${serviceId} Waitlist ♡</h2>
-                <p class="text-[10px] uppercase tracking-widest text-emerald-400 font-black mt-2">We'll notify you when slots open!</p>
+                <h2 class="text-2xl font-black text-pink-400">Join ${serviceId} Waitlist</h2>
+                <p class="text-[10px] uppercase tracking-widest text-emerald-400 font-black">We'll email you when a slot opens! ♡</p>
             </div>
-
             <form id="waitlistForm" class="space-y-4">
-                <input type="text" id="w-name" placeholder="Full Name*" required 
-                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200">
-                
-                <input type="email" id="w-email" placeholder="Email Address*" required 
-                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200">
-                
-                <textarea id="w-notes" placeholder="Notes (Sculpt name, specific requests, etc.)" 
-                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200 h-24"></textarea>
-                
+                <input type="text" id="w-name" placeholder="Your Name*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600">
+                <input type="email" id="w-email" placeholder="Email Address*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600">
+                <textarea id="w-notes" placeholder="Any specific sculpt or details? (Optional)" class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 h-24"></textarea>
                 <div class="flex gap-3">
-                    <button type="button" onclick="document.getElementById('${modalId}').remove()" 
-                        class="flex-1 py-4 text-[10px] font-black uppercase text-pink-300">Cancel</button>
-                    <button type="submit" 
-                        class="flex-[2] bg-emerald-400 text-white py-4 rounded-full font-black uppercase text-[10px] shadow-lg">Join Waitlist ✨</button>
+                    <button type="button" onclick="document.getElementById('${modalId}').remove()" class="flex-1 py-4 text-[10px] font-black uppercase text-pink-300">Cancel</button>
+                    <button type="submit" class="flex-[2] bg-emerald-400 text-white py-4 rounded-full font-black uppercase text-[10px]">Join List ✨</button>
                 </div>
             </form>
-        </div>
-    `;
+        </div>`;
+    document.body.appendChild(modal);
+
+    document.getElementById('waitlistForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.innerText = "Processing... ♡";
+
+        const { error } = await _supabase.from('waitlist').insert([{
+            name: document.getElementById('w-name').value,
+            email: document.getElementById('w-email').value,
+            notes: document.getElementById('w-notes').value,
+            service_requested: serviceId,
+            status: 'pending'
+        }]);
+
+        if (!error) {
+            showMagicAlert("Added! 🌸", "We'll be in touch!", "success");
+            modal.remove();
+        } else {
+            showMagicAlert("Error", "Could not join waitlist.", "error");
+            btn.innerText = "Join List ✨";
+        }
+    };
+}
 
     document.body.appendChild(modal);
 
@@ -520,32 +542,21 @@ function toggleDollDetails() {
     document.getElementById('bundle-dd-head').classList.toggle('hidden', !val.includes('Dollfie'));
 }
 
-function startBooking() {
-    // 1. Show the global loader from your utils to give that "magical" transition feel
-    if (typeof StudioLoader !== 'undefined') {
-        StudioLoader.show("Opening Studio... ✨");
-    }
+   function startBooking() {
+    if (typeof StudioLoader !== 'undefined') StudioLoader.show("Opening Studio... ✨");
 
-    // 2. Small delay so the transition isn't jarring
     setTimeout(() => {
-        const entryChoice = document.getElementById('entryChoice');
-        const bookingForm = document.getElementById('bookingForm');
+        const entry = document.getElementById('entryChoice');
+        const container = document.getElementById('commissionContainer'); // Updated target
 
-        if (entryChoice) entryChoice.classList.add('hidden');
-        
-        if (bookingForm) {
-            bookingForm.classList.remove('step-hidden', 'hidden');
-            // Ensure we start at Step 1
+        if (entry) entry.classList.add('hidden');
+        if (container) {
+            container.classList.remove('hidden');
             showStep(1);
         }
 
-        // 3. Hide the loader once the form is ready
-        if (typeof StudioLoader !== 'undefined') {
-            StudioLoader.hide();
-        }
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 600); 
+        if (typeof StudioLoader !== 'undefined') StudioLoader.hide();
+    }, 600);
 }
 </script>
     
