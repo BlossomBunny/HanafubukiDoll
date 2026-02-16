@@ -243,46 +243,53 @@ async function handleFormSubmit(e) {
         setTimeout(() => overlay.classList.add('opacity-100'), 10);
     }
 
-    const uploadSet = async (fileInputId) => {
+   // 1. Move the helper function outside or keep it at the very top
+const uploadSet = async (fileInputId) => {
     const files = document.getElementById(fileInputId)?.files;
     if (!files || files.length === 0) return [];
-    
+
     const urls = [];
-    // Identify folder name (e.g., 'faceupFiles' becomes 'faceup')
-    const folder = fileInputId.replace('Files', ''); 
+    const folder = fileInputId.replace('Files', '');
 
     for (let file of files) {
         try {
-            // 1. Resize images using the improved global-utils logic
             if (file.type.startsWith('image/')) {
-                file = await resizeImage(file, 1200, 0.7); 
+                file = await resizeImage(file, 1200, 0.7);
             }
-
-            // 2. Create organized path: folder/timestamp-name
             const path = `${folder}/${Date.now()}-${file.name}`;
-            
-            // 3. Upload to 'references' bucket
             const { data, error } = await _supabase.storage
                 .from('references')
                 .upload(path, file);
-                
+
             if (error) throw error;
 
-            // 4. Grab Public URL
             const { data: pUrl } = _supabase.storage
                 .from('references')
                 .getPublicUrl(path);
 
             if (pUrl?.publicUrl) urls.push(pUrl.publicUrl);
-
         } catch (uploadErr) {
             console.error(`Error uploading ${file.name}:`, uploadErr);
-            // Optionally: showMagicAlert("Upload Error", `Failed to upload ${file.name}`, "error");
         }
     }
     return urls;
 };
 
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const overlay = document.getElementById('loadingOverlay');
+
+    btn.innerText = "Sending... ✨";
+    btn.disabled = true;
+
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.add('opacity-100'), 10);
+    }
+
+    // --- THE FIX STARTS HERE ---
+    try { // <--- This opening brace was missing!
         const fBase = document.getElementById('faceupBase').value;
         let finalSculpt = document.getElementById('dollSculpt').value;
         let finalCompany = document.getElementById('dollCompany').value;
@@ -295,25 +302,26 @@ async function handleFormSubmit(e) {
             finalCompany = "Volks";
         }
 
-        const faceupDetails = (fBase !== "None") ? { 
-            base: fBase, 
-            notes: document.getElementById('faceupNotes')?.value, 
-            images: await uploadSet('faceupFiles') 
+        const faceupDetails = (fBase !== "None") ? {
+            base: fBase,
+            notes: document.getElementById('faceupNotes')?.value,
+            images: await uploadSet('faceupFiles')
         } : null;
 
-        const maniDetails = (document.getElementById('maniBase').value !== "None") ? { 
-            base: document.getElementById('maniBase').value, 
-            addons: document.getElementById('pediAddon').checked ? ['Pedicure'] : [], 
-            notes: document.getElementById('maniNotes')?.value, 
-            images: await uploadSet('maniFiles') 
+        const maniDetails = (document.getElementById('maniBase').value !== "None") ? {
+            base: document.getElementById('maniBase').value,
+            addons: document.getElementById('pediAddon').checked ? ['Pedicure'] : [],
+            notes: document.getElementById('maniNotes')?.value,
+            images: await uploadSet('maniFiles')
         } : null;
 
-        const eyeDetails = (document.getElementById('eyeBase').value !== "None") ? { 
-            base: document.getElementById('eyeBase').value, 
-            notes: document.getElementById('eyeNotes')?.value, 
-            images: await uploadSet('eyeFiles') 
+        const eyeDetails = (document.getElementById('eyeBase').value !== "None") ? {
+            base: document.getElementById('eyeBase').value,
+            notes: document.getElementById('eyeNotes')?.value,
+            images: await uploadSet('eyeFiles')
         } : null;
-const { error } = await _supabase.from('commissions').insert([{
+
+        const { error } = await _supabase.from('commissions').insert([{
             customer_name: document.getElementById('custName').value,
             customer_email: document.getElementById('custEmail').value,
             social_handle: document.getElementById('socialHandle').value,
@@ -329,24 +337,23 @@ const { error } = await _supabase.from('commissions').insert([{
 
         if (error) throw error;
 
-        // 2. Cleanup Overlay on Success
         if (overlay) {
             overlay.classList.remove('opacity-100');
             setTimeout(() => overlay.classList.add('hidden'), 300);
         }
 
-        showMagicAlert("Request Sent! ♡", "...", "success");
-   
+        showMagicAlert("Request Sent! ♡", "I'll be in touch soon!", "success");
+        e.target.reset();
+
     } catch (err) {
-        // 3. Cleanup Overlay on Error
         if (overlay) {
             overlay.classList.remove('opacity-100');
             setTimeout(() => overlay.classList.add('hidden'), 300);
         }
-        
+
         showMagicAlert(
-            "Submission Error", 
-            "Oh no! " + (err.message || "Something went wrong while sending your request. ☁️"), 
+            "Submission Error",
+            "Oh no! " + (err.message || "Something went wrong while sending your request. ☁️"),
             "error"
         );
 
