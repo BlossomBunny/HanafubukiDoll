@@ -93,3 +93,67 @@ async function resizeImage(file, maxWidth = 1024, quality = 0.8) {
         reader.onerror = reject;
     });
 }
+
+/**
+ * Studio Global Loader Manager
+ * Handles the "Whisking your request away..." overlay
+ */
+const StudioLoader = {
+    // Injects the loader HTML into the page automatically
+    init() {
+        if (document.getElementById('loadingOverlay')) return;
+        const loaderHTML = `
+            <div id="loadingOverlay" class="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+                <div class="relative">
+                    <div class="w-20 h-20 border-4 border-pink-100 border-t-pink-500 rounded-full animate-spin"></div>
+                    <div class="absolute inset-0 flex items-center justify-center text-2xl">✨</div>
+                </div>
+                <p class="mt-4 font-black text-[10px] uppercase tracking-[0.2em] text-pink-500 animate-pulse">Whisking your request away...</p>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', loaderHTML);
+    },
+
+    show() {
+        const el = document.getElementById('loadingOverlay');
+        if (!el) return;
+        el.classList.remove('hidden');
+        // Force a tiny reflow for the opacity transition
+        void el.offsetWidth;
+        el.classList.add('opacity-100');
+    },
+
+    hide() {
+        const el = document.getElementById('loadingOverlay');
+        if (!el) return;
+        el.classList.remove('opacity-100');
+        setTimeout(() => el.classList.add('hidden'), 300);
+    }
+};
+
+// --- THE FETCH INTERCEPTOR (Auto-Loader) ---
+// This automatically shows the loader whenever Supabase or an image upload is working
+(function() {
+    const originalFetch = window.fetch;
+    let activeRequests = 0;
+
+    window.fetch = async (...args) => {
+        activeRequests++;
+        StudioLoader.show();
+
+        try {
+            const response = await originalFetch(...args);
+            return response;
+        } catch (error) {
+            throw error;
+        } finally {
+            activeRequests--;
+            if (activeRequests <= 0) {
+                activeRequests = 0;
+                StudioLoader.hide();
+            }
+        }
+    };
+})();
+
+// Initialize loader on every page load
+document.addEventListener('DOMContentLoaded', () => StudioLoader.init());
