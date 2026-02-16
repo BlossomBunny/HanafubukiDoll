@@ -34,6 +34,8 @@
     <a href="customer-contact.html" class="nav-btn nav-btn-mint">Contact ♡</a>
 </div>
         </div>
+   <div class="petals-container" id="petals"></div>
+        
     </nav>
         
     <main class="max-w-3xl mx-auto relative z-10 p-6 md:p-10">
@@ -198,6 +200,18 @@ const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
 let _supabase;
 
+         const container = document.getElementById('petals');
+        for (let i = 0; i < 19; i++) {
+            const p = document.createElement('div');
+            p.className = 'petal';
+            p.innerText = '🌸';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.top = '-5vh'; 
+            p.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            p.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            p.style.animationDelay = (Math.random() * -20) + 's';
+            container.appendChild(p);
+        }
 
 // Initialize everything on load
 window.onload = async () => {
