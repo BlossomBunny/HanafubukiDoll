@@ -41,11 +41,13 @@
             <h1 class="text-4xl font-black tracking-tighter text-gray-800">Connect with the Studio</h1>
             <p class="italic text-pink-400 font-medium">How can we help today? ♡</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <a href="mailto:Admin@hanafubukidoll.co.uk" class="p-8 border-2 border-pink-50 rounded-3xl hover:bg-pink-50 transition-all group">
-                    <span class="text-4xl">✉️</span>
-                    <h3 class="font-bold mt-4">General Inquiry</h3>
-                    <p class="text-[10px] uppercase tracking-widest opacity-50 mt-2">Questions or Collabs</p>
-                </a>
+                <a href="mailto:Admin@hanafubukidoll.co.uk" 
+   onclick="showLoading()" 
+   class="p-8 border-2 border-pink-50 rounded-3xl hover:bg-pink-50 transition-all group">
+    <span class="text-4xl">✉️</span>
+    <h3 class="font-bold mt-4">General Inquiry</h3>
+    <p class="text-[10px] uppercase tracking-widest opacity-50 mt-2">Questions or Collabs</p>
+</a>
 <div id="loadingOverlay" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
     <div class="relative">
         <div class="w-20 h-20 border-4 border-pink-100 border-t-pink-500 rounded-full animate-spin"></div>
@@ -386,8 +388,9 @@ async function syncFormWithStock() {
     }
 }
 
+<script>
 function startBooking() {
-    document.getElementById('entryChoice').classList.add('step-hidden');
+    document.getElementById('entryChoice').classList.add('hidden');
     document.getElementById('bookingForm').classList.remove('step-hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -527,6 +530,19 @@ function showWaitlistForm(serviceId) {
             submitBtn.innerText = originalText;
         }
     });
+    
+    function showLoading() {
+    const loader = document.getElementById('loadingOverlay');
+    loader.classList.remove('hidden');
+    loader.style.opacity = "1";
+    
+    // Hide it again after 3 seconds so the screen isn't stuck 
+    // if the mail app opens in the background
+    setTimeout(() => {
+        loader.style.opacity = "0";
+        setTimeout(() => loader.classList.add('hidden'), 300);
+    }, 3000);
+}
 
     </script>
 <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
