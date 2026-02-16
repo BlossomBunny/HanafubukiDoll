@@ -1,3 +1,65 @@
+const StudioLoader = {
+    // Automatically adds the HTML to the page if it's missing
+    init: function() {
+        if (document.getElementById('loadingOverlay')) return;
+        const html = `
+            <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-md z-[1000] flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+                <div class="relative">
+                    <div class="w-16 h-16 border-4 border-pink-100 border-t-emerald-400 rounded-full animate-spin"></div>
+                    <div class="absolute inset-0 flex items-center justify-center text-xl animate-pulse">🌸</div>
+                </div>
+                <p id="loadingText" class="mt-6 font-black uppercase tracking-[0.3em] text-[10px] text-pink-400">Processing...</p>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+    },
+
+    show: function(text = "Processing...") {
+        this.init();
+        const el = document.getElementById('loadingOverlay');
+        const txt = document.getElementById('loadingText');
+        if (txt) txt.innerText = text;
+        if (el) {
+            el.classList.remove('hidden');
+            el.classList.remove('pointer-events-none');
+            setTimeout(() => el.classList.add('opacity-100'), 10);
+        }
+    },
+
+    hide: function() {
+        const el = document.getElementById('loadingOverlay');
+        if (el) {
+            el.classList.remove('opacity-100');
+            el.classList.add('pointer-events-none');
+            // Wait for fade-out transition before hiding
+            setTimeout(() => el.classList.add('hidden'), 300);
+        }
+    }
+};
+
+(function() {
+    const originalFetch = window.fetch;
+    let activeRequests = 0;
+
+    window.fetch = async (...args) => {
+        activeRequests++;
+        StudioLoader.show("Whisking it away... ✨");
+
+        try {
+            return await originalFetch(...args);
+        } finally {
+            activeRequests--;
+            if (activeRequests <= 0) {
+                activeRequests = 0;
+                // Add a 400ms buffer so the loader doesn't "flicker" 
+                // and stays visible until the DOM updates.
+                setTimeout(() => {
+                    if (activeRequests === 0) StudioLoader.hide();
+                }, 400);
+            }
+        }
+    };
+})();
+
 /**
  * showMagicAlert
  * @param {string} title - The big text
@@ -130,30 +192,3 @@ const StudioLoader = {
     }
 };
 
-// --- THE FETCH INTERCEPTOR (Auto-Loader) ---
-// This automatically shows the loader whenever Supabase or an image upload is working
-(function() {
-    const originalFetch = window.fetch;
-    let activeRequests = 0;
-
-    window.fetch = async (...args) => {
-        activeRequests++;
-        StudioLoader.show();
-
-        try {
-            const response = await originalFetch(...args);
-            return response;
-        } catch (error) {
-            throw error;
-        } finally {
-            activeRequests--;
-            if (activeRequests <= 0) {
-                activeRequests = 0;
-                StudioLoader.hide();
-            }
-        }
-    };
-})();
-
-// Initialize loader on every page load
-document.addEventListener('DOMContentLoaded', () => StudioLoader.init());
