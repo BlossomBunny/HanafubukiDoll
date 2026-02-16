@@ -206,13 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </a>
     </footer>
 
-<div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
-    <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden animate-fadeIn mb-2">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility Settings</h3>
-            <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 hover:text-pink-500 text-2xl" aria-label="Close Menu">&times;</button>
-        </div>
-        <div class="space-y-5">
+ <div class="space-y-5">
             <label class="flex justify-between items-center cursor-pointer group">
                 <span class="text-[11px] font-bold text-gray-600 uppercase group-hover:text-pink-400 transition-colors">Dark Mode</span>
                 <input type="checkbox" id="darkToggle" onchange="ComfortSettings.update('dark-theme', this.checked)" class="w-5 h-5 accent-pink-500">
