@@ -510,31 +510,6 @@ function showWaitlistForm(serviceId) {
     };
 }
 
-    document.body.appendChild(modal);
-
-    document.getElementById('waitlistForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const btn = e.target.querySelector('button[type="submit"]');
-        btn.innerText = "Processing... ♡";
-
-        const { error } = await _supabase.from('waitlist').insert([{
-            name: document.getElementById('w-name').value,
-            email: document.getElementById('w-email').value,
-            notes: document.getElementById('w-notes').value,
-            service_requested: serviceId,
-            status: 'pending' // Matches your table requirements
-        }]);
-
-        if (!error) {
-            showMagicAlert("Added! 🌸", "Check your email for updates soon!", "success");
-            modal.remove();
-        } else {
-            showMagicAlert("Error", "Could not join waitlist. Please try again.", "error");
-            btn.innerText = "Join Waitlist ✨";
-        }
-    };
-}
-
 function toggleDollDetails() {
     const val = document.getElementById('faceupBase').value;
     document.getElementById('dollDetails').classList.toggle('hidden', val !== 'Standard Face-Up');
