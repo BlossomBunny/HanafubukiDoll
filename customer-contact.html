@@ -542,21 +542,36 @@ function toggleDollDetails() {
     document.getElementById('bundle-dd-head').classList.toggle('hidden', !val.includes('Dollfie'));
 }
 
-   function startBooking() {
-    if (typeof StudioLoader !== 'undefined') StudioLoader.show("Opening Studio... ✨");
+  async function startBooking() {
+    // 1. Manually trigger the loader
+    if (typeof StudioLoader !== 'undefined') {
+        StudioLoader.show("Opening Studio... ✨");
+    }
 
-    setTimeout(() => {
+    try {
+        // 2. Wait for the data to actually load so the form isn't empty
+        await Promise.all([
+            syncFormWithStock(),
+            checkServiceAvailability()
+        ]);
+
+        // 3. Toggle the containers
         const entry = document.getElementById('entryChoice');
-        const container = document.getElementById('commissionContainer'); // Updated target
+        const container = document.getElementById('commissionContainer');
 
         if (entry) entry.classList.add('hidden');
         if (container) {
             container.classList.remove('hidden');
-            showStep(1);
+            showStep(1); // Ensure we start at Step 1
         }
-
-        if (typeof StudioLoader !== 'undefined') StudioLoader.hide();
-    }, 600);
+    } catch (error) {
+        console.error("Studio failed to initialize:", error);
+    } finally {
+        // 4. Only hide once everything is finished
+        if (typeof StudioLoader !== 'undefined') {
+            StudioLoader.hide();
+        }
+    }
 }
 </script>
     
