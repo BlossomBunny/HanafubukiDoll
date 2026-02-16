@@ -77,133 +77,121 @@
     </div>
 </div>
 
-        <form id="bookingForm" class="step-hidden space-y-8 pb-20 animate-fadeIn">
-            <button type="button" onclick="location.reload()" class="text-[10px] font-black uppercase tracking-widest text-pink-400 hover:text-pink-600">← Back to Options</button>
+     <form id="bookingForm" class="step-hidden max-w-2xl mx-auto space-y-10 pb-20 animate-fadeIn">
+    <button type="button" onclick="location.reload()" 
+        class="text-[10px] font-black uppercase tracking-[0.2em] text-pink-300 hover:text-pink-500 transition-colors flex items-center gap-2 ml-4">
+        <span>←</span> Back to Options
+    </button>
 
-            <div class="glass-card p-8 space-y-6">
-                <h2 class="text-2xl font-black tracking-tighter">1. Your Details</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" id="custName" placeholder="Full Name*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none focus:ring-2 ring-pink-200">
-                    <input type="text" id="socialHandle" placeholder="Social Handle (@...)" class="w-full p-4 rounded-xl border border-pink-100 outline-none">
-                    <input type="text" id="Country" placeholder="Country (e.g. USA)" required class="w-full p-4 rounded-xl border border-pink-100 outline-none">
-                    <input type="email" id="custEmail" placeholder="Email Address*" required class="w-full p-4 rounded-xl border border-pink-100 outline-none md:col-span-2">
-                </div>
+    <div class="glass-card p-8 space-y-6 border-pink-50">
+        <h2 class="text-2xl font-black tracking-tighter text-rose-950/80">1. Your Details</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="custName" placeholder="Full Name*" required 
+                class="w-full p-4 rounded-2xl border border-pink-50 bg-white/60 outline-none focus:ring-2 ring-pink-100 text-rose-900/80">
+            <input type="text" id="socialHandle" placeholder="Social Handle (@...)" 
+                class="w-full p-4 rounded-2xl border border-pink-50 bg-white/60 outline-none focus:ring-2 ring-pink-100 text-rose-900/80">
+            <input type="text" id="Country" placeholder="Country (e.g. USA)*" required 
+                class="w-full p-4 rounded-2xl border border-pink-50 bg-white/60 outline-none focus:ring-2 ring-pink-100 text-rose-900/80">
+            <input type="email" id="custEmail" placeholder="Email Address*" required 
+                class="w-full p-4 rounded-2xl border border-pink-50 bg-white/60 outline-none focus:ring-2 ring-pink-100 md:col-span-2 text-rose-900/80">
+        </div>
+    </div>
+
+    <div class="space-y-8">
+        <h2 class="text-2xl font-black tracking-tighter text-rose-950/80 px-4">2. Service Details</h2>
+
+        <div id="faceups-section" class="glass-card p-8 border-l-4 border-pink-400 space-y-6">
+            <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest">Face-Up & Doll Info</h3>
+            
+            <select id="faceupBase" onchange="toggleDollDetails()" 
+                class="w-full p-4 rounded-xl border border-pink-100 bg-white text-rose-900/80 outline-none focus:ring-2 ring-pink-100">
+                <option value="None">No Faceup Needed</option>
+                <option value="Standard Face-Up">Standard Face-Up</option>
+                <option value="Face-Up + Smartdoll Head (Bundle)" id="opt-sm-bundle">Face-Up + Smartdoll Head (Bundle)</option>
+                <option value="Face-Up + Dollfie Dream Head (Bundle)" id="opt-dd-bundle">Face-Up + Dollfie Dream Head (Bundle)</option>
+            </select>
+
+            <div id="bundle-sm-head" class="hidden animate-fadeIn space-y-2">
+                <label class="text-[10px] font-black uppercase text-pink-400 ml-2">Select In-Stock Smartdoll Sculpt ♡</label>
+                <select id="sm-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-rose-900/80"></select>
             </div>
 
-            <div class="space-y-6">
-                <h2 class="text-2xl font-black tracking-tighter px-4">2. Service Details</h2>
-
-                <div id="faceups-section" class="glass-card p-6 service-block border-l-4 border-pink-400">
-                    <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest mb-4">Face-Up & Doll Info</h3>
-                    <select id="faceupBase" onchange="toggleDollDetails()" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
-                        <option value="None">No Faceup Needed</option>
-                        <option value="Standard Face-Up">Standard Face-Up</option>
-                        <option value="Face-Up + Smartdoll Head (Bundle)" id="opt-sm-bundle">Face-Up + Smartdoll Head (Bundle)</option>
-                        <option value="Face-Up + Dollfie Dream Head (Bundle)" id="opt-dd-bundle">Face-Up + Dollfie Dream Head (Bundle)</option>
-                    </select>
-
-                    <div id="bundle-sm-head" class="hidden mb-4 animate-fadeIn">
-                        <label class="text-[10px] font-black uppercase text-pink-400 ml-2">Select In-Stock Smartdoll Sculpt ♡</label>
-                        <select id="sm-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white"></select>
-                    </div>
-
-                    <div id="bundle-dd-head" class="hidden mb-4 animate-fadeIn">
-                        <label class="text-[10px] font-black uppercase text-purple-400 ml-2">Select In-Stock Dollfie Sculpt ♡</label>
-                        <select id="dd-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white"></select>
-                    </div>
-
-                    <div id="dollDetails" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-fadeIn">
-                        <input type="text" id="dollCompany" placeholder="Doll Company (e.g. SmartDoll)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none md:col-span-2 bg-pink-50/20">
-                        <input type="text" id="dollSculpt" placeholder="Doll Sculpt (e.g. Mirai)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none bg-pink-50/20">
-                    </div>
-
-                    <div class="space-y-4">
-                        <input type="text" id="dollSkintone" placeholder="Skintone (e.g. Cinnamon)*" class="w-full p-4 rounded-xl border border-pink-50 outline-none bg-pink-50/20">
-                        <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
-                        <div class="p-4 bg-pink-50/50 border border-pink-100 rounded-2xl my-4 flex gap-3 items-start animate-fadeIn">
-    <span class="text-lg">💡</span>
-    <div>
-        <p class="text-[10px] font-black text-pink-500 uppercase tracking-widest mb-1">Artist Tip</p>
-        <p class="text-xs text-gray-600 leading-relaxed">
-            Have a lot of photos? To keep your vision organized, you can 
-            <a href="tools.html" target="_blank" class="text-pink-600 underline font-bold hover:text-pink-700">use our Reference Builder</a> 
-            to create one single collage sheet with all your notes! ♡
-        </p>
-    </div>
-</div>
-                        <input type="file" id="faceupFiles" multiple class="text-[10px]">
-                    </div>
-                </div>
-                
-                <div id="manicures-section" class="glass-card p-6 service-block border-l-4 border-emerald-400">
-                    <h3 class="font-black text-emerald-500 uppercase text-[10px] tracking-widest mb-4">Manicures</h3>
-                    <select id="maniBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
-                        <option value="None">No Manicure Needed</option>
-                        <option value="Standard Manicure">Standard Manicure</option>
-                        <option value="Acrylic Manicure">Acrylic Manicure</option>
-                        <option value="Smartdoll Decora Hands" id="opt-sm-mani">Smartdoll Decora Hands</option>
-                        <option value="Dollfie Dream Decora Hands" id="opt-dd-mani">Dollfie Dream Decora Hands</option>
-                    </select>
-                    <div class="space-y-4">
-                        <label class="text-xs font-bold flex items-center gap-2 cursor-pointer"><input type="checkbox" id="pediAddon" value="Pedicure" class="w-4 h-4 accent-emerald-400"> Include Pedicure?</label>
-                        <textarea id="maniNotes" placeholder="Nail colors/themes..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
-                        <div class="p-4 bg-pink-50/50 border border-pink-100 rounded-2xl my-4 flex gap-3 items-start animate-fadeIn">
-    <span class="text-lg">💡</span>
-    <div>
-        <p class="text-[10px] font-black text-pink-500 uppercase tracking-widest mb-1">Artist Tip</p>
-        <p class="text-xs text-gray-600 leading-relaxed">
-            Have a lot of photos? To keep your vision organized, you can 
-            <a href="tools.html" target="_blank" class="text-pink-600 underline font-bold hover:text-pink-700">use our Reference Builder</a> 
-            to create one single collage sheet with all your notes! ♡
-        </p>
-    </div>
-</div>
-                        <input type="file" id="maniFiles" multiple class="text-[10px]">
-                    </div>
-                </div>
-
-                <div id="eyes-section" class="glass-card p-6 service-block border-l-4 border-blue-400">
-                    <h3 class="font-black text-blue-500 uppercase text-[10px] tracking-widest mb-4">Follow-Me Eyes</h3>
-                    <select id="eyeBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white mb-4">
-                        <option value="None">No Eyes Needed</option>
-                        <option value="Follow-Me Eyes">Follow-Me Eyes</option>
-                        <option value="Glitter Follow-Me Eyes">Glitter Follow-Me Eyes</option>
-                        <option value="Custom Follow-Me Eyes">Custom Follow-Me Eyes</option>
-                    </select>
-                    <textarea id="eyeNotes" placeholder="Eye color/detail requests..." class="w-full p-4 rounded-xl border border-pink-50 text-sm h-24"></textarea>
-                    <div class="p-4 bg-pink-50/50 border border-pink-100 rounded-2xl my-4 flex gap-3 items-start animate-fadeIn">
-    <span class="text-lg">💡</span>
-    <div>
-        <p class="text-[10px] font-black text-pink-500 uppercase tracking-widest mb-1">Artist Tip</p>
-        <p class="text-xs text-gray-600 leading-relaxed">
-            Have a lot of photos? To keep your vision organized, you can 
-            <a href="tools.html" target="_blank" class="text-pink-600 underline font-bold hover:text-pink-700">use our Reference Builder</a> 
-            to create one single collage sheet with all your notes! ♡
-        </p>
-    </div>
-</div>
-                    <input type="file" id="eyeFiles" multiple class="text-[10px]">
-                </div>
+            <div id="bundle-dd-head" class="hidden animate-fadeIn space-y-2">
+                <label class="text-[10px] font-black uppercase text-purple-400 ml-2">Select In-Stock Dollfie Sculpt ♡</label>
+                <select id="dd-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-rose-900/80"></select>
             </div>
 
-            <div class="p-5 bg-pink-50/50 rounded-2xl border border-pink-100 text-[11px] h-48 overflow-y-auto text-gray-600 leading-relaxed custom-scrollbar">
-                <p class="font-black mb-3 uppercase tracking-widest text-pink-500 border-b border-pink-100 pb-1">Studio Terms of Service</p>
-                <div class="space-y-3">
-                    <p><strong>♡ Payments:</strong> Payment is required in full before work can begin. Layaway is accepted but should be discussed prior to submitting a commission form.</p>
-                    <p><strong>♡ Shipping:</strong> Client covers all shipping/insurance costs. We will discuss shipping needs individually. We are not responsible for lost parcels, but will always assist in the claim process for loss or damage.</p>
-                    <p><strong>♡ Customs Fees:</strong> Shipments from outside of the UK will collect a customs charge if above £39. We will inform you of this charge and you will be responsible for paying it.</p>
-                    <p><strong>♡ Artistic Freedom:</strong> By booking with us you acknowledge our individual style and accept this for your commissioned piece.</p>
-                </div>
+            <div id="dollDetails" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 animate-fadeIn">
+                <input type="text" id="dollCompany" placeholder="Doll Company (e.g. SmartDoll)*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20 md:col-span-2">
+                <input type="text" id="dollSculpt" placeholder="Doll Sculpt (e.g. Mirai)*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20">
+                <input type="text" id="dollSkintone" placeholder="Skintone (e.g. Cinnamon)*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20">
             </div>
 
-            <label class="flex items-start gap-3 cursor-pointer">
-                <input type="checkbox" id="tosCheck" required class="mt-1 w-5 h-5 accent-pink-500">
-                <span class="text-xs font-bold text-gray-700">I agree to the Terms of Service. ♡</span>
+            <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-rose-900/80"></textarea>
+
+            <div class="p-5 bg-pink-50/40 border border-pink-100 rounded-2xl flex gap-4 items-start">
+                <span class="text-xl">💡</span>
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black text-pink-500 uppercase tracking-widest">Artist Tip</p>
+                    <p class="text-[11px] text-rose-900/70 leading-relaxed">
+                        Have a lot of photos? Use our <a href="tools.html" target="_blank" class="text-pink-600 underline font-bold">Reference Builder</a> to create a single collage! ♡
+                    </p>
+                </div>
+            </div>
+            
+            <input type="file" id="faceupFiles" multiple class="text-[10px] text-pink-300 file:bg-pink-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-pink-500 file:font-bold file:mr-4">
+        </div>
+
+        <div id="manicures-section" class="glass-card p-8 border-l-4 border-emerald-400 space-y-4">
+            <h3 class="font-black text-emerald-500 uppercase text-[10px] tracking-widest">Manicures</h3>
+            <select id="maniBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white">
+                <option value="None">No Manicure Needed</option>
+                <option value="Standard Manicure">Standard Manicure</option>
+                <option value="Acrylic Manicure">Acrylic Manicure</option>
+                <option value="Smartdoll Decora Hands" id="opt-sm-mani">Smartdoll Decora Hands</option>
+                <option value="Dollfie Dream Decora Hands" id="opt-dd-mani">Dollfie Dream Decora Hands</option>
+            </select>
+            <label class="flex items-center gap-2 cursor-pointer ml-2">
+                <input type="checkbox" id="pediAddon" value="Pedicure" class="w-4 h-4 accent-emerald-400">
+                <span class="text-xs font-bold text-rose-900/60">Include Pedicure?</span>
             </label>
-            <button type="submit" id="submitBtn" class="w-full bg-pink-500 text-white py-5 rounded-3xl font-black shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
-                Submit Commission Request ✨
-            </button>
-        </form>
+            <textarea id="maniNotes" placeholder="Nail colors/themes..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-rose-900/80"></textarea>
+            <input type="file" id="maniFiles" multiple class="text-[10px] text-emerald-300 file:bg-emerald-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-emerald-500 file:font-bold file:mr-4">
+        </div>
+
+        <div id="eyes-section" class="glass-card p-8 border-l-4 border-blue-400 space-y-4">
+            <h3 class="font-black text-blue-500 uppercase text-[10px] tracking-widest">Follow-Me Eyes</h3>
+            <select id="eyeBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white">
+                <option value="None">No Eyes Needed</option>
+                <option value="Follow-Me Eyes">Follow-Me Eyes</option>
+                <option value="Glitter Follow-Me Eyes">Glitter Follow-Me Eyes</option>
+                <option value="Custom Follow-Me Eyes">Custom Follow-Me Eyes</option>
+            </select>
+            <textarea id="eyeNotes" placeholder="Eye color/detail requests..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-rose-900/80"></textarea>
+            <input type="file" id="eyeFiles" multiple class="text-[10px] text-blue-300 file:bg-blue-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-blue-500 file:font-bold file:mr-4">
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <div class="p-6 bg-pink-50/30 rounded-[30px] border border-pink-50 text-[11px] h-44 overflow-y-auto text-rose-900/70 leading-relaxed custom-scrollbar italic">
+            <p class="font-black mb-3 uppercase tracking-widest text-pink-500 not-italic border-b border-pink-100 pb-1">Studio Terms of Service</p>
+            <p><strong>♡ Payments:</strong> Payment in full required before work begins.</p>
+            <p><strong>♡ Shipping:</strong> Client covers costs. We are not responsible for lost parcels but will assist in claims.</p>
+            <p><strong>♡ Customs:</strong> Fees for shipments outside the UK are the client's responsibility.</p>
+            <p><strong>♡ Artistic Freedom:</strong> You acknowledge our style upon booking.</p>
+        </div>
+
+        <label class="flex items-center justify-center gap-3 cursor-pointer">
+            <input type="checkbox" id="tosCheck" required class="w-5 h-5 accent-pink-500">
+            <span class="text-xs font-bold text-rose-900/70">I agree to the Terms of Service. ♡</span>
+        </label>
+
+        <button type="submit" id="submitBtn" 
+            class="w-full bg-rose-950/80 text-white py-5 rounded-[40px] font-black uppercase tracking-[0.2em] text-xs shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+            Submit Commission Request ✨
+        </button>
+    </div>
+</form>
     </main>
 
      <script>
@@ -398,9 +386,14 @@ async function syncFormWithStock() {
 }
 
 function startBooking() {
-    document.getElementById('entryChoice').classList.add('hidden');
-    document.getElementById('bookingForm').classList.remove('step-hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const entryChoice = document.getElementById('entryChoice');
+    const bookingForm = document.getElementById('bookingForm');
+    
+    if (entryChoice) entryChoice.classList.add('hidden');
+    if (bookingForm) {
+        bookingForm.classList.remove('step-hidden');
+        bookingForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 function toggleDollDetails() {
