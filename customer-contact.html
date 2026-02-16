@@ -38,21 +38,29 @@
         
     </nav>
         
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <a href="mailto:Admin@hanafubukidoll.co.uk" 
-       onclick="StudioLoader.show(); setTimeout(StudioLoader.hide, 3000);"
-       class="p-8 border-2 border-pink-50 rounded-3xl hover:bg-pink-50 transition-all group flex flex-col items-center justify-center">
-        <span class="text-4xl">✉️</span>
-        <h3 class="font-bold mt-4">General Inquiry</h3>
-        <p class="text-[10px] uppercase tracking-widest opacity-50 mt-2">Questions or Collabs</p>
-    </a>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+    <div class="flex justify-center">
+        <a href="mailto:Admin@hanafubukidoll.co.uk" 
+           onclick="StudioLoader.show(); setTimeout(StudioLoader.hide, 3000);"
+           class="w-full max-w-[280px] p-10 border-2 border-pink-50 rounded-[40px] hover:bg-pink-50 transition-all group flex flex-col items-center justify-center space-y-4">
+            <span class="text-4xl group-hover:scale-110 transition-transform duration-300">✉️</span>
+            <div class="text-center">
+                <h3 class="font-bold text-gray-800">General Inquiry</h3>
+                <p class="text-[10px] uppercase tracking-[0.2em] text-pink-400 font-black mt-1">Questions or Collabs</p>
+            </div>
+        </a>
+    </div>
 
-    <button onclick="startBooking()" 
-            class="p-8 border-2 border-pink-50 rounded-3xl hover:bg-pink-50 transition-all group flex flex-col items-center justify-center">
-        <span class="text-4xl">🌸</span>
-        <h3 class="font-bold mt-4">Book a Slot</h3>
-        <p class="text-[10px] uppercase tracking-widest opacity-50 mt-2">Start your commission</p>
-    </button>
+    <div class="flex justify-center">
+        <button onclick="startBooking()" 
+                class="w-full max-w-[280px] p-10 border-2 border-pink-50 rounded-[40px] hover:bg-pink-100/50 transition-all group flex flex-col items-center justify-center space-y-4">
+            <span class="text-4xl group-hover:scale-110 transition-transform duration-300">🎨</span>
+            <div class="text-center">
+                <h3 class="font-bold text-gray-800">Book a Slot</h3>
+                <p class="text-[10px] uppercase tracking-[0.2em] text-pink-400 font-black mt-1">Questionnaire & Refs</p>
+            </div>
+        </button>
+    </div>
 </div>
         <form id="bookingForm" class="step-hidden space-y-8 pb-20 animate-fadeIn">
             <button type="button" onclick="location.reload()" class="text-[10px] font-black uppercase tracking-widest text-pink-400 hover:text-pink-600">← Back to Options</button>
