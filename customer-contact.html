@@ -196,10 +196,6 @@
     </main>
 
      <script>
-const SUPABASE_URL = 'https://hxqxinfdeyprkuvvyqet.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_J6MAvzpyVHd_zo6PtEcnzQ_L6AVEDZE';
-let _supabase;
-
          const container = document.getElementById('petals');
         for (let i = 0; i < 19; i++) {
             const p = document.createElement('div');
@@ -229,21 +225,6 @@ window.onload = async () => {
     }
 };
 
-async function handleFormSubmit(e) {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    const overlay = document.getElementById('loadingOverlay');
-
-   
-    btn.innerText = "Sending... ✨";
-    btn.disabled = true;
-    
-    if (overlay) {
-        overlay.classList.remove('hidden');
-        setTimeout(() => overlay.classList.add('opacity-100'), 10);
-    }
-
-   // 1. Move the helper function outside or keep it at the very top
 const uploadSet = async (fileInputId) => {
     const files = document.getElementById(fileInputId)?.files;
     if (!files || files.length === 0) return [];
@@ -289,7 +270,7 @@ async function handleFormSubmit(e) {
     }
 
     // --- THE FIX STARTS HERE ---
-    try { // <--- This opening brace was missing!
+    try { 
         const fBase = document.getElementById('faceupBase').value;
         let finalSculpt = document.getElementById('dollSculpt').value;
         let finalCompany = document.getElementById('dollCompany').value;
@@ -544,13 +525,12 @@ function showWaitlistForm(serviceId) {
                 err.message || "Something went wrong while joining the list. ☁️", 
                 "error"
             );
-            
-            // Only reset the button on error so they can try again
+                     
             submitBtn.disabled = false;
             submitBtn.innerText = originalText;
         }
     });
-    
+}
     function showLoading() {
     const loader = document.getElementById('loadingOverlay');
     loader.classList.remove('hidden');
