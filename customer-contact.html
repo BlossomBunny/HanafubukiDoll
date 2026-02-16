@@ -83,68 +83,92 @@
         <span>←</span> Back to Options
     </button>
 
-    <div class="glass-card p-8 space-y-6 border-pink-50">
-        <h2 class="text-2xl font-black tracking-tighter text-rose-950/80">1. Your Details</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" id="custName" placeholder="Full Name*" required 
-                class="w-full p-4 rounded-2xl border border-pink-50 bg-white/60 outline-none focus:ring-2 ring-pink-100 text-rose-900/80">
-            <input type="text" id="socialHandle" placeholder="Social Handle (@...)" 
-                class="w-full p-4 rounded-2xl border border-pink-50 bg-white/60 outline-none focus:ring-2 ring-pink-100 text-rose-900/80">
-            <input type="text" id="Country" placeholder="Country (e.g. USA)*" required 
-                class="w-full p-4 rounded-2xl border border-pink-50 bg-white/60 outline-none focus:ring-2 ring-pink-100 text-rose-900/80">
-            <input type="email" id="custEmail" placeholder="Email Address*" required 
-                class="w-full p-4 rounded-2xl border border-pink-50 bg-white/60 outline-none focus:ring-2 ring-pink-100 md:col-span-2 text-rose-900/80">
+   <div id="commissionContainer" class="max-w-2xl mx-auto pb-20">
+    
+    <div id="step-1-2" class="glass-card p-10 space-y-8 border-pink-100 animate-fadeIn">
+        <div class="text-center">
+            <h2 class="text-3xl font-black text-pink-400 tracking-tighter">New Request</h2>
+            <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-black">Identity & Services ♡</p>
         </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="custName" placeholder="Full Name*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
+            <input type="text" id="socialHandle" placeholder="Social Handle (@...)" class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
+            <input type="text" id="Country" placeholder="Country (e.g. USA)*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
+            <input type="email" id="custEmail" placeholder="Email Address*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 md:col-span-2 text-pink-600 placeholder:text-pink-200">
+        </div>
+
+        <div class="space-y-4">
+            <p class="text-[10px] font-black uppercase text-pink-300 text-center tracking-widest">What are we working on?</p>
+            <div class="grid grid-cols-3 gap-3">
+                <label class="flex flex-col items-center p-4 border border-pink-50 rounded-3xl cursor-pointer hover:bg-pink-50 transition-all">
+                    <input type="checkbox" id="checkFaceup" class="hidden peer">
+                    <span class="text-2xl opacity-40 peer-checked:opacity-100">🎨</span>
+                    <span class="text-[9px] font-bold mt-2 text-pink-200 peer-checked:text-pink-400 text-center">FACEUP</span>
+                </label>
+                <label class="flex flex-col items-center p-4 border border-pink-50 rounded-3xl cursor-pointer hover:bg-emerald-50 transition-all">
+                    <input type="checkbox" id="checkMani" class="hidden peer">
+                    <span class="text-2xl opacity-40 peer-checked:opacity-100">💅</span>
+                    <span class="text-[9px] font-bold mt-2 text-pink-200 peer-checked:text-emerald-400 text-center">MANI</span>
+                </label>
+                <label class="flex flex-col items-center p-4 border border-pink-50 rounded-3xl cursor-pointer hover:bg-pink-50 transition-all">
+                    <input type="checkbox" id="checkEyes" class="hidden peer">
+                    <span class="text-2xl opacity-40 peer-checked:opacity-100">👀</span>
+                    <span class="text-[9px] font-bold mt-2 text-pink-200 peer-checked:text-pink-400 text-center">EYES</span>
+                </label>
+            </div>
+        </div>
+
+        <button onclick="processSelection()" class="w-full bg-pink-400 text-white py-5 rounded-[40px] font-black uppercase tracking-widest text-xs shadow-lg shadow-pink-100 hover:scale-[1.02] transition-all">
+            Continue to Details ✨
+        </button>
     </div>
 
-    <div class="space-y-8">
-        <h2 class="text-2xl font-black tracking-tighter text-rose-950/80 px-4">2. Service Details</h2>
+    <div id="step-3" class="hidden space-y-8 animate-fadeIn">
+        <button onclick="showStep(1)" class="text-[10px] font-black uppercase tracking-widest text-pink-300 ml-4 hover:text-pink-500 transition-colors">← Back to Services</button>
 
-        <div id="faceups-section" class="glass-card p-8 border-l-4 border-pink-400 space-y-6">
+        <div id="faceup-details" class="hidden glass-card p-8 border-l-4 border-pink-400 space-y-6">
             <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest">Face-Up & Doll Info</h3>
-            
-            <select id="faceupBase" onchange="toggleDollDetails()" 
-                class="w-full p-4 rounded-xl border border-pink-100 bg-white text-rose-900/80 outline-none focus:ring-2 ring-pink-100">
+            <select id="faceupBase" onchange="toggleDollDetails()" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-pink-600 outline-none">
                 <option value="None">No Faceup Needed</option>
                 <option value="Standard Face-Up">Standard Face-Up</option>
                 <option value="Face-Up + Smartdoll Head (Bundle)" id="opt-sm-bundle">Face-Up + Smartdoll Head (Bundle)</option>
                 <option value="Face-Up + Dollfie Dream Head (Bundle)" id="opt-dd-bundle">Face-Up + Dollfie Dream Head (Bundle)</option>
             </select>
 
-            <div id="bundle-sm-head" class="hidden animate-fadeIn space-y-2">
+            <div id="bundle-sm-head" class="hidden space-y-2">
                 <label class="text-[10px] font-black uppercase text-pink-400 ml-2">Select In-Stock Smartdoll Sculpt ♡</label>
-                <select id="sm-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-rose-900/80"></select>
+                <select id="sm-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-pink-600"></select>
             </div>
 
-            <div id="bundle-dd-head" class="hidden animate-fadeIn space-y-2">
-                <label class="text-[10px] font-black uppercase text-purple-400 ml-2">Select In-Stock Dollfie Sculpt ♡</label>
-                <select id="dd-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-rose-900/80"></select>
+            <div id="bundle-dd-head" class="hidden space-y-2">
+                <label class="text-[10px] font-black uppercase text-pink-400 ml-2">Select In-Stock Dollfie Sculpt ♡</label>
+                <select id="dd-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-pink-600"></select>
             </div>
 
-            <div id="dollDetails" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 animate-fadeIn">
-                <input type="text" id="dollCompany" placeholder="Doll Company (e.g. SmartDoll)*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20 md:col-span-2">
-                <input type="text" id="dollSculpt" placeholder="Doll Sculpt (e.g. Mirai)*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20">
-                <input type="text" id="dollSkintone" placeholder="Skintone (e.g. Cinnamon)*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20">
+            <div id="dollDetails" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="dollCompany" placeholder="Doll Company*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20 md:col-span-2 outline-none">
+                <input type="text" id="dollSculpt" placeholder="Doll Sculpt*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20 outline-none">
+                <input type="text" id="dollSkintone" placeholder="Skintone*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20 outline-none">
             </div>
 
-            <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-rose-900/80"></textarea>
+            <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-pink-600 text-sm outline-none"></textarea>
 
             <div class="p-5 bg-pink-50/40 border border-pink-100 rounded-2xl flex gap-4 items-start">
                 <span class="text-xl">💡</span>
                 <div class="space-y-1">
                     <p class="text-[10px] font-black text-pink-500 uppercase tracking-widest">Artist Tip</p>
-                    <p class="text-[11px] text-rose-900/70 leading-relaxed">
-                        Have a lot of photos? Use our <a href="tools.html" target="_blank" class="text-pink-600 underline font-bold">Reference Builder</a> to create a single collage! ♡
+                    <p class="text-[11px] text-pink-700/70 leading-relaxed">
+                        Have a lot of photos? Use our <a href="tools.html" target="_blank" class="text-pink-600 underline font-bold">Reference Builder</a>! ♡
                     </p>
                 </div>
             </div>
-            
-            <input type="file" id="faceupFiles" multiple class="text-[10px] text-pink-300 file:bg-pink-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-pink-500 file:font-bold file:mr-4">
+            <input type="file" id="faceupFiles" multiple class="text-[10px] text-pink-300 file:bg-pink-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-pink-500 file:font-bold">
         </div>
 
-        <div id="manicures-section" class="glass-card p-8 border-l-4 border-emerald-400 space-y-4">
+        <div id="mani-details" class="hidden glass-card p-8 border-l-4 border-emerald-400 space-y-4">
             <h3 class="font-black text-emerald-500 uppercase text-[10px] tracking-widest">Manicures</h3>
-            <select id="maniBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white">
+            <select id="maniBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-pink-600">
                 <option value="None">No Manicure Needed</option>
                 <option value="Standard Manicure">Standard Manicure</option>
                 <option value="Acrylic Manicure">Acrylic Manicure</option>
@@ -152,120 +176,193 @@
                 <option value="Dollfie Dream Decora Hands" id="opt-dd-mani">Dollfie Dream Decora Hands</option>
             </select>
             <label class="flex items-center gap-2 cursor-pointer ml-2">
-                <input type="checkbox" id="pediAddon" value="Pedicure" class="w-4 h-4 accent-emerald-400">
-                <span class="text-xs font-bold text-rose-900/60">Include Pedicure?</span>
+                <input type="checkbox" id="pediAddon" class="w-4 h-4 accent-emerald-400">
+                <span class="text-xs font-bold text-pink-700/60">Include Pedicure?</span>
             </label>
-            <textarea id="maniNotes" placeholder="Nail colors/themes..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-rose-900/80"></textarea>
-            <input type="file" id="maniFiles" multiple class="text-[10px] text-emerald-300 file:bg-emerald-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-emerald-500 file:font-bold file:mr-4">
+            <textarea id="maniNotes" placeholder="Nail colors/themes..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-pink-600 text-sm outline-none"></textarea>
+            <input type="file" id="maniFiles" multiple class="text-[10px] text-emerald-300 file:bg-emerald-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-emerald-500 file:font-bold">
         </div>
 
-        <div id="eyes-section" class="glass-card p-8 border-l-4 border-blue-400 space-y-4">
-            <h3 class="font-black text-blue-500 uppercase text-[10px] tracking-widest">Follow-Me Eyes</h3>
-            <select id="eyeBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white">
+        <div id="eyes-details" class="hidden glass-card p-8 border-l-4 border-emerald-200 space-y-4">
+            <h3 class="font-black text-emerald-600 uppercase text-[10px] tracking-widest">Follow-Me Eyes</h3>
+            <select id="eyeBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-pink-600">
                 <option value="None">No Eyes Needed</option>
                 <option value="Follow-Me Eyes">Follow-Me Eyes</option>
                 <option value="Glitter Follow-Me Eyes">Glitter Follow-Me Eyes</option>
                 <option value="Custom Follow-Me Eyes">Custom Follow-Me Eyes</option>
             </select>
-            <textarea id="eyeNotes" placeholder="Eye color/detail requests..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-rose-900/80"></textarea>
-            <input type="file" id="eyeFiles" multiple class="text-[10px] text-blue-300 file:bg-blue-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-blue-500 file:font-bold file:mr-4">
+            <textarea id="eyeNotes" placeholder="Eye color/detail requests..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-pink-600 text-sm outline-none"></textarea>
+            <input type="file" id="eyeFiles" multiple class="text-[10px] text-emerald-300 file:bg-emerald-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-emerald-500 file:font-bold">
         </div>
+
+        <button onclick="showStep(4)" class="w-full bg-emerald-400 text-white py-5 rounded-[40px] font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-50 hover:scale-[1.02] transition-all">
+            Next: Terms & Review ♡
+        </button>
     </div>
 
-    <div class="space-y-6">
-        <div class="p-6 bg-pink-50/30 rounded-[30px] border border-pink-50 text-[11px] h-44 overflow-y-auto text-rose-900/70 leading-relaxed custom-scrollbar italic">
-            <p class="font-black mb-3 uppercase tracking-widest text-pink-500 not-italic border-b border-pink-100 pb-1">Studio Terms of Service</p>
-            <p><strong>♡ Payments:</strong> Payment in full required before work begins.</p>
-            <p><strong>♡ Shipping:</strong> Client covers costs. We are not responsible for lost parcels but will assist in claims.</p>
-            <p><strong>♡ Customs:</strong> Fees for shipments outside the UK are the client's responsibility.</p>
-            <p><strong>♡ Artistic Freedom:</strong> You acknowledge our style upon booking.</p>
+    <div id="step-4" class="hidden space-y-8 animate-fadeIn">
+        <button onclick="showStep(3)" class="text-[10px] font-black uppercase tracking-widest text-pink-300 ml-4">← Back to Details</button>
+        <div class="glass-card p-10 border-pink-100 space-y-6">
+            <h2 class="text-2xl font-black text-pink-400 tracking-tighter">Studio Terms</h2>
+            <div class="p-6 bg-pink-50/30 rounded-[30px] border border-pink-50 text-[11px] h-44 overflow-y-auto text-pink-700/70 leading-relaxed custom-scrollbar italic">
+                <p class="font-black mb-3 uppercase tracking-widest text-pink-500 not-italic border-b border-pink-100 pb-1">Studio Terms of Service</p>
+                <p><strong>♡ Payments:</strong> Payment in full required before work begins.</p>
+                <p><strong>♡ Shipping:</strong>  Client covers costs. We are not responsible for lost parcels but will assist in claims.</p>
+                <p><strong>♡ Customs:</strong> Fees for shipments outside the UK are the client's responsibility. Incoming parcels abouve £39  may recieve a charge. You are liable to pay this before wer can retrieve your parcel.</p>
+                <p><strong>♡ Artistic Freedom:</strong> You acknowledge our style upon booking.</p>
+            </div>
+            <label class="flex items-center justify-center gap-3 cursor-pointer">
+                <input type="checkbox" id="tosCheck" required class="w-6 h-6 accent-pink-400">
+                <span class="text-xs font-bold text-pink-400">I agree to the Terms of Service ♡</span>
+            </label>
         </div>
-
-        <label class="flex items-center justify-center gap-3 cursor-pointer">
-            <input type="checkbox" id="tosCheck" required class="w-5 h-5 accent-pink-500">
-            <span class="text-xs font-bold text-rose-900/70">I agree to the Terms of Service. ♡</span>
-        </label>
-
-        <button type="submit" id="submitBtn" 
-            class="w-full bg-rose-950/80 text-white py-5 rounded-[40px] font-black uppercase tracking-[0.2em] text-xs shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+        <button onclick="finalSubmit()" class="w-full bg-pink-400 text-white py-5 rounded-[40px] font-black uppercase tracking-widest text-xs shadow-xl shadow-pink-100 hover:scale-[1.05] transition-all">
             Submit Commission Request ✨
         </button>
     </div>
-</form>
+
+    <div id="step-5" class="hidden glass-card p-12 text-center space-y-6 border-emerald-100 animate-fadeIn">
+        <div class="text-5xl">🌸</div>
+        <h2 class="text-3xl font-black text-pink-400 tracking-tighter">Whisked Away!</h2>
+        <p class="text-pink-600/70 italic leading-relaxed">
+            Thank you! Your request is in the studio's hands. We usually reply within 48 hours.
+        </p>
+        <div class="p-4 bg-emerald-50/50 rounded-2xl text-[10px] text-emerald-500 font-black uppercase tracking-widest">
+            If you dont hear from us within 48 hours please chase via General Inquiry!
+        </div>
+        <button onclick="location.reload()" class="text-pink-300 font-bold text-[10px] uppercase tracking-widest hover:underline pt-4">Return Home</button>
+    </div>
+</div>
     </main>
 
-     <script>
-         const container = document.getElementById('petals');
-        for (let i = 0; i < 19; i++) {
-            const p = document.createElement('div');
-            p.className = 'petal';
-            p.innerText = '🌸';
-            p.style.left = Math.random() * 100 + 'vw';
-            p.style.top = '-5vh'; 
-            p.style.fontSize = (Math.random() * 20 + 15) + 'px';
-            p.style.animationDuration = (Math.random() * 10 + 15) + 's';
-            p.style.animationDelay = (Math.random() * -20) + 's';
-            container.appendChild(p);
-        }
+<script>
+// --- 1. SAKURA PETALS ---
+const container = document.getElementById('petals');
+for (let i = 0; i < 19; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.innerText = '🌸';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.top = '-5vh'; 
+    p.style.fontSize = (Math.random() * 20 + 15) + 'px';
+    p.style.animationDuration = (Math.random() * 10 + 15) + 's';
+    p.style.animationDelay = (Math.random() * -20) + 's';
+    container.appendChild(p);
+}
 
-// Initialize everything on load
+// --- 2. INITIALIZATION ---
 window.onload = async () => {
-    syncFormWithStock();
-    checkServiceAvailability();
-
-    // 3. Attach the form listener AFTER supabase is ready
-    const bookingForm = document.getElementById('bookingForm');
-    if (bookingForm) {
-        bookingForm.addEventListener('submit', handleFormSubmit);
-    }
+    // Check stock for bundles and check if services are live/waitlist
+    await syncFormWithStock();
+    await checkServiceAvailability();
 };
 
-const uploadSet = async (fileInputId) => {
-    const files = document.getElementById(fileInputId)?.files;
-    if (!files || files.length === 0) return [];
+// --- 3. DYNAMIC SERVICE CHECKER (STEP 1 LOGIC) ---
+async function checkServiceAvailability() {
+    const { data: settings } = await _supabase.from('studio_settings').select('*');
+    if (!settings) return;
 
-    const urls = [];
-    const folder = fileInputId.replace('Files', '');
-
-    for (let file of files) {
-        try {
-            if (file.type.startsWith('image/')) {
-                file = await resizeImage(file, 1200, 0.7);
+    settings.forEach(service => {
+        const checkbox = document.getElementById(`check${service.id.charAt(0).toUpperCase() + service.id.slice(1)}`);
+        const label = checkbox?.closest('label');
+        
+        if (!service.is_live && checkbox) {
+            checkbox.disabled = true;
+            if (label) {
+                label.style.opacity = '0.5';
+                label.style.cursor = 'pointer'; // Keep pointer so they can click to join waitlist
+                const statusText = label.querySelector('span:last-child');
+                if (statusText) statusText.textContent = 'WAITLIST ♡';
+                
+                // If they click a waitlist service, open the modal
+                label.onclick = (e) => {
+                    e.preventDefault();
+                    showWaitlistForm(service.id);
+                };
             }
-            const path = `${folder}/${Date.now()}-${file.name}`;
-            const { data, error } = await _supabase.storage
-                .from('references')
-                .upload(path, file);
-
-            if (error) throw error;
-
-            const { data: pUrl } = _supabase.storage
-                .from('references')
-                .getPublicUrl(path);
-
-            if (pUrl?.publicUrl) urls.push(pUrl.publicUrl);
-        } catch (uploadErr) {
-            console.error(`Error uploading ${file.name}:`, uploadErr);
         }
+    });
+}
+
+// --- 4. STOCK & BUNDLE LOGIC ---
+async function syncFormWithStock() {
+    const { data: stock } = await _supabase.from('inventory').select('*');
+    if (!stock) return;
+
+    // Smartdoll Logic
+    const smHeads = stock.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0);
+    const smOpt = document.getElementById('opt-sm-bundle');
+    const smSelect = document.getElementById('sm-head-sculpt-select');
+    
+    if (smOpt && smHeads.length === 0) {
+        smOpt.disabled = true;
+        smOpt.textContent = 'Face-Up + Smartdoll Head (SOLD OUT)';
+        smOpt.classList.add('text-pink-200');
+    } else if (smSelect) {
+        smSelect.innerHTML = smHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
     }
-    return urls;
-};
 
-async function handleFormSubmit(e) {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    const overlay = document.getElementById('loadingOverlay');
+    // Dollfie Logic
+    const ddHeads = stock.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0);
+    const ddOpt = document.getElementById('opt-dd-bundle');
+    const ddSelect = document.getElementById('dd-head-sculpt-select');
 
+    if (ddOpt && ddHeads.length === 0) {
+        ddOpt.disabled = true;
+        ddOpt.textContent = 'Face-Up + Dollfie Dream Head (SOLD OUT)';
+        ddOpt.classList.add('text-pink-200');
+    } else if (ddSelect) {
+        ddSelect.innerHTML = ddHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
+    }
+}
+
+// --- 5. NAVIGATION ---
+function processSelection() {
+    const isFaceup = document.getElementById('checkFaceup').checked;
+    const isMani = document.getElementById('checkMani').checked;
+    const isEyes = document.getElementById('checkEyes').checked;
+
+    if (!isFaceup && !isMani && !isEyes) {
+        showMagicAlert("Selection Required", "Please pick at least one service to proceed! ♡", "error");
+        return;
+    }
+
+    // Show only the detail sections the user actually wants
+    document.getElementById('faceup-details').classList.toggle('hidden', !isFaceup);
+    document.getElementById('mani-details').classList.toggle('hidden', !isMani);
+    document.getElementById('eyes-details').classList.toggle('hidden', !isEyes);
+
+    showStep(3);
+}
+
+function showStep(stepNum) {
+    const steps = ['step-1-2', 'step-3', 'step-4', 'step-5'];
+    steps.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
+
+    const target = stepNum === 1 ? 'step-1-2' : `step-${stepNum}`;
+    const targetEl = document.getElementById(target);
+    if (targetEl) {
+        targetEl.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+// --- 6. FINAL SUBMISSION ---
+async function finalSubmit() {
+    if (!document.getElementById('tosCheck').checked) {
+        showMagicAlert("Terms", "Please agree to the studio terms to continue! ♡", "error");
+        return;
+    }
+
+    const btn = document.querySelector('#step-4 button');
     btn.innerText = "Sending... ✨";
     btn.disabled = true;
 
-    if (overlay) {
-        overlay.classList.remove('hidden');
-        setTimeout(() => overlay.classList.add('opacity-100'), 10);
-    }
-
-    // --- THE FIX STARTS HERE ---
-    try { 
+    try {
+        // Handle Sculpt Logic for Bundles vs Standard
         const fBase = document.getElementById('faceupBase').value;
         let finalSculpt = document.getElementById('dollSculpt').value;
         let finalCompany = document.getElementById('dollCompany').value;
@@ -278,25 +375,7 @@ async function handleFormSubmit(e) {
             finalCompany = "Volks";
         }
 
-        const faceupDetails = (fBase !== "None") ? {
-            base: fBase,
-            notes: document.getElementById('faceupNotes')?.value,
-            images: await uploadSet('faceupFiles')
-        } : null;
-
-        const maniDetails = (document.getElementById('maniBase').value !== "None") ? {
-            base: document.getElementById('maniBase').value,
-            addons: document.getElementById('pediAddon').checked ? ['Pedicure'] : [],
-            notes: document.getElementById('maniNotes')?.value,
-            images: await uploadSet('maniFiles')
-        } : null;
-
-        const eyeDetails = (document.getElementById('eyeBase').value !== "None") ? {
-            base: document.getElementById('eyeBase').value,
-            notes: document.getElementById('eyeNotes')?.value,
-            images: await uploadSet('eyeFiles')
-        } : null;
-
+        // INSERT DATA
         const { error } = await _supabase.from('commissions').insert([{
             customer_name: document.getElementById('custName').value,
             customer_email: document.getElementById('custEmail').value,
@@ -305,178 +384,64 @@ async function handleFormSubmit(e) {
             doll_company: finalCompany,
             doll_sculpt: finalSculpt,
             doll_skintone: document.getElementById('dollSkintone').value || 'N/A',
-            faceup_details: faceupDetails,
-            manicure_details: maniDetails,
-            eye_details: eyeDetails,
+            faceup_details: fBase !== "None" ? { base: fBase, notes: document.getElementById('faceupNotes').value } : null,
             status: 'Enquiry'
         }]);
 
         if (error) throw error;
-
-        if (overlay) {
-            overlay.classList.remove('opacity-100');
-            setTimeout(() => overlay.classList.add('hidden'), 300);
-        }
-
-        showMagicAlert("Request Sent! ♡", "I'll be in touch soon!", "success");
-        e.target.reset();
+        showStep(5);
 
     } catch (err) {
-        if (overlay) {
-            overlay.classList.remove('opacity-100');
-            setTimeout(() => overlay.classList.add('hidden'), 300);
-        }
-
-        showMagicAlert(
-            "Submission Error",
-            "Oh no! " + (err.message || "Something went wrong while sending your request. ☁️"),
-            "error"
-        );
-
+        showMagicAlert("Error", err.message, "error");
+        btn.innerText = "Submit Request ✨";
         btn.disabled = false;
-        btn.innerText = "Submit ✨";
-    }
-}
-        
-// --- STOCK LOGIC ---
-async function syncFormWithStock() {
-    const { data: stock, error } = await _supabase.from('inventory').select('*');
-    if (error) {
-        console.error("Stock sync failed:", error);
-        return;
-    }
-
-    // Smartdoll Heads
-    const smHeads = stock.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0);
-    const smBundleOpt = document.getElementById('opt-sm-bundle');
-    const smSelect = document.getElementById('sm-head-sculpt-select');
-    if (smBundleOpt && smSelect) {
-        if (smHeads.length === 0) {
-            smBundleOpt.disabled = true;
-            smBundleOpt.textContent = 'Face-Up + Smartdoll Head (SOLD OUT)';
-            smBundleOpt.style.color = '#ef4444'; // red
-            smBundleOpt.style.opacity = '0.6';
-        } else {
-            smBundleOpt.disabled = false;
-            smBundleOpt.textContent = 'Face-Up + Smartdoll Head (Bundle)';
-            smBundleOpt.style.color = '';
-            smBundleOpt.style.opacity = '';
-            smSelect.innerHTML = smHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
-        }
-    }
-
-    // Dollfie Dream Heads
-    const ddHeads = stock.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0);
-    const ddBundleOpt = document.getElementById('opt-dd-bundle');
-    const ddSelect = document.getElementById('dd-head-sculpt-select');
-    if (ddBundleOpt && ddSelect) {
-        if (ddHeads.length === 0) {
-            ddBundleOpt.disabled = true;
-            ddBundleOpt.textContent = 'Face-Up + Dollfie Dream Head (SOLD OUT)';
-            ddBundleOpt.style.color = '#ef4444';
-            ddBundleOpt.style.opacity = '0.6';
-        } else {
-            ddBundleOpt.disabled = false;
-            ddBundleOpt.textContent = 'Face-Up + Dollfie Dream Head (Bundle)';
-            ddBundleOpt.style.color = '';
-            ddBundleOpt.style.opacity = '';
-            ddSelect.innerHTML = ddHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
-        }
     }
 }
 
-function startBooking() {
-    const entryChoice = document.getElementById('entryChoice');
-    const bookingForm = document.getElementById('bookingForm');
-    
-    if (entryChoice) entryChoice.classList.add('hidden');
-    if (bookingForm) {
-        bookingForm.classList.remove('step-hidden');
-        bookingForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-}
-
+// --- 7. UI HELPERS ---
 function toggleDollDetails() {
-    const selection = document.getElementById('faceupBase').value;
-    const dollDetailsBox = document.getElementById('dollDetails');
-    const smBundleBox = document.getElementById('bundle-sm-head');
-    const ddBundleBox = document.getElementById('bundle-dd-head');
-    const skintoneInput = document.getElementById('dollSkintone');
-
-    [dollDetailsBox, smBundleBox, ddBundleBox].forEach(el => el?.classList.add('hidden'));
-
-    if (selection === 'Standard Face-Up') {
-        dollDetailsBox?.classList.remove('hidden');
-        skintoneInput?.closest('.space-y-4')?.classList.remove('hidden'); // Show skintone
-    } else if (selection === 'Face-Up + Smartdoll Head (Bundle)') {
-        smBundleBox?.classList.remove('hidden');
-        skintoneInput?.closest('.space-y-4')?.classList.add('hidden'); // Hide skintone for bundle
-    } else if (selection === 'Face-Up + Dollfie Dream Head (Bundle)') {
-        ddBundleBox?.classList.remove('hidden');
-        skintoneInput?.closest('.space-y-4')?.classList.add('hidden'); // Hide skintone for bundle
-    }
+    const val = document.getElementById('faceupBase').value;
+    document.getElementById('dollDetails').classList.toggle('hidden', val !== 'Standard Face-Up');
+    document.getElementById('bundle-sm-head').classList.toggle('hidden', !val.includes('Smartdoll'));
+    document.getElementById('bundle-dd-head').classList.toggle('hidden', !val.includes('Dollfie'));
 }
 
-async function checkServiceAvailability() {
-    const { data: settings, error } = await _supabase.from('studio_settings').select('*');
-    if (error || !settings) {
-        console.error("Failed to load service status:", error);
-        return;
-    }
-
-    settings.forEach(service => {
-        const section = document.getElementById(`${service.id}-section`);
-        if (!section) return;
-
-        if (!service.is_live) {
-            // Service is off → replace with waitlist UI
-            const message = service.banner_text || "We're at maximum capacity right now, but you can join the waitlist!";
-            section.innerHTML = `
-                <div class="p-10 text-center space-y-8 bg-pink-50/40 rounded-3xl border border-pink-200 shadow-sm animate-fadeIn">
-                    <h3 class="text-2xl font-black text-pink-600">🌸 ${service.id.charAt(0).toUpperCase() + service.id.slice(1)} is currently full</h3>
-                    <p class="text-base text-gray-700 max-w-2xl mx-auto">${message}</p>
-                    <button onclick="showWaitlistForm('${service.id}')"
-                            class="px-10 py-5 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold uppercase text-lg shadow-md transition-all transform hover:scale-105">
-                        Join ${service.id} Waitlist ♡
-                    </button>
-                </div>
-            `;
-        } else {
-            // Service is live → ensure visible and has "None" option
-            section.style.display = 'block';
-            const select = section.querySelector('select');
-            if (select && !select.querySelector('option[value="None"]')) {
-                const noneOption = document.createElement('option');
-                noneOption.value = 'None';
-                noneOption.textContent = `No ${service.id.charAt(0).toUpperCase() + service.id.slice(1)} Needed`;
-                select.insertBefore(noneOption, select.firstChild);
-            }
-        }
-    });
-}
-
-// Waitlist modal & submission
+    // --- 8. WAITLIST MODAL ---
 function showWaitlistForm(serviceId) {
     const modalId = 'waitlistModal';
     document.getElementById(modalId)?.remove();
 
     const modal = document.createElement('div');
     modal.id = modalId;
-    modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[999]';
+    // Uses a soft backdrop to keep focus on the modal
+    modal.className = 'fixed inset-0 bg-rose-900/20 backdrop-blur-sm flex items-center justify-center z-[999] p-4';
+    
     modal.innerHTML = `
-        <div class="bg-white rounded-3xl p-8 max-w-lg w-full mx-4 shadow-2xl animate-fadeIn">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black text-pink-600">Join the ${serviceId} Waitlist ♡</h2>
-                <button onclick="this.closest('#${modalId}').remove()" class="text-3xl text-gray-400 hover:text-rose-600">&times;</button>
+        <div class="bg-white rounded-[40px] p-10 max-w-lg w-full shadow-2xl border border-pink-50 animate-fadeIn space-y-6">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl font-black text-pink-400 tracking-tighter">Join the Waitlist ♡</h2>
+                <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-black">${serviceId} slots are currently full</p>
             </div>
-            <p class="text-gray-600 mb-6">We'll email you as soon as slots open up!</p>
-            <form id="waitlistForm" class="space-y-6">
-                <input type="email" id="waitlistEmail" placeholder="Your Email Address *" required class="w-full p-4 border border-pink-100 rounded-2xl focus:ring-2 focus:ring-pink-300">
-                <input type="text" id="waitlistName" placeholder="Your Name (optional)" class="w-full p-4 border border-pink-100 rounded-2xl">
-                <textarea id="waitlistNotes" placeholder="Any notes or preferred timeline (optional)" class="w-full p-4 border border-pink-100 rounded-2xl h-32"></textarea>
-                <div class="flex gap-4 justify-end">
-                    <button type="button" onclick="document.getElementById('${modalId}').remove()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-2xl hover:bg-gray-300">Cancel</button>
-                    <button type="submit" class="px-8 py-3 bg-pink-500 text-white rounded-2xl font-bold hover:bg-pink-600">Join Waitlist</button>
+
+            <form id="waitlistForm" class="space-y-4">
+                <input type="email" id="waitlistEmail" placeholder="Email Address*" required 
+                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
+                
+                <input type="text" id="waitlistName" placeholder="Your Name" 
+                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
+                
+                <textarea id="waitlistNotes" placeholder="What sculpt/theme are you hoping for?" 
+                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200 h-24 text-sm"></textarea>
+                
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('${modalId}').remove()" 
+                        class="flex-1 py-4 rounded-full font-black uppercase tracking-widest text-[10px] text-pink-300 hover:bg-pink-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                        class="flex-[2] bg-emerald-400 text-white py-4 rounded-full font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-100 hover:scale-[1.02] active:scale-95 transition-all">
+                        Join List ✨
+                    </button>
                 </div>
             </form>
         </div>
@@ -484,55 +449,37 @@ function showWaitlistForm(serviceId) {
 
     document.body.appendChild(modal);
 
-   document.getElementById('waitlistForm').addEventListener('submit', async (e) => {
+    // Modal Submission Logic
+    document.getElementById('waitlistForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerText;
-        
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Joining... ♡";
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.innerText = "Adding... ♡";
+        btn.disabled = true;
 
         try {
-            const email = document.getElementById('waitlistEmail').value.trim();
-            if (!email) throw new Error("Please enter your email address! ♡");
-
             const { error } = await _supabase.from('waitlist').insert([{
-                email: email,
+                email: document.getElementById('waitlistEmail').value,
+                name: document.getElementById('waitlistName').value,
+                notes: document.getElementById('waitlistNotes').value,
                 service_requested: serviceId,
-                status: 'pending',
-                name: document.getElementById('waitlistName').value.trim() || null,
-                notes: document.getElementById('waitlistNotes').value.trim() || null,
-                created_at: new Date().toISOString()
+                status: 'pending'
             }]);
 
             if (error) throw error;
 
-            showMagicAlert(
-                "You're on the list! 🌸", 
-                `Thank you! You've been added to the ${serviceId} waitlist. We'll email you as soon as slots open up!`, 
-                "success"
-            );
-
-            const modal = document.getElementById(modalId);
-            if (modal) modal.remove();
+            // Use your existing magic alert
+            showMagicAlert("Added! 🌸", "I'll email you as soon as a slot opens up.", "success");
+            modal.remove();
 
         } catch (err) {
-            console.error("Waitlist error:", err);
-            
-            showMagicAlert(
-                "Waitlist Error", 
-                err.message || "Something went wrong while joining the list. ☁️", 
-                "error"
-            );
-                     
-            submitBtn.disabled = false;
-            submitBtn.innerText = originalText;
+            showMagicAlert("Waitlist Error", err.message, "error");
+            btn.innerText = "Join List ✨";
+            btn.disabled = false;
         }
     });
 }
+</script>
     
-    </script>
 <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
         <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
         <p class="text-[var(--text-muted)] text-sm mb-6">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
