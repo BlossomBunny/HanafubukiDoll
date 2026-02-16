@@ -502,6 +502,34 @@ function toggleDollDetails() {
     document.getElementById('bundle-sm-head').classList.toggle('hidden', !val.includes('Smartdoll'));
     document.getElementById('bundle-dd-head').classList.toggle('hidden', !val.includes('Dollfie'));
 }
+
+function startBooking() {
+    // 1. Show the global loader from your utils to give that "magical" transition feel
+    if (typeof StudioLoader !== 'undefined') {
+        StudioLoader.show("Opening Studio... ✨");
+    }
+
+    // 2. Small delay so the transition isn't jarring
+    setTimeout(() => {
+        const entryChoice = document.getElementById('entryChoice');
+        const bookingForm = document.getElementById('bookingForm');
+
+        if (entryChoice) entryChoice.classList.add('hidden');
+        
+        if (bookingForm) {
+            bookingForm.classList.remove('step-hidden', 'hidden');
+            // Ensure we start at Step 1
+            showStep(1);
+        }
+
+        // 3. Hide the loader once the form is ready
+        if (typeof StudioLoader !== 'undefined') {
+            StudioLoader.hide();
+        }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 600); 
+}
 </script>
     
 <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
