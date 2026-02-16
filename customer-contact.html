@@ -84,7 +84,14 @@
     </button>
 
    <div id="commissionContainer" class="max-w-2xl mx-auto pb-20">
-    
+       
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-md z-[1000] flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <div class="relative">
+        <div class="w-16 h-16 border-4 border-emerald-100 border-t-emerald-400 rounded-full animate-spin"></div>
+        <div class="absolute inset-0 flex items-center justify-center text-pink-300 animate-pulse">🌸</div>
+    </div>
+    <p class="mt-4 font-black uppercase tracking-[0.3em] text-[10px] text-pink-400">Pounding mochi... please wait!</p>
+</div>
     <div id="step-1-2" class="glass-card p-10 space-y-8 border-pink-100 animate-fadeIn">
         <div class="text-center">
             <h2 class="text-3xl font-black text-pink-400 tracking-tighter">New Request</h2>
@@ -252,12 +259,70 @@ for (let i = 0; i < 19; i++) {
 
 // --- 2. INITIALIZATION ---
 window.onload = async () => {
-    // Check stock for bundles and check if services are live/waitlist
     await syncFormWithStock();
     await checkServiceAvailability();
 };
 
-// --- 3. DYNAMIC SERVICE CHECKER (STEP 1 LOGIC) ---
+// --- 3. IMAGE & UPLOAD HELPERS (Restored & Cleaned) ---
+const resizeImage = (file, maxWidth, quality) => {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                }, 'image/jpeg', quality);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+};
+
+const uploadSet = async (fileInputId) => {
+    const files = document.getElementById(fileInputId)?.files;
+    if (!files || files.length === 0) return [];
+
+    const urls = [];
+    const folder = fileInputId.replace('Files', '');
+
+    for (let file of files) {
+        try {
+            if (file.type.startsWith('image/')) {
+                file = await resizeImage(file, 1200, 0.7);
+            }
+            const path = `${folder}/${Date.now()}-${file.name}`;
+            const { data, error } = await _supabase.storage
+                .from('references')
+                .upload(path, file);
+
+            if (error) throw error;
+
+            const { data: pUrl } = _supabase.storage
+                .from('references')
+                .getPublicUrl(path);
+
+            if (pUrl?.publicUrl) urls.push(pUrl.publicUrl);
+        } catch (err) {
+            console.error(`Upload error:`, err);
+        }
+    }
+    return urls;
+};
+
+// --- 4. NAVIGATION & SERVICE LOGIC ---
 async function checkServiceAvailability() {
     const { data: settings } = await _supabase.from('studio_settings').select('*');
     if (!settings) return;
@@ -270,64 +335,24 @@ async function checkServiceAvailability() {
             checkbox.disabled = true;
             if (label) {
                 label.style.opacity = '0.5';
-                label.style.cursor = 'pointer'; // Keep pointer so they can click to join waitlist
                 const statusText = label.querySelector('span:last-child');
                 if (statusText) statusText.textContent = 'WAITLIST ♡';
-                
-                // If they click a waitlist service, open the modal
-                label.onclick = (e) => {
-                    e.preventDefault();
-                    showWaitlistForm(service.id);
-                };
+                label.onclick = (e) => { e.preventDefault(); showWaitlistForm(service.id); };
             }
         }
     });
 }
 
-// --- 4. STOCK & BUNDLE LOGIC ---
-async function syncFormWithStock() {
-    const { data: stock } = await _supabase.from('inventory').select('*');
-    if (!stock) return;
-
-    // Smartdoll Logic
-    const smHeads = stock.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0);
-    const smOpt = document.getElementById('opt-sm-bundle');
-    const smSelect = document.getElementById('sm-head-sculpt-select');
-    
-    if (smOpt && smHeads.length === 0) {
-        smOpt.disabled = true;
-        smOpt.textContent = 'Face-Up + Smartdoll Head (SOLD OUT)';
-        smOpt.classList.add('text-pink-200');
-    } else if (smSelect) {
-        smSelect.innerHTML = smHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
-    }
-
-    // Dollfie Logic
-    const ddHeads = stock.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0);
-    const ddOpt = document.getElementById('opt-dd-bundle');
-    const ddSelect = document.getElementById('dd-head-sculpt-select');
-
-    if (ddOpt && ddHeads.length === 0) {
-        ddOpt.disabled = true;
-        ddOpt.textContent = 'Face-Up + Dollfie Dream Head (SOLD OUT)';
-        ddOpt.classList.add('text-pink-200');
-    } else if (ddSelect) {
-        ddSelect.innerHTML = ddHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
-    }
-}
-
-// --- 5. NAVIGATION ---
 function processSelection() {
     const isFaceup = document.getElementById('checkFaceup').checked;
     const isMani = document.getElementById('checkMani').checked;
     const isEyes = document.getElementById('checkEyes').checked;
 
     if (!isFaceup && !isMani && !isEyes) {
-        showMagicAlert("Selection Required", "Please pick at least one service to proceed! ♡", "error");
+        showMagicAlert("Wait! ♡", "Please select at least one service.", "error");
         return;
     }
 
-    // Show only the detail sections the user actually wants
     document.getElementById('faceup-details').classList.toggle('hidden', !isFaceup);
     document.getElementById('mani-details').classList.toggle('hidden', !isMani);
     document.getElementById('eyes-details').classList.toggle('hidden', !isEyes);
@@ -337,32 +362,32 @@ function processSelection() {
 
 function showStep(stepNum) {
     const steps = ['step-1-2', 'step-3', 'step-4', 'step-5'];
-    steps.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-    });
-
+    steps.forEach(id => document.getElementById(id)?.classList.add('hidden'));
     const target = stepNum === 1 ? 'step-1-2' : `step-${stepNum}`;
-    const targetEl = document.getElementById(target);
-    if (targetEl) {
-        targetEl.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    document.getElementById(target)?.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// --- 6. FINAL SUBMISSION ---
+// --- 5. SUBMISSION ---
 async function finalSubmit() {
     if (!document.getElementById('tosCheck').checked) {
-        showMagicAlert("Terms", "Please agree to the studio terms to continue! ♡", "error");
+        showMagicAlert("Terms", "Please agree to the studio terms! ♡", "error");
         return;
     }
 
+    const overlay = document.getElementById('loadingOverlay');
     const btn = document.querySelector('#step-4 button');
-    btn.innerText = "Sending... ✨";
+
+    // Show Loading Overlay
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        // Small timeout to allow the 'hidden' removal to register for the opacity transition
+        setTimeout(() => overlay.classList.add('opacity-100'), 10);
+    }
+    
     btn.disabled = true;
 
     try {
-        // Handle Sculpt Logic for Bundles vs Standard
         const fBase = document.getElementById('faceupBase').value;
         let finalSculpt = document.getElementById('dollSculpt').value;
         let finalCompany = document.getElementById('dollCompany').value;
@@ -375,7 +400,11 @@ async function finalSubmit() {
             finalCompany = "Volks";
         }
 
-        // INSERT DATA
+        // The image uploads happen here (this usually takes the longest)
+        const faceupImages = await uploadSet('faceupFiles');
+        const maniImages = await uploadSet('maniFiles');
+        const eyeImages = await uploadSet('eyeFiles');
+
         const { error } = await _supabase.from('commissions').insert([{
             customer_name: document.getElementById('custName').value,
             customer_email: document.getElementById('custEmail').value,
@@ -384,99 +413,94 @@ async function finalSubmit() {
             doll_company: finalCompany,
             doll_sculpt: finalSculpt,
             doll_skintone: document.getElementById('dollSkintone').value || 'N/A',
-            faceup_details: fBase !== "None" ? { base: fBase, notes: document.getElementById('faceupNotes').value } : null,
+            faceup_details: fBase !== "None" ? { 
+                base: fBase, 
+                notes: document.getElementById('faceupNotes').value,
+                images: faceupImages 
+            } : null,
+            manicure_details: document.getElementById('maniBase').value !== "None" ? {
+                base: document.getElementById('maniBase').value,
+                notes: document.getElementById('maniNotes').value,
+                images: maniImages
+            } : null,
+            eye_details: document.getElementById('eyeBase').value !== "None" ? {
+                base: document.getElementById('eyeBase').value,
+                notes: document.getElementById('eyeNotes').value,
+                images: eyeImages
+            } : null,
             status: 'Enquiry'
         }]);
 
         if (error) throw error;
+
+        // Hide overlay before showing success
+        if (overlay) {
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+        
         showStep(5);
 
     } catch (err) {
+        // Hide overlay so user can see the error alert
+        if (overlay) {
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+
         showMagicAlert("Error", err.message, "error");
-        btn.innerText = "Submit Request ✨";
         btn.disabled = false;
     }
 }
+// --- 6. STOCK & MODAL LOGIC (Bundles & Waitlist) ---
+async function syncFormWithStock() {
+    const { data: stock } = await _supabase.from('inventory').select('*');
+    if (!stock) return;
 
-// --- 7. UI HELPERS ---
+    const smHeads = stock.filter(i => i.category === 'Smartdoll Heads' && i.quantity > 0);
+    const ddHeads = stock.filter(i => i.category === 'Dollfie Dream Heads' && i.quantity > 0);
+
+    const smSelect = document.getElementById('sm-head-sculpt-select');
+    const ddSelect = document.getElementById('dd-head-sculpt-select');
+
+    if (smSelect) smSelect.innerHTML = smHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
+    if (ddSelect) ddSelect.innerHTML = ddHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
+}
+
+function showWaitlistForm(serviceId) {
+    const modalId = 'waitlistModal';
+    document.getElementById(modalId)?.remove();
+    const modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'fixed inset-0 bg-rose-900/20 backdrop-blur-sm flex items-center justify-center z-[999] p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-[40px] p-10 max-w-lg w-full shadow-2xl border border-pink-50 animate-fadeIn space-y-6">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl font-black text-pink-400 tracking-tighter">Join the Waitlist ♡</h2>
+                <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-black">${serviceId} is currently full</p>
+            </div>
+            <form id="waitlistForm" class="space-y-4">
+                <input type="email" id="waitlistEmail" placeholder="Email Address*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600">
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('${modalId}').remove()" class="flex-1 py-4 text-[10px] font-black uppercase text-pink-300">Cancel</button>
+                    <button type="submit" class="flex-[2] bg-emerald-400 text-white py-4 rounded-full font-black uppercase text-[10px]">Join List ✨</button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('waitlistForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const { error } = await _supabase.from('waitlist').insert([{ email: document.getElementById('waitlistEmail').value, service_requested: serviceId }]);
+        if (!error) { showMagicAlert("Added! 🌸", "I'll be in touch!", "success"); modal.remove(); }
+    };
+}
+
 function toggleDollDetails() {
     const val = document.getElementById('faceupBase').value;
     document.getElementById('dollDetails').classList.toggle('hidden', val !== 'Standard Face-Up');
     document.getElementById('bundle-sm-head').classList.toggle('hidden', !val.includes('Smartdoll'));
     document.getElementById('bundle-dd-head').classList.toggle('hidden', !val.includes('Dollfie'));
-}
-
-    // --- 8. WAITLIST MODAL ---
-function showWaitlistForm(serviceId) {
-    const modalId = 'waitlistModal';
-    document.getElementById(modalId)?.remove();
-
-    const modal = document.createElement('div');
-    modal.id = modalId;
-    // Uses a soft backdrop to keep focus on the modal
-    modal.className = 'fixed inset-0 bg-rose-900/20 backdrop-blur-sm flex items-center justify-center z-[999] p-4';
-    
-    modal.innerHTML = `
-        <div class="bg-white rounded-[40px] p-10 max-w-lg w-full shadow-2xl border border-pink-50 animate-fadeIn space-y-6">
-            <div class="text-center space-y-2">
-                <h2 class="text-2xl font-black text-pink-400 tracking-tighter">Join the Waitlist ♡</h2>
-                <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-black">${serviceId} slots are currently full</p>
-            </div>
-
-            <form id="waitlistForm" class="space-y-4">
-                <input type="email" id="waitlistEmail" placeholder="Email Address*" required 
-                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
-                
-                <input type="text" id="waitlistName" placeholder="Your Name" 
-                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
-                
-                <textarea id="waitlistNotes" placeholder="What sculpt/theme are you hoping for?" 
-                    class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200 h-24 text-sm"></textarea>
-                
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="document.getElementById('${modalId}').remove()" 
-                        class="flex-1 py-4 rounded-full font-black uppercase tracking-widest text-[10px] text-pink-300 hover:bg-pink-50 transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit" 
-                        class="flex-[2] bg-emerald-400 text-white py-4 rounded-full font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-100 hover:scale-[1.02] active:scale-95 transition-all">
-                        Join List ✨
-                    </button>
-                </div>
-            </form>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    // Modal Submission Logic
-    document.getElementById('waitlistForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = e.target.querySelector('button[type="submit"]');
-        btn.innerText = "Adding... ♡";
-        btn.disabled = true;
-
-        try {
-            const { error } = await _supabase.from('waitlist').insert([{
-                email: document.getElementById('waitlistEmail').value,
-                name: document.getElementById('waitlistName').value,
-                notes: document.getElementById('waitlistNotes').value,
-                service_requested: serviceId,
-                status: 'pending'
-            }]);
-
-            if (error) throw error;
-
-            // Use your existing magic alert
-            showMagicAlert("Added! 🌸", "I'll email you as soon as a slot opens up.", "success");
-            modal.remove();
-
-        } catch (err) {
-            showMagicAlert("Waitlist Error", err.message, "error");
-            btn.innerText = "Join List ✨";
-            btn.disabled = false;
-        }
-    });
 }
 </script>
     
