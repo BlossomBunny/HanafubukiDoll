@@ -147,8 +147,6 @@ async function renderworkbench(showArchived = false) {
         </div>
     `).join('') || '<p class="text-center p-10 text-gray-300 italic">No orders found.</p>';
 
-    // --- NEW: URL AUTO-OPEN LOGIC ---
-    // This part handles opening the drawer if there is an ID in the URL
     const urlParams = new URLSearchParams(window.location.search);
     const jobId = urlParams.get('id');
     if (jobId && !activeJobId) {
