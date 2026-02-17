@@ -9,92 +9,62 @@
     <script src="global-utils.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="global-style.css">
-    <style>
-        .step-hidden { display: none !important; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .tab-btn.active { background: var(--accent-pink) !important; color: white !important; transform: translateY(-2px); }
-        .disabled-section { opacity: 0.3; pointer-events: none; filter: grayscale(1); transition: all 0.4s ease; }
-        .animate-fadeIn { animation: fadeIn 0.5s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        @keyframes floatArrow {
-    0%, 100% {
-        transform: translateY(0);
-        opacity: 0.8;
-    }
-    50% {
-        transform: translateY(10px);
-        opacity: 1;
-    }
-}
-
-.animate-float-arrow {
-    animation: floatArrow 2s ease-in-out infinite;
-}
-        <style>
-    .step-hidden { display: none !important; }
+   <style>
+    /* 1. Global Animations */
     .animate-fadeIn { animation: fadeIn 0.5s ease forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* Improved Scrapbook Layout */
-    .scrapbook-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 2rem;
-        align-items: center;
-        perspective: 1000px;
-    }
-
-    .polaroid {
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.05));
-    }
-
-    .polaroid:hover {
-        transform: scale(1.05) rotate(0deg) !important;
-        z-index: 50 !important;
-        filter: drop-shadow(0 20px 25px rgba(251, 182, 206, 0.3));
-    }
 
     @keyframes floatArrow {
         0%, 100% { transform: translateY(0); opacity: 0.8; }
         50% { transform: translateY(10px); opacity: 1; }
     }
     .animate-float-arrow { animation: floatArrow 2s ease-in-out infinite; }
-        /* Washi Tape Accents */
-.tape {
-    position: absolute;
-    top: -15px;
-    left: 50%;
-    transform: translateX(-50%) rotate(-2deg);
-    width: 60px;
-    height: 20px;
-    background: rgba(251, 182, 206, 0.6); /* Soft Pink */
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.02);
-    z-index: 20;
-    pointer-events: none;
-    border-left: 2px dashed rgba(255,255,255,0.3);
-    border-right: 2px dashed rgba(255,255,255,0.3);
-}
 
-.tape-mint { background: rgba(52, 211, 153, 0.4); } /* Mint Green */
+    /* 2. Functional Classes */
+    .step-hidden { display: none !important; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .tab-btn.active { background: #ec4899 !important; color: white !important; transform: translateY(-2px); }
+    .disabled-section { opacity: 0.3; pointer-events: none; filter: grayscale(1); transition: all 0.4s ease; }
 
-/* Improved Polaroid Design */
-.polaroid {
-    position: relative;
-    background: white;
-    padding: 12px 12px 35px 12px;
-    border: 1px solid #fdf2f8;
-    box-shadow: 5px 10px 20px rgba(0,0,0,0.04);
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+    /* 3. Scrapbook Elements - Strictly Pink & Emerald */
+    .tape-pink { 
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 18px;
+        background: #fbcfe8; /* pink-200 */
+        opacity: 0.8;
+        z-index: 20;
+    }
+    .tape-emerald { 
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 18px;
+        background: #a7f3d0; /* emerald-200 */
+        opacity: 0.8;
+        z-index: 20;
+    }
 
-.polaroid:hover {
-    transform: scale(1.1) rotate(0deg) !important;
-    z-index: 100 !important;
-    box-shadow: 0 20px 40px rgba(251, 182, 206, 0.4);
-}
+    .polaroid {
+        position: relative;
+        background: white;
+        padding: 6px 6px 22px 6px;
+        border: 1.5px solid #fdf2f8; /* pink-50 */
+        box-shadow: 0 4px 10px rgba(251, 182, 206, 0.15);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .polaroid:hover {
+        transform: scale(1.1) rotate(0deg) !important;
+        z-index: 100 !important;
+        box-shadow: 0 12px 24px rgba(251, 182, 206, 0.25);
+    }
 </style>
 </head>
     
@@ -117,79 +87,77 @@
         
     </nav>
 
-  <div id="entryChoice" class="p-4 md:p-10 text-center space-y-6 animate-fadeIn">
+ <div id="entryChoice" class="p-4 md:p-6 text-center space-y-2 animate-fadeIn">
     
-    <div class="space-y-4">
-        <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-rose-950/80">Hanafubuki Doll Studio</h1>
-        <p class="text-pink-400 font-medium italic max-w-xl mx-auto leading-relaxed text-sm md:text-base">
-            Welcome to the studio! Whether you're looking for a bespoke face-up, a custom manicure, or just have a question about our process, we're here to help bring your doll to life. ♡
+    <div class="space-y-1">
+        <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-pink-500/90">Hanafubuki Doll Studio</h1>
+        <p class="text-pink-400 font-semibold italic max-w-lg mx-auto leading-relaxed text-xs md:text-sm">
+            Bringing your characters to life with bespoke face-ups and custom details. ♡
         </p>
     </div>
 
-    <section class="max-w-6xl mx-auto py-8 px-6 relative overflow-visible">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+    <section class="max-w-4xl mx-auto py-2 px-4 relative">
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12">
             
-            <div class="flex flex-row md:flex-col gap-4 md:-space-y-10 items-center order-2 md:order-1">
-                <div class="polaroid w-28 md:w-36 -rotate-12 hover:z-50">
-                    <div class="tape"></div>
+            <div class="hidden md:flex flex-col -space-y-10 items-center order-2 md:order-1">
+                <div class="polaroid w-24 -rotate-12">
+                    <div class="tape-pink rotate-3"></div>
                     <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094727.png" alt="Process">
-                    <p class="text-[8px] mt-2 text-pink-300 font-black uppercase tracking-widest text-center">Artist Choice ♡</p>
+                    <p class="text-[6px] mt-1.5 text-pink-400 font-black uppercase tracking-widest">Artist Choice</p>
                 </div>
-                <div class="polaroid w-32 md:w-40 rotate-6 z-10 md:ml-8">
-                    <div class="tape tape-mint" style="transform: translateX(-50%) rotate(5deg);"></div>
-                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094952.png" alt="Inspiration">
-                    <p class="text-[8px] mt-2 text-emerald-300 font-black uppercase tracking-widest text-center">Favourites ✨</p>
+                <div class="polaroid w-26 rotate-6 z-10 ml-6">
+                    <div class="tape-pink -rotate-6"></div>
+                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094952.png" alt="Process 2">
+                    <p class="text-[6px] mt-1.5 text-pink-400 font-black uppercase tracking-widest">In Progress ♡</p>
                 </div>
             </div>
 
-            <div class="order-1 md:order-2 z-20">
-                <div class="relative bg-white/40 backdrop-blur-sm p-8 md:p-12 rounded-[40px] border-4 border-dashed border-pink-100 shadow-sm text-center">
-                    <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-3xl">🎀</span>
-                    <p class="text-3xl md:text-4xl text-rose-900/40 leading-tight italic" style="font-family: 'Caveat', cursive;">
-                        Ready to start <br>your project? ✨
+            <div class="order-1 md:order-2 py-2">
+                <div class="relative bg-white/40 p-8 md:p-10 rounded-[40px] border-2 border-dashed border-pink-200 text-center">
+                    <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-3xl">🎀</span>
+                    <p class="text-3xl md:text-4xl text-pink-400 leading-tight italic" style="font-family: 'Caveat', cursive;">
+                        Ready to start <br>your project?
                     </p>
-                    <div class="mt-4 text-2xl animate-float-arrow text-pink-200">↓</div>
+                    <div class="mt-4 text-2xl animate-float-arrow text-pink-300">↓</div>
                 </div>
             </div>
 
-            <div class="flex flex-row md:flex-col gap-4 md:-space-y-10 items-center order-3">
-                <div class="polaroid w-32 md:w-40 -rotate-3 z-10 md:-ml-6">
-                    <div class="tape" style="width: 60px; background: rgba(251, 182, 206, 0.4);"></div>
+            <div class="hidden md:flex flex-col -space-y-10 items-center order-3">
+                <div class="polaroid w-26 -rotate-3 z-10 -ml-6">
+                    <div class="tape-emerald rotate-6"></div>
                     <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094805.png" alt="Details">
-                    <p class="text-[8px] mt-2 text-pink-300 font-black uppercase tracking-widest text-center">Feeling Extra! 🌸</p>
+                    <p class="text-[6px] mt-1.5 text-emerald-500 font-black uppercase tracking-widest">Fine Details 🌸</p>
                 </div>
-                <div class="polaroid w-28 md:w-36 rotate-12">
-                    <div class="tape tape-mint" style="transform: translateX(-50%) rotate(-8deg);"></div>
+                <div class="polaroid w-24 rotate-12">
+                    <div class="tape-emerald -rotate-3"></div>
                     <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094752.png" alt="Finished">
-                    <p class="text-[8px] mt-2 text-emerald-300 font-black uppercase tracking-widest text-center">Artist Choice ♡</p>
+                    <p class="text-[6px] mt-1.5 text-emerald-500 font-black uppercase tracking-widest">Finished ✨</p>
                 </div>
             </div>
 
         </div>
     </section>
 
-    <div class="space-y-6 pt-4">
-        <p class="text-[10px] uppercase tracking-[0.3em] text-pink-300 font-black">Select an option to begin</p>
+    <div class="space-y-4 pt-2">
+        <p class="text-[9px] uppercase tracking-[0.3em] text-pink-300 font-bold">Select an option to begin</p>
         
-        <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
+        <div class="flex flex-col md:flex-row gap-4 justify-center items-center px-4">
             <a href="mailto:Admin@hanafubukidoll.co.uk" 
-               onclick="StudioLoader.show(); setTimeout(StudioLoader.hide, 3000);"
-               class="w-full max-w-[240px] p-6 border-2 border-pink-100/50 rounded-[35px] hover:bg-pink-50/80 transition-all group flex flex-col items-center">
-                <span class="text-2xl mb-2 opacity-80 group-hover:scale-110 transition-transform">✉️</span>
-                <h3 class="font-bold text-rose-900/70 text-sm">General Inquiry</h3>
-                <p class="text-[9px] uppercase tracking-widest text-pink-400 font-black mt-1">Chat with us</p>
+               class="w-full max-w-[200px] p-5 border-2 border-pink-100 rounded-[30px] hover:bg-pink-50/50 transition-all group flex flex-col items-center">
+                <span class="text-2xl mb-2 group-hover:scale-110 transition-transform">✉️</span>
+                <h3 class="font-bold text-pink-500/80 text-xs">General Inquiry</h3>
+                <p class="text-[8px] uppercase tracking-widest text-pink-400 font-black mt-1">Chat with us</p>
             </a>
 
             <button onclick="startBooking()" 
-                    class="w-full max-w-[240px] p-6 border-2 border-mint-100/50 rounded-[35px] hover:bg-mint-50/50 transition-all group flex flex-col items-center">
-                <span class="text-2xl mb-2 opacity-80 group-hover:scale-110 transition-transform">🎨</span>
-                <h3 class="font-bold text-rose-900/70 text-sm">Book a Slot</h3>
-                <p class="text-[9px] uppercase tracking-widest text-mint-500 font-black mt-1">Start Commission</p>
+                    class="w-full max-w-[200px] p-5 border-2 border-emerald-100 rounded-[30px] hover:bg-emerald-50/50 transition-all group flex flex-col items-center">
+                <span class="text-2xl mb-2 group-hover:scale-110 transition-transform">🎨</span>
+                <h3 class="font-bold text-emerald-600/70 text-xs">Book a Slot</h3>
+                <p class="text-[8px] uppercase tracking-widest text-emerald-500 font-black mt-1">Start Commission</p>
             </button>
         </div>
     </div>
 </div>
-
    
 <div id="commissionContainer" class="hidden max-w-2xl mx-auto pb-20">
        
