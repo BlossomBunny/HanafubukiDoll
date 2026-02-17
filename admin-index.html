@@ -284,21 +284,67 @@ async function sendWaitlistEmail(id, email, name) {
 
         // 2. DEFINE the html variable first
         const htmlContent = `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; color: #333;">
-                <h1 style="color: #ec4899; font-size: 28px; margin-bottom: 20px;">You're next in line! ♡</h1>
-                <p style="font-size: 16px; line-height: 1.6;">
-                    Hi ${name || 'there'},<br><br>
-                    Your waitlist request has moved up the queue!<br><br>
-                    You can now submit your full details and references here:<br>
-                    <a href="${priorityLink}" style="color: #ec4899; font-weight: bold; text-decoration: underline;">
-                        Submit Priority Request → ${priorityLink}
-                    </a><br><br>
-                    Please fill it out as soon as possible so we can get started ♡<br><br>
-                    Thank you!<br>
-                    Hanafubuki Doll Studio 🌸🐰
-                </p>
-            </div>
-        `;
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            .button:hover { background-color: #db2777 !important; }
+        </style>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #fff5f7; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td style="padding: 40px 0;">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #fce7f3;">
+                        <tr>
+                            <td height="8" style="background: linear-gradient(90deg, #f9a8d4, #ec4899);"></td>
+                        </tr>
+                        
+                        <tr>
+                            <td style="padding: 40px; text-align: center;">
+                                <div style="font-size: 40px; margin-bottom: 20px;">🌸</div>
+                                <h1 style="color: #ec4899; font-size: 26px; margin: 0 0 20px 0; font-weight: 700;">You're next in line! ♡</h1>
+                                
+                                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                                    Hi ${name || 'there'},<br><br>
+                                    Exciting news! Your waitlist request has moved up the queue. We are ready to review your details and get started on your custom creation.
+                                </p>
+
+                                <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                                    <tr>
+                                        <td align="center" bgcolor="#ec4899" style="border-radius: 99px;">
+                                            <a href="${priorityLink}" target="_blank" style="display: inline-block; padding: 16px 32px; font-family: sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; font-weight: bold;">
+                                                Submit Priority Request →
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <p style="color: #9ca3af; font-size: 14px; margin-top: 30px; line-height: 1.6;">
+                                    Please fill out the form as soon as possible to secure your spot in this batch.<br>
+                                    We can't wait to see your references!
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="padding: 30px; background-color: #fdf2f8; text-align: center; border-top: 1px solid #fce7f3;">
+                                <p style="margin: 0; color: #be185d; font-size: 14px; font-weight: 600;">
+                                    Hanafubuki Doll Studio 🌸🐰
+                                </p>
+                                <p style="margin: 10px 0 0 0; color: #f9a8d4; font-size: 12px;">
+                                    If the button doesn't work, copy-paste this link:<br>
+                                    ${priorityLink}
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+`;
 
         // 3. INVOKE the function (Make sure to use 'hyper-handler')
         // Using the variable 'htmlContent' we just defined
