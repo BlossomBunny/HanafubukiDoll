@@ -22,10 +22,34 @@
                 backdrop-filter: blur(12px); 
                 @apply rounded-[2rem] border border-pink-100/20; 
             }
-            .img-enlarge { @apply fixed inset-0 z-[200] w-full h-full object-contain bg-black/90 cursor-zoom-out p-5; }
-        }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #fbcfe8; border-radius: 10px; }
+           
+.doll-thumb {
+    transition: all 0.3s ease;
+}
+
+.img-enlarge {
+    position: fixed !important;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: auto !important;
+    height: auto !important;
+    max-width: 90vw;
+    max-height: 90vh;
+    z-index: 9999;
+    object-fit: contain !important;
+    box-shadow: 0 0 0 100vmax rgba(0,0,0,0.8); 
+    border-radius: 12px;
+}
+
+/* Custom Scrollbar for the row */
+.custom-scrollbar::-webkit-scrollbar {
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #f9a8d4;
+    border-radius: 10px;
+}
     </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
@@ -336,12 +360,17 @@ function recalcBalance() {
                 </select>
             </div>
             
-            ${data.images && data.images.length > 0 ? `
-                <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-                    ${data.images.map(img => `
-                        <img src="${img}" class="w-24 h-24 object-cover rounded-2xl border-2 border-white shadow-sm shrink-0 cursor-zoom-in" onclick="this.classList.toggle('img-enlarge')">
-                    `).join('')}
-                </div>` : ''}
+      ${data.images && data.images.length > 0 ? `
+    <div class="flex gap-4 overflow-x-auto pb-4 custom-scrollbar items-center">
+        ${data.images.map(img => `
+            <img 
+                src="${img}" 
+                class="doll-thumb w-32 h-40 object-contain bg-pink-50 rounded-xl border-2 border-white shadow-sm shrink-0 cursor-zoom-in" 
+                onclick="this.classList.toggle('img-enlarge')"
+                title="Click to enlarge"
+            >
+        `).join('')}
+    </div>` : ''}
 
             <div class="space-y-3">
                 <div class="p-3 bg-${theme}-50/30 rounded-2xl border border-${theme}-100/50">
