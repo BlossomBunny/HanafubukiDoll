@@ -674,23 +674,22 @@ async function startBooking() {
     if (typeof StudioLoader !== 'undefined') {
         StudioLoader.show("Opening Studio... ✨");
     }
-
     try {
         await Promise.all([
             syncFormWithStock(),
             checkServiceAvailability()
         ]);
-
         const entry = document.getElementById('entryChoice');
         const container = document.getElementById('commissionContainer');
-
-        if (entry) entry.classList.add('hidden');
-        
+        if (entry) {
+            entry.style.display = 'none';
+        }
         if (container) {
             container.classList.remove('hidden');
-            container.style.display = 'block'; 
+            container.style.display = 'block';
             container.style.opacity = '1';
-            showStep(1); 
+            container.style.visibility = 'visible';
+            showStep(1);
         }
     } catch (error) {
         console.error("Studio failed to initialize:", error);
