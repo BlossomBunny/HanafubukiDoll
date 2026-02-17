@@ -538,43 +538,67 @@ function showWaitlistForm(serviceId) {
     `;
     document.body.appendChild(modal);
 
-    document.getElementById('waitlistForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('w-submit-btn');
-        
-        // 1. Manually trigger the sparkly loader (Interception handles the hide later)
-        if (typeof StudioLoader !== 'undefined') StudioLoader.show("Adding to list... 🌸");
-        btn.innerText = "Processing...";
-        btn.disabled = true;
+   document.getElementById('waitlistForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('w-submit-btn');
+    const serviceId = document.querySelector('#waitlistForm p')?.innerText.replace('Requesting: ', '') || 'General';
+    
+    // 1. Use the global loader safely
+    if (window.StudioLoader) {
+        window.StudioLoader.show("Adding to list... 🌸");
+    } else {
+        // Fallback if global-utils didn't load
+        const overlay = document.getElementById('loadingOverlay');
+        overlay?.classList.remove('hidden', 'opacity-0');
+        overlay?.classList.add('opacity-100');
+    }
 
-        try {
-            const { error } = await _supabase.from('waitlist').insert([{
-                name: document.getElementById('w-name').value,
-                email: document.getElementById('w-email').value,
-                notes: document.getElementById('w-notes').value,
-                service_requested: serviceId,
-                status: 'pending'
-            }]);
+    btn.innerText = "Processing...";
+    btn.disabled = true;
 
-            if (error) throw error;
+    try {
+        const { error } = await _supabase.from('waitlist').insert([{
+            name: document.getElementById('w-name').value,
+            email: document.getElementById('w-email').value,
+            notes: document.getElementById('w-notes').value,
+            service_requested: serviceId,
+            status: 'pending'
+        }]);
 
-            // Success
+        if (error) throw error;
+
+        // Success
+        if (window.showMagicAlert) {
             showMagicAlert("Added! 🌸", "We'll notify you when slots open!", "success");
-            modal.remove();
-
-        } catch (err) {
-            console.error("Waitlist error:", err);
-            showMagicAlert("Error", "Something went wrong. Please try again!", "error");
-            
-            // 2. RESET button if it fails
-            btn.innerText = "Join List ✨";
-            btn.disabled = false;
-        } finally {
-            // 3. Ensure loader is told to hide (in case interceptor didn't catch the error state)
-            if (typeof StudioLoader !== 'undefined') StudioLoader.hide();
+        } else {
+            alert("Added to waitlist! 🌸");
         }
-    };
-}
+        
+        document.getElementById('waitlistModal')?.remove();
+
+    } catch (err) {
+        console.error("Waitlist error:", err);
+        const errorMsg = err.status === 403 ? "Database access denied (403). Please check RLS policies." : "Something went wrong. Please try again!";
+        
+        if (window.showMagicAlert) {
+            showMagicAlert("Error", errorMsg, "error");
+        } else {
+            alert(errorMsg);
+        }
+        
+        btn.innerText = "Join List ✨";
+        btn.disabled = false;
+    } finally {
+        // 2. Hide loader
+        if (window.StudioLoader) {
+            window.StudioLoader.hide();
+        } else {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay?.classList.add('opacity-0');
+            setTimeout(() => overlay?.classList.add('hidden'), 300);
+        }
+    }
+};
 
 function toggleDollDetails() {
     const val = document.getElementById('faceupBase').value;
