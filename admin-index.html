@@ -302,7 +302,7 @@ async function sendWaitlistEmail(id, email, name) {
         `;
 
         // Note: Ensure _supabase is your initialized Supabase client
-        const { data, error } = await _supabase.functions.invoke('send-email', {
+        const { data, error } = await _supabase.functions.invoke('hyper-handler', {
             body: {
                 to: email,
                 subject: `You're next! Submit your doll details ♡ Hanafubuki Doll`,
