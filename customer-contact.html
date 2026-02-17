@@ -681,17 +681,17 @@ async function startBooking() {
     }
 
     try {
-     await Promise.all([syncFormWithStock(), checkServiceAvailability()]);  
-        const entry = document.getElementById('entryChoice');
-        const container = document.getElementById('commissionContainer');
+        // await Promise.all([syncFormWithStock(), checkServiceAvailability()]);  // keep commented until ready
 
+        const entry = document.getElementById('entryChoice');
         if (entry) {
             entry.style.display = 'none';
         }
 
+        const container = document.getElementById('commissionContainer');
         if (container) {
+            container.classList.remove('hidden');
             container.style.display = 'block';
-            container.style.minHeight = '100vh';
         }
 
         showStep(1);
