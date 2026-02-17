@@ -223,12 +223,25 @@
                     <td class="p-4 text-sm text-gray-600">${entry.email}</td>
                     <td class="p-4"><span class="px-2 py-1 bg-pink-50 text-pink-500 rounded-full text-[9px] font-black">${entry.service_requested}</span></td>
                     <td class="p-4 text-right">
-                        <button onclick="promoteWaitlist('${entry.id}', '${entry.email}', '${entry.name}')" class="text-pink-500 hover:scale-110">✨</button>
                         <button onclick="deleteWaitlistEntry('${entry.id}', '${entry.name}')" class="ml-2 text-red-300">🗑️</button>
                     </td>
                 </tr>
             `).join('');
         }
+        async function deleteWaitlistEntry(id, name) {
+    if (!confirm(`Delete waitlist entry for ${name || 'this user'}? This cannot be undone.`)) return;
+
+    try {
+        const { error } = await _supabase.from('waitlist').delete().eq('id', id);
+        if (error) throw error;
+        
+        showMagicAlert("Deleted", `Entry for ${name || 'user'} removed.`, "success");
+        renderWaitlist(); // refresh table
+    } catch (err) {
+        console.error("Delete failed:", err);
+        showMagicAlert("Error", "Could not delete entry. Try again.", "error");
+    }
+}
 
         function updateChart(paid, pending) {
             const ctx = document.getElementById('revenueChart').getContext('2d');
