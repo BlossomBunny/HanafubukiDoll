@@ -477,28 +477,33 @@ function processSelection() {
 }
 
 function showStep(stepNum) {
-       const steps = ['step-1-2', 'step-3', 'step-4', 'step-5'];
+    const steps = ['step-1-2', 'step-3', 'step-4', 'step-5'];
     
+    // Hide everything first
     steps.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
+        if (el) {
+            el.classList.add('hidden');
+            el.style.display = 'none';          // aggressive hide
+        }
     });
 
-    let targetId;
-    if (stepNum === 1) {
-        targetId = 'step-1-2';
-    } else {
-        targetId = `step-${stepNum}`;
-    }
-
+    // Show only the target step
+    let targetId = stepNum === 1 ? 'step-1-2' : `step-${stepNum}`;
     const targetEl = document.getElementById(targetId);
     if (targetEl) {
         targetEl.classList.remove('hidden');
+        targetEl.style.display = 'block';
+        targetEl.style.opacity = '1';
+        targetEl.style.visibility = 'visible';
+        targetEl.style.minHeight = '500px';     // prevent collapse
     }
+
+    // Force browser to redraw layout
+    document.body.offsetHeight;
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 // --- 5. SUBMISSION ---
 async function finalSubmit() {
     if (!document.getElementById('tosCheck').checked) {
