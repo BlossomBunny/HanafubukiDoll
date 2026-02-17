@@ -10,6 +10,7 @@
     <script src="global-utils.js"></script>
 <link rel="stylesheet" href="global-style.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
     <style>
         @keyframes pulse-custom {
             0%, 100% { transform: scale(1); opacity: 1; }
@@ -39,6 +40,17 @@ img {
 img {
     image-rendering: -webkit-optimize-contrast;
     filter: contrast(1.05) brightness(1.02);
+}
+        /* Washi Tape Texture */
+.bg-emerald-100\/60 {
+    background-image: radial-gradient(#ffffff 0.5px, transparent 0.5px);
+    background-size: 4px 4px;
+    opacity: 0.8;
+}
+
+/* Smooth fade for the signature */
+p[style*="font-family: 'Caveat'"] {
+    text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.5);
 }
     </style>
 </head>
@@ -84,37 +96,54 @@ img {
                 Crafting magic in our studio since 2021♡</p>           
         </section>
 
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
-            <div class="glass-card p-12 md:p-16 border-l-8 border-[var(--accent-mint)]">
-                <h2 class="text-4xl font-extrabold mb-8">Hi There!</h2>
-                <div class="space-y-6 text-lg leading-relaxed text-[var(--text-muted)]">
-                    <p>We're Dani & Jas ♡</p>
-                    <p>Our journey began in 2008 with a Boy&Girl Natalia and an Angel of Dream Chi. Since then, we've become avide collectors in the vinyl doll space with a heavy focus on Smartdoll. We've been lucky enough to turn a lifelong passion into a mission: creating a safe, positive space for collectors to realize their dream dolls.</p>
-                    <p class="text-[var(--text-main)] font-bold">Every doll that visits our studio is treated with the same care we give our own collection. You're not just a client; you're part of our story.</p>
-                </div>
-            </div>
-         <div class="grid grid-cols-2 gap-4 pt-4 relative">
-    <div class="group relative z-10">
-        <span class="absolute -top-6 left-4 text-2xl transition-all duration-500 group-hover:-top-10 group-hover:rotate-12 pointer-events-none">🐰</span>
+       <section class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-32 relative">
+    <div class="relative p-10 md:p-14">
+        <div class="absolute -top-4 left-1/2 -translate-x-1/2 w-32 h-8 bg-emerald-100/60 backdrop-blur-sm -rotate-2 z-20 border-x border-emerald-200/50"></div>
         
-        <div class="overflow-hidden rounded-[30px] border-4 border-white shadow-xl rotate-[-2deg] transition-transform duration-500 group-hover:rotate-0 group-hover:scale-105">
-            <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20095443.png" 
-                 class="w-full h-48 object-cover bg-pink-50" 
-                 alt="Studio Gallery 1">
-            <span class="absolute top-2 right-2 text-lg animate-pulse">✨</span>
+        <div class="absolute inset-0 bg-white shadow-sm border border-pink-50 -rotate-1 rounded-[60px] -z-10"></div>
+        
+        <h2 class="text-5xl font-black mb-8 italic tracking-tighter text-pink-400">Hi There!</h2>
+        
+        <div class="space-y-6 text-base leading-relaxed text-gray-600">
+            <div class="flex items-center gap-3">
+                <span class="h-[1px] w-8 bg-pink-200"></span>
+                <p class="font-black uppercase tracking-[0.2em] text-[10px] text-pink-300">Meet the team!</p>
+            </div>
+            
+            <p class="text-4xl text-emerald-500/80" style="font-family: 'Caveat', cursive;">
+                We're Dani & Jas ♡
+            </p>
+            
+            <p>Our journey began in <span class="bg-pink-100/50 px-1 rounded">2008</span> with a Boy&Girl Natalia and an Angel of Dream Chi. Since then, we've become avid collectors with a heavy focus on anime aesthetic vinyl dolls, especially <span class="text-emerald-500 font-bold underline decoration-pink-200 underline-offset-4">Smartdoll</span>.</p>
+            
+            <p>We've turned a passion into a mission: creating a safe, positive space for collectors to realize their dream dolls.</p>
+            
+            <div class="pt-6 relative">
+                <span class="absolute -top-1 -left-4 text-pink-200 rotate-12">✨</span>
+                <p class="text-[var(--text-main)] font-medium italic border-l-2 border-pink-100 pl-4">
+                    "Every doll that visits our studio is treated with the same care we give our own collection."
+                </p>
+            </div>
         </div>
     </div>
 
-    <div class="group relative mt-10 z-10">
-        <div class="overflow-hidden rounded-[30px] border-4 border-emerald-50 shadow-xl rotate-[3deg] transition-transform duration-500 group-hover:rotate-0 group-hover:scale-105">
-            <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20095434.png" 
-                 class="w-full h-48 object-cover bg-emerald-50" 
-                 alt="Studio Gallery 2">
-            <span class="absolute bottom-2 left-2 text-lg group-hover:rotate-180 transition-transform duration-700">🌸</span>
+    <div class="grid grid-cols-2 gap-4 relative pr-4">
+        <div class="group relative z-10">
+            <span class="absolute -top-6 left-4 text-2xl transition-all duration-500 group-hover:-top-10 group-hover:rotate-12 pointer-events-none">🐰</span>
+            <div class="overflow-hidden rounded-[30px] border-4 border-white shadow-xl rotate-[-3deg] transition-all duration-500 group-hover:rotate-0">
+                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20095443.png" 
+                     class="w-full h-64 object-cover" alt="Our Studio">
+            </div>
+        </div>
+        <div class="group relative mt-12 z-10">
+             <div class="overflow-hidden rounded-[30px] border-4 border-white shadow-xl rotate-[4deg] transition-all duration-500 group-hover:rotate-0">
+                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20095434.png" 
+                     class="w-full h-64 object-cover" alt="Our Work">
+            </div>
+            <div class="absolute -bottom-4 -right-4 bg-white p-3 rounded-full shadow-lg text-xl animate-bounce">🌸</div>
         </div>
     </div>
-</div>
-        </section>
+</section>
 
         <section class="mb-32">
             <h2 class="text-4xl font-extrabold text-center mb-16">The Studio Experience</h2>
