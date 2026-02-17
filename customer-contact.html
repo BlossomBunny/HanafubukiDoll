@@ -221,7 +221,7 @@
     </div>
     <p class="mt-4 font-black uppercase tracking-[0.3em] text-[10px] text-pink-400">Pounding mochi... please wait!</p>
 </div>
-    <div id="step-1-2" class="glass-card p-10 space-y-8 border-pink-100">
+   <div id="step-1-2" class="glass-card p-10 space-y-8 border-pink-100 min-h-[500px]">
         <div class="text-center">
             <h2 class="text-3xl font-black text-pink-400 tracking-tighter">New Request</h2>
             <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-black">Lets make some magic! ♡</p>
@@ -496,15 +496,28 @@ function showStep(stepNum) {
         targetEl.style.display = 'block';
         targetEl.style.opacity = '1';
         targetEl.style.visibility = 'visible';
-        targetEl.style.minHeight = '500px';     // prevent collapse
+        targetEl.style.minHeight = '600px';     // main fix — gives it height
+        targetEl.style.height = 'auto';
+        targetEl.style.overflow = 'visible';
+
+        // Force inner children (grid, spacing divs) to have some height too
+        targetEl.querySelectorAll('.grid, .space-y-4, .grid-cols-1').forEach(child => {
+            child.style.minHeight = '200px';
+        });
+
+        // Reflow trigger (very important)
+        targetEl.offsetHeight;
     }
 
     // Force browser to redraw layout
     document.body.offsetHeight;
+
     console.log("Just showed:", targetId);
-console.log("step-1-2 current display:", getComputedStyle(document.getElementById('step-1-2')).display);
+    console.log("step-1-2 current display:", getComputedStyle(document.getElementById('step-1-2')).display);
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+    
 // --- 5. SUBMISSION ---
 async function finalSubmit() {
     if (!document.getElementById('tosCheck').checked) {
