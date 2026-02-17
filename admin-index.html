@@ -213,36 +213,133 @@
         }
 
         async function renderWaitlist() {
-            const { data: waitlist } = await _supabase.from('waitlist').select('*').order('created_at', { ascending: false });
-            if (!waitlist) return;
-            document.getElementById('waitlist-count').innerText = `${waitlist.length} Entries`;
-            document.getElementById('waitlist-table-body').innerHTML = waitlist.map(entry => `
-                <tr class="hover:bg-amber-50/30">
-                    <td class="p-4 text-[10px] font-bold text-gray-400">${new Date(entry.created_at).toLocaleDateString()}</td>
-                    <td class="p-4 text-sm font-black text-gray-700">${entry.name || '—'}</td>
-                    <td class="p-4 text-sm text-gray-600">${entry.email}</td>
-                    <td class="p-4"><span class="px-2 py-1 bg-pink-50 text-pink-500 rounded-full text-[9px] font-black">${entry.service_requested}</span></td>
-                    <td class="p-4 text-right">
-                        <button onclick="deleteWaitlistEntry('${entry.id}', '${entry.name}')" class="ml-2 text-red-300">🗑️</button>
+    const countEl = document.getElementById('waitlist-count');
+    const tableBody = document.getElementById('waitlist-table-body');
+
+    if (!countEl || !tableBody) return;
+
+    try {
+        const { data: waitlist, error } = await _supabase
+            .from('waitlist')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        countEl.textContent = `${waitlist.length} Entries`;
+
+        tableBody.innerHTML = waitlist.map(entry => {
+            const isEmailed = entry.status === 'Emailed';
+            return `
+                <tr class="hover:bg-amber-50/30 transition-colors">
+                    <td class="p-4 text-[10px] font-bold text-gray-400 uppercase">
+                        ${new Date(entry.created_at).toLocaleDateString()}
                     </td>
-                </tr>
-            `).join('');
-        }
-        async function deleteWaitlistEntry(id, name) {
+                    <td class="p-4 text-sm font-black text-gray-700">
+                        ${entry.name || '—'}
+                    </td>
+                    <td class="p-4">
+                        <div class="text-sm font-medium text-gray-600">${entry.email}</div>
+                        <div class="text-[9px] font-black uppercase tracking-tighter ${isEmailed ? 'text-blue-400' : 'text-amber-400'}">
+                            ${isEmailed ? '✓ Emailed' : '○ Pending'}
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-3 py-1 bg-pink-50 text-pink-500 rounded-full text-[9px] font-black uppercase tracking-widest border border-pink-100">
+                            ${entry.service_requested || '—'}
+                        </span>
+                    </td>
+                    <td class="p-4 text-xs text-gray-500 max-w-xs truncate" title="${entry.notes || ''}">
+                        ${entry.notes || '<span class="italic opacity-30">No notes</span>'}
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        ${!isEmailed ? `
+                            <button onclick="sendWaitlistEmail('${entry.id}', '${entry.email}', '${entry.name || 'Valued Client'}')"
+                                    class="px-4 py-2 bg-pink-500 text-white rounded-xl font-black text-[10px] uppercase shadow-sm hover:bg-pink-600 transition-all">
+                                ✨ Email Invite
+                            </button>
+                        ` : `
+                            <span class="px-4 py-2 text-[10px] font-black uppercase text-gray-300 italic">Emailed</span>
+                        `}
+                        <button onclick="deleteWaitlistEntry('${entry.id}', '${entry.name || 'Client'}')"
+                                class="inline-block p-2 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100">
+                            🗑️
+                        </button>
+                    </td>
+                </tr>`;
+        }).join('') || '<tr><td colspan="6" class="p-10 text-center text-gray-300 italic">The waitlist is empty! ♡</td></tr>';
+    } catch (err) {
+        console.error("Waitlist load failed:", err);
+        tableBody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-red-400">Error loading waitlist</td></tr>';
+    }
+}
+        
+        
+async function sendWaitlistEmail(id, email, name) {
+    if (!confirm(`Send invite to ${name || email}?`)) return;
+
+    try {
+        const priorityLink = "https://hanafubukidoll.co.uk/customer-priorityrequest.html"; // update if needed
+
+        const html = `
+            <div style="font-family: 'Plus Jakarta Sans', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; color: #333;">
+                <h1 style="color: #ec4899; font-size: 28px; margin-bottom: 20px;">You're next in line! ♡</h1>
+                <p style="font-size: 16px; line-height: 1.6;">
+                    Hi ${name || 'there'},<br><br>
+                    Your waitlist request has moved up the queue!<br><br>
+                    You can now submit your full details and references here:<br>
+                    <a href="${priorityLink}" style="color: #ec4899; font-weight: bold; text-decoration: underline;">
+                        Submit Priority Request → ${priorityLink}
+                    </a><br><br>
+                    Please fill it out as soon as possible so we can get started ♡<br><br>
+                    Thank you!<br>
+                    Hanafubuki Doll Studio 🌸🐰
+                </p>
+                <p style="font-size: 12px; color: #999; margin-top: 40px;">
+                    If the button doesn't work, copy-paste the link into your browser.
+                </p>
+            </div>
+        `;
+
+        const { data, error } = await _supabase.functions.invoke('send-email', {
+            body: {
+                to: email,
+                subject: `You're next! Submit your doll details ♡ Hanafubuki Doll`,
+                html: html,
+                replyTo: "Admin@hanafubukidoll.co.uk"
+            }
+        });
+
+        if (error) throw error;
+
+        // Update status to 'Emailed'
+        await _supabase.from('waitlist')
+            .update({ status: 'Emailed' })
+            .eq('id', id);
+
+        showMagicAlert("Sent!", `Invite sent to ${email}. Status updated to Emailed.`, "success");
+        renderWaitlist();
+
+    } catch (err) {
+        console.error("Email failed:", err);
+        showMagicAlert("Error", "Failed to send email or update status.", "error");
+    }
+}
+
+async function deleteWaitlistEntry(id, name) {
     if (!confirm(`Delete waitlist entry for ${name || 'this user'}? This cannot be undone.`)) return;
 
     try {
         const { error } = await _supabase.from('waitlist').delete().eq('id', id);
         if (error) throw error;
-        
+
         showMagicAlert("Deleted", `Entry for ${name || 'user'} removed.`, "success");
-        renderWaitlist(); // refresh table
+        renderWaitlist(); // refresh
     } catch (err) {
         console.error("Delete failed:", err);
-        showMagicAlert("Error", "Could not delete entry. Try again.", "error");
+        showMagicAlert("Error", "Could not delete entry.", "error");
     }
 }
-
         function updateChart(paid, pending) {
             const ctx = document.getElementById('revenueChart').getContext('2d');
             if (revenueChart) revenueChart.destroy();
