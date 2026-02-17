@@ -588,7 +588,6 @@ async function syncFormWithStock() {
     const smOpt = document.getElementById('opt-sm-bundle');
     const ddOpt = document.getElementById('opt-dd-bundle');
 
-    // Disable the options in the select menu if stock is 0
     if (smOpt && smHeads.length === 0) {
         smOpt.disabled = true;
         smOpt.textContent = "Face-Up + Smartdoll Head (SOLD OUT)";
@@ -598,7 +597,6 @@ async function syncFormWithStock() {
         ddOpt.textContent = "Face-Up + Dollfie Dream Head (SOLD OUT)";
     }
 
-    // Populate the sub-dropdowns in case they are needed later
     const smSelect = document.getElementById('sm-head-sculpt-select');
     const ddSelect = document.getElementById('dd-head-sculpt-select');
     if (smSelect) smSelect.innerHTML = smHeads.map(h => `<option value="${h.sculpt_size}">${h.sculpt_size} (${h.skintone})</option>`).join('');
@@ -633,14 +631,11 @@ function showWaitlistForm(serviceId) {
     `;
     
     document.body.appendChild(modalContainer);
-
     document.getElementById('closeWaitlist').onclick = () => modalContainer.remove();
 
     document.getElementById('waitlistForm').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('w-submit-btn');
-        const serviceName = serviceId || 'General';
-        
         btn.innerText = "Processing...";
         btn.disabled = true;
 
@@ -649,33 +644,21 @@ function showWaitlistForm(serviceId) {
                 name: document.getElementById('w-name').value,
                 email: document.getElementById('w-email').value,
                 notes: document.getElementById('w-notes').value,
-                service_requested: serviceName,
+                service_requested: serviceId || 'General',
                 status: 'pending'
             }]);
 
             if (error) throw error;
-
-            if (window.showMagicAlert) {
-                showMagicAlert("Added! 🌸", "We'll notify you when slots open!", "success");
-            }
-            
+            if (window.showMagicAlert) showMagicAlert("Added! 🌸", "We'll notify you!", "success");
             modalContainer.remove();
-
         } catch (err) {
-            console.error("Waitlist error:", err);
-            const errorMsg = err.status === 403 
-                ? "Database access denied (403). Check RLS policies." 
-                : (err.message || "Something went wrong.");
-            
-            if (window.showMagicAlert) {
-                showMagicAlert("Error", errorMsg, "error");
-            }
-            
+            if (window.showMagicAlert) showMagicAlert("Error", err.message, "error");
             btn.innerText = "Join List ✨";
             btn.disabled = false;
         } 
     };
 }
+
 function toggleDollDetails() {
     const val = document.getElementById('faceupBase').value;
     const dollDetails = document.getElementById('dollDetails');
@@ -704,12 +687,9 @@ async function startBooking() {
         if (entry) entry.classList.add('hidden');
         
         if (container) {
-            // Remove hidden AND make sure it's not transparent
             container.classList.remove('hidden');
             container.style.display = 'block'; 
             container.style.opacity = '1';
-            
-            // Call the step function
             showStep(1); 
         }
     } catch (error) {
@@ -721,7 +701,6 @@ async function startBooking() {
     }
 }
 </script>
-    
 <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
         <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
         <p class="text-[var(--text-muted)] text-sm mb-6">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
