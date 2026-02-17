@@ -617,6 +617,87 @@ function showWaitlistForm(serviceId) {
     
     document.body.appendChild(modal);
 
+    document.getElementById('waitlistForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('w-submit-btn');
+        const serviceDisplay = document.querySelector('#waitlistForm p')?.innerText.replace('Requesting: ', '') || 'General';
+        
+        btn.innerText = "Processing...";
+        btn.disabled = true;
+
+        try {
+            const { error } = await _supabase.from('waitlist').insert([{
+                name: document.getElementById('w-name').value,
+                email: document.getElementById('w-email').value,
+                notes: document.getElementById('w-notes').value,
+                service_requested: serviceDisplay,
+                status: 'pending'
+            }]);
+
+            if (error) throw error;
+
+            if (window.showMagicAlert) {
+                showMagicAlert("Added! 🌸", "We'll notify you when slots open!", "success");
+            }
+            
+            document.getElementById('waitlistModal')?.remove();
+
+        } catch (err) {
+            console.error("Waitlist error:", err);
+            const errorMsg = err.status === 403 
+                ? "Database access denied (403). Please check RLS policies." 
+                : (err.message || "Something went wrong.");
+            
+            if (window.showMagicAlert) {
+                showMagicAlert("Error", errorMsg, "error");
+            }
+            
+            btn.innerText = "Join List ✨";
+            btn.disabled = false;
+        } 
+    };
+} // <--- End of showWaitlistForm
+
+function toggleDollDetails() {
+    const val = document.getElementById('faceupBase').value;
+    const dollDetails = document.getElementById('dollDetails');
+    const smBundle = document.getElementById('bundle-sm-head');
+    const ddBundle = document.getElementById('bundle-dd-head');
+
+    if (dollDetails) dollDetails.classList.toggle('hidden', val !== 'Standard Face-Up');
+    if (smBundle) smBundle.classList.toggle('hidden', !val.includes('Smartdoll'));
+    if (ddBundle) ddBundle.classList.toggle('hidden', !val.includes('Dollfie'));
+}
+
+async function startBooking() {
+    if (typeof StudioLoader !== 'undefined') {
+        StudioLoader.show("Opening Studio... ✨");
+    }
+
+    try {
+        await Promise.all([
+            syncFormWithStock(),
+            checkServiceAvailability()
+        ]);
+
+        const entry = document.getElementById('entryChoice');
+        const container = document.getElementById('commissionContainer');
+
+        if (entry) entry.classList.add('hidden');
+        if (container) {
+            container.classList.remove('hidden');
+            showStep(1); 
+        }
+    } catch (error) {
+        console.error("Studio failed to initialize:", error);
+    } finally {
+        if (typeof StudioLoader !== 'undefined') {
+            StudioLoader.hide();
+        }
+    }
+}
+    document.body.appendChild(modal);
+
    document.getElementById('waitlistForm').onsubmit = async (e) => {
     e.preventDefault();
     const btn = document.getElementById('w-submit-btn');
