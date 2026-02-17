@@ -407,14 +407,12 @@ async function finalSubmit() {
         return;
     }
 
-    const overlay = document.getElementById('loadingOverlay');
     const btn = document.querySelector('#step-4 button');
-
-    // Show Loading Overlay
-    if (overlay) {
-        overlay.classList.remove('hidden');
-        // Small timeout to allow the 'hidden' removal to register for the opacity transition
-        setTimeout(() => overlay.classList.add('opacity-100'), 10);
+    
+    // 1. Manually call show because there are multiple await steps (uploads + database)
+    // and we want the loader to stay up for the whole journey.
+    if (window.StudioLoader) {
+        StudioLoader.show("Whisking your request away... ✨");
     }
     
     btn.disabled = true;
@@ -432,11 +430,12 @@ async function finalSubmit() {
             finalCompany = "Volks";
         }
 
-        // The image uploads happen here (this usually takes the longest)
+        // Image uploads
         const faceupImages = await uploadSet('faceupFiles');
         const maniImages = await uploadSet('maniFiles');
         const eyeImages = await uploadSet('eyeFiles');
 
+        // Supabase Insert
         const { error } = await _supabase.from('commissions').insert([{
             customer_name: document.getElementById('custName').value,
             customer_email: document.getElementById('custEmail').value,
@@ -465,23 +464,18 @@ async function finalSubmit() {
 
         if (error) throw error;
 
-        // Hide overlay before showing success
-        if (overlay) {
-            overlay.classList.remove('opacity-100');
-            setTimeout(() => overlay.classList.add('hidden'), 300);
-        }
-        
+        // Success - showStep(5) is the success screen
         showStep(5);
 
     } catch (err) {
-        // Hide overlay so user can see the error alert
-        if (overlay) {
-            overlay.classList.remove('opacity-100');
-            setTimeout(() => overlay.classList.add('hidden'), 300);
-        }
-
-        showMagicAlert("Error", err.message, "error");
+        console.error("Submission error:", err);
+        showMagicAlert("Error", err.message || "Failed to send request", "error");
         btn.disabled = false;
+    } finally {
+        // 2. Hide the loader once everything (success OR failure) is done
+        if (window.StudioLoader) {
+            StudioLoader.hide();
+        }
     }
 }
 // --- 6. STOCK & MODAL LOGIC (Bundles & Waitlist) ---
@@ -536,6 +530,7 @@ function showWaitlistForm(serviceId) {
             </form>
         </div>
     `;
+    
     document.body.appendChild(modal);
 
    document.getElementById('waitlistForm').onsubmit = async (e) => {
@@ -543,21 +538,11 @@ function showWaitlistForm(serviceId) {
     const btn = document.getElementById('w-submit-btn');
     const serviceId = document.querySelector('#waitlistForm p')?.innerText.replace('Requesting: ', '') || 'General';
     
-    // 1. Use the global loader safely
-    if (window.StudioLoader) {
-        window.StudioLoader.show("Adding to list... 🌸");
-    } else {
-        // Fallback if global-utils didn't load
-        const overlay = document.getElementById('loadingOverlay');
-        overlay?.classList.remove('hidden', 'opacity-0');
-        overlay?.classList.add('opacity-100');
-    }
-
     btn.innerText = "Processing...";
     btn.disabled = true;
 
     try {
-        const { error } = await _supabase.from('waitlist').insert([{
+            const { error } = await _supabase.from('waitlist').insert([{
             name: document.getElementById('w-name').value,
             email: document.getElementById('w-email').value,
             notes: document.getElementById('w-notes').value,
@@ -570,36 +555,25 @@ function showWaitlistForm(serviceId) {
         // Success
         if (window.showMagicAlert) {
             showMagicAlert("Added! 🌸", "We'll notify you when slots open!", "success");
-        } else {
-            alert("Added to waitlist! 🌸");
         }
         
         document.getElementById('waitlistModal')?.remove();
 
     } catch (err) {
         console.error("Waitlist error:", err);
-        const errorMsg = err.status === 403 ? "Database access denied (403). Please check RLS policies." : "Something went wrong. Please try again!";
+        const errorMsg = err.status === 403 
+            ? "Database access denied (403). Please check RLS policies." 
+            : (err.message || "Something went wrong.");
         
         if (window.showMagicAlert) {
             showMagicAlert("Error", errorMsg, "error");
-        } else {
-            alert(errorMsg);
         }
         
         btn.innerText = "Join List ✨";
         btn.disabled = false;
-    } finally {
-        // 2. Hide loader
-        if (window.StudioLoader) {
-            window.StudioLoader.hide();
-        } else {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay?.classList.add('opacity-0');
-            setTimeout(() => overlay?.classList.add('hidden'), 300);
-        }
-    }
+    } 
+ 
 };
-
 function toggleDollDetails() {
     const val = document.getElementById('faceupBase').value;
     document.getElementById('dollDetails').classList.toggle('hidden', val !== 'Standard Face-Up');
