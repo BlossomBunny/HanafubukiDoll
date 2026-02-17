@@ -552,21 +552,34 @@ function updateEmailPreview() {
     const reasonSelect = document.getElementById('declineReason');
     const notes = document.getElementById('declineNotes').value.trim();
     const reasonText = reasonSelect.options[reasonSelect.selectedIndex]?.text || '[reason not selected]';
-    const preview =
-`Subject: Update on Your HanafubukiDoll Commission Enquiry
-Dear ${currentDeclineHandle || 'valued client'},
-Thank you so much for reaching out and for your interest in HanafubukiDoll ♡
-After carefully reviewing your request, We are really sorry to let you know that we're unable to accept this commission at this time.
+
+    const preview = 
+`Subject: Update Regarding Your HanafubukiDoll Enquiry ♡
+
+Dear ${currentDeclineHandle || 'valued friend'},
+
+Thank you so much for reaching out to us — it truly means a lot that you considered HanafubukiDoll for your project 🌸 We're always grateful for every enquiry.
+
+After carefully reviewing your request, I'm really sorry to say that we're unable to accept this commission at this time.
+
 Reason: ${reasonText}
-${notes ? `\nAdditional note: ${notes}` : ''}
-We truly appreciate you considering us and wish you the very best in finding the perfect artist for your project.
-Warmest regards,
-Dani & Jas
-HanafubukiDoll 🌸
+
+${notes ? `A little note from us: ${notes}\n\n` : '\n'}
+
+We genuinely want you to find the perfect artist who can bring your vision to life just the way you dream it. Here are a few friendly places where many doll enthusiasts discover wonderful creators and services:
+• Facebook - Join the bigger groups to ask for recommendations!
+• Instagram — explore hashtags like #BJDCommission, #BJDFaceup, #BallJointedDollArtist, or #BJDSale
+• Den of Angels forum (the big international BJD community hub for discussions and artist spotlights)
+
+We truly appreciate your interest in our work and send you the warmest wishes for finding the ideal match for your special piece 🐰✨
+
+Warmest regards,  
+Dani & Jas  
+HanafubukiDoll 🌸  
 https://hanafubukidoll.co.uk`;
+
     document.getElementById('emailPreview').textContent = preview;
 }
-document.getElementById('declineNotes')?.addEventListener('input', updateEmailPreview);
 
     
 async function confirmDeclineAndSend() {
@@ -605,14 +618,31 @@ async function confirmDeclineAndSend() {
                     const subject = previewText.split('\n')[0].replace('Subject: ', '');
                     
                     const response = await fetch('https://hxqxinfdeyprkuvvyqet.supabase.co/functions/v1/hyper-handler', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            to: currentDeclineEmail,
-                            subject: subject,
-                            html: previewText.replace(/\n/g, '<br>')
-                        })
-                    });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        to: currentDeclineEmail,
+        subject: subject,
+        html: `
+<div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #4b5563;
+            line-height: 1.7;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 24px 20px;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #f9e0e8;">
+    ${previewText
+        .replace(/\n{2,}/g, '</p><p style="margin: 16px 0;">') 
+        .replace(/\n/g, '<br>')                                 
+        .replace(/https?:\/\/[^\s<]+/g, match =>
+            `<a href="${match}" style="color: #ec4899; text-decoration: none; font-weight: 500;">${match}</a>`)
+    }
+</div>
+`
+    })
+});
 
                     if (!response.ok) throw new Error(`Email service status ${response.status}`);
                     
