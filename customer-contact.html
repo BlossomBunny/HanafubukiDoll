@@ -214,35 +214,162 @@
  </div>
    
 <div id="commissionContainer" class="hidden max-w-2xl mx-auto pb-20">
-  <div class="glass-card p-10 space-y-8 border-pink-100 min-h-[600px]">
-    <div class="text-center">
-      <h2 class="text-3xl font-black text-pink-400 tracking-tighter">New Request</h2>
-      <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-black">Lets make some magic! ♡</p>
+       
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-md z-[1000] flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="relative">
+            <div class="w-16 h-16 border-4 border-emerald-100 border-t-emerald-400 rounded-full animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center text-pink-300 animate-pulse">🌸</div>
+        </div>
+        <p class="mt-4 font-black uppercase tracking-[0.3em] text-[10px] text-pink-400">Pounding mochi... please wait!</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <input type="text" id="custName" placeholder="Full Name*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
-      <input type="text" id="socialHandle" placeholder="Social Handle (@...)" class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
-      <input type="text" id="Country" placeholder="Country (e.g. USA)*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
-      <input type="email" id="custEmail" placeholder="Email Address*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 md:col-span-2 text-pink-600 placeholder:text-pink-200">
+    <div id="step-1-2" class="glass-card p-10 space-y-8 border-pink-100 animate-fadeIn">
+        <div class="text-center">
+            <h2 class="text-3xl font-black text-pink-400 tracking-tighter">New Request</h2>
+            <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-black">Lets make some magic! ♡</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="custName" placeholder="Full Name*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
+            <input type="text" id="socialHandle" placeholder="Social Handle (@...)" class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
+            <input type="text" id="Country" placeholder="Country (e.g. USA)*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 text-pink-600 placeholder:text-pink-200">
+            <input type="email" id="custEmail" placeholder="Email Address*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-white/80 outline-none focus:ring-2 ring-emerald-100 md:col-span-2 text-pink-600 placeholder:text-pink-200">
+        </div>
+
+        <div class="space-y-4">
+            <p class="text-[10px] font-black uppercase text-pink-300 text-center tracking-widest">What are we working on?</p>
+            <div class="grid grid-cols-3 gap-3">
+                <label class="flex flex-col items-center p-4 border border-pink-50 rounded-3xl cursor-pointer hover:bg-pink-50 transition-all">
+                    <input type="checkbox" id="checkFaceup" class="hidden peer">
+                    <span class="text-2xl opacity-40 peer-checked:opacity-100">🎨</span>
+                    <span class="text-[9px] font-bold mt-2 text-pink-200 peer-checked:text-pink-400 text-center">FACEUP</span>
+                </label>
+                <label class="flex flex-col items-center p-4 border border-pink-50 rounded-3xl cursor-pointer hover:bg-emerald-50 transition-all">
+                    <input type="checkbox" id="checkMani" class="hidden peer">
+                    <span class="text-2xl opacity-40 peer-checked:opacity-100">💅</span>
+                    <span class="text-[9px] font-bold mt-2 text-pink-200 peer-checked:text-emerald-400 text-center">MANI</span>
+                </label>
+                <label class="flex flex-col items-center p-4 border border-pink-50 rounded-3xl cursor-pointer hover:bg-pink-50 transition-all">
+                    <input type="checkbox" id="checkEyes" class="hidden peer">
+                    <span class="text-2xl opacity-40 peer-checked:opacity-100">👀</span>
+                    <span class="text-[9px] font-bold mt-2 text-pink-200 peer-checked:text-pink-400 text-center">EYES</span>
+                </label>
+            </div>
+        </div>
+
+        <button onclick="processSelection()" class="w-full bg-pink-400 text-white py-5 rounded-[40px] font-black uppercase tracking-widest text-xs shadow-lg shadow-pink-100 hover:scale-[1.02] transition-all">
+            Continue to Details ✨
+        </button>
     </div>
 
-    <div class="space-y-4">
-      <p class="text-[10px] font-black uppercase text-pink-300 text-center tracking-widest">What are we working on?</p>
-      <div class="grid grid-cols-3 gap-3">
-        <label class="flex flex-col items-center p-4 border border-pink-50 rounded-3xl cursor-pointer hover:bg-pink-50 transition-all">
-          <input type="checkbox" id="checkFaceup" class="hidden peer">
-          <span class="text-2xl opacity-40 peer-checked:opacity-100">🎨</span>
-          <span class="text-[9px] font-bold mt-2 text-pink-200 peer-checked:text-pink-400 text-center">FACEUP</span>
-        </label>
-        <!-- ... the other two labels (Mani, Eyes) ... -->
-      </div>
+    <div id="step-3" class="hidden space-y-8 animate-fadeIn">
+        <button onclick="showStep(1)" class="text-[10px] font-black uppercase tracking-widest text-pink-300 ml-4 hover:text-pink-500 transition-colors">← Back to Services</button>
+
+        <div id="faceup-details" class="hidden glass-card p-8 border-l-4 border-pink-400 space-y-6">
+            <h3 class="font-black text-pink-500 uppercase text-[10px] tracking-widest">Face-Up & Doll Info</h3>
+            <select id="faceupBase" onchange="toggleDollDetails()" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-pink-600 outline-none">
+                <option value="None">No Faceup Needed</option>
+                <option value="Standard Face-Up">Standard Face-Up</option>
+                <option value="Face-Up + Smartdoll Head (Bundle)" id="opt-sm-bundle">Face-Up + Smartdoll Head (Bundle)</option>
+                <option value="Face-Up + Dollfie Dream Head (Bundle)" id="opt-dd-bundle">Face-Up + Dollfie Dream Head (Bundle)</option>
+            </select>
+
+            <div id="bundle-sm-head" class="hidden space-y-2">
+                <label class="text-[10px] font-black uppercase text-pink-400 ml-2">Select In-Stock Smartdoll Sculpt ♡</label>
+                <select id="sm-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-pink-600"></select>
+            </div>
+
+            <div id="bundle-dd-head" class="hidden space-y-2">
+                <label class="text-[10px] font-black uppercase text-pink-400 ml-2">Select In-Stock Dollfie Sculpt ♡</label>
+                <select id="dd-head-sculpt-select" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-pink-600"></select>
+            </div>
+
+            <div id="dollDetails" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="dollCompany" placeholder="Doll Company*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20 md:col-span-2 outline-none">
+                <input type="text" id="dollSculpt" placeholder="Doll Sculpt*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20 outline-none">
+                <input type="text" id="dollSkintone" placeholder="Skintone*" class="w-full p-4 rounded-xl border border-pink-50 bg-pink-50/20 outline-none">
+            </div>
+
+            <textarea id="faceupNotes" placeholder="Face-up specific notes..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-pink-600 text-sm outline-none"></textarea>
+
+            <div class="p-5 bg-pink-50/40 border border-pink-100 rounded-2xl flex gap-4 items-start">
+                <span class="text-xl">💡</span>
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black text-pink-500 uppercase tracking-widest">Artist Tip</p>
+                    <p class="text-[11px] text-pink-700/70 leading-relaxed">
+                        Have a lot of photos? Use our <a href="tools.html" target="_blank" class="text-pink-600 underline font-bold">Reference Builder</a>! ♡
+                    </p>
+                </div>
+            </div>
+            <input type="file" id="faceupFiles" multiple class="text-[10px] text-pink-300 file:bg-pink-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-pink-500 file:font-bold">
+        </div>
+
+        <div id="mani-details" class="hidden glass-card p-8 border-l-4 border-emerald-400 space-y-4">
+            <h3 class="font-black text-emerald-500 uppercase text-[10px] tracking-widest">Manicures</h3>
+            <select id="maniBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-pink-600">
+                <option value="None">No Manicure Needed</option>
+                <option value="Standard Manicure">Standard Manicure</option>
+                <option value="Acrylic Manicure">Acrylic Manicure</option>
+                <option value="Smartdoll Decora Hands" id="opt-sm-mani">Smartdoll Decora Hands</option>
+                <option value="Dollfie Dream Decora Hands" id="opt-dd-mani">Dollfie Dream Decora Hands</option>
+            </select>
+            <label class="flex items-center gap-2 cursor-pointer ml-2">
+                <input type="checkbox" id="pediAddon" class="w-4 h-4 accent-emerald-400">
+                <span class="text-xs font-bold text-pink-700/60">Include Pedicure?</span>
+            </label>
+            <textarea id="maniNotes" placeholder="Nail colors/themes..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-pink-600 text-sm outline-none"></textarea>
+            <input type="file" id="maniFiles" multiple class="text-[10px] text-emerald-300 file:bg-emerald-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-emerald-500 file:font-bold">
+        </div>
+
+        <div id="eyes-details" class="hidden glass-card p-8 border-l-4 border-emerald-200 space-y-4">
+            <h3 class="font-black text-emerald-600 uppercase text-[10px] tracking-widest">Follow-Me Eyes</h3>
+            <select id="eyeBase" class="w-full p-4 rounded-xl border border-pink-100 bg-white text-pink-600">
+                <option value="None">No Eyes Needed</option>
+                <option value="Follow-Me Eyes">Follow-Me Eyes</option>
+                <option value="Glitter Follow-Me Eyes">Glitter Follow-Me Eyes</option>
+                <option value="Custom Follow-Me Eyes">Custom Follow-Me Eyes</option>
+            </select>
+            <textarea id="eyeNotes" placeholder="Eye color/detail requests..." class="w-full p-4 rounded-xl border border-pink-50 bg-white/60 h-24 text-pink-600 text-sm outline-none"></textarea>
+            <input type="file" id="eyeFiles" multiple class="text-[10px] text-emerald-300 file:bg-emerald-50 file:border-none file:px-4 file:py-2 file:rounded-full file:text-emerald-500 file:font-bold">
+        </div>
+
+        <button onclick="showStep(4)" class="w-full bg-emerald-400 text-white py-5 rounded-[40px] font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-50 hover:scale-[1.02] transition-all">
+            Next: Terms & Review ♡
+        </button>
     </div>
 
-    <button onclick="alert('Form submitted! (test)')" class="w-full bg-pink-400 text-white py-5 rounded-[40px] font-black uppercase tracking-widest text-xs shadow-lg shadow-pink-100 hover:scale-[1.02] transition-all">
-      Continue to Details ✨
-    </button>
-  </div>
+    <div id="step-4" class="hidden space-y-8 animate-fadeIn">
+        <button onclick="showStep(3)" class="text-[10px] font-black uppercase tracking-widest text-pink-300 ml-4">← Back to Details</button>
+        <div class="glass-card p-10 border-pink-100 space-y-6">
+            <h2 class="text-2xl font-black text-pink-400 tracking-tighter">Studio Terms</h2>
+            <div class="p-6 bg-pink-50/30 rounded-[30px] border border-pink-50 text-[11px] h-44 overflow-y-auto text-pink-700/70 leading-relaxed custom-scrollbar italic">
+                <p class="font-black mb-3 uppercase tracking-widest text-pink-500 not-italic border-b border-pink-100 pb-1">Studio Terms of Service</p>
+                <p><strong>♡ Payments:</strong> Payment in full required before work begins.</p>
+                <p><strong>♡ Shipping:</strong>  Client covers costs. We are not responsible for lost parcels but will assist in claims.</p>
+                <p><strong>♡ Customs:</strong> Fees for shipments outside the UK are the client's responsibility. Incoming parcels above £39 may receive a charge. You are liable to pay this before we can retrieve your parcel.</p>
+                <p><strong>♡ Artistic Freedom:</strong> You acknowledge our style upon booking.</p>
+            </div>
+            <label class="flex items-center justify-center gap-3 cursor-pointer">
+                <input type="checkbox" id="tosCheck" required class="w-6 h-6 accent-pink-400">
+                <span class="text-xs font-bold text-pink-400">I agree to the Terms of Service ♡</span>
+            </label>
+        </div>
+        <button onclick="finalSubmit()" class="w-full bg-pink-400 text-white py-5 rounded-[40px] font-black uppercase tracking-widest text-xs shadow-xl shadow-pink-100 hover:scale-[1.05] transition-all">
+            Submit Commission Request ✨
+        </button>
+    </div>
+
+    <div id="step-5" class="hidden glass-card p-12 text-center space-y-6 border-emerald-100 animate-fadeIn">
+        <div class="text-5xl">🌸</div>
+        <h2 class="text-3xl font-black text-pink-400 tracking-tighter">Whisked Away!</h2>
+        <p class="text-pink-600/70 italic leading-relaxed">
+            Thank you! Your request is in the studio's hands. We usually reply within 48 hours.
+        </p>
+        <div class="p-4 bg-emerald-50/50 rounded-2xl text-[10px] text-emerald-500 font-black uppercase tracking-widest">
+            If you dont hear from us within 48 hours please chase via General Inquiry!
+        </div>
+        <button onclick="location.reload()" class="text-pink-300 font-bold text-[10px] uppercase tracking-widest hover:underline pt-4">Return Home</button>
+    </div>
 </div>
     </main>
 
