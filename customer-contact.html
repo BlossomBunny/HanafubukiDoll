@@ -501,7 +501,8 @@ function showStep(stepNum) {
 
     // Force browser to redraw layout
     document.body.offsetHeight;
-    
+    console.log("Just showed:", targetId);
+console.log("step-1-2 current display:", getComputedStyle(document.getElementById('step-1-2')).display);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 // --- 5. SUBMISSION ---
