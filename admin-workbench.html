@@ -11,45 +11,47 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="global-style.css">
     
-    <style type="text/tailwindcss">
-        @layer components {
-            .nav-btn { @apply px-5 py-2 rounded-full font-bold text-sm transition-all cursor-pointer inline-block; }
-            .nav-btn-pink { @apply bg-pink-50 text-pink-500 hover:bg-pink-100; }
-            .nav-btn-mint { @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; }
-            .auth-hidden { @apply hidden !important; }
-            .glass-card { 
-                background: rgba(255, 255, 255, 0.8); 
-                backdrop-filter: blur(12px); 
-                @apply rounded-[2rem] border border-pink-100/20; 
-            }
-           
-.doll-thumb {
-    transition: all 0.3s ease;
-}
+<style type="text/tailwindcss">
+    @layer components {
+        .nav-btn { @apply px-5 py-2 rounded-full font-bold text-sm transition-all cursor-pointer inline-block; }
+        .nav-btn-pink { @apply bg-pink-50 text-pink-500 hover:bg-pink-100; }
+        .nav-btn-mint { @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; }
+        .auth-hidden { @apply hidden !important; }
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(12px); 
+            @apply rounded-[2rem] border border-pink-100/20; 
+        }
 
-.img-enlarge {
-    position: fixed !important;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: auto !important;
-    height: auto !important;
-    max-width: 90vw;
-    max-height: 90vh;
-    z-index: 9999;
-    object-fit: contain !important;
-    box-shadow: 0 0 0 100vmax rgba(0,0,0,0.8); 
-    border-radius: 12px;
-}
+        /* Wrap your custom CSS here so Tailwind handles it correctly */
+        .doll-thumb {
+            @apply transition-all duration-300 ease-in-out;
+        }
 
-/* Custom Scrollbar for the row */
-.custom-scrollbar::-webkit-scrollbar {
-    height: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #f9a8d4;
-    border-radius: 10px;
-}
+        .img-enlarge {
+            position: fixed !important;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: auto !important;
+            height: auto !important;
+            max-width: 90vw;
+            max-height: 90vh;
+            z-index: 9999;
+            object-fit: contain !important;
+            box-shadow: 0 0 0 100vmax rgba(0,0,0,0.8); 
+            border-radius: 12px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #f9a8d4;
+            border-radius: 10px;
+        }
+    }
+</style>
     </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
