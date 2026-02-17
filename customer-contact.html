@@ -477,10 +477,25 @@ function processSelection() {
 }
 
 function showStep(stepNum) {
-    const steps = ['step-1-2', 'step-3', 'step-4', 'step-5'];
-    steps.forEach(id => document.getElementById(id)?.classList.add('hidden'));
-    const target = stepNum === 1 ? 'step-1-2' : `step-${stepNum}`;
-    document.getElementById(target)?.classList.remove('hidden');
+       const steps = ['step-1-2', 'step-3', 'step-4', 'step-5'];
+    
+    steps.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
+
+    let targetId;
+    if (stepNum === 1) {
+        targetId = 'step-1-2';
+    } else {
+        targetId = `step-${stepNum}`;
+    }
+
+    const targetEl = document.getElementById(targetId);
+    if (targetEl) {
+        targetEl.classList.remove('hidden');
+    }
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -687,8 +702,14 @@ async function startBooking() {
         const container = document.getElementById('commissionContainer');
 
         if (entry) entry.classList.add('hidden');
+        
         if (container) {
+            // Remove hidden AND make sure it's not transparent
             container.classList.remove('hidden');
+            container.style.display = 'block'; 
+            container.style.opacity = '1';
+            
+            // Call the step function
             showStep(1); 
         }
     } catch (error) {
@@ -699,7 +720,6 @@ async function startBooking() {
         }
     }
 }
-   
 function toggleDollDetails() {
     const val = document.getElementById('faceupBase').value;
     document.getElementById('dollDetails').classList.toggle('hidden', val !== 'Standard Face-Up');
