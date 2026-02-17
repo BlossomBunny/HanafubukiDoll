@@ -592,35 +592,42 @@ async function syncFormWithStock() {
 
 function showWaitlistForm(serviceId) {
     const modalId = 'waitlistModal';
-    document.getElementById(modalId)?.remove();
-    const modal = document.createElement('div');
-    modal.id = modalId;
-    modal.className = 'fixed inset-0 bg-rose-900/20 backdrop-blur-sm flex items-center justify-center z-[999] p-4';
+    // Remove existing modal if it exists
+    const existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    const modalContainer = document.createElement('div');
+    modalContainer.id = modalId;
+    modalContainer.className = 'fixed inset-0 bg-rose-900/20 backdrop-blur-sm flex items-center justify-center z-[999] p-4';
     
-    modal.innerHTML = `
+    modalContainer.innerHTML = `
         <div class="bg-white rounded-[40px] p-8 max-w-lg w-full shadow-2xl border border-pink-50 animate-fadeIn space-y-6">
             <div class="text-center">
                 <h2 class="text-2xl font-black text-pink-400 uppercase tracking-tighter italic">Join Waitlist ♡</h2>
-                <p class="text-[10px] uppercase tracking-widest text-emerald-400 font-black mt-2">Requesting: ${serviceId}</p>
+                <p id="serviceLabel" class="text-[10px] uppercase tracking-widest text-emerald-400 font-black mt-2">Requesting: ${serviceId}</p>
             </div>
             <form id="waitlistForm" class="space-y-4">
                 <input type="text" id="w-name" placeholder="Full Name" required class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200">
                 <input type="email" id="w-email" placeholder="Email Address" required class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200">
                 <textarea id="w-notes" placeholder="Sculpt details / special requests..." class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200 h-24"></textarea>
                 <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="document.getElementById('${modalId}').remove()" class="flex-1 py-4 text-[10px] font-black uppercase text-pink-300">Cancel</button>
+                    <button type="button" id="closeWaitlist" class="flex-1 py-4 text-[10px] font-black uppercase text-pink-300">Cancel</button>
                     <button type="submit" id="w-submit-btn" class="flex-[2] bg-emerald-400 text-white py-4 rounded-full font-black uppercase text-[10px] shadow-lg shadow-emerald-100">Join List ✨</button>
                 </div>
             </form>
         </div>
     `;
     
-    document.body.appendChild(modal);
+    document.body.appendChild(modalContainer);
 
+    // Close button logic
+    document.getElementById('closeWaitlist').onclick = () => modalContainer.remove();
+
+    // Submit logic
     document.getElementById('waitlistForm').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('w-submit-btn');
-        const serviceDisplay = document.querySelector('#waitlistForm p')?.innerText.replace('Requesting: ', '') || 'General';
+        const serviceName = serviceId || 'General';
         
         btn.innerText = "Processing...";
         btn.disabled = true;
@@ -630,7 +637,7 @@ function showWaitlistForm(serviceId) {
                 name: document.getElementById('w-name').value,
                 email: document.getElementById('w-email').value,
                 notes: document.getElementById('w-notes').value,
-                service_requested: serviceDisplay,
+                service_requested: serviceName,
                 status: 'pending'
             }]);
 
@@ -640,12 +647,12 @@ function showWaitlistForm(serviceId) {
                 showMagicAlert("Added! 🌸", "We'll notify you when slots open!", "success");
             }
             
-            document.getElementById('waitlistModal')?.remove();
+            modalContainer.remove();
 
         } catch (err) {
             console.error("Waitlist error:", err);
             const errorMsg = err.status === 403 
-                ? "Database access denied (403). Please check RLS policies." 
+                ? "Database access denied (403). Check RLS policies." 
                 : (err.message || "Something went wrong.");
             
             if (window.showMagicAlert) {
@@ -656,8 +663,7 @@ function showWaitlistForm(serviceId) {
             btn.disabled = false;
         } 
     };
-} // <--- End of showWaitlistForm
-
+}
 function toggleDollDetails() {
     const val = document.getElementById('faceupBase').value;
     const dollDetails = document.getElementById('dollDetails');
