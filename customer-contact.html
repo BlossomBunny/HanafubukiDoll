@@ -671,56 +671,32 @@ function toggleDollDetails() {
 }
 
 async function startBooking() {
-    console.log("startBooking() was actually called");
-
-    // Show loader immediately so we know something started
     if (typeof StudioLoader !== 'undefined') {
-        StudioLoader.show("Opening booking form...");
+        StudioLoader.show("Opening Studio... ✨");
     }
 
     try {
-        // Temporarily skip these to test if they're blocking everything
-        // await Promise.all([
-        //     syncFormWithStock(),
-        //     checkServiceAvailability()
-        // ]);
-
-        console.log("Made it past the awaits (or skipped them)");
-
+     await Promise.all([syncFormWithStock(), checkServiceAvailability()]);  
         const entry = document.getElementById('entryChoice');
         const container = document.getElementById('commissionContainer');
 
         if (entry) {
-            console.log("Hiding entryChoice");
-            entry.style.display = 'none';              // strongest hide
-            entry.style.visibility = 'hidden';
-            entry.style.height = '0';
-            entry.style.overflow = 'hidden';
-        } else {
-            console.log("entryChoice element NOT found!");
+            entry.style.display = 'none';
         }
 
         if (container) {
-            console.log("Showing commissionContainer");
-            container.classList.remove('hidden');
             container.style.display = 'block';
-            container.style.opacity = '1';
-            container.style.visibility = 'visible';
-            container.style.minHeight = '500px';       // prevent collapse
-        } else {
-            console.log("commissionContainer element NOT found!");
+            container.style.minHeight = '100vh';
         }
 
         showStep(1);
-        console.log("Called showStep(1)");
 
     } catch (error) {
-        console.error("Error inside startBooking:", error);
+        console.error("Studio failed to initialize:", error);
     } finally {
         if (typeof StudioLoader !== 'undefined') {
             StudioLoader.hide();
         }
-        console.log("startBooking finished");
     }
 }
 </script>
