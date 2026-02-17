@@ -1,11 +1,7 @@
-/**
- * Studio Global Loader Manager
- * Handles the "Whisking your request away..." overlay
- */
 const StudioLoader = {
-    // 1. Automatically injects the HTML if it's missing
-    init: function() {
+    init() {
         if (document.getElementById('loadingOverlay')) return;
+
         const html = `
             <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-md z-[10000] flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-300 pointer-events-none">
                 <div class="relative">
@@ -14,58 +10,37 @@ const StudioLoader = {
                 </div>
                 <p id="loadingText" class="mt-6 font-black uppercase tracking-[0.3em] text-[10px] text-pink-400">Processing...</p>
             </div>`;
+
         document.body.insertAdjacentHTML('beforeend', html);
     },
 
-    // 2. Shows the loader with custom text
-    show: function(text = "Whisking it away... ✨") {
+    show(text = "Pounding mochi... please wait! ✨") {
         this.init();
         const el = document.getElementById('loadingOverlay');
         const txt = document.getElementById('loadingText');
-        if (txt) txt.innerText = text;
+
+        if (txt) txt.textContent = text;
         if (el) {
             el.classList.remove('hidden', 'pointer-events-none');
-            void el.offsetWidth; // Force reflow
+            // Force reflow for smooth transition
+            void el.offsetWidth;
             el.classList.add('opacity-100');
         }
     },
 
-    // 3. Hides the loader
-    hide: function() {
+    hide() {
         const el = document.getElementById('loadingOverlay');
-        if (el) {
-            el.classList.remove('opacity-100');
-            el.classList.add('pointer-events-none');
-            setTimeout(() => el.classList.add('hidden'), 300);
-        }
+        if (!el) return;
+
+        el.classList.remove('opacity-100');
+        el.classList.add('pointer-events-none');
+
+        // Wait for fade-out transition before hiding
+        setTimeout(() => {
+            el.classList.add('hidden');
+        }, 320);
     }
 };
-
-// --- AUTOMATIC FETCH INTERCEPTOR ---
-// This makes the loader show up automatically for ANY Supabase or API call
-(function() {
-    const originalFetch = window.fetch;
-    let activeRequests = 0;
-
-    window.fetch = async (...args) => {
-        activeRequests++;
-        StudioLoader.show("Whisking it away... ✨");
-
-        try {
-            return await originalFetch(...args);
-        } finally {
-            activeRequests--;
-            if (activeRequests <= 0) {
-                activeRequests = 0;
-                // Buffer to prevent flickering on fast connections
-                setTimeout(() => {
-                    if (activeRequests === 0) StudioLoader.hide();
-                }, 400);
-            }
-        }
-    };
-})();
-
 // --- MAGIC ALERT FUNCTION ---
 function showMagicAlert(title, message, type = 'success', onConfirm = null) {
     const existing = document.getElementById('magic-alert');
