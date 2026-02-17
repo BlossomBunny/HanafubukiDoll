@@ -592,7 +592,6 @@ async function syncFormWithStock() {
 
 function showWaitlistForm(serviceId) {
     const modalId = 'waitlistModal';
-    // Remove existing modal if it exists
     const existing = document.getElementById(modalId);
     if (existing) existing.remove();
 
@@ -620,10 +619,8 @@ function showWaitlistForm(serviceId) {
     
     document.body.appendChild(modalContainer);
 
-    // Close button logic
     document.getElementById('closeWaitlist').onclick = () => modalContainer.remove();
 
-    // Submit logic
     document.getElementById('waitlistForm').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('w-submit-btn');
@@ -702,49 +699,7 @@ async function startBooking() {
         }
     }
 }
-    document.body.appendChild(modal);
-
-   document.getElementById('waitlistForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('w-submit-btn');
-    const serviceId = document.querySelector('#waitlistForm p')?.innerText.replace('Requesting: ', '') || 'General';
-    
-    btn.innerText = "Processing...";
-    btn.disabled = true;
-
-    try {
-            const { error } = await _supabase.from('waitlist').insert([{
-            name: document.getElementById('w-name').value,
-            email: document.getElementById('w-email').value,
-            notes: document.getElementById('w-notes').value,
-            service_requested: serviceId,
-            status: 'pending'
-        }]);
-
-        if (error) throw error;
-
-        // Success
-        if (window.showMagicAlert) {
-            showMagicAlert("Added! 🌸", "We'll notify you when slots open!", "success");
-        }
-        
-        document.getElementById('waitlistModal')?.remove();
-
-    } catch (err) {
-        console.error("Waitlist error:", err);
-        const errorMsg = err.status === 403 
-            ? "Database access denied (403). Please check RLS policies." 
-            : (err.message || "Something went wrong.");
-        
-        if (window.showMagicAlert) {
-            showMagicAlert("Error", errorMsg, "error");
-        }
-        
-        btn.innerText = "Join List ✨";
-        btn.disabled = false;
-    } 
- 
-};
+   
 function toggleDollDetails() {
     const val = document.getElementById('faceupBase').value;
     document.getElementById('dollDetails').classList.toggle('hidden', val !== 'Standard Face-Up');
