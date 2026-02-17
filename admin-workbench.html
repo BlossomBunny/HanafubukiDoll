@@ -526,7 +526,6 @@ async function saveJobChanges() {
                 
                 closeDrawer();
                 renderworkbench(false);
-                renderSummary();
 
             } catch (err) {
                 console.error("Decline error:", err);
@@ -662,7 +661,6 @@ async function confirmDeclineAndSend() {
                 closeDeclineModal();
                 closeDrawer();
                 renderworkbench(false);
-                renderSummary();
 
             } catch (err) {
                 console.error("Decline error:", err);
