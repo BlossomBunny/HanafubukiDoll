@@ -65,6 +65,33 @@
         z-index: 100 !important;
         box-shadow: 0 12px 24px rgba(251, 182, 206, 0.25);
     }
+       <style>
+    .btn-pop {
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 8px 0px rgba(0,0,0,0.02);
+    }
+    .btn-pop:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(251, 182, 206, 0.2);
+    }
+    .btn-pop:active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    /* Decorative sparkles for the booking button */
+    .sparkle-group { position: relative; }
+    .sparkle-group::after {
+        content: "✨";
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        font-size: 1.2rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .sparkle-group:hover::after { opacity: 1; }
+</style>
 </style>
 </head>
     
@@ -102,13 +129,13 @@
             <div class="hidden md:flex flex-col -space-y-10 items-center order-2 md:order-1">
                 <div class="polaroid w-24 -rotate-12">
                     <div class="tape-pink rotate-3"></div>
-                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094727.png" alt="Process">
-                    <p class="text-[6px] mt-1.5 text-pink-400 font-black uppercase tracking-widest">Artist Choice</p>
+                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094727.png" alt="Artist Choice  ♡">
+                    <p class="text-[6px] mt-1.5 text-pink-400 font-black uppercase tracking-widest">Artist Choice  ♡</p>
                 </div>
                 <div class="polaroid w-26 rotate-6 z-10 ml-6">
                     <div class="tape-pink -rotate-6"></div>
-                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094952.png" alt="Process 2">
-                    <p class="text-[6px] mt-1.5 text-pink-400 font-black uppercase tracking-widest">In Progress ♡</p>
+                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094952.png" alt="Character Dolls ♡">
+                    <p class="text-[6px] mt-1.5 text-pink-400 font-black uppercase tracking-widest">Character Dolls ♡</p>
                 </div>
             </div>
 
@@ -125,37 +152,42 @@
             <div class="hidden md:flex flex-col -space-y-10 items-center order-3">
                 <div class="polaroid w-26 -rotate-3 z-10 -ml-6">
                     <div class="tape-emerald rotate-6"></div>
-                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094805.png" alt="Details">
-                    <p class="text-[6px] mt-1.5 text-emerald-500 font-black uppercase tracking-widest">Fine Details 🌸</p>
+                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094752.png" alt="Artist Choice">
+                    <p class="text-[6px] mt-1.5 text-emerald-500 font-black uppercase tracking-widest">Artist Choice 🌸</p>
                 </div>
                 <div class="polaroid w-24 rotate-12">
                     <div class="tape-emerald -rotate-3"></div>
-                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094752.png" alt="Finished">
-                    <p class="text-[6px] mt-1.5 text-emerald-500 font-black uppercase tracking-widest">Finished ✨</p>
+                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094805.png" alt="Feeling Extra! ♡">
+                    <p class="text-[6px] mt-1.5 text-emerald-500 font-black uppercase tracking-widest">Feeling Extra! ♡</p>
                 </div>
             </div>
 
         </div>
     </section>
 
-    <div class="space-y-4 pt-2">
-        <p class="text-[9px] uppercase tracking-[0.3em] text-pink-300 font-bold">Select an option to begin</p>
+    <div class="space-y-6 pt-6">
+    <p class="text-[10px] uppercase tracking-[0.4em] text-pink-300 font-black animate-pulse">Select an option to begin</p>
+    
+    <div class="flex flex-col md:flex-row gap-8 justify-center items-center px-4">
         
-        <div class="flex flex-col md:flex-row gap-4 justify-center items-center px-4">
-            <a href="mailto:Admin@hanafubukidoll.co.uk" 
-               class="w-full max-w-[200px] p-5 border-2 border-pink-100 rounded-[30px] hover:bg-pink-50/50 transition-all group flex flex-col items-center">
-                <span class="text-2xl mb-2 group-hover:scale-110 transition-transform">✉️</span>
-                <h3 class="font-bold text-pink-500/80 text-xs">General Inquiry</h3>
-                <p class="text-[8px] uppercase tracking-widest text-pink-400 font-black mt-1">Chat with us</p>
-            </a>
+        <a href="mailto:Admin@hanafubukidoll.co.uk" 
+           class="btn-pop w-full max-w-[240px] p-8 bg-pink-50/50 border-2 border-pink-100 rounded-[40px] group flex flex-col items-center relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-24 h-24 bg-white/40 rounded-full blur-xl transition-all group-hover:scale-150"></div>
+            
+            <div class="text-4xl mb-3 group-hover:rotate-12 transition-transform">✉️</div>
+            <h3 class="font-extrabold text-pink-500 text-sm tracking-tight">General Inquiry</h3>
+            <p class="text-[9px] uppercase tracking-[0.2em] text-pink-400/70 font-black mt-1">Let's Chat</p>
+        </a>
 
-            <button onclick="startBooking()" 
-                    class="w-full max-w-[200px] p-5 border-2 border-emerald-100 rounded-[30px] hover:bg-emerald-50/50 transition-all group flex flex-col items-center">
-                <span class="text-2xl mb-2 group-hover:scale-110 transition-transform">🎨</span>
-                <h3 class="font-bold text-emerald-600/70 text-xs">Book a Slot</h3>
-                <p class="text-[8px] uppercase tracking-widest text-emerald-500 font-black mt-1">Start Commission</p>
-            </button>
-        </div>
+        <button onclick="startBooking()" 
+                class="btn-pop sparkle-group w-full max-w-[240px] p-8 bg-emerald-50/50 border-2 border-emerald-100 rounded-[40px] group flex flex-col items-center relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-24 h-24 bg-white/40 rounded-full blur-xl transition-all group-hover:scale-150"></div>
+
+            <div class="text-4xl mb-3 group-hover:-rotate-12 transition-transform">🎨</div>
+            <h3 class="font-extrabold text-emerald-600 text-sm tracking-tight">Book a Slot</h3>
+            <p class="text-[9px] uppercase tracking-[0.2em] text-emerald-500/70 font-black mt-1">Start Commission</p>
+        </button>
+
     </div>
 </div>
    
