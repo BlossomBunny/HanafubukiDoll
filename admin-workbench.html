@@ -28,20 +28,21 @@
             @apply transition-all duration-300 ease-in-out;
         }
 
-        .img-enlarge {
-            position: fixed !important;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: auto !important;
-            height: auto !important;
-            max-width: 90vw;
-            max-height: 90vh;
-            z-index: 9999;
-            object-fit: contain !important;
-            box-shadow: 0 0 0 100vmax rgba(0,0,0,0.8); 
-            border-radius: 12px;
-        }
+      .img-enlarge {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important; /* Forces perfect center */
+    width: auto !important;
+    height: auto !important;
+    max-width: 95vw !important; /* Slightly wider */
+    max-height: 95vh !important;
+    z-index: 99999 !important; /* High enough to beat everything */
+    object-fit: contain !important;
+    box-shadow: 0 0 0 100vmax rgba(0,0,0,0.85); /* Darker backdrop */
+    border-radius: 8px;
+    margin: 0 !important; /* Prevents layout shifts */
+}
 
         .custom-scrollbar::-webkit-scrollbar {
             height: 6px;
