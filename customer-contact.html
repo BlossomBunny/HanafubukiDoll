@@ -91,7 +91,28 @@
         transition: opacity 0.3s;
     }
     .sparkle-group:hover::after { opacity: 1; }
-</style>
+       <style>
+    /* Larger, clearer polaroids */
+    .polaroid-horizontal {
+        position: relative;
+        background: white;
+        padding: 8px 8px 24px 8px;
+        border: 1.5px solid #fdf2f8;
+        box-shadow: 0 4px 15px rgba(251, 182, 206, 0.1);
+        transition: all 0.4s ease;
+        width: 110px; /* Increased size */
+    }
+
+    /* Mobile optimization: hide photos on very small screens so buttons stay up */
+    @media (max-width: 768px) {
+        .scrapbook-hide-mobile { display: none; }
+    }
+
+    .polaroid-horizontal:hover {
+        transform: scale(1.15) rotate(0deg) !important;
+        z-index: 50 !important;
+        box-shadow: 0 15px 30px rgba(251, 182, 206, 0.2);
+    }
 </style>
 </head>
     
@@ -123,47 +144,47 @@
         </p>
     </div>
 
-    <section class="max-w-4xl mx-auto py-2 px-4 relative">
-        <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12">
-            
-            <div class="hidden md:flex flex-col -space-y-10 items-center order-2 md:order-1">
-                <div class="polaroid w-24 -rotate-12">
-                    <div class="tape-pink rotate-3"></div>
-                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094727.png" alt="Artist Choice  ♡">
-                    <p class="text-[6px] mt-1.5 text-pink-400 font-black uppercase tracking-widest">Artist Choice  ♡</p>
-                </div>
-                <div class="polaroid w-26 rotate-6 z-10 ml-6">
-                    <div class="tape-pink -rotate-6"></div>
-                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094952.png" alt="Character Dolls ♡">
-                    <p class="text-[6px] mt-1.5 text-pink-400 font-black uppercase tracking-widest">Character Dolls ♡</p>
-                </div>
+    <section class="max-w-6xl mx-auto py-4 px-4 relative overflow-visible">
+    <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
+        
+        <div class="scrapbook-hide-mobile flex flex-row items-center -space-x-4 order-2 md:order-1">
+            <div class="polaroid-horizontal -rotate-12 mt-4">
+                <div class="tape-pink rotate-3"></div>
+                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094727.png" class="w-full">
+                <p class="text-[7px] mt-2 text-pink-400 font-black uppercase tracking-tighter">Artist Choice</p>
             </div>
-
-            <div class="order-1 md:order-2 py-2">
-                <div class="relative bg-white/40 p-8 md:p-10 rounded-[40px] border-2 border-dashed border-pink-200 text-center">
-                    <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-3xl">🎀</span>
-                    <p class="text-3xl md:text-4xl text-pink-400 leading-tight italic" style="font-family: 'Caveat', cursive;">
-                        Ready to start <br>your project?
-                    </p>
-                    <div class="mt-4 text-2xl animate-float-arrow text-pink-300">↓</div>
-                </div>
+            <div class="polaroid-horizontal rotate-6 z-10">
+                <div class="tape-pink -rotate-6"></div>
+                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094952.png" class="w-full">
+                <p class="text-[7px] mt-2 text-pink-400 font-black uppercase tracking-tighter text-center">Character Dolls</p>
             </div>
-
-            <div class="hidden md:flex flex-col -space-y-10 items-center order-3">
-                <div class="polaroid w-26 -rotate-3 z-10 -ml-6">
-                    <div class="tape-emerald rotate-6"></div>
-                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094752.png" alt="Artist Choice">
-                    <p class="text-[6px] mt-1.5 text-emerald-500 font-black uppercase tracking-widest">Artist Choice 🌸</p>
-                </div>
-                <div class="polaroid w-24 rotate-12">
-                    <div class="tape-emerald -rotate-3"></div>
-                    <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094805.png" alt="Feeling Extra! ♡">
-                    <p class="text-[6px] mt-1.5 text-emerald-500 font-black uppercase tracking-widest">Feeling Extra! ♡</p>
-                </div>
-            </div>
-
         </div>
-    </section>
+
+        <div class="order-1 md:order-2 px-2">
+            <div class="relative bg-white/40 p-10 md:p-12 rounded-[40px] border-2 border-dashed border-pink-200 text-center shadow-sm">
+                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl">🎀</span>
+                <p class="text-3xl md:text-4xl text-pink-400 leading-tight italic" style="font-family: 'Caveat', cursive;">
+                    Ready to start <br>your project?
+                </p>
+                <div class="mt-4 text-2xl animate-float-arrow text-pink-300">↓</div>
+            </div>
+        </div>
+
+        <div class="scrapbook-hide-mobile flex flex-row items-center -space-x-4 order-3">
+            <div class="polaroid-horizontal -rotate-6 z-10">
+                <div class="tape-emerald rotate-6"></div>
+                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094752.png" class="w-full">
+                <p class="text-[7px] mt-2 text-emerald-500 font-black uppercase tracking-tighter">Artist Choice</p>
+            </div>
+            <div class="polaroid-horizontal rotate-12 mt-4">
+                <div class="tape-emerald -rotate-3"></div>
+                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094805.png" class="w-full">
+                <p class="text-[7px] mt-2 text-emerald-500 font-black uppercase tracking-tighter text-center">Feeling Extra!</p>
+            </div>
+        </div>
+
+    </div>
+</section>
 
     <div class="space-y-6 pt-6">
     <p class="text-[10px] uppercase tracking-[0.4em] text-pink-300 font-black animate-pulse">Select an option to begin</p>
