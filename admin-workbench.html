@@ -264,6 +264,8 @@ async function openDrawer(id) {
                 </div>
             </div>`;
 
+ drawer.classList.remove('translate-x-full');
+
     } catch (err) { 
         console.error("Open drawer error:", err); 
         if (typeof showMagicAlert === 'function') {
