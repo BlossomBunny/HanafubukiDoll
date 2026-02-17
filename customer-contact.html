@@ -472,40 +472,56 @@ function showWaitlistForm(serviceId) {
     modal.innerHTML = `
         <div class="bg-white rounded-[40px] p-8 max-w-lg w-full shadow-2xl border border-pink-50 animate-fadeIn space-y-6">
             <div class="text-center">
-                <h2 class="text-2xl font-black text-pink-400">Join ${serviceId} Waitlist</h2>
-                <p class="text-[10px] uppercase tracking-widest text-emerald-400 font-black">We'll email you when a slot opens! ♡</p>
+                <h2 class="text-2xl font-black text-pink-400 uppercase tracking-tighter italic">Join Waitlist ♡</h2>
+                <p class="text-[10px] uppercase tracking-widest text-emerald-400 font-black mt-2">Requesting: ${serviceId}</p>
             </div>
             <form id="waitlistForm" class="space-y-4">
-                <input type="text" id="w-name" placeholder="Your Name*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600">
-                <input type="email" id="w-email" placeholder="Email Address*" required class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600">
-                <textarea id="w-notes" placeholder="Any specific sculpt or details? (Optional)" class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 h-24"></textarea>
-                <div class="flex gap-3">
+                <input type="text" id="w-name" placeholder="Full Name" required class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200">
+                <input type="email" id="w-email" placeholder="Email Address" required class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200">
+                <textarea id="w-notes" placeholder="Sculpt details / special requests..." class="w-full p-4 rounded-2xl border border-pink-50 bg-pink-50/10 outline-none text-pink-600 placeholder:text-pink-200 h-24"></textarea>
+                <div class="flex gap-3 pt-2">
                     <button type="button" onclick="document.getElementById('${modalId}').remove()" class="flex-1 py-4 text-[10px] font-black uppercase text-pink-300">Cancel</button>
-                    <button type="submit" class="flex-[2] bg-emerald-400 text-white py-4 rounded-full font-black uppercase text-[10px]">Join List ✨</button>
+                    <button type="submit" id="w-submit-btn" class="flex-[2] bg-emerald-400 text-white py-4 rounded-full font-black uppercase text-[10px] shadow-lg shadow-emerald-100">Join List ✨</button>
                 </div>
             </form>
-        </div>`;
+        </div>
+    `;
     document.body.appendChild(modal);
 
     document.getElementById('waitlistForm').onsubmit = async (e) => {
         e.preventDefault();
-        const btn = e.target.querySelector('button[type="submit"]');
-        btn.innerText = "Processing... ♡";
+        const btn = document.getElementById('w-submit-btn');
+        
+        // 1. Manually trigger the sparkly loader (Interception handles the hide later)
+        if (typeof StudioLoader !== 'undefined') StudioLoader.show("Adding to list... 🌸");
+        btn.innerText = "Processing...";
+        btn.disabled = true;
 
-        const { error } = await _supabase.from('waitlist').insert([{
-            name: document.getElementById('w-name').value,
-            email: document.getElementById('w-email').value,
-            notes: document.getElementById('w-notes').value,
-            service_requested: serviceId,
-            status: 'pending'
-        }]);
+        try {
+            const { error } = await _supabase.from('waitlist').insert([{
+                name: document.getElementById('w-name').value,
+                email: document.getElementById('w-email').value,
+                notes: document.getElementById('w-notes').value,
+                service_requested: serviceId,
+                status: 'pending'
+            }]);
 
-        if (!error) {
-            showMagicAlert("Added! 🌸", "We'll be in touch!", "success");
+            if (error) throw error;
+
+            // Success
+            showMagicAlert("Added! 🌸", "We'll notify you when slots open!", "success");
             modal.remove();
-        } else {
-            showMagicAlert("Error", "Could not join waitlist.", "error");
+
+        } catch (err) {
+            console.error("Waitlist error:", err);
+            showMagicAlert("Error", "Something went wrong. Please try again!", "error");
+            
+            // 2. RESET button if it fails
             btn.innerText = "Join List ✨";
+            btn.disabled = false;
+        } finally {
+            // 3. Ensure loader is told to hide (in case interceptor didn't catch the error state)
+            if (typeof StudioLoader !== 'undefined') StudioLoader.hide();
         }
     };
 }
