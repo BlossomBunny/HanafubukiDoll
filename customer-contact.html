@@ -695,7 +695,7 @@ async function startBooking() {
     }
 
     try {
-        // await Promise.all([syncFormWithStock(), checkServiceAvailability()]);  // keep commented until ready
+        // await Promise.all([syncFormWithStock(), checkServiceAvailability()]);  // still commented
 
         const entry = document.getElementById('entryChoice');
         if (entry) {
@@ -706,6 +706,9 @@ async function startBooking() {
         if (container) {
             container.classList.remove('hidden');
             container.style.display = 'block';
+            container.style.minHeight = '100vh';     // ← forces the wrapper to have height
+            container.style.height = 'auto';
+            container.style.overflow = 'visible';
         }
 
         showStep(1);
