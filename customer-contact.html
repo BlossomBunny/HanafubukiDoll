@@ -62,6 +62,39 @@
         50% { transform: translateY(10px); opacity: 1; }
     }
     .animate-float-arrow { animation: floatArrow 2s ease-in-out infinite; }
+        /* Washi Tape Accents */
+.tape {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-2deg);
+    width: 60px;
+    height: 20px;
+    background: rgba(251, 182, 206, 0.6); /* Soft Pink */
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.02);
+    z-index: 20;
+    pointer-events: none;
+    border-left: 2px dashed rgba(255,255,255,0.3);
+    border-right: 2px dashed rgba(255,255,255,0.3);
+}
+
+.tape-mint { background: rgba(52, 211, 153, 0.4); } /* Mint Green */
+
+/* Improved Polaroid Design */
+.polaroid {
+    position: relative;
+    background: white;
+    padding: 12px 12px 35px 12px;
+    border: 1px solid #fdf2f8;
+    box-shadow: 5px 10px 20px rgba(0,0,0,0.04);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.polaroid:hover {
+    transform: scale(1.1) rotate(0deg) !important;
+    z-index: 100 !important;
+    box-shadow: 0 20px 40px rgba(251, 182, 206, 0.4);
+}
 </style>
 </head>
     
@@ -92,43 +125,50 @@
         </p>
     </div>
 
-<section class="max-w-5xl mx-auto py-12 px-6">
-    <div class="flex flex-col md:flex-row items-center justify-center gap-10 relative">
+<section class="max-w-6xl mx-auto py-16 px-6 relative overflow-visible">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-12">
         
-        <div class="flex flex-row md:flex-col gap-4 items-center order-2 md:order-1">
-            <div class="polaroid w-32 md:w-40 -rotate-6">
-                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094727.png">
-                <p class="text-[8px] mt-2 text-pink-300 font-bold uppercase tracking-widest text-center">Process ♡</p>
+        <div class="flex flex-row md:flex-col gap-6 md:-space-y-12 items-center order-2 md:order-1">
+            <div class="polaroid w-36 md:w-44 -rotate-12 hover:z-50">
+                <div class="tape"></div>
+                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094727.png" alt="Process">
+                <p class="text-[9px] mt-3 text-pink-300 font-black uppercase tracking-widest text-center" style="font-family: 'Plus Jakarta Sans', sans-serif;">Early Stage ♡</p>
             </div>
-            <div class="polaroid w-40 md:w-48 rotate-3 z-10 -ml-8 md:ml-0 md:-mt-10">
-                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094952.png">
-                <p class="text-[8px] mt-2 text-pink-300 font-bold uppercase tracking-widest text-center">Inspiration ✨</p>
+            
+            <div class="polaroid w-44 md:w-52 rotate-6 z-10 md:ml-12">
+                <div class="tape tape-mint" style="transform: translateX(-50%) rotate(5deg);"></div>
+                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094952.png" alt="Inspiration">
+                <p class="text-[9px] mt-3 text-emerald-300 font-black uppercase tracking-widest text-center" style="font-family: 'Plus Jakarta Sans', sans-serif;">Color Palette ✨</p>
             </div>
         </div>
 
         <div class="order-1 md:order-2 z-20">
-            <div class="relative bg-white/60 backdrop-blur-sm p-12 rounded-[40px] border-2 border-dashed border-pink-200 shadow-inner text-center">
-                <p class="text-3xl md:text-4xl text-pink-500/80 leading-tight italic" style="font-family: 'Caveat', cursive;">
+            <div class="relative bg-white/50 backdrop-blur-md p-12 md:p-16 rounded-[50px] border-4 border-dashed border-pink-100 shadow-[inset_0_0_20px_rgba(251,182,206,0.1)] text-center">
+                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl">🎀</span>
+                <p class="text-4xl md:text-5xl text-rose-900/40 leading-tight italic" style="font-family: 'Caveat', cursive;">
                     Ready to start <br>your project? ✨
                 </p>
-                <div class="mt-4 text-3xl animate-float-arrow text-pink-300">↓</div>
+                <div class="mt-6 text-3xl animate-float-arrow text-pink-200">↓</div>
             </div>
         </div>
 
-        <div class="flex flex-row md:flex-col gap-4 items-center order-3">
-            <div class="polaroid w-36 md:w-44 rotate-6">
-                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094805.png">
-                <p class="text-[8px] mt-2 text-pink-300 font-bold uppercase tracking-widest text-center">Details 🌸</p>
+        <div class="flex flex-row md:flex-col gap-6 md:-space-y-12 items-center order-3">
+            <div class="polaroid w-40 md:w-48 -rotate-3 z-10 md:-ml-8">
+                <div class="tape" style="width: 80px; background: rgba(251, 182, 206, 0.4);"></div>
+                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094805.png" alt="Details">
+                <p class="text-[9px] mt-3 text-pink-300 font-black uppercase tracking-widest text-center" style="font-family: 'Plus Jakarta Sans', sans-serif;">Fine Details 🌸</p>
             </div>
-            <div class="polaroid w-32 md:w-40 -rotate-3 -ml-8 md:ml-0 md:-mt-8">
-                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094752.png">
-                <p class="text-[8px] mt-2 text-pink-300 font-bold uppercase tracking-widest text-center">Finished ♡</p>
+            
+            <div class="polaroid w-36 md:w-44 rotate-12">
+                <div class="tape tape-mint" style="transform: translateX(-50%) rotate(-8deg);"></div>
+                <img src="https://hxqxinfdeyprkuvvyqet.supabase.co/storage/v1/object/public/Site%20Images/Screenshot%202026-02-17%20094752.png" alt="Finished">
+                <p class="text-[9px] mt-3 text-emerald-300 font-black uppercase tracking-widest text-center" style="font-family: 'Plus Jakarta Sans', sans-serif;">Studio Final ♡</p>
             </div>
         </div>
 
     </div>
 </section>
-
+       
     <div class="space-y-6">
         <p class="text-[10px] uppercase tracking-[0.3em] text-pink-300 font-black">Select an option to begin</p>
         
