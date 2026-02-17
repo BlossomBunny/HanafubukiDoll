@@ -212,7 +212,7 @@
     </div>
 </div>
    
-<div id="commissionContainer" class="max-w-2xl mx-auto pb-20">
+<div id="commissionContainer" class="hidden max-w-2xl mx-auto pb-20">
   <div class="glass-card p-10 space-y-8 border-pink-100 min-h-[600px]">
     <div class="text-center">
       <h2 class="text-3xl font-black text-pink-400 tracking-tighter">New Request</h2>
@@ -566,13 +566,26 @@ async function startBooking() {
     const entry = document.getElementById('entryChoice');
     const container = document.getElementById('commissionContainer');
 
-    if (entry) entry.style.display = 'none';
-    if (container) {
-        container.style.display = 'block';
-        container.style.minHeight = '100vh';
+    if (entry) {
+        entry.style.display = 'none';
     }
-}
 
+    if (container) {
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        container.style.minHeight = '100vh';           // forces height
+        container.style.height = 'auto';
+        container.style.opacity = '1';
+        container.style.visibility = 'visible';
+
+        // Extra reflow tricks
+        container.offsetHeight;
+        document.body.offsetHeight;
+        window.dispatchEvent(new Event('resize'));
+    }
+
+    console.log("Toggle complete – container height:", container?.offsetHeight || 0);
+}
 </script>
 <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
         <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
