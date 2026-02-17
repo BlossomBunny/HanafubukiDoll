@@ -279,7 +279,7 @@ async function sendWaitlistEmail(id, email, name) {
     if (!confirm(`Send invite to ${name || email}?`)) return;
 
     try {
-        const priorityLink = "https://hanafubukidoll.co.uk/customer-priorityrequest.html"; // update if needed
+        const priorityLink = "https://blossombunny.github.io/HanafubukiDoll/customer-priorityrequest.html";
 
         const html = `
             <div style="font-family: 'Plus Jakarta Sans', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; color: #333;">
@@ -291,7 +291,7 @@ async function sendWaitlistEmail(id, email, name) {
                     <a href="${priorityLink}" style="color: #ec4899; font-weight: bold; text-decoration: underline;">
                         Submit Priority Request → ${priorityLink}
                     </a><br><br>
-                    Please fill it out as soon as possible so we can get started ♡<br><br>
+                    Please fill it out as soon as possible so we can review! ♡<br><br>
                     Thank you!<br>
                     Hanafubuki Doll Studio 🌸🐰
                 </p>
@@ -301,6 +301,7 @@ async function sendWaitlistEmail(id, email, name) {
             </div>
         `;
 
+        // Note: Ensure _supabase is your initialized Supabase client
         const { data, error } = await _supabase.functions.invoke('send-email', {
             body: {
                 to: email,
@@ -312,20 +313,21 @@ async function sendWaitlistEmail(id, email, name) {
 
         if (error) throw error;
 
-        // Update status to 'Emailed'
-        await _supabase.from('waitlist')
+        // Update status in database after successful email
+        const { error: updateError } = await _supabase.from('waitlist')
             .update({ status: 'Emailed' })
             .eq('id', id);
+        
+        if (updateError) throw updateError;
 
-        showMagicAlert("Sent!", `Invite sent to ${email}. Status updated to Emailed.`, "success");
-        renderWaitlist();
+        showMagicAlert("Sent!", `Invite sent to ${email}.`, "success");
+        if (typeof renderWaitlist === "function") renderWaitlist();
 
     } catch (err) {
         console.error("Email failed:", err);
-        showMagicAlert("Error", "Failed to send email or update status.", "error");
+        showMagicAlert("Error", err.message || "Failed to send email.", "error");
     }
 }
-
 async function deleteWaitlistEntry(id, name) {
     if (!confirm(`Delete waitlist entry for ${name || 'this user'}? This cannot be undone.`)) return;
 
