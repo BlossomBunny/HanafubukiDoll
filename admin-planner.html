@@ -122,6 +122,45 @@
     letter-spacing: -0.01em;
     opacity: 0.9;
 }
+
+        /* Die-Cut Sticker Effect */
+.sticker-style {
+    /* The white die-cut border */
+    border: 3px solid #ffffff !important; 
+    
+    /* Rounded but slightly irregular to look hand-cut */
+    border-radius: 12px !important; 
+    
+    /* The shadow makes it look like it has thickness (3D) */
+    box-shadow: 2px 3px 0px rgba(0,0,0,0.05), 
+                0 4px 6px rgba(0,0,0,0.1) !important;
+    
+    /* Slight tilt for the scrapbook feel */
+    transform: rotate(-1.5deg);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.sticker-style:hover {
+    transform: rotate(0deg) scale(1.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+}
+
+/* Make the event title (text inside sticker) stand out */
+.sticker-style .fc-event-title {
+    color: #4b5563 !important;
+    font-weight: 800 !important;
+    text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+}
+        .job-bar-style {
+    border: none !important;
+    /* Semi-transparent look like real washi tape */
+    opacity: 0.85; 
+    border-radius: 4px !important;
+    /* Adds a subtle tape texture */
+    background-image: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent);
+    background-size: 10px 10px;
+}
     </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
@@ -155,29 +194,46 @@
                     Active Session: 2026 ♡
                 </div>
             </div>
-            <div class="flex gap-2">
-                <button onclick="showEventModal(null)" class="bg-emerald-400 hover:bg-emerald-500 text-white w-8 h-8 rounded-full shadow-sm transition-transform hover:scale-110">＋</button>
-                <div class="w-3 h-3 bg-pink-300 rounded-full"></div>
-                <div class="w-3 h-3 bg-blue-300 rounded-full"></div>
-                <div class="w-3 h-3 bg-yellow-300 rounded-full"></div>
-            </div>
-        </div>
+           <div class="hidden md:flex items-center gap-6 bg-white/50 px-6 py-2 rounded-full border border-white">
+    <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-[#DBEAFE] rounded-full shadow-sm"></div>
+        <span class="text-[9px] font-black uppercase text-gray-500">Enquiry</span>
+    </div>
+    <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-[#D1FAE5] rounded-full shadow-sm"></div>
+        <span class="text-[9px] font-black uppercase text-gray-500">Working</span>
+    </div>
+    <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-[#FFB3BA] rounded-full shadow-sm"></div>
+        <span class="text-[9px] font-black uppercase text-gray-500">Holiday</span>
+    </div>
+    <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-[#FDA4AF] rounded-full shadow-sm"></div>
+        <span class="text-[9px] font-black uppercase text-gray-500">Urgent</span>
+    </div>
+</div>
 
-<div id="sticker-drawer" class="w-full md:w-20 bg-pink-50/50 border-r-4 border-white p-4 flex flex-row md:flex-col gap-6 items-center">
-    <div class="sticker-item cursor-grab active:cursor-grabbing text-3xl hover:scale-125 transition-transform" 
-         data-event='{"title": "Holiday", "type": "holiday"}'>🌸</div>
+<div id="sticker-drawer" class="w-full md:w-32 bg-pink-50/50 border-r-4 border-white p-4 flex flex-row md:flex-col gap-6 items-center">
+    <p class="text-[9px] font-black text-pink-300 uppercase tracking-widest hidden md:block mb-4">Studio Kit</p>
     
-    <div class="sticker-item cursor-grab active:cursor-grabbing text-3xl hover:scale-125 transition-transform" 
-         data-event='{"title": "Personal", "type": "personal"}'>✨</div>
+    <div class="sticker-item flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing group" data-event='{"title": "STUDIO CLOSED", "type": "holiday"}'>
+        <div class="text-3xl group-hover:scale-110 transition-transform">🌸</div>
+        <span class="text-[8px] font-black text-pink-400 uppercase text-center">Studio<br>Closed</span>
+    </div>
     
-    <div class="sticker-item cursor-grab active:cursor-grabbing text-3xl hover:scale-125 transition-transform" 
-         data-event='{"title": "Deadline", "type": "other"}'>⭐</div>
+    <div class="sticker-item flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing group" data-event='{"title": "Admin & Restock", "type": "personal"}'>
+        <div class="text-3xl group-hover:scale-110 transition-transform">✨</div>
+        <span class="text-[8px] font-black text-blue-400 uppercase text-center">Admin &<br>Restock</span>
+    </div>
     
-    <div class="sticker-item cursor-grab active:cursor-grabbing text-3xl hover:scale-125 transition-transform" 
-         data-event='{"title": "Supplies", "type": "other"}'>🎀</div>
+    <div class="sticker-item flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing group" data-event='{"title": " Special Events", "type": "other"}'>
+        <div class="text-3xl group-hover:scale-110 transition-transform">⭐</div>
+        <span class="text-[8px] font-black text-yellow-600 uppercase text-center">Special<br>Events</span>
+    </div>
 
-    <div id="trash-zone" class="mt-auto text-3xl p-2 rounded-2xl bg-white/20 border-2 border-dashed border-pink-200 opacity-50 hover:opacity-100 hover:bg-rose-50 hover:border-rose-300 transition-all cursor-default" title="Drag events here to delete">
-        🗑️
+    <div id="trash-zone" class="mt-auto flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/40 border-2 border-dashed border-pink-200 opacity-40 hover:opacity-100 hover:bg-rose-50 transition-all">
+        <span class="text-xl">🗑️</span>
+        <span class="text-[8px] font-black text-rose-400 uppercase">Delete</span>
     </div>
 </div>
 
@@ -289,9 +345,24 @@ async function deleteEvent() {
     );
 }
        
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if user is logged in first, then render
+    _supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+            document.getElementById('adminMain').classList.remove('auth-hidden');
+            renderPlanner(); 
+        } else {
+            window.location.href = 'admin-login.html';
+        }
+    });
+});
+
+
 async function renderPlanner() {
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
+
+    calendarEl.innerHTML = ''; 
 
     try {
         // 1. Fetch Data
@@ -320,7 +391,7 @@ async function renderPlanner() {
             firstDay: 1,
             editable: true,
             selectable: true,
-            droppable: true, // Allows stickers to be dropped
+            droppable: true,
             dayMaxEvents: 3,
             
             events: [
@@ -343,22 +414,25 @@ async function renderPlanner() {
                     start: event.start_date,
                     end: event.end_date,
                     allDay: true,
-                    backgroundColor: event.type === 'holiday' ? '#FFB3BA' : '#BAE1FF',
+                   backgroundColor: event.type === 'holiday' ? '#FFD1DC': (event.type === 'personal' ? '#B2E2F2' : '#FEE2E2'),
                     extendedProps: { type: 'event', details: event.details || '' }
                 }))
             ],
 
             // DROPPING A NEW STICKER
             drop: function(info) {
-                const droppedData = JSON.parse(info.draggedEl.getAttribute('data-event'));
-                // Trigger the modal with the date we dropped it on
-                showEventModal(null, {
-                    title: droppedData.title,
-                    start: info.date,
-                    extendedProps: { type: droppedData.type }
-                });
-            },
+    const droppedData = JSON.parse(info.draggedEl.getAttribute('data-event'));
+    
+    showEventModal(null, {
+        title: droppedData.title,
+        start: info.date,
+        extendedProps: { type: droppedData.type }
+    });
 
+    if (info.draggedEl.parentNode) {
+    
+    }
+},
             // DRAGGING OFF TO THE TRASH CAN
             eventDragStop: function(info) {
                 const trashEl = document.getElementById('trash-zone');
