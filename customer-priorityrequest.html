@@ -373,9 +373,49 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
         btn.innerText = "Submit Commission Request ✨";
     }
 });
+ 
+        function applyPriorityRestriction() {
+    const params = new URLSearchParams(window.location.search);
+    const requestedService = params.get('service'); // faceups, manicures, or eyes
+
+    const services = {
+        'faceups': 'faceups-section',
+        'manicures': 'manicures-section',
+        'eyes': 'eyes-section'
+    };
+
+    // 1. Hide all blocks by default
+    Object.values(services).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
+
+    // 2. Show only the specific one
+    if (services[requestedService]) {
+        const activeId = services[requestedService];
+        const activeEl = document.getElementById(activeId);
+        if (activeEl) activeEl.classList.remove('hidden');
         
-window.onload = syncFormWithStock;
-        
+        // Auto-set the dropdown so they don't have to
+        if (requestedService === 'faceups') {
+            document.getElementById('faceupBase').value = "Standard Face-Up";
+            toggleDollDetails(); 
+        } else if (requestedService === 'manicures') {
+            document.getElementById('maniBase').value = "Standard Manicure";
+        } else if (requestedService === 'eyes') {
+            document.getElementById('eyeBase').value = "Follow-Me Eyes";
+        }
+    } else {
+        // If link is broken/missing param, show all as fallback
+        Object.values(services).forEach(id => document.getElementById(id)?.classList.remove('hidden'));
+    }
+}
+
+// Update your window.onload to include the check
+window.onload = async () => {
+    await syncFormWithStock();
+    applyPriorityRestriction();
+};
     </script>
 <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
         <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
