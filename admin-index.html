@@ -252,22 +252,21 @@
                     <td class="p-4 text-xs text-gray-500 max-w-xs truncate" title="${entry.notes || ''}">
                         ${entry.notes || '<span class="italic opacity-30">No notes</span>'}
                     </td>
-                    <td class="p-4 text-right space-x-2">
+<td class="p-4 text-right space-x-2">
     ${!isEmailed ? `
         <button onclick="sendWaitlistEmail('${entry.id}', '${entry.email}', '${entry.name || 'Valued Client'}', '${entry.service_requested}')"
                 class="px-4 py-2 bg-pink-500 text-white rounded-xl font-black text-[10px] uppercase shadow-sm hover:bg-pink-600 transition-all">
             ✨ Email Invite
         </button>
-    ` : ''}
- </td>
-                        ` : `
-                            <span class="px-4 py-2 text-[10px] font-black uppercase text-gray-300 italic">Emailed</span>
-                        `}
-                        <button onclick="deleteWaitlistEntry('${entry.id}', '${entry.name || 'Client'}')"
-                                class="inline-block p-2 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100">
-                            🗑️
-                        </button>
-                    </td>
+    ` : `
+        <span class="px-4 py-2 text-[10px] font-black uppercase text-gray-300 italic">Emailed</span>
+    `}
+
+    <button onclick="deleteWaitlistEntry('${entry.id}', '${entry.name || 'Client'}')"
+            class="inline-block p-2 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100">
+        🗑️
+    </button>
+</td>
                 </tr>`;
         }).join('') || '<tr><td colspan="6" class="p-10 text-center text-gray-300 italic">The waitlist is empty! ♡</td></tr>';
     } catch (err) {
@@ -353,9 +352,6 @@ async function sendWaitlistEmail(id, email, name, serviceRequested) {
     </body>
     </html>
 `;
-
-        // 3. INVOKE the function (Make sure to use 'hyper-handler')
-        // Using the variable 'htmlContent' we just defined
         const { data, error } = await _supabase.functions.invoke('hyper-handler', {
             body: {
                 to: email,
@@ -383,7 +379,6 @@ async function sendWaitlistEmail(id, email, name, serviceRequested) {
 
     } catch (err) {
         console.error("Email failed:", err);
-        // This will now show the actual error instead of just 'ReferenceError'
         showMagicAlert("Error", err.message || "Failed to send email.", "error");
     }
 }
@@ -489,7 +484,6 @@ async function updateBanner() {
     }
 }
 
-// Helper to handle the button's "sliding" look
 function updateBannerUI(isLive) {
     const btn = document.getElementById('bannerToggleBtn');
     const label = document.getElementById('bannerStatusLabel');
