@@ -253,11 +253,13 @@
                         ${entry.notes || '<span class="italic opacity-30">No notes</span>'}
                     </td>
                     <td class="p-4 text-right space-x-2">
-                        ${!isEmailed ? `
-                            <button onclick="sendWaitlistEmail('${entry.id}', '${entry.email}', '${entry.name || 'Valued Client'}')"
-                                    class="px-4 py-2 bg-pink-500 text-white rounded-xl font-black text-[10px] uppercase shadow-sm hover:bg-pink-600 transition-all">
-                                ✨ Email Invite
-                            </button>
+    ${!isEmailed ? `
+        <button onclick="sendWaitlistEmail('${entry.id}', '${entry.email}', '${entry.name || 'Valued Client'}', '${entry.service_requested}')"
+                class="px-4 py-2 bg-pink-500 text-white rounded-xl font-black text-[10px] uppercase shadow-sm hover:bg-pink-600 transition-all">
+            ✨ Email Invite
+        </button>
+    ` : ''}
+ </td>
                         ` : `
                             <span class="px-4 py-2 text-[10px] font-black uppercase text-gray-300 italic">Emailed</span>
                         `}
@@ -275,14 +277,20 @@
 }
         
         
-async function sendWaitlistEmail(id, email, name) {
-    // 1. Confirmation check
+async function sendWaitlistEmail(id, email, name, serviceRequested) {
     if (!confirm(`Send invite to ${name || email}?`)) return;
 
     try {
-        const priorityLink = "https://blossombunny.github.io/HanafubukiDoll/customer-priorityrequest.html";
-
-        // 2. DEFINE the html variable first
+        const serviceMap = {
+            'Faceups': 'faceups',
+            'Manicures': 'manicures',
+            'Follow-Me Eyes': 'eyes'
+        };
+        
+        const serviceKey = serviceMap[serviceRequested] || 'faceups';
+        
+        const priorityLink = `https://blossombunny.github.io/HanafubukiDoll/customer-priorityrequest.html?service=${serviceKey}`;
+        
         const htmlContent = `
     <!DOCTYPE html>
     <html>
