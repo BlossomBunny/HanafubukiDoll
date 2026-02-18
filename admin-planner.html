@@ -408,16 +408,23 @@ async function renderPlanner() {
                         extendedProps: { type: 'job', status: job.status }
                     };
                 }),
-                ...events.map(event => ({
-                    id: event.id,
-                    title: `${event.type === 'holiday' ? '🌸' : '✨'} ${event.title}`,
-                    start: event.start_date,
-                    end: event.end_date,
-                    allDay: true,
-                   backgroundColor: event.type === 'holiday' ? '#FFD1DC': (event.type === 'personal' ? '#B2E2F2' : '#FEE2E2'),
-                    extendedProps: { type: 'event', details: event.details || '' }
-                }))
-            ],
+               ...events.map(event => {
+    const icon = event.type === 'holiday' ? '🌸' : (event.type === 'personal' ? '✨' : '⭐');
+    
+    return {
+        id: event.id,
+        title: `${icon} ${event.title}`,
+        start: event.start_date,
+        end: event.end_date,
+        allDay: true,
+        backgroundColor: event.type === 'holiday' ? '#FFD1DC' : (event.type === 'personal' ? '#B2E2F2' : '#FEF3C7'),
+        className: 'sticker-style', 
+        extendedProps: { 
+            type: 'event', 
+            details: event.details || '' 
+        }
+    };
+})
 
             // DROPPING A NEW STICKER
             drop: function(info) {
