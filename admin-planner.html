@@ -36,6 +36,33 @@
         }
         .fc-col-header-cell-cushion { @apply text-[10px] font-black uppercase tracking-widest text-pink-300 !important; }
         .fc-day-today { @apply bg-emerald-50/20 !important; }
+/* Make stickers larger and more "chunky" */
+.fc-event.sticker-style {
+    @apply my-1 mx-1 !important;
+    padding: 8px 10px !important; /* Larger footprint */
+    font-size: 11px !important;    /* Bigger text */
+    border-radius: 12px !important;
+    cursor: pointer;
+    border-left-width: 6px !important; /* Thicker ribbon */
+}
+
+/* Force the Header Buttons to be Pink/White (No more blue!) */
+.fc .fc-button-primary {
+    @apply bg-white border-2 border-pink-100 text-pink-400 font-black rounded-full px-6 py-2 transition-all !important;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 10px;
+}
+
+.fc .fc-button-primary:hover {
+    @apply bg-pink-50 border-pink-200 text-pink-600 !important;
+}
+
+.fc .fc-button-primary:not(:disabled):active, 
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+    @apply bg-pink-200 border-pink-300 text-pink-700 !important;
+}
+    
 
         /* --- 3. WASHI TAPE (COMMISSIONS) --- */
         .job-bar-style {
