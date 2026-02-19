@@ -67,12 +67,13 @@
                             <button onclick="updateBanner()" class="px-6 bg-pink-500 text-white rounded-2xl text-[10px] font-black uppercase hover:bg-pink-600 transition-all">Update ♡</button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4 bg-white p-3 rounded-2xl border border-pink-50 shadow-sm">
-                        <span id="bannerStatusLabel" class="text-[10px] font-black uppercase text-gray-400">Banner Off</span>
-                        <button id="bannerToggleBtn" onclick="toggleBanner()" class="w-12 h-6 bg-gray-200 rounded-full relative transition-all">
-                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all"></div>
-                        </button>
-                    </div>
+                <div class="flex items-center gap-4 bg-white p-3 rounded-2xl border border-pink-50 shadow-sm">
+    <span id="bannerStatusLabel" class="text-[10px] font-black uppercase text-gray-400 transition-colors duration-300">Banner Off</span>
+    <button id="bannerToggleBtn" onclick="toggleBanner()" 
+            class="w-12 h-6 bg-gray-200 rounded-full relative transition-colors duration-300 outline-none">
+        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 ease-in-out transform translate-x-0"></div>
+    </button>
+</div>
                 </div>
             </section>
         </div>
@@ -526,11 +527,41 @@ async function deleteWaitlistEntry(id, name) {
             renderSummary();
         }
 
-        // --- BANNER MANAGEMENT FUNCTIONS ---
+ // --- BANNER MANAGEMENT FUNCTIONS ---
 
+/**
+ * 1. Synchronize UI on Page Load
+ * Fetches the real-time status and text from Supabase
+ */
+async function syncBannerUI() {
+    try {
+        const { data, error } = await _supabase
+            .from('studio_settings')
+            .select('is_live, banner_text')
+            .eq('id', 'Banner')
+            .single();
+
+        if (error) throw error;
+
+        if (data) {
+            const msgInput = document.getElementById('bannerMsgInput');
+            if (msgInput) msgInput.value = data.banner_text || "";
+            
+            // Set the visual state of the toggle
+            updateBannerUI(data.is_live);
+        }
+    } catch (err) {
+        console.error("Initial banner sync failed:", err);
+    }
+}
+
+/**
+ * 2. Toggle Status (Live/Off)
+ * Flips the boolean in the database and updates UI
+ */
 async function toggleBanner() {
     try {
-        // 1. Fetch current status
+        // Get current state
         const { data, error } = await _supabase
             .from('studio_settings')
             .select('is_live')
@@ -541,7 +572,7 @@ async function toggleBanner() {
 
         const newStatus = !data.is_live;
 
-        // 2. Update database
+        // Update database
         const { error: updateError } = await _supabase
             .from('studio_settings')
             .update({ is_live: newStatus })
@@ -549,49 +580,48 @@ async function toggleBanner() {
 
         if (updateError) throw updateError;
 
-        // 3. Update the UI
+        // Update UI immediately
         updateBannerUI(newStatus);
         
+        if (typeof renderSummary === 'function') renderSummary();
+
     } catch (err) {
         console.error("Banner toggle failed:", err);
-        showMagicAlert("Error", "Could not toggle banner! ☁️", "error");
+        showMagicAlert("Error", "Could not toggle banner. ☁️", "error");
     }
 }
 
+/**
+ * 3. Update Banner Text
+ * Saves the new message to Supabase
+ */
 async function updateBanner() {
     const msgInput = document.getElementById('bannerMsgInput');
     const newText = msgInput?.value.trim();
 
     if (!newText) {
-        return showMagicAlert(
-            "Empty Message", 
-            "Please enter a message for the banner! ♡", 
-            "error"
-        );
+        return showMagicAlert("Empty Message", "Please enter a message! ♡", "error");
     }
 
-    const { error } = await _supabase
-        .from('studio_settings')
-        .update({ banner_text: newText })
-        .eq('id', 'Banner');
+    try {
+        const { error } = await _supabase
+            .from('studio_settings')
+            .update({ banner_text: newText })
+            .eq('id', 'Banner');
 
-    if (error) {
-        showMagicAlert(
-            "Update Failed", 
-            "We couldn't update the banner right now. ☁️", 
-            "error"
-        );
-    } else {
-        showMagicAlert(
-            "Banner Updated", 
-            "Your new announcement is now live for all customers! ✨", 
-            "success"
-        );
-        // Optional: clear the input after success
-        if (msgInput) msgInput.value = "";
+        if (error) throw error;
+
+        showMagicAlert("Banner Updated", "Your new announcement is live! ✨", "success");
+    } catch (err) {
+        console.error("Update failed:", err);
+        showMagicAlert("Update Failed", "Could not save text. ☁️", "error");
     }
 }
 
+/**
+ * 4. UI Visual Engine
+ * Handles the CSS transitions and labels
+ */
 function updateBannerUI(isLive) {
     const btn = document.getElementById('bannerToggleBtn');
     const label = document.getElementById('bannerStatusLabel');
@@ -600,42 +630,24 @@ function updateBannerUI(isLive) {
     if (!btn || !label || !dot) return;
 
     if (isLive) {
-        // Toggle Background
-        btn.classList.remove('bg-gray-200');
-        btn.classList.add('bg-pink-500');
-        // Slide the dot
-        dot.classList.remove('left-1');
-        dot.classList.add('left-7'); // Tailwind left-7 is roughly 28px
-        // Label Style
+        btn.classList.replace('bg-gray-200', 'bg-pink-500');
+        // We use translate for a smoother "slide" effect
+        dot.style.transform = "translateX(24px)"; 
         label.innerText = "Banner Live ✨";
-        label.classList.remove('text-gray-400');
-        label.classList.add('text-pink-500');
+        label.classList.replace('text-gray-400', 'text-pink-500');
     } else {
-        // Toggle Background
+        btn.classList.replace('bg-gray-200', 'bg-gray-200'); // Safety check
         btn.classList.remove('bg-pink-500');
         btn.classList.add('bg-gray-200');
-        // Slide the dot
-        dot.classList.remove('left-7');
-        dot.classList.add('left-1');
-        // Label Style
+        
+        dot.style.transform = "translateX(0px)";
         label.innerText = "Banner Off";
-        label.classList.remove('text-pink-500');
-        label.classList.add('text-gray-400');
+        label.classList.replace('text-pink-500', 'text-gray-400');
     }
 }
 
-async function syncBannerUI() {
-    const { data } = await _supabase.from('studio_settings').select('*').eq('id', 'Banner').single();
-    if (data) {
-        document.getElementById('bannerMsgInput').value = data.banner_text || "";
-        updateBannerUI(data.is_live);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-    syncBannerUI(); 
-});
-
+// Event Listeners
+document.addEventListener('DOMContentLoaded', syncBannerUI);
     </script>
 
       <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
