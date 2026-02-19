@@ -30,133 +30,90 @@
         .fc-theme-standard td, .fc-theme-standard th { @apply border-pink-50 !important; }
         .fc-daygrid-day-frame { @apply m-1 rounded-2xl border-2 border-pink-50/50 bg-white transition-all duration-300 !important; min-height: 100px !important; }
         
-        /* Date Circles & Header */
         .fc-daygrid-day-number {
             @apply bg-pink-100 text-pink-500 font-black text-[10px] w-7 h-7 rounded-full flex items-center justify-center m-2 transition-transform hover:scale-110 !important;
         }
         .fc-col-header-cell-cushion { @apply text-[10px] font-black uppercase tracking-widest text-pink-300 !important; }
         .fc-day-today { @apply bg-emerald-50/20 !important; }
-/* Make stickers larger and more "chunky" */
-.fc-event.sticker-style {
-    @apply my-1 mx-1 !important;
-    padding: 8px 10px !important; /* Larger footprint */
-    font-size: 11px !important;    /* Bigger text */
-    border-radius: 12px !important;
-    cursor: pointer;
-    border-left-width: 6px !important; /* Thicker ribbon */
-}
+        .fc-daygrid-day-events { position: relative !important; }
 
-/* Force the Header Buttons to be Pink/White (No more blue!) */
-.fc .fc-button-primary {
-    @apply bg-white border-2 border-pink-100 text-pink-400 font-black rounded-full px-6 py-2 transition-all !important;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-size: 10px;
-}
+        /* --- 3. HEADER BUTTONS (PINK THEME) --- */
+        .fc .fc-button-primary {
+            @apply bg-white border-2 border-pink-100 text-pink-400 font-black rounded-full px-6 py-2 transition-all !important;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 10px;
+        }
+        .fc .fc-button-primary:hover { @apply bg-pink-50 border-pink-200 text-pink-600 !important; }
+        .fc .fc-button-primary:not(:disabled).fc-button-active { @apply bg-pink-500 border-pink-500 text-white !important; }
 
-.fc .fc-button-primary:hover {
-    @apply bg-pink-50 border-pink-200 text-pink-600 !important;
-}
-
-.fc .fc-button-primary:not(:disabled):active, 
-.fc .fc-button-primary:not(:disabled).fc-button-active {
-    @apply bg-pink-200 border-pink-300 text-pink-700 !important;
-}
-    
-
-        /* --- 3. WASHI TAPE (COMMISSIONS) --- */
-        .job-bar-style {
-            @apply border-none shadow-sm opacity-90 !important;
-            border-radius: 4px !important;
-            background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.2) 5px, transparent 5px, transparent 10px);
-            padding: 4px 10px !important;
+        /* --- 4. WASHI TAPE BARS (FOR RANGES / JOBS) --- */
+        .job-bar-style, .range-bar-style {
+            @apply border-none shadow-sm my-1 !important;
+            border-radius: 20px !important;
+            padding: 4px 12px !important;
             font-weight: 800 !important;
-            font-size: 9px !important;
-            transition: transform 0.2s ease;
-        }
-
-        /* --- 4. STICKER SYSTEM (THE COLOR FIX) --- */
-        /* This base class ensures the "Ribbon" look for all types */
-        .sticker-style {
-            @apply border-none shadow-sm !important;
-            border-left-width: 5px !important;
-            border-radius: 8px !important;
-            padding: 4px 8px !important;
-            font-weight: 900 !important;
             font-size: 10px !important;
-            margin-bottom: 2px !important;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+            position: relative !important;
+            z-index: 1 !important;
+            background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.2) 5px, transparent 5px, transparent 10px);
         }
-        .sticker-style:hover { transform: scale(1.05) !important; z-index: 10; }
+        /* Specific Bar Colors */
+        .type-holiday { @apply bg-pink-100 text-pink-600 !important; }
+        .type-admin   { @apply bg-emerald-100 text-emerald-700 !important; }
+        .type-birthday{ @apply bg-amber-100 text-amber-700 !important; }
 
-        /* Color Overrides for specific types */
-        .sticker-holiday { background-color: #fdf2f8 !important; color: #db2777 !important; border-left-color: #f472b6 !important; }
-        .sticker-admin   { background-color: #f0fdf4 !important; color: #059669 !important; border-left-color: #34d399 !important; }
-        .sticker-birthday{ background-color: #fffbeb !important; color: #b45309 !important; border-left-color: #fbbf24 !important; }
-        .sticker-stuff   { background-color: #faf5ff !important; color: #7e22ce !important; border-left-color: #a855f7 !important; }
+        /* --- 5. WIGGLY STICKERS (SINGLE DAY EMOJIS) --- */
+        .fc-event.sticker-style {
+            @apply bg-transparent border-none shadow-none !important;
+            position: absolute !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 10 !important;
+            display: flex !important;
+            justify-content: center !important;
+            overflow: visible !important;
+        }
 
-        /* --- 5. ANIMATIONS --- */
+        .sticker-style .fc-event-time, .sticker-style .fc-event-dot { display: none !important; }
+
+        .fc-event.sticker-style .fc-event-main {
+            font-size: 38px !important;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));
+            cursor: pointer;
+            display: inline-block;
+            animation: sticker-wiggle 3s ease-in-out infinite;
+            transform-origin: center;
+            margin-top: -5px; /* Floats it slightly over the bars */
+        }
+
+        /* Shift second overlapping sticker down */
+        .sticker-style + .sticker-style .fc-event-main { margin-top: 20px; }
+
+        /* Hover States */
+        .fc-event.sticker-style:hover .fc-event-main {
+            animation: none;
+            transform: scale(1.3) rotate(10deg) !important;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+            z-index: 100;
+        }
+
+        /* --- 6. ANIMATIONS --- */
+        @keyframes sticker-wiggle {
+            0%, 100% { transform: rotate(-3deg) translateY(0); }
+            50% { transform: rotate(3deg) translateY(-3px); }
+        }
+        
         @keyframes pulse-custom { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0; } }
         .animate-pulse-custom { animation: pulse-custom 2s infinite; }
+        
         .bounce-bunny { display: inline-block; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        /* Varied wiggle speeds for organic feel */
+        .fc-event.sticker-style:nth-child(even) .fc-event-main { animation-duration: 2.5s; animation-delay: 0.5s; }
+        .fc-event.sticker-style:nth-child(3n) .fc-event-main { animation-duration: 4s; animation-delay: 0.2s; }
     }
-
-.sticker-style .fc-event-time, 
-.sticker-style .fc-event-dot {
-    display: none !important;
-}
-
-
-.fc-event.sticker-style {
-    @apply bg-transparent border-none shadow-none !important;
-    display: flex !important;
-    justify-content: center !important;
-    overflow: visible !important;
-}
-
-.fc-event.sticker-style .fc-event-main {
-    font-size: 32px !important; /* Adjust size to match your UI */
-    filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));
-    cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.fc-event.sticker-style:hover .fc-event-main {
-    transform: scale(1.2) rotate(5deg);
-}
-
-@keyframes sticker-wiggle {
-    0% { transform: rotate(0deg); }
-    25% { transform: rotate(3deg); }
-    50% { transform: rotate(0deg); }
-    75% { transform: rotate(-3deg); }
-    100% { transform: rotate(0deg); }
-}
-
-
-.fc-event.sticker-style .fc-event-main {
-    display: inline-block;
-    animation: sticker-wiggle 3s ease-in-out infinite;
-    transform-origin: center;
-}
-
-
-.fc-event.sticker-style:hover .fc-event-main {
-    animation: none; /* Stop the gentle wiggle */
-    transform: scale(1.3) rotate(10deg) !important;
-    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
-}
-
-.fc-event.sticker-style:nth-child(even) .fc-event-main {
-    animation-duration: 2.5s;
-    animation-delay: 0.5s;
-}
-
-.fc-event.sticker-style:nth-child(3n) .fc-event-main {
-    animation-duration: 4s;
-    animation-delay: 0.2s;
-}
     </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
@@ -376,25 +333,26 @@ events: [
     
     // --- MAP STICKERS (Personal/Holiday/Admin) ---
    ...(events || []).map(e => {
-
-    const emoji = e.title.split(' ')[0]; 
+    const isRange = e.start_date !== e.end_date;
+    const emoji = e.title.split(' ')[0];
 
     return {
         id: e.id,
-        title: emoji, 
+        title: isRange ? e.title : emoji,
         start: e.start_date,
         end: e.end_date || e.start_date,
-        allDay: true, // <--- THIS REMOVES THE '12a'
-        display: 'block',
-        className: ['sticker-style', `sticker-${e.type || 'stuff'}`],
-        extendedProps: { 
-            fullTitle: e.title, 
-            type: e.type, 
-            details: e.details 
-        }
+        allDay: true,
+        backgroundColor: 'transparent', // Forces transparency
+        borderColor: 'transparent',
+        className: [
+            isRange ? 'range-bar-style' : 'sticker-style', 
+            `type-${e.type || 'stuff'}`
+        ],
+        extendedProps: { type: e.type, details: e.details }
     };
 })
     ],
+           
     // 2. SAVE NEW STICKERS (This was the missing piece!)
     eventReceive: async function(info) {
     const type = info.event.extendedProps.type || 'stuff';
