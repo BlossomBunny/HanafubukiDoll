@@ -204,7 +204,7 @@
 
        // 5. Priorities (Smart Sorting: Oldest > Paid Status > Urgent)
 const priorities = jobs
-    .filter(j => !['Shipped', 'Enquiry', 'Quote'].includes(j.status)) // Exclude completed/unconfirmed
+    .filter(j => !['Complete', 'Shipped', 'Enquiry', 'Quote'].includes(j.status)) // Exclude completed/unconfirmed
     .map(j => {
         let score = 0;
         
@@ -220,28 +220,48 @@ const priorities = jobs
     .sort((a, b) => b.pScore - a.pScore) 
     .slice(0, 3); 
 
-document.getElementById('priority-list').innerHTML = priorities.map(j => `
-    <div class="flex flex-col p-3 bg-white rounded-xl border border-pink-50 shadow-sm gap-2 relative overflow-hidden">
-        ${j.is_urgent ? '<div class="absolute top-0 right-0 px-2 py-0.5 bg-rose-400 text-white text-[7px] font-black uppercase">Urgent</div>' : ''}
-        
-        <div class="flex justify-between items-center">
-            <span class="font-black text-[11px] text-gray-700 uppercase">${j.social_handle || 'Client'}</span>
-            <span class="text-[8px] px-2 py-0.5 bg-pink-100 text-pink-500 rounded-full font-black uppercase">
-                ${j.status}
-            </span>
-        </div>
+document.getElementById('priority-list').innerHTML = priorities.map(j => {
+    // 1. Determine the correct label and color for the payment indicator
+    let payLabel = j.payment_status || 'Unpaid';
+    let dotColor = 'bg-amber-400'; // Default for Unpaid/Partial
 
-        <div class="flex items-center gap-3">
-            <div class="flex items-center gap-1">
-                <div class="w-1.5 h-1.5 rounded-full ${j.payment_status === 'Paid' ? 'bg-emerald-400' : 'bg-amber-400'}"></div>
-                <span class="text-[8px] font-bold uppercase text-gray-500">${j.payment_status || 'Unpaid'}</span>
+    if (j.payment_method === 'Trade') {
+        payLabel = 'Trade 🤝';
+        dotColor = 'bg-blue-400';
+    } else if (j.payment_method === 'Gift') {
+        payLabel = 'Gift 🎀';
+        dotColor = 'bg-purple-400';
+    } else if (j.payment_status === 'Paid') {
+        payLabel = 'Paid ✨';
+        dotColor = 'bg-emerald-400';
+    } else if (j.payment_method === 'Layaway' && j.payment_status !== 'Paid') {
+        payLabel = 'Layaway ⏳';
+        dotColor = 'bg-amber-400';
+    }
+
+    return `
+        <div class="flex flex-col p-3 bg-white rounded-xl border border-pink-50 shadow-sm gap-2 relative overflow-hidden">
+            ${j.is_urgent ? '<div class="absolute top-0 right-0 px-2 py-0.5 bg-rose-400 text-white text-[7px] font-black uppercase">Urgent</div>' : ''}
+            
+            <div class="flex justify-between items-center">
+                <span class="font-black text-[11px] text-gray-700 uppercase">${j.social_handle || 'Client'}</span>
+                <span class="text-[8px] px-2 py-0.5 bg-pink-100 text-pink-500 rounded-full font-black uppercase">
+                    ${j.status}
+                </span>
             </div>
-            <span class="text-[8px] font-bold uppercase text-pink-300 italic">
-                ${j.daysInQueue} Days Waiting
-            </span>
+
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1">
+                    <div class="w-1.5 h-1.5 rounded-full ${dotColor}"></div>
+                    <span class="text-[8px] font-bold uppercase text-gray-500">${payLabel}</span>
+                </div>
+                <span class="text-[8px] font-bold uppercase text-pink-300 italic">
+                    ${j.daysInQueue} Days Waiting
+                </span>
+            </div>
         </div>
-    </div>
-`).join('') || '<p class="text-gray-400 text-xs italic">All clear! Go take a break ♡</p>';
+    `;
+}).join('') || '<p class="text-gray-400 text-xs italic">All clear! Go take a break ♡</p>';
         
         // 6. Quick Toggles (Using the fetched settings)
         if (settings) {
