@@ -287,37 +287,6 @@ document.getElementById('priority-list').innerHTML = priorities.map(j => {
         console.error("Summary load failed:", err); 
     }
 }
-        // Inside renderSummary()
-const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const last6Months = [];
-const enquiryData = [];
-const bookingData = [];
-
-// Get the last 6 months (including the current one)
-for (let i = 5; i >= 0; i--) {
-    const d = new Date();
-    d.setMonth(d.getMonth() - i);
-    const monthKey = `${d.getFullYear()}-${d.getMonth()}`; // Unique key for grouping
-    last6Months.push({
-        name: monthNames[d.getMonth()],
-        key: monthKey
-    });
-}
-
-// Group your jobs
-last6Months.forEach(month => {
-    const jobsInMonth = jobs.filter(j => {
-        const jobDate = new Date(j.created_at);
-        return jobDate.getFullYear() === parseInt(month.key.split('-')[0]) && 
-               jobDate.getMonth() === parseInt(month.key.split('-')[1]);
-    });
-
-    enquiryData.push(jobsInMonth.length); // Total Enquiries
-    bookingData.push(jobsInMonth.filter(j => j.payment_status === 'Paid' || j.payment_method === 'Layaway').length); // Successful conversions
-});
-
-// Now call the chart update
-updateTrendChart(last6Months.map(m => m.name), enquiryData, bookingData);
 
         async function renderWaitlist() {
     const countEl = document.getElementById('waitlist-count');
