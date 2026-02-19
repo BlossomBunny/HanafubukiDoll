@@ -126,7 +126,14 @@
             @apply bg-rose-100 border-rose-300 opacity-100 scale-105 !important;
         }
     }
-</style>
+<style type="text/tailwindcss">
+    @layer components {
+        /* Add a soft "Today" ribbon to the top right of the current day */
+        .fc-day-today .fc-daygrid-day-top::after {
+            content: 'TODAY';
+            @apply absolute top-2 right-10 text-[7px] font-black text-emerald-400 tracking-tighter;
+        }
+    }
 </style>
     </style>
 </head>
@@ -151,7 +158,7 @@
 
 <main id="adminMain" class="max-w-7xl mx-auto p-6 md:p-10 flex flex-col lg:flex-row gap-8">
     
-    <div class="bg-white rounded-[2.5rem] p-6 border border-pink-100 shadow-sm sticky top-24">
+    <div id="stickerDrawer" class="bg-white rounded-[2.5rem] p-6 border border-pink-100 shadow-sm sticky top-24">
         <h3 class="text-[10px] font-black text-pink-400 uppercase tracking-[0.2em] mb-6 text-center">Studio Kit</h3>
         
         <div class="flex flex-row lg:flex-col gap-6 justify-center items-center">
@@ -171,7 +178,6 @@
             </div>
         </div>
     </div>
-</aside>
 
     <section class="flex-1">
         <div class="flex justify-between items-end mb-8 px-4">
@@ -201,7 +207,9 @@
             </div>
             <div class="flex gap-3 pt-4">
                 <button onclick="closeModal()" class="flex-1 py-4 text-gray-400 font-black text-[10px] uppercase tracking-widest">Cancel</button>
-                <button onclick="updateEventRecord()" class="flex-[2] bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all">Save Changes ♡</button>
+               <button onclick="updateEventRecord()" class="flex-[2] bg-pink-500 ...">
+    Save Changes ♡
+</button>
             </div>
         </div>
     </div>
@@ -244,7 +252,9 @@ let calendar;
 let currentEditingId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Initialize Draggables first
+    console.log("🌸 Initializing Planner...");
+    
+    // 1. Initialize Draggables with Safety Check
     initStickers();
     
     // 2. Render the Calendar
@@ -254,124 +264,207 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const jobToOpen = urlParams.get('open');
     if (jobToOpen) {
-        handleWorkbenchRedirect(jobToOpen);
+        // Simple check: if we are on workbench, handle redirect; 
+        // otherwise, the 'Open in Workbench' button handles it via href.
+        console.log("Job to open found:", jobToOpen);
     }
 });
 
 function initStickers() {
     const containerEl = document.getElementById('stickerDrawer');
-    // This allows the items inside the drawer to be dragged onto the calendar
+    
+    // If the ID isn't found, don't crash the whole script
+    if (!containerEl) {
+        console.error("❌ Sticker Drawer (id='stickerDrawer') not found in HTML!");
+        return;
+    }
+
     new FullCalendar.Draggable(containerEl, {
         itemSelector: '.sticker-item',
         eventData: function(eventEl) {
+            // This pulls the data-event attribute from your HTML items
             return JSON.parse(eventEl.dataset.event);
         }
     });
+    console.log("✅ Stickers Initialized");
 }
 
 async function renderPlanner() {
     const calendarEl = document.getElementById('calendar');
+    if (!calendarEl) return;
     
-    // Fetch Data from Supabase
-    const [{ data: jobs }, { data: events }] = await Promise.all([
-        _supabase.from('commissions').select('*').not('arrived_at', 'is', null),
-        _supabase.from('events').select('*')
-    ]);
+    try {
+        // Fetch Data from Supabase
+        const [{ data: jobs }, { data: events }] = await Promise.all([
+            _supabase.from('commissions').select('*').not('arrived_at', 'is', null),
+            _supabase.from('events').select('*')
+        ]);
 
-    calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
-        editable: true,
-        droppable: true,
-        fixedWeekCount: false, // Makes the calendar height adjust to the month
-        
-        events: [
-            ...jobs.map(j => ({
-                id: `job-${j.id}`,
-                title: `🐰 ${j.customer_name}`,
-                start: j.arrived_at,
-                className: 'job-bar-style',
-                backgroundColor: '#f0f9ff', 
-                textColor: '#0369a1',
-                extendedProps: { type: 'commission', social: j.social_handle, sculpt: j.doll_sculpt, status: j.status, payment: j.payment_status }
-            })),
-            ...events.map(e => ({
-                id: e.id,
-                title: e.title,
-                start: e.start_date,
-                className: 'sticker-style',
-                backgroundColor: e.type === 'holiday' ? '#fdf2f8' : '#f0fdf4',
-                textColor: e.type === 'holiday' ? '#db2777' : '#059669',
-                extendedProps: { type: 'sticker', details: e.details }
-            }))
-        ],
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+            editable: true,
+            droppable: true,
+            fixedWeekCount: false,
+            
+            events: [
+                ...(jobs || []).map(j => ({
+                    id: `job-${j.id}`,
+                    title: `🐰 ${j.customer_name}`,
+                    start: j.arrived_at,
+                    className: 'job-bar-style',
+                    backgroundColor: '#f0f9ff', 
+                    textColor: '#0369a1',
+                    extendedProps: { type: 'commission', social: j.social_handle, sculpt: j.doll_sculpt, status: j.status, payment: j.payment_status }
+                })),
+                ...(events || []).map(e => ({
+                    id: e.id,
+                    title: e.title,
+                    start: e.start_date,
+                    className: 'sticker-style',
+                    backgroundColor: e.type === 'holiday' ? '#fdf2f8' : '#f0fdf4',
+                    textColor: e.type === 'holiday' ? '#db2777' : '#059669',
+                    extendedProps: { type: 'sticker', details: e.details }
+                }))
+            ],
+// 1. SAVE NEW STICKERS WHEN DROPPED
+        eventReceive: async function(info) {
+            const type = info.event.extendedProps.type || 'personal';
+            const title = info.event.title;
+            const startDate = info.event.startStr;
 
-        eventClick: function(info) {
-            const props = info.event.extendedProps;
-            if (props.type === 'commission') {
-                const uuid = info.event.id.replace('job-', '');
-                document.getElementById('jobCustomerName').innerText = info.event.title;
-                document.getElementById('jobSocial').innerText = props.social || '@hidden';
-                document.getElementById('jobSculpt').innerText = props.sculpt || 'Not Specified';
-                document.getElementById('jobStatusBadge').innerText = props.status;
-                document.getElementById('jobArrived').innerText = info.event.start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                document.getElementById('jobPayment').innerText = props.payment || 'Pending';
-                document.getElementById('workbenchLink').href = `admin-workbench.html?open=${uuid}`;
-                document.getElementById('jobModal').classList.remove('hidden');
+            const { data, error } = await _supabase
+                .from('events')
+                .insert([{
+                    title: title,
+                    type: type,
+                    start_date: startDate,
+                    details: ""
+                }])
+                .select();
+
+            if (error) {
+                console.error("Save Error:", error);
+                info.event.remove(); 
+                showMagicAlert("Oh no!", "Sticker didn't save. ☁️", "error");
             } else {
-                currentEditingId = info.event.id;
-                document.getElementById('editTitle').value = info.event.title;
-                document.getElementById('editDetails').value = props.details || '';
-                document.getElementById('eventModal').classList.remove('hidden');
+                // Important: Link the calendar event to the new Database ID
+                info.event.setProp('id', data[0].id);
+                showMagicAlert("Success! 🌸", "Added to planner.", "success");
             }
         },
 
-        eventDragStart: function() {
-            document.getElementById('calendar-trash').classList.add('opacity-100', 'border-rose-400');
-        },
+        // 2. UPDATE DATE WHEN STICKER IS MOVED
+        eventDrop: async function(info) {
+            // Prevent moving commissions (Jobs) - they should be fixed by 'arrived_at'
+            if (info.event.id.toString().startsWith('job-')) {
+                info.revert();
+                showMagicAlert("Bunny Says No! 🐰", "Move commissions in the Workbench.", "warning");
+                return;
+            }
 
-        eventDragStop: function(info) {
-            document.getElementById('calendar-trash').classList.remove('opacity-100', 'border-rose-400');
-            const trashEl = document.getElementById('calendar-trash');
-            const rect = trashEl.getBoundingClientRect();
-            if (info.jsEvent.clientX >= rect.left && info.jsEvent.clientX <= rect.right &&
-                info.jsEvent.clientY >= rect.top && info.jsEvent.clientY <= rect.bottom) {
-                if (info.event.id.startsWith('job-')) {
-                    showMagicAlert("Bunny Says No! 🐰", "Commissions can't be deleted here.", "warning");
+            const { error } = await _supabase
+                .from('events')
+                .update({ 
+                    start_date: info.event.startStr 
+                })
+                .eq('id', info.event.id);
+
+            if (error) {
+                info.revert();
+                showMagicAlert("Error", "Could not update date.", "error");
+            }
+        },
+            eventClick: function(info) {
+                const props = info.event.extendedProps;
+                if (props.type === 'commission') {
+                    const uuid = info.event.id.replace('job-', '');
+                    document.getElementById('jobCustomerName').innerText = info.event.title;
+                    document.getElementById('jobSocial').innerText = props.social || '@hidden';
+                    document.getElementById('jobSculpt').innerText = props.sculpt || 'Not Specified';
+                    document.getElementById('jobStatusBadge').innerText = props.status;
+                    document.getElementById('jobArrived').innerText = info.event.start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                    document.getElementById('jobPayment').innerText = props.payment || 'Pending';
+                    document.getElementById('workbenchLink').href = `admin-workbench.html?open=${uuid}`;
+                    document.getElementById('jobModal').classList.remove('hidden');
                 } else {
-                    deleteEvent(info.event.id);
+                    currentEditingId = info.event.id;
+                    document.getElementById('editTitle').value = info.event.title;
+                    document.getElementById('editDetails').value = props.details || '';
+                    document.getElementById('eventModal').classList.remove('hidden');
+                }
+            },
+
+            eventDragStart: function() {
+                const trash = document.getElementById('calendar-trash');
+                if(trash) trash.classList.add('opacity-100', 'border-rose-400', 'bg-rose-50');
+            },
+
+            eventDragStop: function(info) {
+                const trashEl = document.getElementById('calendar-trash');
+                if(trashEl) trashEl.classList.remove('opacity-100', 'border-rose-400', 'bg-rose-50');
+                
+                const rect = trashEl.getBoundingClientRect();
+                if (info.jsEvent.clientX >= rect.left && info.jsEvent.clientX <= rect.right &&
+                    info.jsEvent.clientY >= rect.top && info.jsEvent.clientY <= rect.bottom) {
+                    if (info.event.id.startsWith('job-')) {
+                        alert("Bunny Says No! 🐰 Commissions must be managed in the Workbench.");
+                    } else {
+                        deleteEvent(info.event.id);
+                    }
                 }
             }
-        }
-    });
-    calendar.render();
+        });
+        calendar.render();
+        console.log("✅ Calendar Rendered");
+    } catch (err) {
+        console.error("❌ Planner Data Load Error:", err);
+    }
 }
+
+// Modal closing functions (Add these so the buttons work!)
+function closeModal() { document.getElementById('eventModal').classList.add('hidden'); }
+function closeJobModal() { document.getElementById('jobModal').classList.add('hidden'); }
 
 async function deleteEvent(id) {
     const { error } = await _supabase.from('events').delete().eq('id', id);
     if (!error) {
         calendar.getEventById(id).remove();
-        showMagicAlert("Gone! ☁️", "Sticker removed.", "success");
     }
-}      
-// Call this inside your DOMContentLoaded after calendar.render()    
-    async function handleLogout() {
-    try {
-        const { error } = await _supabase.auth.signOut();
-        if (error) throw error;
+}
+      async function updateEventRecord() {
+    if (!currentEditingId) return;
 
-        localStorage.removeItem('hana_active_tab');
+    const title = document.getElementById('editTitle').value;
+    const details = document.getElementById('editDetails').value;
+
+    const { error } = await _supabase
+        .from('events')
+        .update({ 
+            title: title, 
+            details: details 
+        })
+        .eq('id', currentEditingId);
+
+    if (error) {
+        console.error("Update Error:", error);
+        showMagicAlert("Error", "Failed to save changes. ☁️", "error");
+    } else {
+        // Update the UI immediately without refreshing
+        const event = calendar.getEventById(currentEditingId);
+        if (event) {
+            event.setProp('title', title);
+            event.setExtendedProp('details', details);
+        }
         
-        window.location.href = 'admin-login.html'; 
-        
-    } catch (err) {
-        console.error("Logout error:", err);
-        showMagicAlert(
-            "Logout Failed", 
-            "We couldn't sign you out properly. Please try again! ☁️", 
-            "error"
-        );
+        showMagicAlert("Updated ✨", "Notes saved successfully!", "success");
+        closeModal();
     }
+}
+
+async function handleLogout() {
+    await _supabase.auth.signOut();
+    window.location.href = 'admin-login.html';
 }
        </script>
     
