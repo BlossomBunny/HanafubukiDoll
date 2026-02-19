@@ -527,31 +527,33 @@ async function deleteWaitlistEntry(id, name) {
         // --- BANNER MANAGEMENT FUNCTIONS ---
 
 async function toggleBanner() {
-    const btn = document.getElementById('bannerToggleBtn');
-    const label = document.getElementById('bannerStatusLabel');
-    const dot = btn.querySelector('.dot');
-    
-    // 1. Get current state from the database first to ensure toggle is accurate
-    const { data, error } = await _supabase
-        .from('studio_settings')
-        .select('is_live')
-        .eq('id', 'Banner')
-        .single();
+    try {
+        // 1. Fetch current status
+        const { data, error } = await _supabase
+            .from('studio_settings')
+            .select('is_live')
+            .eq('id', 'Banner')
+            .single();
 
-    if (error) return console.error("Error fetching banner state:", error);
+        if (error) throw error;
 
-    const newStatus = !data.is_live;
+        const newStatus = !data.is_live;
 
-    // 2. Update Supabase
-    const { error: updateError } = await _supabase
-        .from('studio_settings')
-        .update({ is_live: newStatus })
-        .eq('id', 'Banner');
+        // 2. Update database
+        const { error: updateError } = await _supabase
+            .from('studio_settings')
+            .update({ is_live: newStatus })
+            .eq('id', 'Banner');
 
-    if (updateError) return console.error("Update failed:", updateError);
+        if (updateError) throw updateError;
 
-    // 3. Update UI Visuals
-    updateBannerUI(newStatus);
+        // 3. Update the UI
+        updateBannerUI(newStatus);
+        
+    } catch (err) {
+        console.error("Banner toggle failed:", err);
+        showMagicAlert("Error", "Could not toggle banner! ☁️", "error");
+    }
 }
 
 async function updateBanner() {
@@ -591,18 +593,32 @@ async function updateBanner() {
 function updateBannerUI(isLive) {
     const btn = document.getElementById('bannerToggleBtn');
     const label = document.getElementById('bannerStatusLabel');
-    const dot = btn.querySelector('.dot');
+    const dot = btn?.querySelector('.dot');
+
+    if (!btn || !label || !dot) return;
 
     if (isLive) {
-        btn.classList.replace('bg-gray-200', 'bg-pink-500');
-        dot.classList.replace('left-1', 'left-7');
+        // Toggle Background
+        btn.classList.remove('bg-gray-200');
+        btn.classList.add('bg-pink-500');
+        // Slide the dot
+        dot.classList.remove('left-1');
+        dot.classList.add('left-7'); // Tailwind left-7 is roughly 28px
+        // Label Style
         label.innerText = "Banner Live ✨";
-        label.classList.replace('text-gray-400', 'text-pink-500');
+        label.classList.remove('text-gray-400');
+        label.classList.add('text-pink-500');
     } else {
-        btn.classList.replace('bg-pink-500', 'bg-gray-200');
-        dot.classList.replace('left-7', 'left-1');
+        // Toggle Background
+        btn.classList.remove('bg-pink-500');
+        btn.classList.add('bg-gray-200');
+        // Slide the dot
+        dot.classList.remove('left-7');
+        dot.classList.add('left-1');
+        // Label Style
         label.innerText = "Banner Off";
-        label.classList.replace('text-pink-500', 'text-gray-400');
+        label.classList.remove('text-pink-500');
+        label.classList.add('text-gray-400');
     }
 }
 
