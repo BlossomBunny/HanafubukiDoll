@@ -19,16 +19,16 @@
         /* --- 1. THEME VARIABLES (Dark Mode Ready) --- */
         :root {
             --cal-bg: #ffffff;
-            --cal-border: #fdf2f8; /* pink-50 */
-            --cal-text: #374151;   /* gray-700 */
+            --cal-border: #fdf2f8; 
+            --cal-text: #1a1a1a;   /* Deepest gray for light mode readability */
             --cal-day-bg: #ffffff;
         }
 
         .dark {
-            --cal-bg: #111827;     /* gray-900 */
-            --cal-border: #374151; /* gray-700 */
-            --cal-text: #f9fafb;   /* gray-50 */
-            --cal-day-bg: #1f2937; /* gray-800 */
+            --cal-bg: #111827;     
+            --cal-border: #374151; 
+            --cal-text: #f9fafb;   
+            --cal-day-bg: #1f2937; 
         }
 
         /* --- 2. GLOBAL UI ELEMENTS --- */
@@ -36,20 +36,18 @@
         .nav-btn-pink { @apply bg-pink-50 text-pink-500 hover:bg-pink-100; }
         .nav-btn-mint { @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; }
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); @apply rounded-[2rem] border border-pink-100/20; }
-        .auth-hidden { @apply hidden !important; }
 
-        /* --- 3. CALENDAR CONTAINER --- */
+        /* --- 3. CALENDAR CONTAINER (Scrollbar Fix) --- */
         #calendar {
             background-color: var(--cal-bg) !important;
             color: var(--cal-text) !important;
             @apply p-6 rounded-[3rem] border-8 shadow-inner transition-colors duration-300;
             border-color: var(--cal-border) !important;
             font-family: 'Plus Jakarta Sans', sans-serif !important;
+            height: auto !important; /* Allow browser to handle scroll */
         }
         
-        .fc-theme-standard td, .fc-theme-standard th { 
-            border-color: var(--cal-border) !important; 
-        }
+        .fc-theme-standard td, .fc-theme-standard th { border-color: var(--cal-border) !important; }
 
         .fc-daygrid-day-frame { 
             background-color: var(--cal-day-bg) !important;
@@ -61,40 +59,35 @@
         .fc-daygrid-day-number {
             @apply bg-pink-100 text-pink-500 font-black text-[10px] w-7 h-7 rounded-full flex items-center justify-center m-2 transition-transform hover:scale-110 !important;
         }
-        .fc-col-header-cell-cushion { @apply text-[10px] font-black uppercase tracking-widest text-pink-300 !important; }
-        .fc-day-today { @apply bg-emerald-50/20 !important; }
-        .fc-daygrid-day-events { position: relative !important; }
 
-        /* --- 4. HEADER BUTTONS --- */
-        .fc .fc-button-primary {
-            @apply bg-white dark:bg-gray-800 border-2 border-pink-100 text-pink-400 font-black rounded-full px-6 py-2 transition-all !important;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            font-size: 10px;
-        }
-        .fc .fc-button-primary:hover { @apply bg-pink-50 border-pink-200 text-pink-600 !important; }
-        .fc .fc-button-primary:not(:disabled).fc-button-active { @apply bg-pink-500 border-pink-500 text-white !important; }
-
-        /* --- 5. WASHI TAPE BARS (RANGES & STUFF FIX) --- */
+        /* --- 4. WASHI TAPE BARS (Jewel Tone Readability) --- */
         .job-bar-style, .range-bar-style {
             @apply border-none shadow-sm my-1 !important;
             border-radius: 20px !important;
             padding: 4px 12px !important;
             font-weight: 800 !important;
-            font-size: 10px !important;
-            position: relative !important; /* Bars need to stay relative to span days */
+            font-size: 11px !important; /* Slightly larger for clarity */
+            position: relative !important;
             z-index: 1 !important;
-            background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.2) 5px, transparent 5px, transparent 10px);
+            /* Toned down stripes (0.15 opacity) so text pops */
+            background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,0.15), rgba(255,255,255,0.15) 5px, transparent 5px, transparent 10px) !important;
         }
 
-        /* Darker text for readability on light bars */
-        .type-holiday { background-color: #fdf2f8 !important; color: #be185d !important; }
-        .type-admin   { background-color: #f0fdf4 !important; color: #15803d !important; }
-        .type-birthday{ background-color: #fffbeb !important; color: #b45309 !important; }
-        .type-stuff   { background-color: #faf5ff !important; color: #7e22ce !important; } /* Purple for Stuff! */
+        /* High-Contrast Category Colors */
+        .type-holiday  { background-color: #fce7f3 !important; color: #9d174d !important; } /* Deep Pink */
+        .type-admin    { background-color: #dcfce7 !important; color: #065f46 !important; } /* Deep Green */
+        .type-birthday { background-color: #fef3c7 !important; color: #92400e !important; } /* Deep Amber */
+        .type-stuff    { background-color: #f3e8ff !important; color: #6b21a8 !important; } /* Deep Purple */
 
-        /* --- 6. WIGGLY STICKERS --- */
-        /* Only apply absolute floating to non-range stickers */
+        /* Job Blue Variety (Jewel Tone Blues) */
+        .job-blue-light { background-color: #e0f2fe !important; color: #075985 !important; }
+        .job-blue-deep  { background-color: #bae6fd !important; color: #0c4a6e !important; }
+
+        /* Dark Mode Overrides for Jobs */
+        .dark .job-blue-light { background-color: #0c4a6e !important; color: #e0f2fe !important; }
+        .dark .job-blue-deep  { background-color: #075985 !important; color: #bae6fd !important; }
+
+        /* --- 5. STICKERS --- */
         .fc-event.sticker-style:not(.range-bar-style) {
             @apply bg-transparent border-none shadow-none !important;
             position: absolute !important;
@@ -103,42 +96,19 @@
             z-index: 10 !important;
             display: flex !important;
             justify-content: center !important;
-            overflow: visible !important;
         }
 
         .sticker-style .fc-event-main {
             font-size: 38px !important;
             filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));
-            cursor: pointer;
             animation: sticker-wiggle 3s ease-in-out infinite;
         }
 
-        /* Hover & Animations (Keep your original code) */
         @keyframes sticker-wiggle {
             0%, 100% { transform: rotate(-3deg) translateY(0); }
             50% { transform: rotate(3deg) translateY(-3px); }
         }
-        .fc-event.sticker-style:nth-child(even) .fc-event-main { animation-duration: 2.5s; }
     }
-    /* Specific Blue Variety for Jobs */
-.job-blue-light { 
-    background-color: #e0f2fe !important; /* sky-100 */
-    color: #0369a1 !important;           /* sky-700 */
-}
-.job-blue-deep { 
-    background-color: #bae6fd !important;  /* sky-200 */
-    color: #075985 !important;           /* sky-800 */
-}
-
-/* Dark Mode support for Jobs */
-.dark .job-blue-light { background-color: #0c4a6e !important; color: #e0f2fe !important; }
-.dark .job-blue-deep { background-color: #075985 !important; color: #bae6fd !important; }
-
-/* Readability fix: Force darker text on light bars */
-.type-holiday { background-color: #fdf2f8 !important; color: #be185d !important; }
-.type-admin   { background-color: #f0fdf4 !important; color: #15803d !important; }
-.type-birthday{ background-color: #fffbeb !important; color: #b45309 !important; }
-.type-stuff   { background-color: #faf5ff !important; color: #7e22ce !important; }
 </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
@@ -348,6 +318,8 @@ async function renderPlanner() {
             editable: true,
             droppable: true,
             fixedWeekCount: false,
+            height: 'auto', 
+    handleWindowResize: true,
 
             // --- ALL EVENTS (Jobs + Stickers) ---
             events: [
