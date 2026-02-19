@@ -272,48 +272,40 @@ async function renderPlanner() {
     fixedWeekCount: false,
 
     // 1. ALL EVENTS (Jobs + Stickers)
-    events: [
-        ...(jobs || []).map(j => ({
-            id: `job-${j.id}`,
-            title: `🐰 ${j.customer_name}`,
-            start: j.arrived_at,
-            end: new Date().toISOString(),
-            className: 'job-bar-style',
-            allDay: true,
-            backgroundColor: '#f0f9ff', 
-            textColor: '#0369a1',
-            extendedProps: { 
-                type: 'commission', 
-                social: j.social_handle, 
-                sculpt: j.doll_sculpt, 
-                status: j.status, 
-                payment: j.payment_status 
-            }
-        })),
-        
-  ...(events || []).map(e => ({
-    id: e.id,
-    title: e.title,
-    start: e.start_date,
-    end: e.end_date || e.start_date,
-    // This matches the .sticker-holiday, .sticker-admin, etc. classes above
-    className: ['sticker-style', `sticker-${e.type || 'stuff'}`], 
-    extendedProps: { type: e.type, details: e.details }
-}))
-            return {
-                id: e.id,
-                title: e.title,
-                start: e.start_date,
-                end: e.end_date || e.start_date,
-                className: 'sticker-style',
-                backgroundColor: styles.bg,
-                textColor: styles.text,
-                borderColor: styles.border,
-                extendedProps: { type: e.type, details: e.details }
-            };
-        })
-    ],
-
+events: [
+    // --- MAP JOBS (Blue Washi Tape) ---
+    ...(jobs || []).map(j => ({
+        id: `job-${j.id}`,
+        title: `🐰 ${j.customer_name}`,
+        start: j.arrived_at,
+        end: new Date().toISOString(),
+        className: 'job-bar-style',
+        allDay: true,
+        backgroundColor: '#f0f9ff', 
+        textColor: '#0369a1',
+        extendedProps: { 
+            type: 'commission', 
+            social: j.social_handle, 
+            sculpt: j.doll_sculpt, 
+            status: j.status, 
+            payment: j.payment_status 
+        }
+    })),
+    
+    // --- MAP STICKERS (Personal/Holiday/Admin) ---
+    ...(events || []).map(e => ({
+        id: e.id,
+        title: e.title,
+        start: e.start_date,
+        end: e.end_date || e.start_date,
+        // Using the new CSS class logic we just condensed!
+        className: ['sticker-style', `sticker-${e.type || 'stuff'}`], 
+        extendedProps: { 
+            type: e.type, 
+            details: e.details 
+        }
+    }))
+],
     // 2. SAVE NEW STICKERS (This was the missing piece!)
     eventReceive: async function(info) {
     const type = info.event.extendedProps.type || 'stuff';
