@@ -134,7 +134,43 @@
             @apply absolute top-2 right-10 text-[7px] font-black text-emerald-400 tracking-tighter;
         }
     }
-</style>
+/* 1. Date Circles (Matches image_615400.jpg) */
+.fc-daygrid-day-number {
+    @apply bg-pink-100 text-pink-500 font-bold rounded-full w-7 h-7 flex items-center justify-center m-2 !important;
+    font-size: 11px !important;
+}
+
+/* 2. The Washi Tape Job Bar */
+.job-bar-style {
+    @apply border-none shadow-sm opacity-80 !important;
+    border-radius: 4px !important;
+    background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0.2) 5px,
+        transparent 5px,
+        transparent 10px
+    ); /* Adds a subtle texture like tape */
+    padding: 2px 8px !important;
+    margin-top: 2px !important;
+}
+
+/* 3. Soften the Grid */
+.fc-theme-standard td, .fc-theme-standard th {
+    @apply border-pink-50 !important;
+}
+
+.fc-day-today {
+    @apply bg-emerald-50/20 !important;
+}
+
+/* 4. The Header Buttons (Pink & Rounded) */
+.fc-button-primary {
+    @apply bg-white border-pink-100 text-pink-400 font-bold rounded-full px-4 capitalize transition-all !important;
+}
+.fc-button-primary:hover {
+    @apply bg-pink-50 border-pink-200 text-pink-600 !important;
+}
     </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
@@ -300,23 +336,35 @@ async function renderPlanner() {
             _supabase.from('events').select('*')
         ]);
 
-        calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
-            editable: true,
-            droppable: true,
-            fixedWeekCount: false,
-            
+calendar = new FullCalendar.Calendar(calendarEl, {
+       headerToolbar: { 
+        left: 'prev,next today', 
+        center: 'title', 
+        right: 'dayGridMonth,timeGridWeek,multiMonthYear' 
+    },
+    initialView: 'dayGridMonth',
+    
+    // Aesthetic settings
+    firstDay: 1, 
+    dayMaxEvents: true,
+    navLinks: true, 
+    
             events: [
-                ...(jobs || []).map(j => ({
-                    id: `job-${j.id}`,
-                    title: `🐰 ${j.customer_name}`,
-                    start: j.arrived_at,
-                    className: 'job-bar-style',
-                    backgroundColor: '#f0f9ff', 
-                    textColor: '#0369a1',
-                    extendedProps: { type: 'commission', social: j.social_handle, sculpt: j.doll_sculpt, status: j.status, payment: j.payment_status }
-                })),
+              ...(jobs || []).map(j => {
+    const arrivalDate = new Date(j.arrived_at);
+    const today = new Date();
+    
+    return {
+        id: `job-${j.id}`,
+        title: `🐰 ${j.customer_name}`,
+        start: j.arrived_at,
+        end: today, // This makes it a "Bar" instead of a "Dot"
+        className: 'job-bar-style',
+        allDay: true, // Important for the "bar" look
+        backgroundColor: '#E0F2FE', 
+        extendedProps: { ... }
+    };
+}),
                 ...(events || []).map(e => ({
                     id: e.id,
                     title: e.title,
