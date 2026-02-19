@@ -120,6 +120,25 @@
         }
         .fc-event.sticker-style:nth-child(even) .fc-event-main { animation-duration: 2.5s; }
     }
+    /* Specific Blue Variety for Jobs */
+.job-blue-light { 
+    background-color: #e0f2fe !important; /* sky-100 */
+    color: #0369a1 !important;           /* sky-700 */
+}
+.job-blue-deep { 
+    background-color: #bae6fd !important;  /* sky-200 */
+    color: #075985 !important;           /* sky-800 */
+}
+
+/* Dark Mode support for Jobs */
+.dark .job-blue-light { background-color: #0c4a6e !important; color: #e0f2fe !important; }
+.dark .job-blue-deep { background-color: #075985 !important; color: #bae6fd !important; }
+
+/* Readability fix: Force darker text on light bars */
+.type-holiday { background-color: #fdf2f8 !important; color: #be185d !important; }
+.type-admin   { background-color: #f0fdf4 !important; color: #15803d !important; }
+.type-birthday{ background-color: #fffbeb !important; color: #b45309 !important; }
+.type-stuff   { background-color: #faf5ff !important; color: #7e22ce !important; }
 </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
@@ -281,6 +300,14 @@ document.addEventListener('DOMContentLoaded', async () => {
          console.log("Job to open found:", jobToOpen);
     }
 });
+      function closeModal() { document.getElementById('eventModal').classList.add('hidden'); }
+function closeJobModal() { document.getElementById('jobModal').classList.add('hidden'); }
+
+// This closes modals when you click the dark background
+window.onclick = function(event) {
+    const eventModal = document.getElementById('eventModal');
+    if (event.target === eventModal) closeModal();
+}
 
 function initStickers() {
     const containerEl = document.getElementById('stickerDrawer');
@@ -310,173 +337,143 @@ async function renderPlanner() {
             _supabase.from('events').select('*')
         ]);
 
-       calendar = new FullCalendar.Calendar(calendarEl, {
-    headerToolbar: { 
-        left: 'prev,next today', 
-        center: 'title', 
-        right: 'dayGridMonth,timeGridWeek,listYear' 
-    },
-    initialView: 'dayGridMonth',
-    firstDay: 1,
-    editable: true,
-    droppable: true,
-    fixedWeekCount: false,
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            headerToolbar: { 
+                left: 'prev,next today', 
+                center: 'title', 
+                right: 'dayGridMonth,timeGridWeek,listYear' 
+            },
+            initialView: 'dayGridMonth',
+            firstDay: 1,
+            editable: true,
+            droppable: true,
+            fixedWeekCount: false,
 
-    // 1. ALL EVENTS (Jobs + Stickers)
-events: [
-    // --- MAP JOBS (Blue Washi Tape) ---
-    ...(jobs || []).map(j => ({
-        id: `job-${j.id}`,
-        title: `🐰 ${j.customer_name}`,
-        start: j.arrived_at,
-        end: new Date().toISOString(),
-        className: 'job-bar-style',
-        allDay: true,
-        backgroundColor: '#f0f9ff', 
-        textColor: '#0369a1',
-        extendedProps: { 
-            type: 'commission', 
-            social: j.social_handle, 
-            sculpt: j.doll_sculpt, 
-            status: j.status, 
-            payment: j.payment_status 
-        }
-    })),
-    
-    // --- MAP STICKERS (Personal/Holiday/Admin) ---
-  ...(events || []).map(e => {
-    const isRange = e.start_date !== e.end_date;
+            // --- ALL EVENTS (Jobs + Stickers) ---
+            events: [
+                // 🐰 MAP JOBS (Alternating Blue Variety)
+                ...(jobs || []).map((j, index) => ({
+                    id: `job-${j.id}`,
+                    title: `🐰 ${j.customer_name}`,
+                    start: j.arrived_at,
+                    end: new Date().toISOString(),
+                    allDay: true,
+                    // Alternates between light and deep blue
+                    className: ['job-bar-style', index % 2 === 0 ? 'job-blue-light' : 'job-blue-deep'],
+                    extendedProps: { 
+                        isJob: true,
+                        jobId: j.id,
+                        type: 'commission'
+                    }
+                })),
+                
+                // 🌸 MAP STICKERS (Personal/Holiday/Admin/Stuff)
+                ...(events || []).map(e => {
+                    const isRange = e.start_date !== e.end_date;
+                    const emoji = e.title ? e.title.split(' ')[0] : '⭐';
 
-    const emoji = e.title ? e.title.split(' ')[0] : '⭐';
+                    return {
+                        id: e.id,
+                        title: isRange ? e.title : emoji,
+                        start: e.start_date,
+                        end: e.end_date || e.start_date,
+                        allDay: true,
+                        backgroundColor: 'transparent',
+                        borderColor: 'transparent',
+                        className: [
+                            isRange ? 'range-bar-style' : 'sticker-style', 
+                            `type-${e.type || 'stuff'}`
+                        ],
+                        extendedProps: { 
+                            type: e.type, 
+                            details: e.details,
+                            fullTitle: e.title 
+                        }
+                    };
+                })
+            ],
 
-    return {
-        id: e.id,
-        title: isRange ? e.title : emoji,
-        start: e.start_date,
-        end: e.end_date || e.start_date,
-        allDay: true,
-        backgroundColor: 'transparent',
-        borderColor: 'transparent',
-        className: [
-            isRange ? 'range-bar-style' : 'sticker-style', 
-            `type-${e.type || 'stuff'}`
-        ],
-        extendedProps: { 
-            type: e.type, 
-            details: e.details,
-            fullTitle: e.title 
-        }
-    };
-})
-    ],
-           
-    // 2. SAVE NEW STICKERS (This was the missing piece!)
-    eventReceive: async function(info) {
-    const type = info.event.extendedProps.type || 'stuff';
-    const title = info.event.title;
-    const startDate = info.event.startStr;
+            // --- CLICK LOGIC (Drawer vs Modal) ---
+            eventClick: function(info) {
+                // If it's a JOB (Bunny), open your Workbench Drawer
+                if (info.event.extendedProps.isJob) {
+                    info.jsEvent.preventDefault();
+                    const jobId = info.event.id.replace('job-', '');
+                    
+                    if (typeof openJobDrawer === "function") {
+                        openJobDrawer(jobId);
+                    } else {
+                        console.log("🐰 Opening Workbench for:", jobId);
+                    }
+                    return; 
+                }
 
-    // 1. Create the object exactly as the DB expects
-    const newEvent = {
-        title: title,
-        type: type,
-        start_date: startDate,
-        end_date: startDate,
-        details: ""
-    };
+                // If it's a STICKER, open the Edit Modal
+                currentEditingId = info.event.id;
+                const displayTitle = info.event.extendedProps.fullTitle || info.event.title;
+                
+                document.getElementById('editTitle').value = displayTitle || "";
+                document.getElementById('editDetails').value = info.event.extendedProps.details || "";
+                document.getElementById('editStart').value = info.event.startStr;
+                document.getElementById('editEnd').value = info.event.endStr || info.event.startStr;
 
-    console.log("🌸 Sending to Supabase:", newEvent);
+                document.getElementById('eventModal').classList.remove('hidden');
+            },
 
-    const { data, error } = await _supabase
-        .from('events')
-        .insert([newEvent])
-        .select();
+            // --- DRAG & DROP LOGIC ---
+            eventReceive: async function(info) {
+                const title = info.event.title;
+                const startDate = info.event.startStr;
+                const newEvent = {
+                    title: title,
+                    type: info.event.extendedProps.type || 'stuff',
+                    start_date: startDate,
+                    end_date: startDate
+                };
 
-    if (error) {
-        // THIS WILL TELL US THE TRUTH:
-        console.error("❌ SUPABASE REJECTION:", error);
-        
-        // Is it a column name issue?
-        if (error.message.includes("column")) {
-             showMagicAlert("Database Error", "One of the columns (like end_date) might not exist in your table yet!", "error");
-        } else {
-             showMagicAlert("Save Failed", error.message, "error");
-        }
-        
-        info.event.remove(); 
-    } else {
-        info.event.setProp('id', data[0].id);
-        currentEditingId = data[0].id;
-        
-        document.getElementById('editTitle').value = title;
-        document.getElementById('editStart').value = startDate;
-        document.getElementById('editEnd').value = startDate;
-        document.getElementById('eventModal').classList.remove('hidden');
-        showMagicAlert("Success! ✨", "Sticker saved to database.", "success");
-    }
-},
-    // 3. MOVE STICKERS
-    eventDrop: async function(info) {
-        if (info.event.id.toString().startsWith('job-')) {
-            info.revert();
-            showMagicAlert("Bunny Says No! 🐰", "Move commissions in the Workbench.", "warning");
-            return;
-        }
-        await _supabase.from('events').update({ 
-            start_date: info.event.startStr,
-            end_date: info.event.endStr || info.event.startStr 
-        }).eq('id', info.event.id);
-    },
+                const { data, error } = await _supabase.from('events').insert([newEvent]).select();
+                if (!error) {
+                    info.event.setProp('id', data[0].id);
+                    renderPlanner(); // Refresh to set the fullTitle prop
+                }
+            },
 
-    // 4. CLICK TO EDIT
-eventClick: function(info) {
-    // 1. Get the correct ID and Full Title
-    currentEditingId = info.event.id;
-    
-    // Check if fullTitle exists (for stickers), otherwise use title (for Jobs)
-    const displayTitle = info.event.extendedProps.fullTitle || info.event.title;
-    
-    // 2. Fill the Modal Fields
-    document.getElementById('editTitle').value = displayTitle;
-    document.getElementById('editDetails').value = info.event.extendedProps.details || "";
-    document.getElementById('editStart').value = info.event.startStr;
-    
-    // Handle end date (FullCalendar end dates are exclusive, so we adjust if needed)
-    let endStr = info.event.endStr || info.event.startStr;
-    document.getElementById('editEnd').value = endStr;
+            eventDrop: async function(info) {
+                if (info.event.id.toString().startsWith('job-')) {
+                    info.revert();
+                    return;
+                }
+                await _supabase.from('events').update({ 
+                    start_date: info.event.startStr,
+                    end_date: info.event.endStr || info.event.startStr 
+                }).eq('id', info.event.id);
+            },
 
-    // 3. Show the Modal
-    document.getElementById('eventModal').classList.remove('hidden');
-       },
-     
-    // 5. TRASH LOGIC
-    eventDragStart: function() {
-        const trash = document.getElementById('calendar-trash');
-        if(trash) trash.classList.add('opacity-100', 'border-rose-400', 'bg-rose-50');
-    },
+            // --- TRASH LOGIC ---
+            eventDragStart: function() {
+                const trash = document.getElementById('calendar-trash');
+                if(trash) trash.classList.add('opacity-100', 'border-rose-400', 'bg-rose-50');
+            },
 
-    eventDragStop: function(info) {
-        const trashEl = document.getElementById('calendar-trash');
-        if(trashEl) trashEl.classList.remove('opacity-100', 'border-rose-400', 'bg-rose-50');
-        
-        const rect = trashEl.getBoundingClientRect();
-        if (info.jsEvent.clientX >= rect.left && info.jsEvent.clientX <= rect.right &&
-            info.jsEvent.clientY >= rect.top && info.jsEvent.clientY <= rect.bottom) {
-            if (!info.event.id.startsWith('job-')) {
-                deleteEvent(info.event.id);
+            eventDragStop: function(info) {
+                const trashEl = document.getElementById('calendar-trash');
+                if(trashEl) trashEl.classList.remove('opacity-100', 'border-rose-400', 'bg-rose-50');
+                
+                const rect = trashEl.getBoundingClientRect();
+                if (info.jsEvent.clientX >= rect.left && info.jsEvent.clientX <= rect.right &&
+                    info.jsEvent.clientY >= rect.top && info.jsEvent.clientY <= rect.bottom) {
+                    if (!info.event.id.toString().startsWith('job-')) {
+                        deleteEvent(info.event.id);
+                    }
+                }
             }
-        }
-    }
-});       calendar.render();
-        console.log("✅ Calendar Rendered");
+        });
+
+        calendar.render();
     } catch (err) {
-        console.error("❌ Planner Data Load Error:", err);
+        console.error("❌ Planner Error:", err);
     }
 }
-
-// Modal closing functions (Add these so the buttons work!)
-function closeModal() { document.getElementById('eventModal').classList.add('hidden'); }
-function closeJobModal() { document.getElementById('jobModal').classList.add('hidden'); }
 
 async function deleteEvent(id) {
     const { error } = await _supabase.from('events').delete().eq('id', id);
