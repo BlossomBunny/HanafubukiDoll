@@ -166,25 +166,25 @@
             }
         });
 
-        // DASHBOARD RENDERING
-async function renderSummary() {
+      async function renderSummary() {
     try {
+        // 1. Fetch all necessary data
         const { data: jobs } = await _supabase.from('commissions').select('*');
+        const { data: settings } = await _supabase.from('studio_settings').select('*');
+        
         if (!jobs) return;
 
-        // 1. Stats Calculations
+        // 2. Stats Calculations (Existing Logic)
         const enq = jobs.filter(j => j.status === 'Enquiry').length;
         const active = jobs.filter(j => ['Working', 'Approved', 'Arrived'].includes(j.status)).length;
         const photo = jobs.filter(j => j.status === 'Photo').length; 
 
-        // 2. Potential Revenue (The total value of all booked work)
+        // 3. Financial Calculations (New Layaway-Friendly Logic)
         const totalBooked = jobs.reduce((s, j) => s + (Number(j.total_price) || 0), 0);
-
-        // 3. Actual Revenue (Summing ALL payments including layaways)
+        
         const totalPaid = jobs.reduce((sum, job) => {
-            // Check if the 'payments' field exists and has data
+            // Sum up every individual payment amount within the layaway 'payments' array
             if (job.payments && Array.isArray(job.payments)) {
-                // Sum up every individual payment amount within this specific job
                 const jobPaymentsTotal = job.payments.reduce((pSum, p) => pSum + (Number(p.amount) || 0), 0);
                 return sum + jobPaymentsTotal;
             }
@@ -195,42 +195,46 @@ async function renderSummary() {
             return sum;
         }, 0);
 
-        // 4. Update the UI
+        // 4. Update the Stats UI
         document.getElementById('stat-enquiries').innerText = enq;
         document.getElementById('stat-workbench').innerText = active;
         document.getElementById('stat-special').innerText = photo;
         document.getElementById('stat-revenue').innerText = `£${totalBooked.toFixed(0)}`;
         document.getElementById('stat-paid').innerText = `£${totalPaid.toFixed(0)}`;
 
-    } catch (err) {
-        console.error("Summary load failed:", err);
+        // 5. Priorities (Sorted by oldest created_at)
+        const priorities = jobs.filter(j => !['Shipped', 'Enquiry'].includes(j.status))
+                               .sort((a,b) => new Date(a.created_at) - new Date(b.created_at))
+                               .slice(0,3);
+                               
+        document.getElementById('priority-list').innerHTML = priorities.map(j => `
+            <div class="flex justify-between items-center p-3 bg-white rounded-xl border border-pink-50 shadow-sm">
+                <span class="font-bold text-[11px] text-gray-700 uppercase">${j.social_handle || 'Client'}</span>
+                <span class="text-[9px] px-3 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase">${j.status}</span>
+            </div>
+        `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
+
+        // 6. Quick Toggles (Using the fetched settings)
+        if (settings) {
+            const services = settings.filter(s => s.id !== 'Banner');
+            document.getElementById('service-quick-toggles').innerHTML = services.map(s => `
+                <button onclick="toggleServiceStatus('${s.id}', ${s.is_live})" 
+                    class="px-3 py-2 rounded-xl text-[9px] font-black uppercase border shadow-sm transition-all
+                    ${s.is_live ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'}">
+                    ${s.id}: ${s.is_live ? 'OPEN' : 'WAITLIST'}
+                </button>
+            `).join('');
+        }
+
+        // 7. Update Chart (Paid vs Remaining)
+        if (typeof updateChart === 'function') {
+            updateChart(totalPaid, totalBooked - totalPaid);
+        }
+
+    } catch (err) { 
+        console.error("Summary load failed:", err); 
     }
 }
-                // Priorities
-                const priorities = jobs.filter(j => !['Shipped', 'Enquiry'].includes(j.status))
-                                       .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(0,3);
-                document.getElementById('priority-list').innerHTML = priorities.map(j => `
-                    <div class="flex justify-between items-center p-3 bg-white rounded-xl border border-pink-50 shadow-sm">
-                        <span class="font-bold text-[11px] text-gray-700 uppercase">${j.social_handle || 'Client'}</span>
-                        <span class="text-[9px] px-3 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase">${j.status}</span>
-                    </div>
-                `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
-
-                // Quick Toggles
-                if (settings) {
-                    const services = settings.filter(s => s.id !== 'Banner');
-                    document.getElementById('service-quick-toggles').innerHTML = services.map(s => `
-                        <button onclick="toggleServiceStatus('${s.id}', ${s.is_live})" 
-                            class="px-3 py-2 rounded-xl text-[9px] font-black uppercase border shadow-sm transition-all
-                            ${s.is_live ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'}">
-                            ${s.id}: ${s.is_live ? 'OPEN' : 'WAITLIST'}
-                        </button>
-                    `).join('');
-                }
-
-                updateChart(totalPaid, totalBooked - totalPaid);
-            } catch (err) { console.error("Summary load failed", err); }
-        }
 
         async function renderWaitlist() {
     const countEl = document.getElementById('waitlist-count');
