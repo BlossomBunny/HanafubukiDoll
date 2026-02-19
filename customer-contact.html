@@ -391,37 +391,40 @@ window.onload = async () => {
     await checkServiceAvailability();
 };
 
-const uploadSet = async (fileInputId) => {
-    const files = document.getElementById(fileInputId)?.files;
-    if (!files || files.length === 0) return [];
+async function uploadSet(inputId, serviceName, jobId) {
+    const input = document.getElementById(inputId);
+    // If no files selected, return empty array so DB doesn't crash
+    if (!input || !input.files || input.files.length === 0) return [];
 
+    const files = Array.from(input.files);
     const urls = [];
-    const folder = fileInputId.replace('Files', '');
 
-    for (let file of files) {
-        try {
-            if (file.type.startsWith('image/')) {
-                file = await resizeImage(file, 1200, 0.7);
-            }
-            const path = `${folder}/${Date.now()}-${file.name}`;
-            const { data, error } = await _supabase.storage
-                .from('references')
-                .upload(path, file);
+    for (const file of files) {
+        // Create a clean filename: timestamp + random string
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${fileExt}`;
+        
+        // This creates the folder structure: refs / [UUID] / [service] / [file]
+        const filePath = `refs/${jobId}/${serviceName}/${fileName}`;
 
-            if (error) throw error;
+        const { data, error } = await _supabase.storage
+            .from('references')
+            .upload(filePath, file);
 
-            const { data: pUrl } = _supabase.storage
-                .from('references')
-                .getPublicUrl(path);
-
-            if (pUrl?.publicUrl) urls.push(pUrl.publicUrl);
-        } catch (err) {
-            console.error(`Upload error:`, err);
+        if (error) {
+            console.error(`Upload error for ${serviceName}:`, error);
+            continue; 
         }
+
+        // Generate the Public URL to store in the JSON block
+        const { data: { publicUrl } } = _supabase.storage
+            .from('references')
+            .getPublicUrl(filePath);
+            
+        urls.push(publicUrl);
     }
     return urls;
-};
-
+}
 // --- 4. NAVIGATION & SERVICE LOGIC ---
 async function checkServiceAvailability() {
     const { data: settings } = await _supabase.from('studio_settings').select('*');
@@ -526,8 +529,7 @@ async function finalSubmit() {
 
     const btn = document.querySelector('#step-4 button');
     
-    // 1. Manually call show because there are multiple await steps (uploads + database)
-    // and we want the loader to stay up for the whole journey.
+  
     if (window.StudioLoader) {
         StudioLoader.show("Whisking your request away... ✨");
     }
@@ -547,13 +549,21 @@ async function finalSubmit() {
             finalCompany = "Volks";
         }
 
-        // Image uploads
-        const faceupImages = await uploadSet('faceupFiles');
-        const maniImages = await uploadSet('maniFiles');
-        const eyeImages = await uploadSet('eyeFiles');
+  async function submitForm() {
+    const btn = document.getElementById('submitBtn');
+    if(btn) btn.disabled = true;
 
-        // Supabase Insert
+    try {
+        if (window.StudioLoader) StudioLoader.show();
+
+        const commissionId = crypto.randomUUID(); 
+
+        const faceupImages = await uploadSet('faceupFiles', 'faceup', commissionId);
+        const maniImages = await uploadSet('maniFiles', 'manicure', commissionId);
+        const eyeImages = await uploadSet('eyeFiles', 'eyes', commissionId);
+
         const { error } = await _supabase.from('commissions').insert([{
+            id: commissionId, // We tell Supabase what the ID is
             customer_name: document.getElementById('custName').value,
             customer_email: document.getElementById('custEmail').value,
             social_handle: document.getElementById('socialHandle').value,
@@ -576,25 +586,24 @@ async function finalSubmit() {
                 notes: document.getElementById('eyeNotes').value,
                 images: eyeImages
             } : null,
-            status: 'Enquiry'
+            status: 'Enquiry',
+            created_at: new Date().toISOString()
         }]);
 
         if (error) throw error;
 
-        // Success - showStep(5) is the success screen
+        // Success!
         showStep(5);
 
     } catch (err) {
         console.error("Submission error:", err);
         showMagicAlert("Error", err.message || "Failed to send request", "error");
-        btn.disabled = false;
+        if(btn) btn.disabled = false;
     } finally {
-        // 2. Hide the loader once everything (success OR failure) is done
-        if (window.StudioLoader) {
-            StudioLoader.hide();
-        }
+        if (window.StudioLoader) StudioLoader.hide();
     }
 }
+        
 // --- 6. STOCK & MODAL LOGIC (Bundles & Waitlist) ---
 async function syncFormWithStock() {
     const { data: stock } = await _supabase.from('inventory').select('*');
