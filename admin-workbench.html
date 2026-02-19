@@ -448,23 +448,30 @@ function recalcBalance() {
         <div class="p-5 bg-white rounded-[2rem] border border-${theme}-50 space-y-4 shadow-sm">
             <div class="flex justify-between items-center border-b border-${theme}-50/50 pb-2">
                 <h4 class="text-[11px] font-black uppercase text-${theme}-500 tracking-wider">${title}</h4>
-                <select id="${key}Status" class="text-[10px] font-black uppercase bg-${theme}-50 px-2 py-1 rounded-lg border-none">
-                    <option value="Pending" ${data.status==='Pending'?'selected':''}>Pending</option>
-                    <option value="Working" ${data.status==='Working'?'selected':''}>Working</option>
-                    <option value="Completed" ${data.status==='Completed'?'selected':''}>Completed</option>
-                </select>
+                <div class="flex gap-2">
+                    <button onclick="document.getElementById('${key}Upload').click()" class="text-[9px] font-black uppercase bg-white border border-${theme}-100 text-${theme}-400 px-2 py-1 rounded-lg hover:bg-${theme}-50 transition-all">
+                        Upload +
+                    </button>
+                    <input type="file" id="${key}Upload" class="hidden" accept="image/*" multiple onchange="handleAdminUpload(this, '${key}')">
+                    
+                    <select id="${key}Status" class="text-[10px] font-black uppercase bg-${theme}-50 px-2 py-1 rounded-lg border-none">
+                        <option value="Pending" ${data.status==='Pending'?'selected':''}>Pending</option>
+                        <option value="Working" ${data.status==='Working'?'selected':''}>Working</option>
+                        <option value="Completed" ${data.status==='Completed'?'selected':''}>Completed</option>
+                    </select>
+                </div>
             </div>
             
-      ${data.images && data.images.length > 0 ? `
-    <div class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-        ${data.images.map(img => `
-            <img 
-                src="${img}" 
-                class="w-24 h-24 object-cover rounded-2xl border-2 border-white shadow-sm shrink-0 cursor-pointer hover:scale-105 transition-transform" 
-                onclick="openLightbox('${img}')"
-            >
-        `).join('')}
-    </div>` : ''}
+            <div id="${key}ImageGrid" class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                ${(data.images || []).map(img => `
+                    <div class="relative shrink-0 group">
+                        <img src="${img}" class="w-24 h-24 object-cover rounded-2xl border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform" onclick="openLightbox('${img}')">
+                        <button onclick="removeImage('${key}', '${img}')" class="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                    </div>
+                `).join('')}
+                ${(!data.images || data.images.length === 0) ? '<p class="text-[10px] text-gray-300 italic py-4">No images uploaded.</p>' : ''}
+            </div>
+
             <div class="space-y-3">
                 <div class="p-3 bg-${theme}-50/30 rounded-2xl border border-${theme}-100/50">
                     <p class="text-[8px] font-black uppercase text-${theme}-400 mb-1">Client Request:</p>
@@ -477,7 +484,7 @@ function recalcBalance() {
             </div>
         </div>`;
 }
-
+        
 function togglePayUI() {
     const type = document.getElementById('payType').value;
     
@@ -868,6 +875,95 @@ async function confirmDeclineAndSend() {
             }
         }
     );
+}
+        async function handleAdminUpload(input, serviceKey) {
+    if (!input.files || input.files.length === 0) return;
+    
+    const files = Array.from(input.files);
+    const loadingBtn = input.previousElementSibling;
+    const originalText = loadingBtn.innerText;
+    
+    loadingBtn.innerText = "Uploading... ✨";
+    loadingBtn.disabled = true;
+
+    try {
+        const uploadedUrls = [];
+
+        for (const file of files) {
+            // 1. Create a unique file path
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${activeJobId}/${serviceKey}_${Date.now()}.${fileExt}`;
+            const filePath = `commission-refs/${fileName}`;
+
+            // 2. Upload to Supabase Storage (Assumes bucket 'commission-media' exists)
+            const { error: uploadError } = await _supabase.storage
+                .from('commission-media')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // 3. Get Public URL
+            const { data: { publicUrl } } = _supabase.storage
+                .from('commission-media')
+                .getPublicUrl(filePath);
+                
+            uploadedUrls.push(publicUrl);
+        }
+
+        // 4. Update the Job Data
+        const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+        const detailsKey = `${serviceKey}_details`;
+        const currentImages = job[detailsKey]?.images || [];
+        
+        const updatedDetails = {
+            ...job[detailsKey],
+            images: [...currentImages, ...uploadedUrls]
+        };
+
+        const { error: updateError } = await _supabase
+            .from('commissions')
+            .update({ [detailsKey]: updatedDetails })
+            .eq('id', activeJobId);
+
+        if (updateError) throw updateError;
+
+        showMagicAlert("Uploaded! 🌸", "Photos added to the order.", "success");
+        await openDrawer(activeJobId); // Refresh drawer
+
+    } catch (err) {
+        console.error("Upload error:", err);
+        showMagicAlert("Upload Failed", err.message, "error");
+    } finally {
+        loadingBtn.innerText = originalText;
+        loadingBtn.disabled = false;
+    }
+}
+
+async function removeImage(serviceKey, imgUrl) {
+    if (!confirm("Delete this image from the order? 🎀")) return;
+
+    try {
+        const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+        const detailsKey = `${serviceKey}_details`;
+        
+        const updatedImages = job[detailsKey].images.filter(url => url !== imgUrl);
+        
+        const updatedDetails = {
+            ...job[detailsKey],
+            images: updatedImages
+        };
+
+        const { error } = await _supabase
+            .from('commissions')
+            .update({ [detailsKey]: updatedDetails })
+            .eq('id', activeJobId);
+
+        if (error) throw error;
+
+        await openDrawer(activeJobId); // Refresh drawer
+    } catch (err) {
+        console.error("Delete image error:", err);
+    }
 }
         
      async function handleLogout() {
