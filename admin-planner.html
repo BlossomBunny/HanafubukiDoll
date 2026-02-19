@@ -50,7 +50,6 @@
         .bounce-bunny { display: inline-block; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-<style type="text/tailwindcss">
     @layer components {
         /* 1. The Main Container - Airy & Soft */
         #calendar {
@@ -88,7 +87,7 @@
             @apply border-none shadow-sm rounded-lg font-black text-[9px] p-1 mx-1 mb-1 !important;
         }
     }
-      <style type="text/tailwindcss">
+        
     @layer components {
         /* Washi Tape: For Commissions */
         .job-bar-style {
@@ -126,7 +125,7 @@
             @apply bg-rose-100 border-rose-300 opacity-100 scale-105 !important;
         }
     }
-<style type="text/tailwindcss">
+
     @layer components {
         /* Add a soft "Today" ribbon to the top right of the current day */
         .fc-day-today .fc-daygrid-day-top::after {
@@ -171,6 +170,46 @@
 .fc-button-primary:hover {
     @apply bg-pink-50 border-pink-200 text-pink-600 !important;
 }
+        /* Holiday Bar Style */
+.sticker-style[data-type="holiday"], 
+.fc-event.holiday-bar {
+    @apply border-none shadow-none !important;
+    background-color: #fdf2f8 !important; /* Soft Pink */
+    color: #db2777 !important; /* Deep Pink Text */
+    border-radius: 8px !important;
+    font-weight: 800 !important;
+    border-left: 4px solid #f472b6 !important; /* Pink accent edge */
+}
+
+/* Admin Bar Style (Mint) */
+.sticker-style[data-type="admin"] {
+    @apply border-none shadow-none !important;
+    background-color: #f0fdf4 !important; /* Soft Mint */
+    color: #059669 !important; /* Deep Green Text */
+    border-radius: 8px !important;
+    font-weight: 800 !important;
+    border-left: 4px solid #34d399 !important;
+}
+        /* Birthday Ribbon Style */
+.sticker-style[data-type="birthday"] {
+    @apply border-none shadow-none !important;
+    background-color: #fffbeb !important; /* Soft Amber/Yellow */
+    color: #b45309 !important; /* Deep Amber Text */
+    border-radius: 8px !important;
+    font-weight: 800 !important;
+    border-left: 4px solid #fbbf24 !important; /* Gold accent edge */
+}
+        @layer components {
+    .sticker-style {
+        @apply border-none !important;
+        border-left-width: 4px !important; /* This creates the "ribbon" look */
+        border-radius: 8px !important;
+        padding: 2px 6px !important;
+        font-weight: 800 !important;
+        font-size: 10px !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+}
     </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
@@ -197,16 +236,26 @@
     <div id="stickerDrawer" class="bg-white rounded-[2.5rem] p-6 border border-pink-100 shadow-sm sticky top-24">
         <h3 class="text-[10px] font-black text-pink-400 uppercase tracking-[0.2em] mb-6 text-center">Studio Kit</h3>
         
-        <div class="flex flex-row lg:flex-col gap-6 justify-center items-center">
-            <div class="sticker-item group cursor-grab" data-event='{"title": "🌸 HOLIDAY", "type": "holiday"}'>
-                <div class="w-14 h-14 bg-pink-50 rounded-2xl flex items-center justify-center text-2xl group-hover:rotate-6 transition-transform shadow-sm">🌸</div>
-                <p class="text-[8px] font-black text-pink-300 uppercase mt-2 text-center">Holiday</p>
-            </div>
+<div class="flex flex-row lg:flex-col gap-6 justify-center items-center">
+    <div class="sticker-item group cursor-grab" data-event='{"title": "🌸 HOLIDAY", "type": "holiday"}'>
+        <div class="w-14 h-14 bg-pink-50 rounded-2xl flex items-center justify-center text-2xl group-hover:rotate-6 transition-transform shadow-sm">🌸</div>
+        <p class="text-[8px] font-black text-pink-300 uppercase mt-2 text-center">Holiday</p>
+    </div>
 
-            <div class="sticker-item group cursor-grab" data-event='{"title": "✨ ADMIN", "type": "personal"}'>
-                <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl group-hover:-rotate-6 transition-transform shadow-sm">✨</div>
-                <p class="text-[8px] font-black text-emerald-300 uppercase mt-2 text-center">Admin</p>
-            </div>
+    <div class="sticker-item group cursor-grab" data-event='{"title": "✨ ADMIN", "type": "admin"}'>
+        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl group-hover:-rotate-6 transition-transform shadow-sm">✨</div>
+        <p class="text-[8px] font-black text-emerald-300 uppercase mt-2 text-center">Admin</p>
+    </div>
+    
+    <div class="sticker-item group cursor-grab" data-event='{"title": "🎂 BIRTHDAY", "type": "birthday"}'>
+    <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl group-hover:rotate-12 transition-transform shadow-sm">🎂</div>
+    <p class="text-[8px] font-black text-amber-400 uppercase mt-2 text-center">Birthday</p>
+</div>
+    <div class="sticker-item group cursor-grab" data-event='{"title": "⭐ EVENT", "type": "stuff"}'>
+    <div class="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-sm">⭐</div>
+    <p class="text-[8px] font-black text-purple-300 uppercase mt-2 text-center">Stuff</p>
+</div>
+    </div>
 
             <div id="calendar-trash" class="w-full mt-6 p-4 border-2 border-dashed border-rose-100 rounded-2xl flex flex-col items-center gap-2 opacity-40 hover:opacity-100 hover:bg-rose-50 transition-all">
                 <span class="text-xl">🗑️</span>
@@ -232,15 +281,28 @@
     <div id="eventModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-pink-100">
         <h3 id="modalTitle" class="text-2xl font-black italic mb-6 text-gray-800">Event Details</h3>
-        <div class="space-y-4">
-            <div>
-                <label class="text-[10px] font-black text-pink-300 uppercase ml-2">Title</label>
-                <input type="text" id="editTitle" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-200 transition-all">
-            </div>
-            <div>
-                <label class="text-[10px] font-black text-pink-300 uppercase ml-2">Extra Notes</label>
-                <textarea id="editDetails" placeholder="Add specific notes here..." class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold h-32 resize-none outline-none focus:ring-2 focus:ring-pink-200"></textarea>
-            </div>
+          <div class="space-y-4">
+    <div>
+        <label class="text-[10px] font-bold text-pink-400 uppercase">Title</label>
+        <input id="editTitle" type="text" class="w-full border-b-2 border-pink-100 focus:border-pink-300 outline-none pb-1">
+    </div>
+    
+    <div class="flex gap-4">
+        <div class="flex-1">
+            <label class="text-[10px] font-bold text-pink-400 uppercase">Start</label>
+            <input id="editStart" type="date" class="w-full text-xs border-pink-50 rounded-lg">
+        </div>
+        <div class="flex-1">
+            <label class="text-[10px] font-bold text-pink-400 uppercase">End</label>
+            <input id="editEnd" type="date" class="w-full text-xs border-pink-50 rounded-lg">
+        </div>
+    </div>
+
+    <div>
+        <label class="text-[10px] font-bold text-pink-400 uppercase">Notes</label>
+        <textarea id="editDetails" class="w-full border-2 border-pink-50 rounded-xl p-2 text-xs h-20 outline-none focus:border-pink-200"></textarea>
+    </div>
+</div>
             <div class="flex gap-3 pt-4">
                 <button onclick="closeModal()" class="flex-1 py-4 text-gray-400 font-black text-[10px] uppercase tracking-widest">Cancel</button>
                <button onclick="updateEventRecord()" class="flex-[2] bg-pink-500 ...">
@@ -349,35 +411,48 @@ async function renderPlanner() {
             fixedWeekCount: false,
             
             events: [
-                // Fixed Jobs Mapping (The Washi Tape Bars)
-                ...(jobs || []).map(j => ({
-                    id: `job-${j.id}`,
-                    title: `🐰 ${j.customer_name}`,
-                    start: j.arrived_at,
-                    end: new Date().toISOString(), // Ends today to create a duration bar
-                    className: 'job-bar-style',
-                    allDay: true,
-                    backgroundColor: '#f0f9ff', 
-                    textColor: '#0369a1',
-                    extendedProps: { 
-                        type: 'commission', 
-                        social: j.social_handle, 
-                        sculpt: j.doll_sculpt, 
-                        status: j.status, 
-                        payment: j.payment_status 
-                    }
-                })),
-                // Stickers Mapping
-                ...(events || []).map(e => ({
-                    id: e.id,
-                    title: e.title,
-                    start: e.start_date,
-                    className: 'sticker-style',
-                    backgroundColor: e.type === 'holiday' ? '#fdf2f8' : '#f0fdf4',
-                    textColor: e.type === 'holiday' ? '#db2777' : '#059669',
-                    extendedProps: { type: 'sticker', details: e.details }
-                }))
-            ],
+    // 🐰 Jobs (Washi Tape Bars)
+    ...(jobs || []).map(j => ({
+        id: `job-${j.id}`,
+        title: `🐰 ${j.customer_name}`,
+        start: j.arrived_at,
+        end: new Date().toISOString(), 
+        className: 'job-bar-style',
+        allDay: true,
+        backgroundColor: '#f0f9ff', 
+        textColor: '#0369a1',
+        extendedProps: { 
+            type: 'commission', 
+            social: j.social_handle, 
+            sculpt: j.doll_sculpt, 
+            status: j.status, 
+            payment: j.payment_status 
+        }
+    })),
+    
+    // ✨ Stickers (Holiday, Admin, Birthday, Stuff)
+    ...(events || []).map(e => {
+        const styles = {
+            holiday: { bg: '#fdf2f8', text: '#db2777', border: '#f472b6' },
+            admin: { bg: '#f0fdf4', text: '#059669', border: '#34d399' },
+            birthday: { bg: '#fffbeb', text: '#b45309', border: '#fbbf24' },
+            stuff: { bg: '#faf5ff', text: '#7e22ce', border: '#a855f7' }
+        }[e.type] || { bg: '#f9fafb', text: '#374151', border: '#d1d5db' };
+
+        return {
+            id: e.id,
+            title: e.title,
+            start: e.start_date,
+            end: e.end_date || e.start_date,
+            className: 'sticker-style',
+            backgroundColor: styles.bg,
+            textColor: styles.text,
+            borderColor: styles.border,
+            extendedProps: { type: e.type, details: e.details }
+        };
+    })
+],
+                    
 // 1. SAVE NEW STICKERS WHEN DROPPED
         eventReceive: async function(info) {
             const type = info.event.extendedProps.type || 'personal';
@@ -404,6 +479,41 @@ async function renderPlanner() {
                 showMagicAlert("Success! 🌸", "Added to planner.", "success");
             }
         },
+            eventReceive: async function(info) {
+    const type = info.event.extendedProps.type || 'stuff';
+    const title = info.event.title;
+    const startDate = info.event.startStr;
+
+    const { data, error } = await _supabase
+        .from('events')
+        .insert([{
+            title: title,
+            type: type,
+            start_date: startDate,
+            end_date: startDate, // Initial 1-day range
+            details: ""
+        }])
+        .select();
+
+    if (error) {
+        console.error("Save Error:", error);
+        info.event.remove(); 
+        showMagicAlert("Oh no!", "Sticker didn't save. ☁️", "error");
+    } else {
+        info.event.setProp('id', data[0].id);
+        
+        // Populate modal fields for the newly dropped sticker
+        currentEditingId = data[0].id;
+        document.getElementById('editTitle').value = title;
+        document.getElementById('editStart').value = startDate;
+        document.getElementById('editEnd').value = startDate;
+        document.getElementById('editDetails').value = "";
+        
+        // Show the modal so they can customize it immediately
+        document.getElementById('eventModal').classList.remove('hidden');
+        showMagicAlert("Success! 🌸", "Sticker added. Add details?", "success");
+    }
+},
 
         // 2. UPDATE DATE WHEN STICKER IS MOVED
         eventDrop: async function(info) {
@@ -439,13 +549,20 @@ async function renderPlanner() {
                     document.getElementById('workbenchLink').href = `admin-workbench.html?open=${uuid}`;
                     document.getElementById('jobModal').classList.remove('hidden');
                 } else {
-                    currentEditingId = info.event.id;
-                    document.getElementById('editTitle').value = info.event.title;
-                    document.getElementById('editDetails').value = props.details || '';
-                    document.getElementById('eventModal').classList.remove('hidden');
-                }
-            },
-
+        currentEditingId = info.event.id;
+        document.getElementById('editTitle').value = info.event.title;
+        document.getElementById('editDetails').value = props.details || '';
+        
+        
+        document.getElementById('editStart').value = info.event.startStr.split('T')[0];
+   
+        document.getElementById('editEnd').value = (info.event.endStr || info.event.startStr).split('T')[0];
+        
+        document.getElementById('eventModal').classList.remove('hidden');
+    }
+}
+                
+                
             eventDragStart: function() {
                 const trash = document.getElementById('calendar-trash');
                 if(trash) trash.classList.add('opacity-100', 'border-rose-400', 'bg-rose-50');
@@ -483,32 +600,30 @@ async function deleteEvent(id) {
         calendar.getEventById(id).remove();
     }
 }
-      async function updateEventRecord() {
+async function updateEventRecord() {
     if (!currentEditingId) return;
 
     const title = document.getElementById('editTitle').value;
     const details = document.getElementById('editDetails').value;
+    const start = document.getElementById('editStart').value;
+    const end = document.getElementById('editEnd').value;
 
     const { error } = await _supabase
         .from('events')
         .update({ 
             title: title, 
-            details: details 
+            details: details,
+            start_date: start,
+            end_date: end
         })
         .eq('id', currentEditingId);
 
     if (error) {
-        console.error("Update Error:", error);
-        showMagicAlert("Error", "Failed to save changes. ☁️", "error");
+        showMagicAlert("Error", "Save failed ☁️", "error");
     } else {
-        // Update the UI immediately without refreshing
-        const event = calendar.getEventById(currentEditingId);
-        if (event) {
-            event.setProp('title', title);
-            event.setExtendedProp('details', details);
-        }
-        
-        showMagicAlert("Updated ✨", "Notes saved successfully!", "success");
+        // Refresh the calendar to show the new bar length
+        calendar.refetchEvents(); 
+        showMagicAlert("Saved! ✨", "The bar has been updated.", "success");
         closeModal();
     }
 }
