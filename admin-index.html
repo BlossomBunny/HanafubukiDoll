@@ -202,28 +202,30 @@
         document.getElementById('stat-revenue').innerText = `£${totalBooked.toFixed(0)}`;
         document.getElementById('stat-paid').innerText = `£${totalPaid.toFixed(0)}`;
 
-       // 5. Priorities (Smart Sorting: Oldest > Paid Status > Urgent)
+     // 5. Priorities (Smart Sorting: Oldest Arrived > Paid Status > Urgent)
 const priorities = jobs
-    .filter(j => !['Complete', 'Shipped', 'Enquiry', 'Quote'].includes(j.status)) // Exclude completed/unconfirmed
+    .filter(j => !['Complete', 'Shipped', 'Enquiry', 'Quote'].includes(j.status))
     .map(j => {
         let score = 0;
         
-        const daysInQueue = Math.floor((new Date() - new Date(j.created_at)) / (1000 * 60 * 60 * 24));
-        score += daysInQueue; 
-
+        // Use arrived_at if available, otherwise fallback to created_at
+        const startDate = j.arrived_at ? new Date(j.arrived_at) : new Date(j.created_at);
+        const daysInCare = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+        
+        // Base score is days in care (Physical Priority)
+        score += daysInCare; 
         
         if (j.is_urgent) score += 50;          
         if (j.payment_status === 'Paid') score += 20; 
         
-        return { ...j, pScore: score, daysInQueue };
+        return { ...j, pScore: score, daysInCare };
     })
     .sort((a, b) => b.pScore - a.pScore) 
     .slice(0, 3); 
 
 document.getElementById('priority-list').innerHTML = priorities.map(j => {
-    // 1. Determine the correct label and color for the payment indicator
     let payLabel = j.payment_status || 'Unpaid';
-    let dotColor = 'bg-amber-400'; // Default for Unpaid/Partial
+    let dotColor = 'bg-amber-400';
 
     if (j.payment_method === 'Trade') {
         payLabel = 'Trade 🤝';
@@ -256,7 +258,7 @@ document.getElementById('priority-list').innerHTML = priorities.map(j => {
                     <span class="text-[8px] font-bold uppercase text-gray-500">${payLabel}</span>
                 </div>
                 <span class="text-[8px] font-bold uppercase text-pink-300 italic">
-                    ${j.daysInQueue} Days Waiting
+                    ${j.daysInCare} Days in Studio
                 </span>
             </div>
         </div>
