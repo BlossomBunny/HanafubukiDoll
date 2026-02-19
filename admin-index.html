@@ -202,18 +202,47 @@
         document.getElementById('stat-revenue').innerText = `£${totalBooked.toFixed(0)}`;
         document.getElementById('stat-paid').innerText = `£${totalPaid.toFixed(0)}`;
 
-        // 5. Priorities (Sorted by oldest created_at)
-        const priorities = jobs.filter(j => !['Shipped', 'Enquiry'].includes(j.status))
-                               .sort((a,b) => new Date(a.created_at) - new Date(b.created_at))
-                               .slice(0,3);
-                               
-        document.getElementById('priority-list').innerHTML = priorities.map(j => `
-            <div class="flex justify-between items-center p-3 bg-white rounded-xl border border-pink-50 shadow-sm">
-                <span class="font-bold text-[11px] text-gray-700 uppercase">${j.social_handle || 'Client'}</span>
-                <span class="text-[9px] px-3 py-1 bg-pink-100 text-pink-500 rounded-full font-black uppercase">${j.status}</span>
-            </div>
-        `).join('') || '<p class="text-gray-400 text-xs italic">No priorities! ♡</p>';
+       // 5. Priorities (Smart Sorting: Oldest > Paid Status > Urgent)
+const priorities = jobs
+    .filter(j => !['Shipped', 'Enquiry', 'Quote'].includes(j.status)) // Exclude completed/unconfirmed
+    .map(j => {
+        let score = 0;
+        
+        const daysInQueue = Math.floor((new Date() - new Date(j.created_at)) / (1000 * 60 * 60 * 24));
+        score += daysInQueue; 
 
+        
+        if (j.is_urgent) score += 50;          
+        if (j.payment_status === 'Paid') score += 20; 
+        
+        return { ...j, pScore: score, daysInQueue };
+    })
+    .sort((a, b) => b.pScore - a.pScore) 
+    .slice(0, 3); 
+
+document.getElementById('priority-list').innerHTML = priorities.map(j => `
+    <div class="flex flex-col p-3 bg-white rounded-xl border border-pink-50 shadow-sm gap-2 relative overflow-hidden">
+        ${j.is_urgent ? '<div class="absolute top-0 right-0 px-2 py-0.5 bg-rose-400 text-white text-[7px] font-black uppercase">Urgent</div>' : ''}
+        
+        <div class="flex justify-between items-center">
+            <span class="font-black text-[11px] text-gray-700 uppercase">${j.social_handle || 'Client'}</span>
+            <span class="text-[8px] px-2 py-0.5 bg-pink-100 text-pink-500 rounded-full font-black uppercase">
+                ${j.status}
+            </span>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1">
+                <div class="w-1.5 h-1.5 rounded-full ${j.payment_status === 'Paid' ? 'bg-emerald-400' : 'bg-amber-400'}"></div>
+                <span class="text-[8px] font-bold uppercase text-gray-500">${j.payment_status || 'Unpaid'}</span>
+            </div>
+            <span class="text-[8px] font-bold uppercase text-pink-300 italic">
+                ${j.daysInQueue} Days Waiting
+            </span>
+        </div>
+    </div>
+`).join('') || '<p class="text-gray-400 text-xs italic">All clear! Go take a break ♡</p>';
+        
         // 6. Quick Toggles (Using the fetched settings)
         if (settings) {
             const services = settings.filter(s => s.id !== 'Banner');
