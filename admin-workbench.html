@@ -274,7 +274,7 @@ async function openDrawer(id) {
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${job.doll_company || ''} ${job.doll_sculpt || ''}</p>
                     </div>
                     <select id="upStatus" class="text-[10px] font-black uppercase bg-gray-100 px-4 py-2 rounded-xl border-none outline-none">
-                        ${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped'].map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                        ${['Enquiry','Quote','Arrived','Working','Approved','Photo','Shipped','Complete'].map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s}</option>`).join('')}
                     </select>
                 </section>
 
