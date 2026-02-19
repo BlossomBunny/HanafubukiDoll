@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="global-style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.css' rel='stylesheet' />
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
 <style type="text/tailwindcss">
@@ -338,9 +339,10 @@ events: [
     })),
     
     // --- MAP STICKERS (Personal/Holiday/Admin) ---
-   ...(events || []).map(e => {
+  ...(events || []).map(e => {
     const isRange = e.start_date !== e.end_date;
-    const emoji = e.title.split(' ')[0];
+
+    const emoji = e.title ? e.title.split(' ')[0] : '⭐';
 
     return {
         id: e.id,
@@ -348,13 +350,17 @@ events: [
         start: e.start_date,
         end: e.end_date || e.start_date,
         allDay: true,
-        backgroundColor: 'transparent', // Forces transparency
+        backgroundColor: 'transparent',
         borderColor: 'transparent',
         className: [
             isRange ? 'range-bar-style' : 'sticker-style', 
             `type-${e.type || 'stuff'}`
         ],
-        extendedProps: { type: e.type, details: e.details }
+        extendedProps: { 
+            type: e.type, 
+            details: e.details,
+            fullTitle: e.title 
+        }
     };
 })
     ],
