@@ -50,71 +50,84 @@
         .bounce-bunny { display: inline-block; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-/* --- Airy Calendar Core --- */
-.fc { font-family: 'Plus Jakarta Sans', sans-serif !important; border: none !important; }
-.fc-theme-standard td, .fc-theme-standard th { border: none !important; }
+<style type="text/tailwindcss">
+    @layer components {
+        /* 1. The Main Container - Airy & Soft */
+        #calendar {
+            @apply bg-white p-6 rounded-[3rem] border-8 border-pink-50 shadow-inner;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+        }
 
-/* Turn day cells into floating white cards */
-.fc-daygrid-day-frame {
-    background: #ffffff; /* Solid white */
-    border-radius: 1.2rem;
-    margin: 6px;
-    border: 1px solid #fdf2f8; /* Very faint pink border */
-    transition: all 0.3s ease;
-    min-height: 100px !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-}
+        /* 2. Transform the Grid into "Sticker" Boxes */
+        .fc-daygrid-day-frame {
+            @apply m-1 rounded-2xl border-2 border-pink-50/50 bg-white transition-all duration-300 !important;
+            min-height: 100px !important;
+        }
 
-.fc-day-today .fc-daygrid-day-frame {
-    background: #ffffff !important;
-    box-shadow: 0 0 0 3px #fbcfe8, 0 8px 20px rgba(0,0,0,0.05); /* Soft pink glow */
-}
+        /* 3. The Date Circles (Matches your reference dots) */
+        .fc-daygrid-day-number {
+            @apply bg-pink-100 text-pink-500 font-black text-[10px] w-6 h-6 rounded-full 
+                   flex items-center justify-center m-2 transition-transform hover:scale-110 !important;
+        }
 
-/* Day numbers as small mint or pink circles */
-.fc-daygrid-day-number {
-    background: #f0fdfa; /* Mint tint */
-    color: #0d9488 !important; /* Mint text */
-    font-weight: 800 !important;
-    font-size: 10px !important;
-    width: 22px;
-    height: 22px;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    margin: 10px !important;
-}
+        /* 4. Today Highlight - Minty Glow */
+        .fc-day-today .fc-daygrid-day-frame {
+            @apply bg-emerald-50/30 border-emerald-200 border-dashed !important;
+        }
 
-/* Weekday Headers (Mon, Tue, etc.) */
-.fc-col-header-cell-cushion {
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    font-size: 10px !important;
-    color: #9ca3af !important; /* Soft gray */
-    font-weight: 800 !important;
-    padding-bottom: 10px;
-}
+        /* 5. Header Styling (Mon, Tue...) */
+        .fc-col-header-cell {
+            @apply pb-4 !important;
+        }
+        .fc-col-header-cell-cushion {
+            @apply text-[10px] font-black uppercase tracking-widest text-pink-300 !important;
+        }
 
-/* Event Styling: Stickers (Events) vs Washi Tape (Jobs) */
-.fc-event {
-    border: none !important;
-    margin: 2px 6px !important;
-    padding: 3px 8px !important;
-}
+        /* 6. Event Stickers */
+        .fc-event {
+            @apply border-none shadow-sm rounded-lg font-black text-[9px] p-1 mx-1 mb-1 !important;
+        }
+    }
+      <style type="text/tailwindcss">
+    @layer components {
+        /* Washi Tape: For Commissions */
+        .job-bar-style {
+            @apply border-none shadow-sm !important;
+            border-radius: 4px !important;
+            /* Subtle paper texture */
+            background-image: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent);
+            background-size: 10px 10px;
+            padding: 4px 10px !important;
+            font-weight: 800 !important;
+            font-size: 9px !important;
+            letter-spacing: 0.02em;
+            transition: transform 0.2s ease;
+        }
+        .job-bar-style:hover {
+            transform: translateY(-1px) scale(1.02);
+            filter: brightness(1.05);
+        }
 
-.sticker-style {
-    border: 2px solid #ffffff !important; 
-    border-radius: 12px !important; 
-    box-shadow: 2px 2px 0px rgba(0,0,0,0.03);
-    transform: rotate(-1deg);
-}
+        /* Stickers: For Holidays/Admin */
+        .sticker-style {
+            @apply border-none shadow-md !important;
+            border-radius: 12px !important;
+            padding: 5px !important;
+            transform: rotate(-1deg);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        }
+        .sticker-style:hover {
+            transform: scale(1.15) rotate(1deg) !important;
+            z-index: 100;
+        }
 
-.job-bar-style {
-    border-radius: 6px !important;
-    opacity: 0.9;
-    font-size: 9px !important;
-    border-left: 4px solid rgba(0,0,0,0.1) !important; /* Washi tape "edge" */
-}
+        /* The Trash Zone "Glow" */
+        #calendar-trash.drag-over {
+            @apply bg-rose-100 border-rose-300 opacity-100 scale-105 !important;
+        }
+    }
+</style>
+</style>
     </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
@@ -136,285 +149,223 @@
         </div>
     </nav>
 
-<main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
+<main id="adminMain" class="max-w-7xl mx-auto p-6 md:p-10 flex flex-col lg:flex-row gap-8">
     
-<div id="plannerContainer" class="animate-fadeIn mt-6">
-    <div class="flex flex-col md:flex-row gap-6">
+    <div class="bg-white rounded-[2.5rem] p-6 border border-pink-100 shadow-sm sticky top-24">
+        <h3 class="text-[10px] font-black text-pink-400 uppercase tracking-[0.2em] mb-6 text-center">Studio Kit</h3>
         
-        <div id="sticker-drawer" class="w-full md:w-48 bg-white rounded-[2.5rem] p-6 shadow-sm border border-emerald-50 flex flex-row md:flex-col gap-6 items-center self-start">
-            <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest hidden md:block mb-2">Studio Kit</p>
-            
-            <div class="sticker-item flex flex-col items-center gap-2 cursor-grab group" data-event='{"title": "STUDIO CLOSED", "type": "holiday"}'>
-                <div class="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🌸</div>
-                <span class="text-[8px] font-black text-pink-400 uppercase text-center">Holiday</span>
-            </div>
-            
-            <div class="sticker-item flex flex-col items-center gap-2 cursor-grab group" data-event='{"title": "Admin & Restock", "type": "personal"}'>
-                <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">✨</div>
-                <span class="text-[8px] font-black text-emerald-400 uppercase text-center">Admin</span>
+        <div class="flex flex-row lg:flex-col gap-6 justify-center items-center">
+            <div class="sticker-item group cursor-grab" data-event='{"title": "🌸 HOLIDAY", "type": "holiday"}'>
+                <div class="w-14 h-14 bg-pink-50 rounded-2xl flex items-center justify-center text-2xl group-hover:rotate-6 transition-transform shadow-sm">🌸</div>
+                <p class="text-[8px] font-black text-pink-300 uppercase mt-2 text-center">Holiday</p>
             </div>
 
-            <div id="trash-zone" class="mt-auto w-full flex flex-col items-center gap-2 p-4 rounded-2xl bg-rose-50/30 border-2 border-dashed border-rose-100 opacity-60 hover:opacity-100 transition-all">
+            <div class="sticker-item group cursor-grab" data-event='{"title": "✨ ADMIN", "type": "personal"}'>
+                <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl group-hover:-rotate-6 transition-transform shadow-sm">✨</div>
+                <p class="text-[8px] font-black text-emerald-300 uppercase mt-2 text-center">Admin</p>
+            </div>
+
+            <div id="calendar-trash" class="w-full mt-6 p-4 border-2 border-dashed border-rose-100 rounded-2xl flex flex-col items-center gap-2 opacity-40 hover:opacity-100 hover:bg-rose-50 transition-all">
                 <span class="text-xl">🗑️</span>
-                <span class="text-[8px] font-black text-rose-400 uppercase">Trash</span>
+                <span class="text-[8px] font-black text-rose-300 uppercase">Drop to Delete</span>
+            </div>
+        </div>
+    </div>
+</aside>
+
+    <section class="flex-1">
+        <div class="flex justify-between items-end mb-8 px-4">
+            <div>
+                <h2 class="text-4xl font-black italic text-gray-800 tracking-tighter">STUDIO PLANNER</h2>
+                <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-[0.3em]">Monthly Schedule ♡</p>
+            </div>
+            <div class="hidden md:flex gap-2">
+                <span class="px-3 py-1 bg-emerald-50 text-emerald-500 rounded-full text-[9px] font-black uppercase">Mint = Admin</span>
+                <span class="px-3 py-1 bg-pink-50 text-pink-500 rounded-full text-[9px] font-black uppercase">Pink = Rest</span>
             </div>
         </div>
 
-        <div class="flex-1 bg-white rounded-[3rem] p-8 shadow-sm border border-pink-50">
-            <div class="flex justify-between items-center mb-8 px-2">
-                <h2 class="text-2xl font-black italic text-gray-800 tracking-tighter">PLANNER ♡</h2>
-                <div class="flex gap-2">
-                    <div class="px-3 py-1 bg-emerald-50 rounded-full text-[9px] font-black text-emerald-500 uppercase">Mint = Admin</div>
-                    <div class="px-3 py-1 bg-pink-50 rounded-full text-[9px] font-black text-pink-500 uppercase">Pink = Holiday</div>
-                </div>
+        <div id="calendar"></div>
+    </section>
+    <div id="eventModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-pink-100">
+        <h3 id="modalTitle" class="text-2xl font-black italic mb-6 text-gray-800">Event Details</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="text-[10px] font-black text-pink-300 uppercase ml-2">Title</label>
+                <input type="text" id="editTitle" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-200 transition-all">
             </div>
-            <div id="calendar"></div>
+            <div>
+                <label class="text-[10px] font-black text-pink-300 uppercase ml-2">Extra Notes</label>
+                <textarea id="editDetails" placeholder="Add specific notes here..." class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold h-32 resize-none outline-none focus:ring-2 focus:ring-pink-200"></textarea>
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button onclick="closeModal()" class="flex-1 py-4 text-gray-400 font-black text-[10px] uppercase tracking-widest">Cancel</button>
+                <button onclick="updateEventRecord()" class="flex-[2] bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all">Save Changes ♡</button>
+            </div>
         </div>
-
     </div>
 </div>
+    <div id="jobModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border-4 border-emerald-50">
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <h3 id="jobCustomerName" class="text-2xl font-black italic text-gray-800">Customer Name</h3>
+                <p id="jobSocial" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">@social_handle</p>
+            </div>
+            <span id="jobStatusBadge" class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[9px] font-black uppercase">Status</span>
+        </div>
+
+        <div class="space-y-4 bg-gray-50 p-6 rounded-[2rem]">
+            <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span class="text-[10px] font-black text-gray-400 uppercase">Sculpt</span>
+                <span id="jobSculpt" class="text-sm font-bold text-gray-700">---</span>
+            </div>
+            <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span class="text-[10px] font-black text-gray-400 uppercase">Arrived</span>
+                <span id="jobArrived" class="text-sm font-bold text-gray-700">---</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-[10px] font-black text-gray-400 uppercase">Payment</span>
+                <span id="jobPayment" class="text-sm font-bold text-emerald-600">---</span>
+            </div>
+        </div>
+
+        <div class="flex gap-3 pt-6">
+            <button onclick="closeJobModal()" class="flex-1 py-4 text-gray-400 font-black text-[10px] uppercase tracking-widest">Close</button>
+            <a id="workbenchLink" href="admin-workbench.html" class="flex-[2] bg-emerald-500 text-white text-center py-4 rounded-2xl font-black shadow-lg hover:bg-emerald-600 transition-all text-sm">Open in Workbench ♡</a>
+        </div>
+    </div>
+</div>
+</main>
     
   <script>
- // --- PLANNER LOGIC --- //
-let currentEventId = null;
-      
-function getJobColor(status, isUrgent) {
-    if (isUrgent) return '#fecdd3'; // pink-200
-    const colors = {
-        'Enquiry': '#ecfeff', // cyan-50 (Minty)
-        'Working': '#f0fdf4', // green-50
-        'Arrived': '#fff7ed', // orange-50
-    };
-    return colors[status] || '#ffffff';
-}
-
-function showEventModal(id, event = null) {
-    currentEventId = id;
-    document.getElementById('eventModalTitle').textContent = id ? 'Edit Event' : 'Add Event';
-    document.getElementById('deleteEventBtn').classList.toggle('hidden', !id);
-
-    if (event) {
-        document.getElementById('eventTitle').value = event.title || '';
-        document.getElementById('eventType').value = event.extendedProps?.type || 'other';
-        document.getElementById('eventStart').value = event.start ? new Date(event.start).toISOString().slice(0,16) : '';
-        document.getElementById('eventEnd').value = event.end ? new Date(event.end).toISOString().slice(0,16) : '';
-        document.getElementById('eventDetails').value = event.extendedProps?.details || '';
-    } else {
-        document.getElementById('eventForm').reset();
-    }
-
-    document.getElementById('eventModal').classList.remove('hidden');
-}
-
-function closeEventModal() {
-    document.getElementById('eventModal').classList.add('hidden');
-}
-
-async function saveEvent() {
-    const title = document.getElementById('eventTitle').value.trim();
-    const type = document.getElementById('eventType').value;
-    const start = document.getElementById('eventStart').value;
-    const end = document.getElementById('eventEnd').value || null;
-    const details = document.getElementById('eventDetails').value.trim();
-
-    // Verification Alert
-    if (!title || !start) {
-        showMagicAlert("Missing Info! ☁️", "Title and start date are required to save an event.", "error");
-        return;
-    }
-
-    try {
-        let error;
-        if (currentEventId) {
-            ({ error } = await _supabase.from('events').update({
-                title, type, start_date: start, end_date: end, details
-            }).eq('id', currentEventId));
-        } else {
-            ({ error } = await _supabase.from('events').insert({
-                title, type, start_date: start, end_date: end, details
-            }));
-        }
-
-        if (error) throw error;
-
-        // Optional Success Alert - You can comment this out if you prefer it just closing silently
-        showMagicAlert("Planner Updated! 🌸", "Your event has been safely tucked into the calendar.", "success");
-
-        closeEventModal();
-        renderPlanner(); // Refresh calendar
-    } catch (err) {
-        console.error("Save event error:", err);
-        // Error Alert
-        showMagicAlert("Save Failed ☁️", "Oh no! We couldn't save that: " + err.message, "error");
-    }
-}
-    
-async function deleteEvent() {
-    showMagicAlert(
-        "Delete Event? 🎀", 
-        "Are you sure you want to remove this from the calendar? This cannot be undone.", 
-        "confirm", 
-        async () => {
-            try {
-                const { error } = await _supabase.from('events').delete().eq('id', currentEventId);
-                if (error) throw error;
-                
-                // Success feedback
-                showMagicAlert("Gone! ☁️", "The event has been cleared from your planner.", "success");
-                
-                closeEventModal();
-                renderPlanner();
-            } catch (err) {
-                console.error("Delete error:", err);
-                showMagicAlert("Error ☁️", "Failed to delete: " + err.message, "error");
-            }
-        }
-    );
-}
-       
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if user is logged in first, then render
-    _supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-            document.getElementById('adminMain').classList.remove('auth-hidden');
-            renderPlanner(); 
-        } else {
-            window.location.href = 'admin-login.html';
-        }
-    });
-});
-
+let calendar;
+let currentEditingId = null;
 
 async function renderPlanner() {
     const calendarEl = document.getElementById('calendar');
-    if (!calendarEl) return;
+    
+    // Fetch Data
+    const [{ data: jobs }, { data: events }] = await Promise.all([
+        _supabase.from('commissions').select('*').not('arrived_at', 'is', null),
+        _supabase.from('events').select('*')
+    ]);
 
-    calendarEl.innerHTML = ''; 
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+        editable: true,
+        droppable: true,
+        
+        events: [
+            // 1. Map Commissions using your specific columns
+            ...jobs.map(j => ({
+                id: `job-${j.id}`,
+                title: `🐰 ${j.customer_name}`, // Only show Name on the bar
+                start: j.arrived_at,
+                className: 'job-bar-style',
+                backgroundColor: '#f0f9ff', 
+                textColor: '#0369a1',
+                // Store extra info for the popup
+                extendedProps: {
+                    type: 'commission',
+                    social: j.social_handle,
+                    sculpt: j.doll_sculpt,
+                    status: j.status,
+                    payment: j.payment_status
+                }
+            })),
+            // 2. Map Stickers (Events table)
+            ...events.map(e => ({
+                id: e.id,
+                title: e.title,
+                start: e.start_date,
+                className: 'sticker-style',
+                backgroundColor: e.type === 'holiday' ? '#fdf2f8' : '#f0fdf4',
+                textColor: e.type === 'holiday' ? '#db2777' : '#059669',
+                extendedProps: { type: 'sticker', details: e.details }
+            }))
+        ],
 
-    try {
-        // 1. Fetch Data
-        const { data: jobs } = await _supabase.from('commissions').select('*')
-            .in('status', ['Enquiry', 'Quote', 'Arrived', 'Working', 'Approved', 'Photo'])
-            .order('created_at');
+    eventClick: function(info) {
+            const props = info.event.extendedProps;
 
-        const { data: events } = await _supabase.from('events').select('*').order('start_date');
-
-        // Initialize Draggable Stickers
-        new FullCalendar.Draggable(document.getElementById('sticker-drawer'), {
-            itemSelector: '.sticker-item',
-            eventData: function(el) {
-                return JSON.parse(el.getAttribute('data-event'));
+            if (props.type === 'commission') {
+                const uuid = info.event.id.replace('job-', '');
+                
+                document.getElementById('jobCustomerName').innerText = info.event.title;
+                document.getElementById('jobSocial').innerText = props.social || '@hidden';
+                document.getElementById('jobSculpt').innerText = props.sculpt || 'Not Specified';
+                document.getElementById('jobStatusBadge').innerText = props.status;
+                document.getElementById('jobArrived').innerText = info.event.start.toLocaleDateString('en-GB', { 
+                    day: 'numeric', month: 'short' 
+                });
+                document.getElementById('jobPayment').innerText = props.payment || 'Pending';
+                
+                // Set the link to open in a new tab so you can keep the planner open
+                const wbLink = document.getElementById('workbenchLink');
+                wbLink.href = `admin-workbench.html?open=${uuid}`;
+                wbLink.target = "_blank"; 
+                
+                document.getElementById('jobModal').classList.remove('hidden');
+            } else {
+                // Open the Sticker/Event Modal
+                currentEditingId = info.event.id;
+                document.getElementById('editTitle').value = info.event.title;
+                document.getElementById('editDetails').value = props.details || '';
+                document.getElementById('eventModal').classList.remove('hidden');
             }
-        });
+        }, // Cleaned up closing brace here
 
-        // 2. Initialize FullCalendar
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: ''
-            },
-            firstDay: 1,
-            editable: true,
-            selectable: true,
-            droppable: true,
-            dayMaxEvents: 3,
+        eventDragStart: function() {
+            document.getElementById('calendar-trash').classList.add('opacity-100', 'border-rose-400', 'scale-105');
+        },
+
+        eventDragStop: function(info) {
+            document.getElementById('calendar-trash').classList.remove('opacity-100', 'border-rose-400', 'scale-105');
             
-            events: [
-                ...jobs.filter(job => job.arrived_at).map(job => {
-                    const arrivalDate = new Date(job.arrived_at);
-                    const today = new Date();
-                    const diffDays = Math.ceil(Math.abs(today - arrivalDate) / (1000 * 60 * 60 * 24));
-                    return {
-                        id: `job-${job.id}`,
-                        title: `🐰 ${job.social_handle || 'Client'} (Day ${diffDays})`,
-                        start: job.arrived_at,
-                        allDay: true,
-                        backgroundColor: getJobColor(job.status, job.is_urgent),
-                        extendedProps: { type: 'job', status: job.status }
-                    };
-                }),
-               ...events.map(event => {
-    const isHoliday = event.type === 'holiday';
-    return {
-        id: event.id,
-        title: event.title,
-        start: event.start_date,
-        end: event.end_date,
-        allDay: true,
-        // Holiday = Pink, Personal = Mint
-        backgroundColor: isHoliday ? '#fce7f3' : '#ccfbf1',
-        className: 'sticker-style', 
-        borderColor: 'transparent',
-        textColor: isHoliday ? '#db2777' : '#0d9488'
-    };
-})
+            const trashEl = document.getElementById('calendar-trash');
+            const rect = trashEl.getBoundingClientRect();
+            const x = info.jsEvent.clientX;
+            const y = info.jsEvent.clientY;
 
-            // DROPPING A NEW STICKER
-            drop: function(info) {
-    const droppedData = JSON.parse(info.draggedEl.getAttribute('data-event'));
-    
-    showEventModal(null, {
-        title: droppedData.title,
-        start: info.date,
-        extendedProps: { type: droppedData.type }
-    });
-
-    if (info.draggedEl.parentNode) {
-    
-    }
-},
-            // DRAGGING OFF TO THE TRASH CAN
-            eventDragStop: function(info) {
-                const trashEl = document.getElementById('trash-zone');
-                const x = info.jsEvent.clientX;
-                const y = info.jsEvent.clientY;
-                const rect = trashEl.getBoundingClientRect();
-
-              
-                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                    if (info.event.extendedProps.type === 'event') {
-                        currentEventId = info.event.id;
-                        deleteEvent(); 
-                    } else {
-                        showMagicAlert("Wait! 🐰", "You can't trash a Job here, only calendar events!", "error");
-                    }
-                }
-            },
-
-            eventDidMount: function(info) {
-                info.el.style.border = 'none';
-                info.el.style.borderRadius = '12px';
-                info.el.style.padding = '2px 6px';
-            },
-
-            eventClick: function(info) {
-                if (info.event.extendedProps.type === 'job') {
-                    const jobId = info.event.id.replace('job-', '');
-                    window.location.href = `admin-workbench.html?id=${jobId}`;
+            if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                if (info.event.id.startsWith('job-')) {
+                    showMagicAlert("Bunny Says No! 🐰", "Commissions can't be deleted here. Change their status in the Workbench instead.", "warning");
                 } else {
-                    showEventModal(info.event.id, info.event);
-                }
-            },
-
-            eventDrop: async function(info) {
-                if (info.event.extendedProps.type === 'event') {
-                    await _supabase.from('events').update({
-                        start_date: info.event.start.toISOString(),
-                        end_date: info.event.end ? info.event.end.toISOString() : null
-                    }).eq('id', info.event.id);
+                    deleteEvent(info.event.id);
                 }
             }
-        });
+        }
+    });
+    calendar.render();
+}
 
-        calendar.render();
-    } catch (err) {
-        console.error("Planner error:", err);
+function closeJobModal() {
+    document.getElementById('jobModal').classList.add('hidden');
+}
+
+async function updateEventRecord() {
+    const title = document.getElementById('editTitle').value;
+    const details = document.getElementById('editDetails').value;
+
+    const { error } = await _supabase.from('events')
+        .update({ title, details })
+        .eq('id', currentEditingId);
+
+    if (!error) {
+        showMagicAlert("Updated ✨", "Notes saved.", "success");
+        closeModal();
+        renderPlanner(); // Refresh UI
     }
 }
+
+function closeModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+}
       
-     
+// Call this inside your DOMContentLoaded after calendar.render()    
     async function handleLogout() {
     try {
         const { error } = await _supabase.auth.signOut();
@@ -435,30 +386,6 @@ async function renderPlanner() {
 }
        </script>
     
-<div id="eventModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-pink-100">
-        <h3 id="eventModalTitle" class="text-2xl font-black italic mb-6">Add Event</h3>
-        <form id="eventForm" class="space-y-4">
-            <input type="text" id="eventTitle" placeholder="Event Title" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-200 transition-all">
-            <select id="eventType" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none">
-                <option value="holiday">🌸 Holiday/Time Off</option>
-                <option value="personal">✨ Personal/Admin</option>
-                <option value="other">🎀 Other</option>
-            </select>
-            <div class="grid grid-cols-2 gap-3">
-                <input type="datetime-local" id="eventStart" class="p-4 bg-gray-50 rounded-2xl border-none text-xs font-bold">
-                <input type="datetime-local" id="eventEnd" class="p-4 bg-gray-50 rounded-2xl border-none text-xs font-bold">
-            </div>
-            <textarea id="eventDetails" placeholder="Extra notes..." class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold h-24 resize-none"></textarea>
-            
-            <div class="flex gap-3 pt-4">
-                <button type="button" id="deleteEventBtn" onclick="deleteEvent()" class="px-6 py-4 text-rose-400 font-black text-[10px] uppercase hidden">Delete</button>
-                <button type="button" onclick="closeEventModal()" class="flex-1 py-4 text-gray-400 font-black text-[10px] uppercase">Cancel</button>
-                <button type="button" onclick="saveEvent()" class="flex-[2] bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all">Save ♡</button>
-            </div>
-        </form>
-    </div>
-</div>
   <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
         <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
         <p class="text-[var(--text-muted)] text-sm mb-6">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
