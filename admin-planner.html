@@ -308,90 +308,65 @@ async function renderPlanner() {
         ]);
 
         calendar = new FullCalendar.Calendar(calendarEl, {
-            headerToolbar: { 
-                left: 'prev,next today', 
-                center: 'title', 
-                right: 'dayGridMonth,timeGridWeek,listYear' 
-            },
-            initialView: 'dayGridMonth',
-            firstDay: 1,
-            editable: true,
-            droppable: true,
-            fixedWeekCount: false,
-            height: 'auto', 
-    handleWindowResize: true,
+    // ... header and other settings ...
+    height: 'auto', // ✨ Removes the inner scrollbar
 
-            // --- ALL EVENTS (Jobs + Stickers) ---
-            events: [
-                // 🐰 MAP JOBS (Alternating Blue Variety)
-                ...(jobs || []).map((j, index) => ({
-                    id: `job-${j.id}`,
-                    title: `🐰 ${j.customer_name}`,
-                    start: j.arrived_at,
-                    end: new Date().toISOString(),
-                    allDay: true,
-                    // Alternates between light and deep blue
-                    className: ['job-bar-style', index % 2 === 0 ? 'job-blue-light' : 'job-blue-deep'],
-                    extendedProps: { 
-                        isJob: true,
-                        jobId: j.id,
-                        type: 'commission'
-                    }
-                })),
-                
-                // 🌸 MAP STICKERS (Personal/Holiday/Admin/Stuff)
-                ...(events || []).map(e => {
-                    const isRange = e.start_date !== e.end_date;
-                    const emoji = e.title ? e.title.split(' ')[0] : '⭐';
+    events: [
+        // 🐰 MAP JOBS (Alternating Blue Variety)
+        ...(jobs || []).map((j, index) => ({
+            id: `job-${j.id}`,
+            title: `🐰 ${j.customer_name}`,
+            start: j.arrived_at,
+            end: new Date().toISOString(),
+            allDay: true,
+            // Alternates colors: Even index gets light blue, Odd gets deep blue
+            className: ['job-bar-style', index % 2 === 0 ? 'job-blue-light' : 'job-blue-deep'],
+            extendedProps: { 
+                isJob: true,
+                jobId: j.id 
+            }
+        })),
+        
+        // 🌸 MAP STICKERS (Stickers/Events)
+        ...(events || []).map(e => {
+            const isRange = e.start_date !== e.end_date;
+            return {
+                id: e.id,
+                title: isRange ? e.title : (e.title ? e.title.split(' ')[0] : '⭐'),
+                start: e.start_date,
+                end: e.end_date || e.start_date,
+                allDay: true,
+                backgroundColor: 'transparent',
+                borderColor: 'transparent',
+                className: [isRange ? 'range-bar-style' : 'sticker-style', `type-${e.type || 'stuff'}`],
+                extendedProps: { type: e.type, details: e.details, fullTitle: e.title }
+            };
+        })
+    ],
 
-                    return {
-                        id: e.id,
-                        title: isRange ? e.title : emoji,
-                        start: e.start_date,
-                        end: e.end_date || e.start_date,
-                        allDay: true,
-                        backgroundColor: 'transparent',
-                        borderColor: 'transparent',
-                        className: [
-                            isRange ? 'range-bar-style' : 'sticker-style', 
-                            `type-${e.type || 'stuff'}`
-                        ],
-                        extendedProps: { 
-                            type: e.type, 
-                            details: e.details,
-                            fullTitle: e.title 
-                        }
-                    };
-                })
-            ],
+    eventClick: function(info) {
+        // 1. IF IT IS A JOB: Open the Workbench Drawer
+        if (info.event.extendedProps.isJob) {
+            info.jsEvent.preventDefault();
+            const jobId = info.event.extendedProps.jobId;
+            
+            // Call your specific drawer function
+            if (typeof openDrawer === "function") {
+                openDrawer(jobId); 
+            }
+            return; 
+        }
 
-            // --- CLICK LOGIC (Drawer vs Modal) ---
-            eventClick: function(info) {
-                // If it's a JOB (Bunny), open your Workbench Drawer
-                if (info.event.extendedProps.isJob) {
-                    info.jsEvent.preventDefault();
-                    const jobId = info.event.id.replace('job-', '');
-                    
-                    if (typeof openJobDrawer === "function") {
-                        openJobDrawer(jobId);
-                    } else {
-                        console.log("🐰 Opening Workbench for:", jobId);
-                    }
-                    return; 
-                }
-
-                // If it's a STICKER, open the Edit Modal
-                currentEditingId = info.event.id;
-                const displayTitle = info.event.extendedProps.fullTitle || info.event.title;
-                
-                document.getElementById('editTitle').value = displayTitle || "";
-                document.getElementById('editDetails').value = info.event.extendedProps.details || "";
-                document.getElementById('editStart').value = info.event.startStr;
-                document.getElementById('editEnd').value = info.event.endStr || info.event.startStr;
-
-                document.getElementById('eventModal').classList.remove('hidden');
-            },
-
+        // 2. IF IT IS A STICKER: Open the Edit Modal
+        currentEditingId = info.event.id;
+        const displayTitle = info.event.extendedProps.fullTitle || info.event.title;
+        
+        document.getElementById('editTitle').value = displayTitle || "";
+        document.getElementById('editDetails').value = info.event.extendedProps.details || "";
+        document.getElementById('editStart').value = info.event.startStr;
+        document.getElementById('editEnd').value = info.event.endStr || info.event.startStr;
+        document.getElementById('eventModal').classList.remove('hidden');
+    },
             // --- DRAG & DROP LOGIC ---
             eventReceive: async function(info) {
                 const title = info.event.title;
