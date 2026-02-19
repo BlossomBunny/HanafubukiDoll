@@ -145,6 +145,21 @@
     </div>
 </div>
     </div>
+        <div class="bg-white p-6 rounded-[2.5rem] border border-pink-50 shadow-sm space-y-4">
+    <div class="flex justify-between items-center">
+        <div>
+            <h3 class="text-xs font-black uppercase text-gray-400">Studio Growth</h3>
+            <p class="text-[10px] text-pink-300 font-bold">Last 6 Months</p>
+        </div>
+        <div class="flex gap-3">
+            <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-pink-400"></span><span class="text-[8px] font-black uppercase text-gray-400">Enquiries</span></div>
+            <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="text-[8px] font-black uppercase text-gray-400">Booked</span></div>
+        </div>
+    </div>
+    <div class="h-40">
+        <canvas id="trendChart"></canvas>
+    </div>
+</div>
 
     <script>
         let revenueChart = null;
@@ -264,6 +279,37 @@ document.getElementById('priority-list').innerHTML = priorities.map(j => `
         console.error("Summary load failed:", err); 
     }
 }
+        // Inside renderSummary()
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const last6Months = [];
+const enquiryData = [];
+const bookingData = [];
+
+// Get the last 6 months (including the current one)
+for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const monthKey = `${d.getFullYear()}-${d.getMonth()}`; // Unique key for grouping
+    last6Months.push({
+        name: monthNames[d.getMonth()],
+        key: monthKey
+    });
+}
+
+// Group your jobs
+last6Months.forEach(month => {
+    const jobsInMonth = jobs.filter(j => {
+        const jobDate = new Date(j.created_at);
+        return jobDate.getFullYear() === parseInt(month.key.split('-')[0]) && 
+               jobDate.getMonth() === parseInt(month.key.split('-')[1]);
+    });
+
+    enquiryData.push(jobsInMonth.length); // Total Enquiries
+    bookingData.push(jobsInMonth.filter(j => j.payment_status === 'Paid' || j.payment_method === 'Layaway').length); // Successful conversions
+});
+
+// Now call the chart update
+updateTrendChart(last6Months.map(m => m.name), enquiryData, bookingData);
 
         async function renderWaitlist() {
     const countEl = document.getElementById('waitlist-count');
@@ -566,6 +612,54 @@ async function syncBannerUI() {
 document.addEventListener('DOMContentLoaded', async () => {
     syncBannerUI(); 
 });
+        let trendChartInstance = null;
+
+function updateTrendChart(labels, enquiries, bookings) {
+    const ctx = document.getElementById('trendChart')?.getContext('2d');
+    if (!ctx) return;
+
+    if (trendChartInstance) trendChartInstance.destroy();
+
+    trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Enquiries',
+                    data: enquiries,
+                    borderColor: '#f472b6', // Pink 400
+                    backgroundColor: 'rgba(244, 114, 182, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4
+                },
+                {
+                    label: 'Booked',
+                    data: bookings,
+                    borderColor: '#10b981', // Emerald 500
+                    backgroundColor: 'transparent',
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    borderWidth: 2,
+                    pointRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false } // We can use our own labels
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { display: false }, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
     </script>
 
       <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
