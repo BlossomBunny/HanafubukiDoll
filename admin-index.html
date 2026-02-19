@@ -167,25 +167,45 @@
         });
 
         // DASHBOARD RENDERING
-        async function renderSummary() {
-            try {
-                const { data: jobs } = await _supabase.from('commissions').select('*');
-                const { data: settings } = await _supabase.from('studio_settings').select('*');
-                if (!jobs) return;
+async function renderSummary() {
+    try {
+        const { data: jobs } = await _supabase.from('commissions').select('*');
+        if (!jobs) return;
 
-                // Stats
-                const enq = jobs.filter(j => j.status === 'Enquiry').length;
-                const active = jobs.filter(j => ['Working', 'Approved', 'Arrived'].includes(j.status)).length;
-                const photo = jobs.filter(j => j.status === 'Photo').length; 
-                const totalBooked = jobs.reduce((s, j) => s + (Number(j.total_price) || 0), 0);
-                const totalPaid = jobs.filter(j => j.payment_status === 'Paid').reduce((s, j) => s + (Number(j.total_price) || 0), 0);
+        // 1. Stats Calculations
+        const enq = jobs.filter(j => j.status === 'Enquiry').length;
+        const active = jobs.filter(j => ['Working', 'Approved', 'Arrived'].includes(j.status)).length;
+        const photo = jobs.filter(j => j.status === 'Photo').length; 
 
-                document.getElementById('stat-enquiries').innerText = enq;
-                document.getElementById('stat-workbench').innerText = active;
-                document.getElementById('stat-special').innerText = photo;
-                document.getElementById('stat-revenue').innerText = `£${totalBooked.toFixed(0)}`;
-                document.getElementById('stat-paid').innerText = `£${totalPaid.toFixed(0)}`;
+        // 2. Potential Revenue (The total value of all booked work)
+        const totalBooked = jobs.reduce((s, j) => s + (Number(j.total_price) || 0), 0);
 
+        // 3. Actual Revenue (Summing ALL payments including layaways)
+        const totalPaid = jobs.reduce((sum, job) => {
+            // Check if the 'payments' field exists and has data
+            if (job.payments && Array.isArray(job.payments)) {
+                // Sum up every individual payment amount within this specific job
+                const jobPaymentsTotal = job.payments.reduce((pSum, p) => pSum + (Number(p.amount) || 0), 0);
+                return sum + jobPaymentsTotal;
+            }
+            // Fallback: If no layaway array exists but it's marked 'Paid', use total_price
+            if (job.payment_status === 'Paid' && (!job.payments || job.payments.length === 0)) {
+                return sum + (Number(job.total_price) || 0);
+            }
+            return sum;
+        }, 0);
+
+        // 4. Update the UI
+        document.getElementById('stat-enquiries').innerText = enq;
+        document.getElementById('stat-workbench').innerText = active;
+        document.getElementById('stat-special').innerText = photo;
+        document.getElementById('stat-revenue').innerText = `£${totalBooked.toFixed(0)}`;
+        document.getElementById('stat-paid').innerText = `£${totalPaid.toFixed(0)}`;
+
+    } catch (err) {
+        console.error("Summary load failed:", err);
+    }
+}
                 // Priorities
                 const priorities = jobs.filter(j => !['Shipped', 'Enquiry'].includes(j.status))
                                        .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).slice(0,3);
