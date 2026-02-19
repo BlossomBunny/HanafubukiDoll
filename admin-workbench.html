@@ -876,7 +876,7 @@ async function confirmDeclineAndSend() {
         }
     );
 }
-        async function handleAdminUpload(input, serviceKey) {
+async function handleAdminUpload(input, serviceKey) {
     if (!input.files || input.files.length === 0) return;
     
     const files = Array.from(input.files);
@@ -890,27 +890,28 @@ async function confirmDeclineAndSend() {
         const uploadedUrls = [];
 
         for (const file of files) {
-            // 1. Create a unique file path
+            // 1. Create a unique path: refs / JobID / ServiceType / FileName
             const fileExt = file.name.split('.').pop();
-            const fileName = `${activeJobId}/${serviceKey}_${Date.now()}.${fileExt}`;
-            const filePath = `commission-refs/${fileName}`;
+            const fileName = `${Date.now()}.${fileExt}`;
+            // This groups everything by the specific Order ID automatically
+            const filePath = `refs/${activeJobId}/${serviceKey}/${fileName}`;
 
-            // 2. Upload to Supabase Storage (Assumes bucket 'commission-media' exists)
+            // 2. Upload to your existing 'references' bucket
             const { error: uploadError } = await _supabase.storage
-                .from('commission-media')
+                .from('references') 
                 .upload(filePath, file);
 
             if (uploadError) throw uploadError;
 
             // 3. Get Public URL
             const { data: { publicUrl } } = _supabase.storage
-                .from('commission-media')
+                .from('references')
                 .getPublicUrl(filePath);
                 
             uploadedUrls.push(publicUrl);
         }
 
-        // 4. Update the Job Data
+        // 4. Update the Commission Record
         const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
         const detailsKey = `${serviceKey}_details`;
         const currentImages = job[detailsKey]?.images || [];
@@ -928,24 +929,46 @@ async function confirmDeclineAndSend() {
         if (updateError) throw updateError;
 
         showMagicAlert("Uploaded! 🌸", "Photos added to the order.", "success");
-        await openDrawer(activeJobId); // Refresh drawer
+        await openDrawer(activeJobId); 
 
     } catch (err) {
         console.error("Upload error:", err);
-        showMagicAlert("Upload Failed", err.message, "error");
+        showMagicAlert("Upload Failed", "Ensure bucket 'references' exists and is public.", "error");
     } finally {
         loadingBtn.innerText = originalText;
         loadingBtn.disabled = false;
     }
 }
-
 async function removeImage(serviceKey, imgUrl) {
     if (!confirm("Delete this image from the order? 🎀")) return;
 
     try {
-        const { data: job } = await _supabase.from('commissions').select('*').eq('id', activeJobId).single();
+        // 1. Get the current job data
+        const { data: job, error: fetchError } = await _supabase
+            .from('commissions')
+            .select('*')
+            .eq('id', activeJobId)
+            .single();
+
+        if (fetchError) throw fetchError;
+
         const detailsKey = `${serviceKey}_details`;
         
+        // 2. Identify the file path for Storage deletion
+        // We need to turn the URL back into a path (e.g., 'refs/job123/faceup/123.jpg')
+        const urlParts = imgUrl.split('/storage/v1/object/public/references/');
+        const filePath = urlParts[1];
+
+        if (filePath) {
+            // 3. Physical Delete from Supabase Storage
+            const { error: storageError } = await _supabase.storage
+                .from('references')
+                .remove([filePath]);
+
+            if (storageError) console.warn("Storage cleanup failed, but proceeding with DB update:", storageError);
+        }
+
+        // 4. Update the Database record
         const updatedImages = job[detailsKey].images.filter(url => url !== imgUrl);
         
         const updatedDetails = {
@@ -953,19 +976,22 @@ async function removeImage(serviceKey, imgUrl) {
             images: updatedImages
         };
 
-        const { error } = await _supabase
+        const { error: updateError } = await _supabase
             .from('commissions')
             .update({ [detailsKey]: updatedDetails })
             .eq('id', activeJobId);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
 
-        await openDrawer(activeJobId); // Refresh drawer
+        // 5. Success Feedback & Refresh
+        showMagicAlert("Image Removed", "The file has been deleted from the studio records. ✨", "success");
+        await openDrawer(activeJobId); 
+
     } catch (err) {
         console.error("Delete image error:", err);
+        showMagicAlert("Delete Failed", "We couldn't remove the image. ☁️", "error");
     }
 }
-        
      async function handleLogout() {
     try {
         const { error } = await _supabase.auth.signOut();
