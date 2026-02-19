@@ -362,9 +362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const jobToOpen = urlParams.get('open');
     if (jobToOpen) {
-        // Simple check: if we are on workbench, handle redirect; 
-        // otherwise, the 'Open in Workbench' button handles it via href.
-        console.log("Job to open found:", jobToOpen);
+         console.log("Job to open found:", jobToOpen);
     }
 });
 
@@ -380,7 +378,6 @@ function initStickers() {
     new FullCalendar.Draggable(containerEl, {
         itemSelector: '.sticker-item',
         eventData: function(eventEl) {
-            // This pulls the data-event attribute from your HTML items
             return JSON.parse(eventEl.dataset.event);
         }
     });
@@ -452,37 +449,49 @@ async function renderPlanner() {
 
     // 2. SAVE NEW STICKERS (This was the missing piece!)
     eventReceive: async function(info) {
-        const type = info.event.extendedProps.type || 'stuff';
-        const title = info.event.title;
-        const startDate = info.event.startStr;
+    const type = info.event.extendedProps.type || 'stuff';
+    const title = info.event.title;
+    const startDate = info.event.startStr;
 
-        const { data, error } = await _supabase
-            .from('events')
-            .insert([{
-                title: title,
-                type: type,
-                start_date: startDate,
-                end_date: startDate,
-                details: ""
-            }])
-            .select();
+    // 1. Create the object exactly as the DB expects
+    const newEvent = {
+        title: title,
+        type: type,
+        start_date: startDate,
+        end_date: startDate,
+        details: ""
+    };
 
-        if (error) {
-            info.event.remove(); 
-            showMagicAlert("Oh no!", "Sticker didn't save.", "error");
+    console.log("🌸 Sending to Supabase:", newEvent);
+
+    const { data, error } = await _supabase
+        .from('events')
+        .insert([newEvent])
+        .select();
+
+    if (error) {
+        // THIS WILL TELL US THE TRUTH:
+        console.error("❌ SUPABASE REJECTION:", error);
+        
+        // Is it a column name issue?
+        if (error.message.includes("column")) {
+             showMagicAlert("Database Error", "One of the columns (like end_date) might not exist in your table yet!", "error");
         } else {
-            info.event.setProp('id', data[0].id);
-            currentEditingId = data[0].id;
-            
-            // Pop the modal so you can set the "End Date" for the bar
-            document.getElementById('editTitle').value = title;
-            document.getElementById('editStart').value = startDate;
-            document.getElementById('editEnd').value = startDate;
-            document.getElementById('editDetails').value = "";
-            document.getElementById('eventModal').classList.remove('hidden');
+             showMagicAlert("Save Failed", error.message, "error");
         }
-    },
-
+        
+        info.event.remove(); 
+    } else {
+        info.event.setProp('id', data[0].id);
+        currentEditingId = data[0].id;
+        
+        document.getElementById('editTitle').value = title;
+        document.getElementById('editStart').value = startDate;
+        document.getElementById('editEnd').value = startDate;
+        document.getElementById('eventModal').classList.remove('hidden');
+        showMagicAlert("Success! ✨", "Sticker saved to database.", "success");
+    }
+},
     // 3. MOVE STICKERS
     eventDrop: async function(info) {
         if (info.event.id.toString().startsWith('job-')) {
