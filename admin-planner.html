@@ -13,203 +13,68 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.css' rel='stylesheet' />
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
-
-    <style type="text/tailwindcss">
-             @layer components {
-            .nav-btn { 
-                @apply px-5 py-2 rounded-full font-bold text-sm transition-all cursor-pointer inline-block; 
-            }
-            .nav-btn-pink { 
-                @apply bg-pink-50 text-pink-500 hover:bg-pink-100; 
-            }
-            .nav-btn-mint { 
-                @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; 
-            }
-
-          .auth-hidden { @apply hidden !important; }
-            
-            .glass-card { 
-                background: rgba(255, 255, 255, 0.8); 
-                backdrop-filter: blur(12px); 
-                @apply rounded-[2rem] border border-pink-100/20; 
-            }
-
-            .img-enlarge { 
-                @apply fixed inset-0 z-[200] w-full h-full object-contain bg-black/90 cursor-zoom-out p-5;
-            }
-        }
-
-        @keyframes pulse-custom {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.5); opacity: 0; }
-        }
-        .animate-pulse-custom {
-            animation: pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        
-        .bounce-bunny { display: inline-block; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
+<style type="text/tailwindcss">
     @layer components {
-        /* 1. The Main Container - Airy & Soft */
+        /* --- 1. GLOBAL UI ELEMENTS --- */
+        .nav-btn { @apply px-5 py-2 rounded-full font-bold text-sm transition-all cursor-pointer inline-block; }
+        .nav-btn-pink { @apply bg-pink-50 text-pink-500 hover:bg-pink-100; }
+        .nav-btn-mint { @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); @apply rounded-[2rem] border border-pink-100/20; }
+        .auth-hidden { @apply hidden !important; }
+
+        /* --- 2. CALENDAR CONTAINER --- */
         #calendar {
             @apply bg-white p-6 rounded-[3rem] border-8 border-pink-50 shadow-inner;
             font-family: 'Plus Jakarta Sans', sans-serif !important;
         }
-
-        /* 2. Transform the Grid into "Sticker" Boxes */
-        .fc-daygrid-day-frame {
-            @apply m-1 rounded-2xl border-2 border-pink-50/50 bg-white transition-all duration-300 !important;
-            min-height: 100px !important;
-        }
-
-        /* 3. The Date Circles (Matches your reference dots) */
-        .fc-daygrid-day-number {
-            @apply bg-pink-100 text-pink-500 font-black text-[10px] w-6 h-6 rounded-full 
-                   flex items-center justify-center m-2 transition-transform hover:scale-110 !important;
-        }
-
-        /* 4. Today Highlight - Minty Glow */
-        .fc-day-today .fc-daygrid-day-frame {
-            @apply bg-emerald-50/30 border-emerald-200 border-dashed !important;
-        }
-
-        /* 5. Header Styling (Mon, Tue...) */
-        .fc-col-header-cell {
-            @apply pb-4 !important;
-        }
-        .fc-col-header-cell-cushion {
-            @apply text-[10px] font-black uppercase tracking-widest text-pink-300 !important;
-        }
-
-        /* 6. Event Stickers */
-        .fc-event {
-            @apply border-none shadow-sm rounded-lg font-black text-[9px] p-1 mx-1 mb-1 !important;
-        }
-    }
+        .fc-theme-standard td, .fc-theme-standard th { @apply border-pink-50 !important; }
+        .fc-daygrid-day-frame { @apply m-1 rounded-2xl border-2 border-pink-50/50 bg-white transition-all duration-300 !important; min-height: 100px !important; }
         
-    @layer components {
-        /* Washi Tape: For Commissions */
+        /* Date Circles & Header */
+        .fc-daygrid-day-number {
+            @apply bg-pink-100 text-pink-500 font-black text-[10px] w-7 h-7 rounded-full flex items-center justify-center m-2 transition-transform hover:scale-110 !important;
+        }
+        .fc-col-header-cell-cushion { @apply text-[10px] font-black uppercase tracking-widest text-pink-300 !important; }
+        .fc-day-today { @apply bg-emerald-50/20 !important; }
+
+        /* --- 3. WASHI TAPE (COMMISSIONS) --- */
         .job-bar-style {
-            @apply border-none shadow-sm !important;
+            @apply border-none shadow-sm opacity-90 !important;
             border-radius: 4px !important;
-            /* Subtle paper texture */
-            background-image: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent);
-            background-size: 10px 10px;
+            background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.2) 5px, transparent 5px, transparent 10px);
             padding: 4px 10px !important;
             font-weight: 800 !important;
             font-size: 9px !important;
-            letter-spacing: 0.02em;
             transition: transform 0.2s ease;
         }
-        .job-bar-style:hover {
-            transform: translateY(-1px) scale(1.02);
-            filter: brightness(1.05);
-        }
 
-        /* Stickers: For Holidays/Admin */
+        /* --- 4. STICKER SYSTEM (THE COLOR FIX) --- */
+        /* This base class ensures the "Ribbon" look for all types */
         .sticker-style {
-            @apply border-none shadow-md !important;
-            border-radius: 12px !important;
-            padding: 5px !important;
-            transform: rotate(-1deg);
+            @apply border-none shadow-sm !important;
+            border-left-width: 5px !important;
+            border-radius: 8px !important;
+            padding: 4px 8px !important;
+            font-weight: 900 !important;
+            font-size: 10px !important;
+            margin-bottom: 2px !important;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         }
-        .sticker-style:hover {
-            transform: scale(1.15) rotate(1deg) !important;
-            z-index: 100;
-        }
+        .sticker-style:hover { transform: scale(1.05) !important; z-index: 10; }
 
-        /* The Trash Zone "Glow" */
-        #calendar-trash.drag-over {
-            @apply bg-rose-100 border-rose-300 opacity-100 scale-105 !important;
-        }
+        /* Color Overrides for specific types */
+        .sticker-holiday { background-color: #fdf2f8 !important; color: #db2777 !important; border-left-color: #f472b6 !important; }
+        .sticker-admin   { background-color: #f0fdf4 !important; color: #059669 !important; border-left-color: #34d399 !important; }
+        .sticker-birthday{ background-color: #fffbeb !important; color: #b45309 !important; border-left-color: #fbbf24 !important; }
+        .sticker-stuff   { background-color: #faf5ff !important; color: #7e22ce !important; border-left-color: #a855f7 !important; }
+
+        /* --- 5. ANIMATIONS --- */
+        @keyframes pulse-custom { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0; } }
+        .animate-pulse-custom { animation: pulse-custom 2s infinite; }
+        .bounce-bunny { display: inline-block; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
     }
-
-    @layer components {
-        /* Add a soft "Today" ribbon to the top right of the current day */
-        .fc-day-today .fc-daygrid-day-top::after {
-            content: 'TODAY';
-            @apply absolute top-2 right-10 text-[7px] font-black text-emerald-400 tracking-tighter;
-        }
-    }
-/* 1. Date Circles (Matches image_615400.jpg) */
-.fc-daygrid-day-number {
-    @apply bg-pink-100 text-pink-500 font-bold rounded-full w-7 h-7 flex items-center justify-center m-2 !important;
-    font-size: 11px !important;
-}
-
-/* 2. The Washi Tape Job Bar */
-.job-bar-style {
-    @apply border-none shadow-sm opacity-80 !important;
-    border-radius: 4px !important;
-    background-image: repeating-linear-gradient(
-        -45deg,
-        rgba(255, 255, 255, 0.2),
-        rgba(255, 255, 255, 0.2) 5px,
-        transparent 5px,
-        transparent 10px
-    ); /* Adds a subtle texture like tape */
-    padding: 2px 8px !important;
-    margin-top: 2px !important;
-}
-
-/* 3. Soften the Grid */
-.fc-theme-standard td, .fc-theme-standard th {
-    @apply border-pink-50 !important;
-}
-
-.fc-day-today {
-    @apply bg-emerald-50/20 !important;
-}
-
-/* 4. The Header Buttons (Pink & Rounded) */
-.fc-button-primary {
-    @apply bg-white border-pink-100 text-pink-400 font-bold rounded-full px-4 capitalize transition-all !important;
-}
-.fc-button-primary:hover {
-    @apply bg-pink-50 border-pink-200 text-pink-600 !important;
-}
-        /* Holiday Bar Style */
-.sticker-style[data-type="holiday"], 
-.fc-event.holiday-bar {
-    @apply border-none shadow-none !important;
-    background-color: #fdf2f8 !important; /* Soft Pink */
-    color: #db2777 !important; /* Deep Pink Text */
-    border-radius: 8px !important;
-    font-weight: 800 !important;
-    border-left: 4px solid #f472b6 !important; /* Pink accent edge */
-}
-
-/* Admin Bar Style (Mint) */
-.sticker-style[data-type="admin"] {
-    @apply border-none shadow-none !important;
-    background-color: #f0fdf4 !important; /* Soft Mint */
-    color: #059669 !important; /* Deep Green Text */
-    border-radius: 8px !important;
-    font-weight: 800 !important;
-    border-left: 4px solid #34d399 !important;
-}
-        /* Birthday Ribbon Style */
-.sticker-style[data-type="birthday"] {
-    @apply border-none shadow-none !important;
-    background-color: #fffbeb !important; /* Soft Amber/Yellow */
-    color: #b45309 !important; /* Deep Amber Text */
-    border-radius: 8px !important;
-    font-weight: 800 !important;
-    border-left: 4px solid #fbbf24 !important; /* Gold accent edge */
-}
-        @layer components {
-    .sticker-style {
-        @apply border-none !important;
-        border-left-width: 4px !important; /* This creates the "ribbon" look */
-        border-radius: 8px !important;
-        padding: 2px 6px !important;
-        font-weight: 800 !important;
-        font-size: 10px !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-}
+</style>
     </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
@@ -305,7 +170,7 @@
 </div>
             <div class="flex gap-3 pt-4">
                 <button onclick="closeModal()" class="flex-1 py-4 text-gray-400 font-black text-[10px] uppercase tracking-widest">Cancel</button>
-               <button onclick="updateEventRecord()" class="flex-[2] bg-pink-500 ...">
+               <button onclick="updateEventRecord()" class="flex-[2] bg-pink-500 hover:bg-pink-600 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-pink-200">
     Save Changes ♡
 </button>
             </div>
@@ -425,14 +290,16 @@ async function renderPlanner() {
                 payment: j.payment_status 
             }
         })),
-        ...(events || []).map(e => {
-            const styles = {
-                holiday: { bg: '#fdf2f8', text: '#db2777', border: '#f472b6' },
-                admin: { bg: '#f0fdf4', text: '#059669', border: '#34d399' },
-                birthday: { bg: '#fffbeb', text: '#b45309', border: '#fbbf24' },
-                stuff: { bg: '#faf5ff', text: '#7e22ce', border: '#a855f7' }
-            }[e.type] || { bg: '#f9fafb', text: '#374151', border: '#d1d5db' };
-
+        
+  ...(events || []).map(e => ({
+    id: e.id,
+    title: e.title,
+    start: e.start_date,
+    end: e.end_date || e.start_date,
+    // This matches the .sticker-holiday, .sticker-admin, etc. classes above
+    className: ['sticker-style', `sticker-${e.type || 'stuff'}`], 
+    extendedProps: { type: e.type, details: e.details }
+}))
             return {
                 id: e.id,
                 title: e.title,
