@@ -16,20 +16,47 @@
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
 <style type="text/tailwindcss">
     @layer components {
-        /* --- 1. GLOBAL UI ELEMENTS --- */
+        /* --- 1. THEME VARIABLES (Dark Mode Ready) --- */
+        :root {
+            --cal-bg: #ffffff;
+            --cal-border: #fdf2f8; /* pink-50 */
+            --cal-text: #374151;   /* gray-700 */
+            --cal-day-bg: #ffffff;
+        }
+
+        .dark {
+            --cal-bg: #111827;     /* gray-900 */
+            --cal-border: #374151; /* gray-700 */
+            --cal-text: #f9fafb;   /* gray-50 */
+            --cal-day-bg: #1f2937; /* gray-800 */
+        }
+
+        /* --- 2. GLOBAL UI ELEMENTS --- */
         .nav-btn { @apply px-5 py-2 rounded-full font-bold text-sm transition-all cursor-pointer inline-block; }
         .nav-btn-pink { @apply bg-pink-50 text-pink-500 hover:bg-pink-100; }
         .nav-btn-mint { @apply bg-emerald-50 text-emerald-600 hover:bg-emerald-100; }
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); @apply rounded-[2rem] border border-pink-100/20; }
         .auth-hidden { @apply hidden !important; }
 
-        /* --- 2. CALENDAR CONTAINER --- */
+        /* --- 3. CALENDAR CONTAINER --- */
         #calendar {
-            @apply bg-white p-6 rounded-[3rem] border-8 border-pink-50 shadow-inner;
+            background-color: var(--cal-bg) !important;
+            color: var(--cal-text) !important;
+            @apply p-6 rounded-[3rem] border-8 shadow-inner transition-colors duration-300;
+            border-color: var(--cal-border) !important;
             font-family: 'Plus Jakarta Sans', sans-serif !important;
         }
-        .fc-theme-standard td, .fc-theme-standard th { @apply border-pink-50 !important; }
-        .fc-daygrid-day-frame { @apply m-1 rounded-2xl border-2 border-pink-50/50 bg-white transition-all duration-300 !important; min-height: 100px !important; }
+        
+        .fc-theme-standard td, .fc-theme-standard th { 
+            border-color: var(--cal-border) !important; 
+        }
+
+        .fc-daygrid-day-frame { 
+            background-color: var(--cal-day-bg) !important;
+            @apply m-1 rounded-2xl border-2 transition-all duration-300 !important; 
+            border-color: var(--cal-border) !important;
+            min-height: 100px !important; 
+        }
         
         .fc-daygrid-day-number {
             @apply bg-pink-100 text-pink-500 font-black text-[10px] w-7 h-7 rounded-full flex items-center justify-center m-2 transition-transform hover:scale-110 !important;
@@ -38,9 +65,9 @@
         .fc-day-today { @apply bg-emerald-50/20 !important; }
         .fc-daygrid-day-events { position: relative !important; }
 
-        /* --- 3. HEADER BUTTONS (PINK THEME) --- */
+        /* --- 4. HEADER BUTTONS --- */
         .fc .fc-button-primary {
-            @apply bg-white border-2 border-pink-100 text-pink-400 font-black rounded-full px-6 py-2 transition-all !important;
+            @apply bg-white dark:bg-gray-800 border-2 border-pink-100 text-pink-400 font-black rounded-full px-6 py-2 transition-all !important;
             text-transform: uppercase;
             letter-spacing: 0.1em;
             font-size: 10px;
@@ -48,24 +75,27 @@
         .fc .fc-button-primary:hover { @apply bg-pink-50 border-pink-200 text-pink-600 !important; }
         .fc .fc-button-primary:not(:disabled).fc-button-active { @apply bg-pink-500 border-pink-500 text-white !important; }
 
-        /* --- 4. WASHI TAPE BARS (FOR RANGES / JOBS) --- */
+        /* --- 5. WASHI TAPE BARS (RANGES & STUFF FIX) --- */
         .job-bar-style, .range-bar-style {
             @apply border-none shadow-sm my-1 !important;
             border-radius: 20px !important;
             padding: 4px 12px !important;
             font-weight: 800 !important;
             font-size: 10px !important;
-            position: relative !important;
+            position: relative !important; /* Bars need to stay relative to span days */
             z-index: 1 !important;
             background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.2) 5px, transparent 5px, transparent 10px);
         }
-        /* Specific Bar Colors */
-        .type-holiday { @apply bg-pink-100 text-pink-600 !important; }
-        .type-admin   { @apply bg-emerald-100 text-emerald-700 !important; }
-        .type-birthday{ @apply bg-amber-100 text-amber-700 !important; }
 
-        /* --- 5. WIGGLY STICKERS (SINGLE DAY EMOJIS) --- */
-        .fc-event.sticker-style {
+        /* Darker text for readability on light bars */
+        .type-holiday { background-color: #fdf2f8 !important; color: #be185d !important; }
+        .type-admin   { background-color: #f0fdf4 !important; color: #15803d !important; }
+        .type-birthday{ background-color: #fffbeb !important; color: #b45309 !important; }
+        .type-stuff   { background-color: #faf5ff !important; color: #7e22ce !important; } /* Purple for Stuff! */
+
+        /* --- 6. WIGGLY STICKERS --- */
+        /* Only apply absolute floating to non-range stickers */
+        .fc-event.sticker-style:not(.range-bar-style) {
             @apply bg-transparent border-none shadow-none !important;
             position: absolute !important;
             left: 50% !important;
@@ -76,46 +106,21 @@
             overflow: visible !important;
         }
 
-        .sticker-style .fc-event-time, .sticker-style .fc-event-dot { display: none !important; }
-
-        .fc-event.sticker-style .fc-event-main {
+        .sticker-style .fc-event-main {
             font-size: 38px !important;
             filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));
             cursor: pointer;
-            display: inline-block;
             animation: sticker-wiggle 3s ease-in-out infinite;
-            transform-origin: center;
-            margin-top: -5px; /* Floats it slightly over the bars */
         }
 
-        /* Shift second overlapping sticker down */
-        .sticker-style + .sticker-style .fc-event-main { margin-top: 20px; }
-
-        /* Hover States */
-        .fc-event.sticker-style:hover .fc-event-main {
-            animation: none;
-            transform: scale(1.3) rotate(10deg) !important;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
-            z-index: 100;
-        }
-
-        /* --- 6. ANIMATIONS --- */
+        /* Hover & Animations (Keep your original code) */
         @keyframes sticker-wiggle {
             0%, 100% { transform: rotate(-3deg) translateY(0); }
             50% { transform: rotate(3deg) translateY(-3px); }
         }
-        
-        @keyframes pulse-custom { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0; } }
-        .animate-pulse-custom { animation: pulse-custom 2s infinite; }
-        
-        .bounce-bunny { display: inline-block; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
-        /* Varied wiggle speeds for organic feel */
-        .fc-event.sticker-style:nth-child(even) .fc-event-main { animation-duration: 2.5s; animation-delay: 0.5s; }
-        .fc-event.sticker-style:nth-child(3n) .fc-event-main { animation-duration: 4s; animation-delay: 0.2s; }
+        .fc-event.sticker-style:nth-child(even) .fc-event-main { animation-duration: 2.5s; }
     }
-    </style>
+</style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
 
