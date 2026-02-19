@@ -992,6 +992,29 @@ async function removeImage(serviceKey, imgUrl) {
         showMagicAlert("Delete Failed", "We couldn't remove the image. ☁️", "error");
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const jobToOpen = urlParams.get('open');
+
+    if (jobToOpen) {
+        // We wait a moment for your Supabase fetch to populate the list
+        const checkExist = setInterval(() => {
+            // Assuming your local array of jobs is called 'commissions'
+            if (typeof commissions !== 'undefined' && commissions.length > 0) {
+                const targetJob = commissions.find(c => c.id === jobToOpen);
+                if (targetJob) {
+                    openDrawer(targetJob);
+                    clearInterval(checkExist);
+                }
+            }
+        }, 100);
+
+        // Stop checking after 5 seconds to prevent infinite loops
+        setTimeout(() => clearInterval(checkExist), 5000);
+    }
+});
+        
      async function handleLogout() {
     try {
         const { error } = await _supabase.auth.signOut();
