@@ -207,11 +207,17 @@
         <textarea id="editDetails" class="w-full border-2 border-pink-50 rounded-xl p-2 text-xs h-20 outline-none focus:border-pink-200"></textarea>
     </div>
 </div>
-            <div class="flex gap-3 pt-4">
-                <button onclick="closeModal()" class="flex-1 py-4 text-gray-400 font-black text-[10px] uppercase tracking-widest">Cancel</button>
-               <button onclick="updateEventRecord()" class="flex-[2] bg-pink-500 hover:bg-pink-600 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-pink-200">
-    Save Changes ♡
-</button>
+<div class="mt-6 flex gap-3 items-center">
+    <button onclick="deleteEventRecord()" 
+        class="p-4 bg-rose-50 text-rose-400 hover:bg-rose-100 rounded-2xl transition-all shadow-sm">
+        <i class="fa-solid fa-trash"></i>
+    </button>
+
+    <button onclick="updateEventRecord()" 
+        class="flex-1 bg-pink-500 hover:bg-pink-600 text-white font-black py-4 rounded-2xl uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-pink-200 transition-transform active:scale-95">
+        Save Changes ♡
+    </button>
+</div>
             </div>
         </div>
     </div>
@@ -412,22 +418,25 @@ events: [
     },
 
     // 4. CLICK TO EDIT
-    eventClick: function(info) {
-        const props = info.event.extendedProps;
-        if (props.type === 'commission') {
-            const uuid = info.event.id.replace('job-', '');
-            document.getElementById('jobCustomerName').innerText = info.event.title;
-            document.getElementById('jobModal').classList.remove('hidden');
-        } else {
-            currentEditingId = info.event.id;
-            document.getElementById('editTitle').value = info.event.title;
-            document.getElementById('editDetails').value = props.details || '';
-            document.getElementById('editStart').value = info.event.startStr.split('T')[0];
-            document.getElementById('editEnd').value = (info.event.endStr || info.event.startStr).split('T')[0];
-            document.getElementById('eventModal').classList.remove('hidden');
-        }
-    },
+eventClick: function(info) {
+    // 1. Get the correct ID and Full Title
+    currentEditingId = info.event.id;
+    
+    // Check if fullTitle exists (for stickers), otherwise use title (for Jobs)
+    const displayTitle = info.event.extendedProps.fullTitle || info.event.title;
+    
+    // 2. Fill the Modal Fields
+    document.getElementById('editTitle').value = displayTitle;
+    document.getElementById('editDetails').value = info.event.extendedProps.details || "";
+    document.getElementById('editStart').value = info.event.startStr;
+    
+    // Handle end date (FullCalendar end dates are exclusive, so we adjust if needed)
+    let endStr = info.event.endStr || info.event.startStr;
+    document.getElementById('editEnd').value = endStr;
 
+    // 3. Show the Modal
+    document.getElementById('eventModal').classList.remove('hidden');
+}
     // 5. TRASH LOGIC
     eventDragStart: function() {
         const trash = document.getElementById('calendar-trash');
@@ -490,7 +499,25 @@ async function updateEventRecord() {
         closeModal();
     }
 }
+async function deleteEventRecord() {
+    if (!currentEditingId) return;
 
+    // Optional: Add a cute confirm
+    if (!confirm("Are you sure you want to remove this sticker? 🐰")) return;
+
+    const { error } = await _supabase
+        .from('events')
+        .delete()
+        .eq('id', currentEditingId);
+
+    if (error) {
+        showMagicAlert("Error", "Could not delete sticker.", "error");
+    } else {
+        calendar.refetchEvents(); // Refresh the calendar
+        closeModal();
+        showMagicAlert("Deleted! ✨", "Sticker removed.", "success");
+    }
+}
 async function handleLogout() {
     await _supabase.auth.signOut();
     window.location.href = 'admin-login.html';
