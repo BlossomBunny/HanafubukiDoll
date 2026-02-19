@@ -243,10 +243,36 @@
 let calendar;
 let currentEditingId = null;
 
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Initialize Draggables first
+    initStickers();
+    
+    // 2. Render the Calendar
+    await renderPlanner();
+
+    // 3. Workbench Receiver Logic
+    const urlParams = new URLSearchParams(window.location.search);
+    const jobToOpen = urlParams.get('open');
+    if (jobToOpen) {
+        handleWorkbenchRedirect(jobToOpen);
+    }
+});
+
+function initStickers() {
+    const containerEl = document.getElementById('stickerDrawer');
+    // This allows the items inside the drawer to be dragged onto the calendar
+    new FullCalendar.Draggable(containerEl, {
+        itemSelector: '.sticker-item',
+        eventData: function(eventEl) {
+            return JSON.parse(eventEl.dataset.event);
+        }
+    });
+}
+
 async function renderPlanner() {
     const calendarEl = document.getElementById('calendar');
     
-    // Fetch Data
+    // Fetch Data from Supabase
     const [{ data: jobs }, { data: events }] = await Promise.all([
         _supabase.from('commissions').select('*').not('arrived_at', 'is', null),
         _supabase.from('events').select('*')
@@ -257,26 +283,18 @@ async function renderPlanner() {
         headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
         editable: true,
         droppable: true,
+        fixedWeekCount: false, // Makes the calendar height adjust to the month
         
         events: [
-            // 1. Map Commissions using your specific columns
             ...jobs.map(j => ({
                 id: `job-${j.id}`,
-                title: `🐰 ${j.customer_name}`, // Only show Name on the bar
+                title: `🐰 ${j.customer_name}`,
                 start: j.arrived_at,
                 className: 'job-bar-style',
                 backgroundColor: '#f0f9ff', 
                 textColor: '#0369a1',
-                // Store extra info for the popup
-                extendedProps: {
-                    type: 'commission',
-                    social: j.social_handle,
-                    sculpt: j.doll_sculpt,
-                    status: j.status,
-                    payment: j.payment_status
-                }
+                extendedProps: { type: 'commission', social: j.social_handle, sculpt: j.doll_sculpt, status: j.status, payment: j.payment_status }
             })),
-            // 2. Map Stickers (Events table)
             ...events.map(e => ({
                 id: e.id,
                 title: e.title,
@@ -288,51 +306,38 @@ async function renderPlanner() {
             }))
         ],
 
-    eventClick: function(info) {
+        eventClick: function(info) {
             const props = info.event.extendedProps;
-
             if (props.type === 'commission') {
                 const uuid = info.event.id.replace('job-', '');
-                
                 document.getElementById('jobCustomerName').innerText = info.event.title;
                 document.getElementById('jobSocial').innerText = props.social || '@hidden';
                 document.getElementById('jobSculpt').innerText = props.sculpt || 'Not Specified';
                 document.getElementById('jobStatusBadge').innerText = props.status;
-                document.getElementById('jobArrived').innerText = info.event.start.toLocaleDateString('en-GB', { 
-                    day: 'numeric', month: 'short' 
-                });
+                document.getElementById('jobArrived').innerText = info.event.start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
                 document.getElementById('jobPayment').innerText = props.payment || 'Pending';
-                
-                // Set the link to open in a new tab so you can keep the planner open
-                const wbLink = document.getElementById('workbenchLink');
-                wbLink.href = `admin-workbench.html?open=${uuid}`;
-                wbLink.target = "_blank"; 
-                
+                document.getElementById('workbenchLink').href = `admin-workbench.html?open=${uuid}`;
                 document.getElementById('jobModal').classList.remove('hidden');
             } else {
-                // Open the Sticker/Event Modal
                 currentEditingId = info.event.id;
                 document.getElementById('editTitle').value = info.event.title;
                 document.getElementById('editDetails').value = props.details || '';
                 document.getElementById('eventModal').classList.remove('hidden');
             }
-        }, // Cleaned up closing brace here
+        },
 
         eventDragStart: function() {
-            document.getElementById('calendar-trash').classList.add('opacity-100', 'border-rose-400', 'scale-105');
+            document.getElementById('calendar-trash').classList.add('opacity-100', 'border-rose-400');
         },
 
         eventDragStop: function(info) {
-            document.getElementById('calendar-trash').classList.remove('opacity-100', 'border-rose-400', 'scale-105');
-            
+            document.getElementById('calendar-trash').classList.remove('opacity-100', 'border-rose-400');
             const trashEl = document.getElementById('calendar-trash');
             const rect = trashEl.getBoundingClientRect();
-            const x = info.jsEvent.clientX;
-            const y = info.jsEvent.clientY;
-
-            if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+            if (info.jsEvent.clientX >= rect.left && info.jsEvent.clientX <= rect.right &&
+                info.jsEvent.clientY >= rect.top && info.jsEvent.clientY <= rect.bottom) {
                 if (info.event.id.startsWith('job-')) {
-                    showMagicAlert("Bunny Says No! 🐰", "Commissions can't be deleted here. Change their status in the Workbench instead.", "warning");
+                    showMagicAlert("Bunny Says No! 🐰", "Commissions can't be deleted here.", "warning");
                 } else {
                     deleteEvent(info.event.id);
                 }
@@ -342,29 +347,13 @@ async function renderPlanner() {
     calendar.render();
 }
 
-function closeJobModal() {
-    document.getElementById('jobModal').classList.add('hidden');
-}
-
-async function updateEventRecord() {
-    const title = document.getElementById('editTitle').value;
-    const details = document.getElementById('editDetails').value;
-
-    const { error } = await _supabase.from('events')
-        .update({ title, details })
-        .eq('id', currentEditingId);
-
+async function deleteEvent(id) {
+    const { error } = await _supabase.from('events').delete().eq('id', id);
     if (!error) {
-        showMagicAlert("Updated ✨", "Notes saved.", "success");
-        closeModal();
-        renderPlanner(); // Refresh UI
+        calendar.getEventById(id).remove();
+        showMagicAlert("Gone! ☁️", "Sticker removed.", "success");
     }
-}
-
-function closeModal() {
-    document.getElementById('eventModal').classList.add('hidden');
-}
-      
+}      
 // Call this inside your DOMContentLoaded after calendar.render()    
     async function handleLogout() {
     try {
