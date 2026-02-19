@@ -397,193 +397,141 @@ async function renderPlanner() {
             _supabase.from('events').select('*')
         ]);
 
-        calendar = new FullCalendar.Calendar(calendarEl, {
-            // Added View switching: Month, Week, and Year List
-            headerToolbar: { 
-                left: 'prev,next today', 
-                center: 'title', 
-                right: 'dayGridMonth,timeGridWeek,listYear' 
-            },
-            initialView: 'dayGridMonth',
-            firstDay: 1, // Starts week on Monday
-            editable: true,
-            droppable: true,
-            fixedWeekCount: false,
+       calendar = new FullCalendar.Calendar(calendarEl, {
+    headerToolbar: { 
+        left: 'prev,next today', 
+        center: 'title', 
+        right: 'dayGridMonth,timeGridWeek,listYear' 
+    },
+    initialView: 'dayGridMonth',
+    firstDay: 1,
+    editable: true,
+    droppable: true,
+    fixedWeekCount: false,
+
+    // 1. ALL EVENTS (Jobs + Stickers)
+    events: [
+        ...(jobs || []).map(j => ({
+            id: `job-${j.id}`,
+            title: `🐰 ${j.customer_name}`,
+            start: j.arrived_at,
+            end: new Date().toISOString(),
+            className: 'job-bar-style',
+            allDay: true,
+            backgroundColor: '#f0f9ff', 
+            textColor: '#0369a1',
+            extendedProps: { 
+                type: 'commission', 
+                social: j.social_handle, 
+                sculpt: j.doll_sculpt, 
+                status: j.status, 
+                payment: j.payment_status 
+            }
+        })),
+        ...(events || []).map(e => {
+            const styles = {
+                holiday: { bg: '#fdf2f8', text: '#db2777', border: '#f472b6' },
+                admin: { bg: '#f0fdf4', text: '#059669', border: '#34d399' },
+                birthday: { bg: '#fffbeb', text: '#b45309', border: '#fbbf24' },
+                stuff: { bg: '#faf5ff', text: '#7e22ce', border: '#a855f7' }
+            }[e.type] || { bg: '#f9fafb', text: '#374151', border: '#d1d5db' };
+
+            return {
+                id: e.id,
+                title: e.title,
+                start: e.start_date,
+                end: e.end_date || e.start_date,
+                className: 'sticker-style',
+                backgroundColor: styles.bg,
+                textColor: styles.text,
+                borderColor: styles.border,
+                extendedProps: { type: e.type, details: e.details }
+            };
+        })
+    ],
+
+    // 2. SAVE NEW STICKERS (This was the missing piece!)
+    eventReceive: async function(info) {
+        const type = info.event.extendedProps.type || 'stuff';
+        const title = info.event.title;
+        const startDate = info.event.startStr;
+
+        const { data, error } = await _supabase
+            .from('events')
+            .insert([{
+                title: title,
+                type: type,
+                start_date: startDate,
+                end_date: startDate,
+                details: ""
+            }])
+            .select();
+
+        if (error) {
+            info.event.remove(); 
+            showMagicAlert("Oh no!", "Sticker didn't save.", "error");
+        } else {
+            info.event.setProp('id', data[0].id);
+            currentEditingId = data[0].id;
             
-            events: [
-    // 🐰 Jobs (Washi Tape Bars)
-    ...(jobs || []).map(j => ({
-        id: `job-${j.id}`,
-        title: `🐰 ${j.customer_name}`,
-        start: j.arrived_at,
-        end: new Date().toISOString(), 
-        className: 'job-bar-style',
-        allDay: true,
-        backgroundColor: '#f0f9ff', 
-        textColor: '#0369a1',
-        extendedProps: { 
-            type: 'commission', 
-            social: j.social_handle, 
-            sculpt: j.doll_sculpt, 
-            status: j.status, 
-            payment: j.payment_status 
+            // Pop the modal so you can set the "End Date" for the bar
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editStart').value = startDate;
+            document.getElementById('editEnd').value = startDate;
+            document.getElementById('editDetails').value = "";
+            document.getElementById('eventModal').classList.remove('hidden');
         }
-    })),
-    
-    // ✨ Stickers (Holiday, Admin, Birthday, Stuff)
-    ...(events || []).map(e => {
-        const styles = {
-            holiday: { bg: '#fdf2f8', text: '#db2777', border: '#f472b6' },
-            admin: { bg: '#f0fdf4', text: '#059669', border: '#34d399' },
-            birthday: { bg: '#fffbeb', text: '#b45309', border: '#fbbf24' },
-            stuff: { bg: '#faf5ff', text: '#7e22ce', border: '#a855f7' }
-        }[e.type] || { bg: '#f9fafb', text: '#374151', border: '#d1d5db' };
+    },
 
-        return {
-            id: e.id,
-            title: e.title,
-            start: e.start_date,
-            end: e.end_date || e.start_date,
-            className: 'sticker-style',
-            backgroundColor: styles.bg,
-            textColor: styles.text,
-            borderColor: styles.border,
-            extendedProps: { type: e.type, details: e.details }
-        };
-    })
-],
-                    
-// 1. SAVE NEW STICKERS WHEN DROPPED
-        eventReceive: async function(info) {
-            const type = info.event.extendedProps.type || 'personal';
-            const title = info.event.title;
-            const startDate = info.event.startStr;
+    // 3. MOVE STICKERS
+    eventDrop: async function(info) {
+        if (info.event.id.toString().startsWith('job-')) {
+            info.revert();
+            showMagicAlert("Bunny Says No! 🐰", "Move commissions in the Workbench.", "warning");
+            return;
+        }
+        await _supabase.from('events').update({ 
+            start_date: info.event.startStr,
+            end_date: info.event.endStr || info.event.startStr 
+        }).eq('id', info.event.id);
+    },
 
-            const { data, error } = await _supabase
-                .from('events')
-                .insert([{
-                    title: title,
-                    type: type,
-                    start_date: startDate,
-                    details: ""
-                }])
-                .select();
+    // 4. CLICK TO EDIT
+    eventClick: function(info) {
+        const props = info.event.extendedProps;
+        if (props.type === 'commission') {
+            const uuid = info.event.id.replace('job-', '');
+            document.getElementById('jobCustomerName').innerText = info.event.title;
+            document.getElementById('jobModal').classList.remove('hidden');
+        } else {
+            currentEditingId = info.event.id;
+            document.getElementById('editTitle').value = info.event.title;
+            document.getElementById('editDetails').value = props.details || '';
+            document.getElementById('editStart').value = info.event.startStr.split('T')[0];
+            document.getElementById('editEnd').value = (info.event.endStr || info.event.startStr).split('T')[0];
+            document.getElementById('eventModal').classList.remove('hidden');
+        }
+    },
 
-            if (error) {
-                console.error("Save Error:", error);
-                info.event.remove(); 
-                showMagicAlert("Oh no!", "Sticker didn't save. ☁️", "error");
-            } else {
-                // Important: Link the calendar event to the new Database ID
-                info.event.setProp('id', data[0].id);
-                showMagicAlert("Success! 🌸", "Added to planner.", "success");
+    // 5. TRASH LOGIC
+    eventDragStart: function() {
+        const trash = document.getElementById('calendar-trash');
+        if(trash) trash.classList.add('opacity-100', 'border-rose-400', 'bg-rose-50');
+    },
+
+    eventDragStop: function(info) {
+        const trashEl = document.getElementById('calendar-trash');
+        if(trashEl) trashEl.classList.remove('opacity-100', 'border-rose-400', 'bg-rose-50');
+        
+        const rect = trashEl.getBoundingClientRect();
+        if (info.jsEvent.clientX >= rect.left && info.jsEvent.clientX <= rect.right &&
+            info.jsEvent.clientY >= rect.top && info.jsEvent.clientY <= rect.bottom) {
+            if (!info.event.id.startsWith('job-')) {
+                deleteEvent(info.event.id);
             }
-        },
-            eventReceive: async function(info) {
-    const type = info.event.extendedProps.type || 'stuff';
-    const title = info.event.title;
-    const startDate = info.event.startStr;
-
-    const { data, error } = await _supabase
-        .from('events')
-        .insert([{
-            title: title,
-            type: type,
-            start_date: startDate,
-            end_date: startDate, // Initial 1-day range
-            details: ""
-        }])
-        .select();
-
-    if (error) {
-        console.error("Save Error:", error);
-        info.event.remove(); 
-        showMagicAlert("Oh no!", "Sticker didn't save. ☁️", "error");
-    } else {
-        info.event.setProp('id', data[0].id);
-        
-        // Populate modal fields for the newly dropped sticker
-        currentEditingId = data[0].id;
-        document.getElementById('editTitle').value = title;
-        document.getElementById('editStart').value = startDate;
-        document.getElementById('editEnd').value = startDate;
-        document.getElementById('editDetails').value = "";
-        
-        // Show the modal so they can customize it immediately
-        document.getElementById('eventModal').classList.remove('hidden');
-        showMagicAlert("Success! 🌸", "Sticker added. Add details?", "success");
+        }
     }
-},
-
-        // 2. UPDATE DATE WHEN STICKER IS MOVED
-        eventDrop: async function(info) {
-            // Prevent moving commissions (Jobs) - they should be fixed by 'arrived_at'
-            if (info.event.id.toString().startsWith('job-')) {
-                info.revert();
-                showMagicAlert("Bunny Says No! 🐰", "Move commissions in the Workbench.", "warning");
-                return;
-            }
-
-            const { error } = await _supabase
-                .from('events')
-                .update({ 
-                    start_date: info.event.startStr 
-                })
-                .eq('id', info.event.id);
-
-            if (error) {
-                info.revert();
-                showMagicAlert("Error", "Could not update date.", "error");
-            }
-        },
-            eventClick: function(info) {
-                const props = info.event.extendedProps;
-                if (props.type === 'commission') {
-                    const uuid = info.event.id.replace('job-', '');
-                    document.getElementById('jobCustomerName').innerText = info.event.title;
-                    document.getElementById('jobSocial').innerText = props.social || '@hidden';
-                    document.getElementById('jobSculpt').innerText = props.sculpt || 'Not Specified';
-                    document.getElementById('jobStatusBadge').innerText = props.status;
-                    document.getElementById('jobArrived').innerText = info.event.start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                    document.getElementById('jobPayment').innerText = props.payment || 'Pending';
-                    document.getElementById('workbenchLink').href = `admin-workbench.html?open=${uuid}`;
-                    document.getElementById('jobModal').classList.remove('hidden');
-                } else {
-        currentEditingId = info.event.id;
-        document.getElementById('editTitle').value = info.event.title;
-        document.getElementById('editDetails').value = props.details || '';
-        
-        
-        document.getElementById('editStart').value = info.event.startStr.split('T')[0];
-   
-        document.getElementById('editEnd').value = (info.event.endStr || info.event.startStr).split('T')[0];
-        
-        document.getElementById('eventModal').classList.remove('hidden');
-    }
-}
-                
-                
-            eventDragStart: function() {
-                const trash = document.getElementById('calendar-trash');
-                if(trash) trash.classList.add('opacity-100', 'border-rose-400', 'bg-rose-50');
-            },
-
-            eventDragStop: function(info) {
-                const trashEl = document.getElementById('calendar-trash');
-                if(trashEl) trashEl.classList.remove('opacity-100', 'border-rose-400', 'bg-rose-50');
-                
-                const rect = trashEl.getBoundingClientRect();
-                if (info.jsEvent.clientX >= rect.left && info.jsEvent.clientX <= rect.right &&
-                    info.jsEvent.clientY >= rect.top && info.jsEvent.clientY <= rect.bottom) {
-                    if (info.event.id.startsWith('job-')) {
-                        alert("Bunny Says No! 🐰 Commissions must be managed in the Workbench.");
-                    } else {
-                        deleteEvent(info.event.id);
-                    }
-                }
-            }
-        });
-        calendar.render();
+});       calendar.render();
         console.log("✅ Calendar Rendered");
     } catch (err) {
         console.error("❌ Planner Data Load Error:", err);
