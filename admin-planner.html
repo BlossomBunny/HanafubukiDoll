@@ -330,41 +330,44 @@ async function renderPlanner() {
     if (!calendarEl) return;
     
     try {
-        // Fetch Data from Supabase
         const [{ data: jobs }, { data: events }] = await Promise.all([
             _supabase.from('commissions').select('*').not('arrived_at', 'is', null),
             _supabase.from('events').select('*')
         ]);
 
-calendar = new FullCalendar.Calendar(calendarEl, {
-       headerToolbar: { 
-        left: 'prev,next today', 
-        center: 'title', 
-        right: 'dayGridMonth,timeGridWeek,multiMonthYear' 
-    },
-    initialView: 'dayGridMonth',
-    
-    // Aesthetic settings
-    firstDay: 1, 
-    dayMaxEvents: true,
-    navLinks: true, 
-    
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            // Added View switching: Month, Week, and Year List
+            headerToolbar: { 
+                left: 'prev,next today', 
+                center: 'title', 
+                right: 'dayGridMonth,timeGridWeek,listYear' 
+            },
+            initialView: 'dayGridMonth',
+            firstDay: 1, // Starts week on Monday
+            editable: true,
+            droppable: true,
+            fixedWeekCount: false,
+            
             events: [
-              ...(jobs || []).map(j => {
-    const arrivalDate = new Date(j.arrived_at);
-    const today = new Date();
-    
-    return {
-        id: `job-${j.id}`,
-        title: `🐰 ${j.customer_name}`,
-        start: j.arrived_at,
-        end: today, // This makes it a "Bar" instead of a "Dot"
-        className: 'job-bar-style',
-        allDay: true, // Important for the "bar" look
-        backgroundColor: '#E0F2FE', 
-        extendedProps: { ... }
-    };
-}),
+                // Fixed Jobs Mapping (The Washi Tape Bars)
+                ...(jobs || []).map(j => ({
+                    id: `job-${j.id}`,
+                    title: `🐰 ${j.customer_name}`,
+                    start: j.arrived_at,
+                    end: new Date().toISOString(), // Ends today to create a duration bar
+                    className: 'job-bar-style',
+                    allDay: true,
+                    backgroundColor: '#f0f9ff', 
+                    textColor: '#0369a1',
+                    extendedProps: { 
+                        type: 'commission', 
+                        social: j.social_handle, 
+                        sculpt: j.doll_sculpt, 
+                        status: j.status, 
+                        payment: j.payment_status 
+                    }
+                })),
+                // Stickers Mapping
                 ...(events || []).map(e => ({
                     id: e.id,
                     title: e.title,
