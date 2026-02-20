@@ -131,7 +131,7 @@
     </div>
 </main>
     
-    <script>
+ <script>
   let revenueChart = null;
 
 // Helper: Calculate days until April 5th
@@ -152,12 +152,17 @@ function toggleTaxModal() {
 }
 
 async function renderfinancials() {
+
     const taxYearFilter = document.getElementById('taxYearFilter');
+
     if (!taxYearFilter) return;
 
     const taxYear = taxYearFilter.value;
+
     const [startYear] = taxYear.split('-').map(Number);
+
     const startDate = new Date(startYear, 3, 6); 
+
     const endDate = new Date(startYear + 1, 3, 5);
 
     // 1. Fetch Data
@@ -191,6 +196,7 @@ async function renderfinancials() {
     let totalIncomeInYear = 0;
     let totalBookedInYear = 0;
     incomeRes.data.forEach(comm => {
+
         const commDate = new Date(comm.created_at);
         if (commDate >= startDate && commDate <= endDate) totalBookedInYear += (Number(comm.total_price) || 0);
         if (Array.isArray(comm.payments)) {
@@ -202,26 +208,34 @@ async function renderfinancials() {
     });
 
     // 5. CORE CALCULATIONS (Fixed order: calculate first!)
-    const totalOut = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+   const totalOut = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
     const netProfit = totalIncomeInYear - totalOut;
+
     const pendingRevenue = totalBookedInYear - totalIncomeInYear;
 
     const taxPot = netProfit > 1000 ? netProfit * 0.20 : 0; 
+   
     const class4NI = (netProfit > 12570) ? (netProfit - 12570) * 0.06 : 0;
+    
     const totalTaxNeeded = taxPot + class4NI;
 
     // 6. Header Update
     const daysLeft = getTaxYearStats();
+
     document.getElementById('daysRemainingText').innerText = daysLeft;
     document.getElementById('taxYearDisplay').innerText = `${startYear}/${(startYear + 1).toString().slice(-2)}`;
 
     const allowanceLimit = 1000;
+
     const cashPercent = Math.min((totalIncomeInYear / allowanceLimit) * 100, 100);
+
     const pendingPercent = Math.min((pendingRevenue / allowanceLimit) * 100, 100 - cashPercent);
 
    const allowanceBar = document.getElementById('allowanceBar');
+
 if (allowanceBar) {
- 
+
    allowanceBar.style.background = `linear-gradient(to right, 
         #ec4899 ${cashPercent}%, 
         rgba(96, 165, 250, 0.4) ${cashPercent}%, 
@@ -235,52 +249,57 @@ if (allowanceStatus) {
     if (totalIncomeInYear >= allowanceLimit) {
         allowanceStatus.innerHTML = `<span class="text-pink-600 font-black">LIMIT REACHED 📢</span>`;
     } else {
-     
+
         allowanceStatus.innerHTML = `
             <span class="text-pink-500">£${totalIncomeInYear} Cash</span> + 
             <span class="text-blue-300 italic">£${pendingRevenue} Pending</span>`;
     }
 }
-
     // 7. Render Unified Smart Reserve
     const isHobby = totalBookedInYear < 1000;
+
     const reserveContainer = document.getElementById('unified-tax-reserve');
     if (reserveContainer) {
        reserveContainer.innerHTML = `
     <div class="glass-card p-6 border-l-4 ${totalTaxNeeded > 0 ? 'border-amber-400 bg-amber-50/30' : 'border-emerald-400 bg-emerald-50/20'}">
         <p class="text-[9px] font-black uppercase text-pink-400 tracking-widest mb-1">Tax Savings Pot</p>
         <div class="flex items-baseline gap-2">
+
             <h3 class="text-2xl font-black italic text-emerald-800">£${totalTaxNeeded.toLocaleString(undefined, {minimumFractionDigits: 2})}</h3>
             ${totalTaxNeeded > 0 ? `<span class="text-[10px] text-amber-600 font-bold">READY TO SAVE</span>` : ''}
         </div>
-        
-        <div class="mt-4">
+
+           <div class="mt-4">
             <div class="w-full bg-gray-200/50 h-1.5 rounded-full overflow-hidden">
                 <div class="bg-amber-400 h-full transition-all duration-1000" style="width: ${Math.min(100, (totalTaxNeeded / Math.max(1, netProfit)) * 100)}%"></div>
             </div>
+
             <p class="text-[9px] font-bold text-gray-400 uppercase mt-2">
                 ${totalTaxNeeded > 0 ? 'Pot Intensity: ' + ((totalTaxNeeded / netProfit) * 100).toFixed(0) + '%' : (isHobby ? 'Hobby Mode Active 🐰' : 'Status: No Tax Due ✨')}
             </p>
-        </div>
+       </div>
     </div>
 `;
-
+        
     // 8. Update Stats Grid
     document.getElementById('financial-stats').innerHTML = `
         <div class="glass-card p-6 border-l-4 border-pink-400">
             <p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p>
-            <p class="text-2xl font-black italic">£${totalIncomeInYear.toLocaleString()}</p>
+           <p class="text-2xl font-black italic">£${totalIncomeInYear.toLocaleString()}</p>
         </div>
+
         <div class="glass-card p-6 border-l-4 border-rose-400">
             <p class="text-[9px] font-black uppercase text-gray-400">Total Expenses</p>
             <p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p>
         </div>
+
         <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20">
             <p class="text-[9px] font-black uppercase text-gray-400">Net Profit</p>
             <p class="text-2xl font-black italic text-emerald-600">£${netProfit.toLocaleString()}</p>
-        </div>
+       </div>
+
         <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20">
-            <p class="text-[9px] font-black uppercase text-gray-400">Pending Revenue</p>
+           <p class="text-[9px] font-black uppercase text-gray-400">Pending Revenue</p>
             <p class="text-2xl font-black italic text-blue-600">£${pendingRevenue.toLocaleString()}</p>
         </div>`;
 
@@ -289,6 +308,7 @@ if (allowanceStatus) {
         acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
         return acc;
     }, {});
+
  document.getElementById('expense-pills').innerHTML = Object.entries(catTotals).map(([cat, amt]) => `
     <div class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-pink-50">
         <span class="text-[9px] font-black uppercase text-gray-400">${cat}</span>
@@ -297,6 +317,7 @@ if (allowanceStatus) {
 `).join('');
 
     document.getElementById('expense-tbody').innerHTML = filteredExpenses.length ? filteredExpenses.map(e => `
+
         <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors ${e.is_virtual ? 'bg-blue-50/20' : ''}">
             <td class="py-4 pl-2 text-[11px] font-bold text-gray-500">${new Date(e.date).toLocaleDateString()}</td>
             <td class="py-4"><span class="px-2 py-1 rounded-md ${e.is_virtual ? 'bg-blue-100 text-blue-500' : 'bg-gray-100 text-gray-400'} text-[9px] font-black uppercase">${e.category}</span></td>
@@ -362,14 +383,17 @@ function exportToCSV() {
 
     // 3. Loop through rows and clean data
     rows.forEach(row => {
+
         const cols = row.querySelectorAll("td");
+
         if (cols.length >= 4) {
+
             const date = cols[0].innerText;
             const category = cols[1].innerText.trim();
             const description = cols[2].innerText.replace(/,/g, ""); // Remove commas so CSV doesn't break
             const amount = cols[3].innerText.replace("£", "");
             const type = row.classList.contains('bg-blue-50/20') ? "Auto-Shipping" : "Manual Entry";
-            
+
             csvContent += `${date},${category},${description},${amount},${type}\n`;
         }
     });
@@ -379,7 +403,7 @@ function exportToCSV() {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     const taxYear = document.getElementById('taxYearFilter').value;
-    
+
     link.setAttribute("href", url);
     link.setAttribute("download", `Hanafubuki_Expenses_${taxYear}.csv`);
     link.style.visibility = 'hidden';
@@ -387,9 +411,9 @@ function exportToCSV() {
     link.click();
     document.body.removeChild(link);
 }
-
         function openExpenseModal() {
     document.getElementById('expenseModal').classList.remove('hidden');
+
     // Set default date to today
     document.querySelector('#expenseForm input[type="date"]').value = new Date().toISOString().split('T')[0];
 }
@@ -402,9 +426,11 @@ function closeExpenseModal() {
 // Handle the Form Submission
 document.getElementById('expenseForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+
     const formData = new FormData(e.target);
-    
+
     const expenseData = {
+
         amount: parseFloat(formData.get('amount')),
         category: formData.get('category'),
         description: formData.get('description'),
@@ -420,6 +446,7 @@ document.getElementById('expenseForm')?.addEventListener('submit', async (e) => 
         renderfinancials(); // Refresh the dashboard
     }
 });
+
         async function deleteExpense(id) {
     // 1. Safety Check: Don't allow deleting 'Virtual' shipping rows
     if (typeof id === 'string' && id.startsWith('ship-')) {
@@ -430,27 +457,30 @@ document.getElementById('expenseForm')?.addEventListener('submit', async (e) => 
     // 2. Confirmation
     if (!confirm("Are you sure you want to remove this expense record?")) return;
 
+            
     // 3. Delete from Supabase
     const { error } = await _supabase
         .from('studio_expenses')
         .delete()
         .eq('id', id);
 
+
     if (error) {
         alert("Error deleting record: " + error.message);
+
     } else {
+
         // 4. Refresh the UI
         renderfinancials();
     }
 }
-            
-// Auto-run on load
+
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(renderfinancials, 500); 
 });
+
 }
     </script>
-
     <div id="expenseModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
     <div class="bg-white rounded-[2.5rem] max-w-md w-full p-8 shadow-2xl border border-pink-100">
         <h3 class="text-xl font-black italic text-gray-800 mb-6">Log New Expense 🌸</h3>
