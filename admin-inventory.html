@@ -57,18 +57,25 @@ function initPage(session) {
     document.getElementById('view-inventory').classList.remove('hidden');
     renderinventory();
 }
-    const toneColors = {
-    'Semi-White':  'bg-[#fff5f5] text-pink-400 border-pink-100', 
-    'Milk':        'bg-[#fffaf5] text-orange-400 border-orange-100', 
-    'Flesh':       'bg-[#fffaf5] text-orange-400 border-orange-100',
-    'Cinnamon':    'bg-[#fefce8] text-yellow-600 border-yellow-200', 
-    'Tan':         'bg-[#fdf2f8] text-pink-600 border-pink-200',  
-    'Tea':         'bg-[#fdf2f8] text-pink-600 border-pink-200',    
-    'Coffee':      'bg-[#fafaf9] text-stone-600 border-stone-200', 
-    'Cocoa':       'bg-[#451a03] text-white border-transparent',   
-    'Green':       'bg-emerald-500 text-white border-transparent', 
-    'Grey':        'bg-slate-200 text-slate-700 border-slate-300',  
-    'Black Navy':  'bg-[#0f172a] text-blue-200 border-transparent',
+
+    function getToneStyle(tone) {
+    const normalized = tone ? tone.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : '';
+    
+    return toneColors[normalized] || 'bg-white border-pink-100 text-pink-400';
+}
+    
+   const toneColors = {
+    'Semi-White':  'bg-red-50 text-red-600 border-red-100',
+    'Milk':        'bg-orange-50 text-orange-600 border-orange-100',
+    'Flesh':       'bg-orange-50 text-orange-600 border-orange-100',
+    'Cinnamon':    'bg-orange-200 text-orange-800 border-orange-300',
+    'Tea':         'bg-yellow-600 text-white border-yellow-700',
+    'Tan':         'bg-yellow-600 text-white border-yellow-700',
+    'Coffee':      'bg-yellow-700 text-white border-yellow-800',
+    'Cocoa':       'bg-amber-900 text-amber-50 border-transparent',
+    'Green':       'bg-lime-500 text-lime-950 border-lime-600',
+    'Grey':        'bg-neutral-400 text-white border-neutral-500',
+    'Black Navy':  'bg-slate-700 text-slate-50 border-slate-800',
 };
 
 async function renderinventory() {
