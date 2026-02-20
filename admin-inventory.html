@@ -125,12 +125,14 @@ async function renderinventory() {
         ${Object.keys(toneColors).map(t => `<option value="${t}">${t}</option>`).join('')}
     </select>
 </div>
-            ${categories.map(cat => {
+           ${categories.map(cat => {
                 const filtered = items.filter(i => i.category === cat.key);
+                const isEyes = cat.key === "Eye Bases";
+
                 return `
                 <div class="space-y-3">
                     <div class="flex justify-between items-center ml-6 mr-4">
-                        <h3 class="text-[11px] font-black uppercase text-emerald-400 tracking-widest">${cat.title}</h3>
+                        <h3 class="text-[11px] font-black uppercase text-gray-400 tracking-widest">${cat.title}</h3>
                         <button onclick="openStockModal(null, '${cat.key}')" 
                                 class="text-[9px] font-black uppercase text-pink-400 hover:text-pink-600 transition-all bg-pink-50/50 px-3 py-1 rounded-full">
                             + Add ${cat.key}
@@ -140,31 +142,31 @@ async function renderinventory() {
                         <table class="w-full text-left">
                             <thead class="bg-pink-50/40 border-b border-pink-50">
                                 <tr>
-                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">Sculpt / Size</th>
-                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">Skintone</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">${isEyes ? 'Size (mm)' : 'Sculpt / Size'}</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">${isEyes ? 'Type' : 'Skintone'}</th>
                                     <th class="p-4 text-[10px] font-black uppercase text-pink-500/70 text-center">Qty</th>
                                     <th class="p-4 text-[10px] font-black uppercase text-pink-500/70 text-right">Adjust</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-pink-50/50">
                                 ${filtered.length ? filtered.map(item => {
-                                    // Stringify the item safely for the onclick attribute
                                     const itemData = JSON.stringify(item).replace(/'/g, "\\'");
+                                    
                                     return `
                                     <tr class="hover:bg-white/60 transition-colors">
-                                        <td class="p-4 text-sm font-bold text-pink-700">${item.sculpt_size}</td>
+                                        <td class="p-4 text-sm font-bold text-gray-700">
+                                            ${isEyes ? `${item.sculpt_size}mm` : item.sculpt_size}
+                                        </td>
                                         <td class="p-4">
-    ${(() => {
-        const toneStyle = toneColors[item.skintone] || 'bg-white border-pink-100 text-pink-400';
-        return `
-            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase border shadow-sm ${toneStyle}">
-                ${item.skintone || '---'}
-            </span>
-        `;
-    })()}
-</td>
+                                            ${isEyes ? 
+                                                `<span class="text-[10px] font-bold text-gray-300 italic uppercase tracking-tighter">Eye Base</span>` : 
+                                                `<span class="px-3 py-1 rounded-full text-[9px] font-black uppercase border shadow-sm transition-all ${getToneStyle(item.skintone)}">
+                                                    ${item.skintone || '---'}
+                                                </span>`
+                                            }
+                                        </td>
                                         <td class="p-4 text-center">
-                                            <span class="text-sm font-black ${item.quantity === 0 ? 'text-pink-300' : (item.quantity < 2 ? 'text-rose-500 animate-pulse' : 'text-emerald-600')}">
+                                            <span class="text-sm font-black ${item.quantity === 0 ? 'text-gray-300' : (item.quantity < 2 ? 'text-rose-500 animate-pulse' : 'text-gray-600')}">
                                                 ${item.quantity}
                                             </span>
                                         </td>
@@ -174,22 +176,23 @@ async function renderinventory() {
                                                     <button onclick="updateStock('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 font-bold transition-all shadow-sm">－</button>
                                                     <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 font-bold transition-all shadow-sm">＋</button>
                                                 </div>
-                                                <button onclick='openStockModal(${itemData})' class="text-mint-300 hover:text-pink-400 transition-colors" title="Edit Item">✎</button>
-                                                <button onclick="deleteStockItem('${item.id}')" class="text-mint-200 hover:text-rose-400 transition-colors" title="Delete Item">🗑️</button>
+                                                <button onclick='openStockModal(${itemData})' class="text-gray-300 hover:text-pink-400 transition-colors">✎</button>
+                                                <button onclick="deleteStockItem('${item.id}')" class="text-gray-200 hover:text-rose-400 transition-colors">🗑️</button>
                                             </div>
                                         </td>
-                                    </tr>
-                                `}).join('') : `
+                                    </tr>`;
+                                }).join('') : `
                                     <tr>
-                                        <td colspan="4" class="p-10 text-center text-[10px] font-black text-pink-300 uppercase tracking-widest italic">No items recorded in ${cat.key}</td>
+                                        <td colspan="4" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase tracking-widest italic">No items in ${cat.key}</td>
                                     </tr>`}
                             </tbody>
                         </table>
                     </div>
                 </div>`;
             }).join('')}
-        </div>`;
+            </div>`;
 }
+                             
 async function updateStock(id, change) {
     const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
     const newQty = Math.max(0, data.quantity + change);
