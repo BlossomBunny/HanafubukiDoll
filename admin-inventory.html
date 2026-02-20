@@ -128,12 +128,6 @@ const items = rawItems.sort((a, b) => {
                 <button onclick="openStockModal()" class="nav-btn nav-btn-pink shadow-sm hover:shadow-pink-100">+ Add New Stock</button>
             </div>
             
-<div class="flex justify-end mb-4">
-    <select onchange="filterByTone(this.value)" class="text-[10px] font-black uppercase bg-white border border-pink-100 rounded-xl px-4 py-2 outline-none shadow-sm">
-        <option value="all">Show All Tones</option>
-        ${Object.keys(toneColors).map(t => `<option value="${t}">${t}</option>`).join('')}
-    </select>
-</div>
            ${categories.map(cat => {
                 const filtered = items.filter(i => i.category === cat.key);
                 const isEyes = cat.key === "Eye Bases";
