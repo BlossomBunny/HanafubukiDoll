@@ -35,37 +35,34 @@
             </div>
         </div>
     </nav>
-
-    <div class="glass-card p-6 mb-8 bg-gradient-to-r from-pink-50 to-emerald-50 border-none">
-    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="flex-1 w-full">
-            <div class="flex justify-between mb-2">
-                <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest">Tax Year Progress</span>
-                <span id="daysRemaining" class="text-[10px] font-black uppercase text-pink-500"></span>
-            </div>
-            <div class="w-full bg-white/50 rounded-full h-3 overflow-hidden border border-pink-100">
-                <div id="yearProgressBar" class="bg-pink-400 h-full transition-all duration-1000" style="width: 0%"></div>
-            </div>
+<div class="glass-card p-4 mb-6 bg-white/40 border-none flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+        <div class="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center text-xl shadow-sm">🗓️</div>
+        <div>
+            <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest leading-none">Tax Year <span id="taxYearDisplay">2025/26</span></p>
+            <p class="text-xs font-bold text-gray-700"><span id="daysRemainingText" class="text-pink-500">--</span> days until April 5th</p>
         </div>
-    </div>
-</div>
-   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-    <div class="lg:col-span-2 glass-card p-6 bg-white/50 border-none flex flex-col justify-center">
-        <div class="flex justify-between mb-2">
-            <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest">Trading Allowance Tracker (£1k Limit)</span>
-            <span id="allowanceStatus" class="text-[10px] font-black uppercase text-emerald-500 font-mono"></span>
-        </div>
-        <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-            <div id="allowanceBar" class="bg-emerald-400 h-full transition-all duration-1000" style="width: 0%"></div>
-        </div>
-        <p id="allowanceText" class="text-[9px] text-gray-400 mt-2 uppercase font-bold italic"></p>
     </div>
 
-    <div id="strategyCard" class="glass-card p-6 border-2 border-dashed border-pink-100 flex flex-col items-center justify-center text-center">
-        <p class="text-[9px] font-black uppercase text-gray-400 mb-1">Recommended Tax Strategy</p>
-        <p id="strategyResult" class="text-xs font-black text-pink-500 uppercase italic">Calculating...</p>
+    <div class="flex-1 max-w-sm px-6 border-l border-gray-100">
+        <div class="flex justify-between mb-1">
+            <span class="text-[9px] font-black uppercase text-gray-400">Trading Allowance Tracker</span>
+            <span id="allowanceStatus" class="text-[9px] font-black text-pink-500 italic">Calculating...</span>
+        </div>
+        <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden shadow-inner">
+            <div id="allowanceBar" class="h-full transition-all duration-1000" style="width: 0%"></div>
+        </div>
     </div>
+
+    <button onclick="toggleTaxModal()" class="px-4 py-2 border border-pink-200 rounded-lg text-[9px] font-black uppercase text-pink-500 hover:bg-pink-50 transition-all">
+        Deadlines & Help 🌸
+    </button>
 </div>
+
+<div id="financial-stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
+
+<div id="unified-tax-reserve"></div>
+    
     <main class="max-w-6xl mx-auto p-4 md:p-10 space-y-10">
         <div id="financial-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
     <div class="glass-card p-6 animate-pulse bg-gray-50 h-32"></div>
@@ -159,7 +156,7 @@ async function renderfinancials() {
 
     // 1. Fetch Data
     const [incomeRes, expenseRes] = await Promise.all([
-        _supabase.from('commissions').select('total_price, created_at, shipping_cost, payments'),
+        _supabase.from('commissions').select('id, total_price, created_at, shipping_cost, payments, customer_name'),
         _supabase.from('studio_expenses').select('*').order('date', { ascending: false })
     ]);
 
@@ -168,27 +165,37 @@ async function renderfinancials() {
         return;
     }
 
-    // 2. Filter Expenses by Tax Year
-    const filteredExpenses = expenseRes.data.filter(e => {
+    // 2. Transform Shipping into "Virtual" Expense Rows
+    // This makes the shipping fees visible line-items in your records
+    const shippingExpenses = incomeRes.data
+        .filter(c => Number(c.shipping_cost) > 0)
+        .map(c => ({
+            id: `ship-${c.id}`, // Unique ID to prevent React/DOM issues
+            date: c.created_at,
+            category: 'Shipping',
+            description: `Postage for ${c.customer_name || 'Commission'}`,
+            amount: Number(c.shipping_cost),
+            is_virtual: true // Flag to distinguish from manual entries
+        }));
+
+    // 3. Combine and Filter by Tax Year
+    const allExpenses = [...expenseRes.data, ...shippingExpenses];
+    
+    const filteredExpenses = allExpenses.filter(e => {
         const d = new Date(e.date);
         return d >= startDate && d <= endDate;
     });
 
-    // 3. Process Commissions & JSON Payments Logic
+    // 4. Process Income (JSON Payments)
     let totalIncomeInYear = 0;
     let totalBookedInYear = 0;
-    let autoShippingInYear = 0;
 
     incomeRes.data.forEach(comm => {
         const commDate = new Date(comm.created_at);
-        
-        // Count booked value/shipping if commission was created this year
         if (commDate >= startDate && commDate <= endDate) {
             totalBookedInYear += (Number(comm.total_price) || 0);
-            autoShippingInYear += (Number(comm.shipping_cost) || 0);
         }
 
-        // Check JSON payments array for money received THIS tax year
         if (Array.isArray(comm.payments)) {
             comm.payments.forEach(p => {
                 const pDate = new Date(p.date);
@@ -199,82 +206,74 @@ async function renderfinancials() {
         }
     });
 
-    // 4. Core Calculations
-    const totalOut = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0) + autoShippingInYear;
+    // 5. Core Calculations
+    const totalOut = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
     const netProfit = totalIncomeInYear - totalOut;
-
-    // HMRC Reserve Logic
-    const taxPot = netProfit > 1000 ? netProfit * 0.20 : 0; 
-    const class4NI = (netProfit > 12570) ? (netProfit - 12570) * 0.06 : 0;
-    const totalTaxNeeded = taxPot + class4NI;
-
     const pendingRevenue = totalBookedInYear - totalIncomeInYear;
 
-    // 5. Update Allowance Tracker & Strategy
-    const allowanceLimit = 1000;
-    const allowancePercent = Math.min((totalBookedInYear / allowanceLimit) * 100, 100);
-    
-    const allowanceBar = document.getElementById('allowanceBar');
-    const strategyResult = document.getElementById('strategyResult');
-    const allowanceStatus = document.getElementById('allowanceStatus');
+// 6. Update Sleek Header
+const daysLeft = getTaxYearStats();
+document.getElementById('daysRemainingText').innerText = daysLeft;
+document.getElementById('taxYearDisplay').innerText = `${startYear}/${(startYear + 1).toString().slice(-2)}`;
 
-    if (allowanceBar) allowanceBar.style.width = `${allowancePercent}%`;
-    if (allowanceStatus) allowanceStatus.innerText = `£${totalBookedInYear.toLocaleString()} / £1,000`;
+const allowanceLimit = 1000;
+const cashPercent = Math.min((totalIncomeInYear / allowanceLimit) * 100, 100);
+const pendingPercent = Math.min((pendingRevenue / allowanceLimit) * 100, 100 - cashPercent);
 
-    if (strategyResult) {
-        if (totalBookedInYear >= allowanceLimit) {
-            strategyResult.innerText = totalOut > 1000 ? "Strategy: Claim Actual Expenses 🧾" : "Strategy: Use £1,000 Trading Allowance 💡";
-            strategyResult.className = "text-xs font-black text-pink-500 uppercase italic";
-        } else {
-            strategyResult.innerText = "Status: Hobby Mode 🧸";
-            strategyResult.className = "text-xs font-black text-emerald-500 uppercase italic";
-        }
-    }
+const allowanceBar = document.getElementById('allowanceBar');
+if (allowanceBar) {
+    allowanceBar.style.background = `linear-gradient(to right, #ec4899 ${cashPercent}%, #fbcfe8 ${cashPercent}%, #fbcfe8 ${cashPercent + pendingPercent}%, #f3f4f6 ${cashPercent + pendingPercent}%)`;
+    allowanceBar.style.width = '100%';
+}
 
-    // 6. Update Stats Grid
-    document.getElementById('financial-stats').innerHTML = `
-        <div class="glass-card p-6 border-l-4 border-pink-400">
-            <p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p>
-            <p class="text-2xl font-black italic">£${totalIncomeInYear.toLocaleString()}</p>
-        </div>
-        <div class="glass-card p-6 border-l-4 border-rose-400">
-            <p class="text-[9px] font-black uppercase text-gray-400">Total Expenses</p>
-            <p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p>
-        </div>
-        <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20">
-            <p class="text-[9px] font-black uppercase text-gray-400">Net Profit</p>
-            <p class="text-2xl font-black italic text-emerald-600">£${netProfit.toLocaleString()}</p>
-        </div>
-        <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20">
-            <p class="text-[9px] font-black uppercase text-gray-400">Pending Revenue</p>
-            <p class="text-2xl font-black italic text-blue-600">£${pendingRevenue.toLocaleString()}</p>
-        </div>
-        <div class="glass-card p-6 border-l-4 border-gray-400 bg-gray-50/50 lg:col-span-4 mt-2">
-             <div class="flex justify-between items-center">
-                <div>
-                    <p class="text-[9px] font-black uppercase text-gray-400">Est. Tax & NI Reserve</p>
-                    <p class="text-xl font-black italic text-gray-700">£${totalTaxNeeded.toLocaleString()}</p>
-                </div>
-                <p class="text-[7px] text-gray-400 uppercase text-right leading-tight">
-                    20% Income Tax applied after £1k profit.<br>NI Class 4 applied after £12,570 profit.
+document.getElementById('allowanceStatus').innerText = 
+    totalIncomeInYear >= allowanceLimit ? "LIMIT REACHED" : `£${totalIncomeInYear} / £1,000`;
+
+// 7. Render Unified Smart Reserve
+const reserveContainer = document.getElementById('unified-tax-reserve');
+const isHobby = totalBookedInYear < 1000;
+
+reserveContainer.innerHTML = `
+    <div class="glass-card p-6 mt-2 border-l-4 ${totalTaxNeeded > 0 ? 'border-amber-400 bg-amber-50/20' : 'border-emerald-400 bg-white/40'}">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div>
+                <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Tax & NI Savings Goal</p>
+                <h3 class="text-3xl font-black italic ${totalTaxNeeded > 0 ? 'text-gray-800' : 'text-emerald-500/40'}">
+                    £${totalTaxNeeded.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                </h3>
+                <p class="text-[9px] font-bold text-gray-400 uppercase mt-1">
+                    ${totalTaxNeeded > 0 ? 'Move this to your business savings pot' : (isHobby ? 'Hobby Mode: No tax currently due' : 'Threshold passed: Calculating profit...')}
                 </p>
-             </div>
+            </div>
+
+            ${totalTaxNeeded > 0 ? `
+            <div class="flex-1 w-full max-w-xs">
+                <div class="flex justify-between mb-2 font-black text-[9px] uppercase">
+                    <span class="text-amber-600 font-black">Reserve Intensity</span>
+                    <span class="text-gray-400">${((totalTaxNeeded / netProfit) * 100).toFixed(0)}% of profit</span>
+                </div>
+                <div class="w-full bg-gray-200/50 h-2 rounded-full overflow-hidden shadow-inner">
+                    <div class="bg-amber-400 h-full" style="width: ${(totalTaxNeeded / netProfit) * 100}%"></div>
+                </div>
+            </div>` : `
+            <div class="hidden md:block">
+                <span class="text-[10px] font-black text-emerald-500 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100 uppercase tracking-widest">
+                    Status: Tax Protected ✨
+                </span>
+            </div>`}
         </div>
-    `;
-
-    // 7. Update Tax Pot Visuals
+    </div>
+`;
+    // 8. Update Tax Pot Visuals
     const taxPotValueEl = document.getElementById('taxPotValue');
-    const taxPotBar = document.getElementById('taxPotBar');
-    const taxPotPercent = document.getElementById('taxPotPercent');
-
     if (taxPotValueEl) {
-        taxPotValueEl.innerText = `£${totalTaxNeeded.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        taxPotValueEl.innerText = `£${totalTaxNeeded.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
         const intensity = netProfit > 0 ? Math.min((totalTaxNeeded / netProfit) * 100, 100) : 0;
-        if (taxPotBar) taxPotBar.style.width = `${intensity}%`;
-        if (taxPotPercent) taxPotPercent.innerText = `${intensity.toFixed(0)}% of Profit`;
+        document.getElementById('taxPotBar').style.width = `${intensity}%`;
+        document.getElementById('taxPotPercent').innerText = `${intensity.toFixed(0)}% of Profit`;
     }
 
-    // 8. Category Pills
+    // 9. Category Pills (Now automatically includes the Shipping category)
     const catTotals = filteredExpenses.reduce((acc, curr) => {
         acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
         return acc;
@@ -287,22 +286,33 @@ async function renderfinancials() {
         </div>
     `).join('');
 
-    // 9. Table Rendering
+    // 10. Table Rendering (Shipping rows highlighted blue)
     const expenseBody = document.getElementById('expense-tbody');
     expenseBody.innerHTML = filteredExpenses.length ? filteredExpenses.map(e => `
-        <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
+        <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors ${e.is_virtual ? 'bg-blue-50/20' : ''}">
             <td class="py-4 pl-2 text-[11px] font-bold text-gray-500">${new Date(e.date).toLocaleDateString()}</td>
-            <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-400">${e.category}</span></td>
+            <td class="py-4">
+                <span class="px-2 py-1 rounded-md ${e.is_virtual ? 'bg-blue-100 text-blue-500' : 'bg-gray-100 text-gray-400'} text-[9px] font-black uppercase">
+                    ${e.category}
+                </span>
+            </td>
             <td class="py-4 text-xs font-bold text-gray-700">${e.description}</td>
             <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
-            <td class="py-4 text-center">${e.reciept_url ? `<a href="${e.reciept_url}" target="_blank">📎</a>` : '∅'}</td>
             <td class="py-4 text-center">
-                <button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">×</button>
+                ${e.is_virtual ? '<span class="text-[10px] text-blue-400 font-bold italic">AUTO</span>' : (e.reciept_url ? `<a href="${e.reciept_url}" target="_blank">📎</a>` : '∅')}
+            </td>
+            <td class="py-4 text-center">
+                ${e.is_virtual ? '' : `
+                <button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>`}
             </td>
         </tr>
-    `).join('') : `<tr><td colspan="6" class="py-10 text-center text-gray-300 italic text-xs">No expenses logged.</td></tr>`;
+    `).join('') : `<tr><td colspan="6" class="py-10 text-center text-gray-300 italic text-xs">No records found.</td></tr>`;
 
-    // 10. Chart
+    // 11. Chart
     if (typeof initRevenueChart === 'function') {
         initRevenueChart(incomeRes.data, filteredExpenses);
     }
@@ -480,6 +490,17 @@ function initRevenueChart(incomeData, expenses) {
         settingsBtn.classList.remove('border-b-2', 'border-pink-500', 'text-pink-500', 'bg-pink-50/30');
         settingsBtn.classList.add('text-gray-400');
     }
+}
+        function getTaxYearStats() {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    // Tax year ends April 5th
+    const taxYearEnd = (today.getMonth() > 3 || (today.getMonth() === 3 && today.getDate() >= 6)) 
+        ? new Date(currentYear + 1, 3, 5) 
+        : new Date(currentYear, 3, 5);
+    
+    const diff = taxYearEnd - today;
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
     </script>
 
