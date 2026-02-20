@@ -88,18 +88,27 @@ async function renderinventory() {
     // 2. SHOW LOADING STATE
     container.innerHTML = `<div class="flex justify-center py-20"><span class="animate-bounce text-2xl">🌸</span></div>`;
     
-    // 3. FETCH DATA
-   const { data: items, error } = await _supabase
+   // 3. FETCH DATA
+const { data: rawItems, error } = await _supabase
     .from('inventory')
-    .select('*')
-    .order('category', { ascending: true })   // Keep categories together
-    .order('skintone', { ascending: true })   // Group all same skintones together!
-    .order('sculpt_size', { ascending: true }); // Then sort by name
-    
-    if (error) {
-        container.innerHTML = `<p class="text-center text-rose-500 p-10">Error loading inventory: ${error.message}</p>`;
-        return;
+    .select('*');
+
+if (error) {
+    container.innerHTML = `<p class="text-center text-rose-500 p-10">Error: ${error.message}</p>`;
+    return;
+}
+
+// 4. CUSTOM SORTING LOGIC
+const items = rawItems.sort((a, b) => {
+    if (a.category === "Eye Bases" && b.category === "Eye Bases") {
+        return parseFloat(a.sculpt_size) - parseFloat(b.sculpt_size);
     }
+    
+    if (a.skintone !== b.skintone) {
+        return (a.skintone || "").localeCompare(b.skintone || "");
+    }
+    return (a.sculpt_size || "").localeCompare(b.sculpt_size || "");
+});
 
     const categories = [
         { title: "Smartdoll Hands (Pairs)", key: "Smartdoll Hands" },
@@ -202,11 +211,21 @@ async function updateStock(id, change) {
 
 function openStockModal(item = null, categoryHint = '') {
     const modal = document.getElementById('stockModal');
-    const form = document.getElementById('stockForm');
-    
-    document.getElementById('stockModalTitle').textContent = item ? 'Edit Stock Item ♡' : 'Add New Stock ♡';
+    const category = item?.category || categoryHint || 'Smartdoll Hands';
+    const isEyes = category === 'Eye Bases';
+
+    document.getElementById('stockModalTitle').textContent = item ? 'Edit Stock ♡' : 'Add New Stock ♡';
     document.getElementById('stockId').value = item?.id || '';
-    document.getElementById('stockCategory').value = item?.category || categoryHint || 'Smartdoll Hands';
+    document.getElementById('stockCategory').value = category;
+    
+
+    const sculptLabel = document.querySelector('label[for="stockSculpt"]');
+    const toneLabel = document.querySelector('label[for="stockSkintone"]');
+    
+    if (sculptLabel) sculptLabel.textContent = isEyes ? "Size (mm)" : "Sculpt/Size";
+    if (toneLabel) toneLabel.style.display = isEyes ? "none" : "block";
+    document.getElementById('stockSkintone').parentElement.style.display = isEyes ? "none" : "block";
+
     document.getElementById('stockSculpt').value = item?.sculpt_size || '';
     document.getElementById('stockSkintone').value = item?.skintone || '';
     document.getElementById('stockQty').value = item?.quantity || 0;
