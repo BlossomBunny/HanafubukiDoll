@@ -260,6 +260,34 @@ async function uploadShippingReceipt(commissionId) {
 
     input.click();
 }
+
+     async function deleteReceipt(id, isVirtual = false) {
+    if (!confirm("Are you sure you want to delete this receipt?")) return;
+
+    let updateData = { receipt_url: null };  // for real expenses
+    let tableName = 'studio_expenses';
+    let idField = 'id';
+
+    if (isVirtual) {
+        updateData = { shipping_receipt_url: null };
+        tableName = 'commissions';
+        idField = 'id';
+    }
+
+    const { error } = await _supabase
+        .from(tableName)
+        .update(updateData)
+        .eq(idField, id);
+
+    if (error) {
+        alert("Failed to delete receipt link: " + error.message);
+        console.error(error);
+    } else {
+        alert("Receipt removed!");
+        renderfinancials();  // Refresh table → button goes back to "+ Add receipt"
+    }
+}
+     
      function exportToCSV() {
     // 1. Grab the table rows
     const rows = document.querySelectorAll("#expense-tbody tr");
@@ -496,16 +524,18 @@ if (allowanceStatus) {
             <td class="py-4 text-xs font-bold text-gray-700">${e.description}</td>
             <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
             <td class="py-4 text-center">
+   <td class="py-4 text-center">
     ${e.reciept_url 
-        ? `<a href="${e.reciept_url}" target="_blank" class="text-blue-500 hover:underline text-sm">📎 View</a>`
+        ? `
+            <a href="${e.reciept_url}" target="_blank" class="text-blue-500 hover:underline text-sm mr-2">📎 View</a>
+            <button onclick="deleteReceipt('${e.is_virtual ? 'ship-' + commissionIdFromVirtual(e) : e.id}', ${e.is_virtual})" class="text-rose-500 hover:text-rose-700 text-xs">🗑 Delete</button>
+          `
         : (e.is_virtual 
             ? `<button onclick="uploadShippingReceipt('${e.id.replace('ship-', '')}')" class="text-blue-500 hover:underline text-xs">+ Add receipt</button>`
             : '∅')}
 </td>
 <td class="py-4 text-center">
-    ${e.is_virtual 
-        ? '' 
-        : `<button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">×</button>`}
+    ${e.is_virtual ? '' : `<button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">×</button>`}
 </td>
         </tr>`).join('') : `<tr><td colspan="6" class="py-10 text-center text-gray-300 italic text-xs">No records found.</td></tr>`;
 
@@ -569,6 +599,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
    });
+
+     function commissionIdFromVirtual(virtualId) {
+    return virtualId.replace('ship-', '');
+}
+     
+async function handleLogout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'customer-index.html';
+        }
+
+     
     </script>
     <div id="expenseModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
     <div class="bg-white rounded-[2.5rem] max-w-md w-full p-8 shadow-2xl border border-pink-100">
