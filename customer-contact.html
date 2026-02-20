@@ -522,24 +522,30 @@ function showStep(stepNum) {
     
 // --- 5. SUBMISSION ---
 async function finalSubmit() {
-    if (!document.getElementById('tosCheck').checked) {
+    // 1. ToS Check - This stops everything if they haven't ticked the box
+    const tosCheck = document.getElementById('tosCheck');
+    if (!tosCheck || !tosCheck.checked) {
         showMagicAlert("Terms", "Please agree to the studio terms! ♡", "error");
         return;
     }
 
     const btn = document.querySelector('#step-4 button');
-    
     if (window.StudioLoader) {
         StudioLoader.show("Whisking your request away... ✨");
     }
-    
     if (btn) btn.disabled = true;
 
     try {
+        // 2. Determine which services were ACTUALLY selected in Step 2
+        const isFaceupSelected = document.getElementById('checkFaceup').checked;
+        const isManiSelected = document.getElementById('checkMani').checked;
+        const isEyesSelected = document.getElementById('checkEyes').checked;
+
         const fBase = document.getElementById('faceupBase').value;
         let finalSculpt = document.getElementById('dollSculpt').value;
         let finalCompany = document.getElementById('dollCompany').value;
 
+        // Smartdoll/Dollfie Logic
         if (fBase.includes('Smartdoll')) {
             finalSculpt = document.getElementById('sm-head-sculpt-select').value;
             finalCompany = "Smartdoll";
@@ -548,13 +554,14 @@ async function finalSubmit() {
             finalCompany = "Volks";
         }
 
-        // Generate ID and upload images
         const commissionId = crypto.randomUUID(); 
-        const faceupImages = await uploadSet('faceupFiles', 'faceup', commissionId);
-        const maniImages = await uploadSet('maniFiles', 'manicure', commissionId);
-        const eyeImages = await uploadSet('eyeFiles', 'eyes', commissionId);
 
-        // Send to Supabase
+        // 3. Conditional Image Uploads
+        const faceupImages = isFaceupSelected ? await uploadSet('faceupFiles', 'faceup', commissionId) : [];
+        const maniImages = isManiSelected ? await uploadSet('maniFiles', 'manicure', commissionId) : [];
+        const eyeImages = isEyesSelected ? await uploadSet('eyeFiles', 'eyes', commissionId) : [];
+
+        // 4. Send to Supabase
         const { error } = await _supabase.from('commissions').insert([{
             id: commissionId,
             customer_name: document.getElementById('custName').value,
@@ -564,21 +571,28 @@ async function finalSubmit() {
             doll_company: finalCompany,
             doll_sculpt: finalSculpt,
             doll_skintone: document.getElementById('dollSkintone').value || 'N/A',
-            faceup_details: fBase !== "None" ? { 
+            
+            // This logic ensures only checked services get an object. 
+            // Others get NULL, which fixes your Admin Drawer visibility!
+            faceup_details: isFaceupSelected ? { 
                 base: fBase, 
                 notes: document.getElementById('faceupNotes').value,
                 images: faceupImages 
             } : null,
-            manicure_details: document.getElementById('maniBase').value !== "None" ? {
+
+            manicure_details: isManiSelected ? {
                 base: document.getElementById('maniBase').value,
                 notes: document.getElementById('maniNotes').value,
                 images: maniImages
             } : null,
-            eye_details: document.getElementById('eyeBase').value !== "None" ? {
+
+            eye_details: isEyesSelected ? {
                 base: document.getElementById('eyeBase').value,
                 notes: document.getElementById('eyeNotes').value,
                 images: eyeImages
             } : null,
+
+            tos_agreed: true, // Matching your column name exactly
             status: 'Enquiry',
             created_at: new Date().toISOString()
         }]);
