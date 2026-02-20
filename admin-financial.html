@@ -70,28 +70,6 @@
     <div class="glass-card p-6 animate-pulse bg-gray-50 h-32"></div>
     <div class="glass-card p-6 animate-pulse bg-gray-50 h-32"></div>
 </div>
-        <div id="financial-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            </div>
-<div class="glass-card p-8 mb-8 bg-gradient-to-br from-blue-50/50 to-pink-50/50 border-none shadow-inner">
-    <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-        <div class="space-y-2 text-center md:text-left">
-            <h3 class="text-[11px] font-black uppercase tracking-[0.2em] text-blue-500">The Tax Pot</h3>
-            <p class="text-4xl font-black text-gray-800 italic" id="taxPotValue">£0.00</p>
-            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Amount to set aside in savings</p>
-        </div>
-        
-        <div class="flex-1 w-full max-w-md space-y-4">
-            <div class="flex justify-between text-[10px] font-black uppercase text-gray-400">
-                <span>Current Progress</span>
-                <span id="taxPotPercent">0% Saved</span>
-            </div>
-            <div class="w-full bg-white/50 rounded-full h-4 p-1 shadow-sm border border-white">
-                <div id="taxPotBar" class="bg-blue-400 h-full rounded-full transition-all duration-1000 shadow-lg" style="width: 0%"></div>
-            </div>
-            <p class="text-[9px] text-center text-gray-400 italic">Based on 20% Income Tax + 6% Class 4 NI (if applicable)</p>
-        </div>
-    </div>
-</div>
         <div class="glass-card p-8 bg-white/80">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Revenue vs Expenses</h3>
@@ -231,12 +209,28 @@ async function renderfinancials() {
     const cashPercent = Math.min((totalIncomeInYear / allowanceLimit) * 100, 100);
     const pendingPercent = Math.min((pendingRevenue / allowanceLimit) * 100, 100 - cashPercent);
 
-    const allowanceBar = document.getElementById('allowanceBar');
-    if (allowanceBar) {
-        allowanceBar.style.background = `linear-gradient(to right, #ec4899 ${cashPercent}%, #fbcfe8 ${cashPercent}%, #fbcfe8 ${cashPercent + pendingPercent}%, #f3f4f6 ${cashPercent + pendingPercent}%)`;
-        allowanceBar.style.width = '100%';
+   const allowanceBar = document.getElementById('allowanceBar');
+if (allowanceBar) {
+ 
+    allowanceBar.style.background = `linear-gradient(to right, 
+        #ec4899 ${cashPercent}%, 
+        #60a5fa ${cashPercent}%, 
+        #60a5fa ${cashPercent + pendingPercent}%, 
+        #f3f4f6 ${cashPercent + pendingPercent}%)`;
+    allowanceBar.style.width = '100%';
+}
+
+
+const allowanceStatus = document.getElementById('allowanceStatus');
+if (allowanceStatus) {
+    if (totalIncomeInYear >= allowanceLimit) {
+        allowanceStatus.innerHTML = `<span class="text-pink-600 font-black">LIMIT REACHED 📢</span>`;
+    } else {
+        allowanceStatus.innerHTML = `
+            <span class="text-pink-500">£${totalIncomeInYear} Cash</span> + 
+            <span class="text-blue-500">£${pendingRevenue} Pending</span>`;
     }
-    document.getElementById('allowanceStatus').innerText = totalIncomeInYear >= allowanceLimit ? "LIMIT REACHED" : `£${totalIncomeInYear} / £1,000`;
+}
 
     // 7. Render Unified Smart Reserve
     const isHobby = totalBookedInYear < 1000;
@@ -456,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="bg-white rounded-[2.5rem] max-w-lg w-full p-8 shadow-2xl relative border border-pink-100">
         <button onclick="toggleTaxModal()" class="absolute top-6 right-6 text-gray-400 hover:text-rose-500 text-2xl font-bold">×</button>
         
-        <h3 class="text-xl font-black italic text-gray-800 mb-4">The Side Hustler's Roadmap 🗺️</h3>
+        <h3 class="text-xl font-black italic text-gray-800 mb-4">The Tax Roadmap 🗺️</h3>
         
         <div class="space-y-4">
             <div class="p-4 bg-pink-50 rounded-2xl border border-pink-100">
