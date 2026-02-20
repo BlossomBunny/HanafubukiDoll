@@ -109,11 +109,10 @@
                 <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Expense Records</h3>
                 <p class="text-[9px] text-gray-400 uppercase font-bold italic">Self-Assessment Audit Trail</p>
             </div>
-            <div class="flex gap-2">
-                <button onclick="exportToCSV()" class="nav-btn nav-btn-pink text-[10px]">💾 Export CSV</button>
-                <button onclick="openExpenseModal()" class="nav-btn nav-btn-mint text-[10px]">+ Log Expense</button>
-            </div>
-        </div>
+           <div class="flex gap-2">
+    <button id="export-csv-btn" class="nav-btn nav-btn-pink text-[10px]">💾 Export CSV</button>
+    <button id="log-expense-btn"  class="nav-btn nav-btn-mint text-[10px]">+ Log Expense</button>
+</div>
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead>
@@ -479,6 +478,19 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(renderfinancials, 500); 
 });
 }
+  
+document.addEventListener('DOMContentLoaded', function() {
+    const exportBtn = document.getElementById('export-csv-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportToCSV);
+    }
+
+    const addBtn = document.getElementById('log-expense-btn');
+    if (addBtn) {
+        addBtn.addEventListener('click', openExpenseModal);
+    }
+
+   });
     </script>
     <div id="expenseModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
     <div class="bg-white rounded-[2.5rem] max-w-md w-full p-8 shadow-2xl border border-pink-100">
