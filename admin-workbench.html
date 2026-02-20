@@ -362,13 +362,10 @@ async function openDrawer(id) {
                 </div>
 
                <div class="space-y-4">
-    /* Only show Faceup if it exists in the DB */
-    ${job.faceup_details ? renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink') : ''}
+       ${job.faceup_details ? renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink') : ''}
     
-    /* Only show Eyes if it exists in the DB */
     ${job.eye_details ? renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue') : ''}
     
-    /* Only show Mani if it exists in the DB */
     ${job.manicure_details ? renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald') : ''}
 </div>
 
