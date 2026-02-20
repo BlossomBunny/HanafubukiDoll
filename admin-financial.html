@@ -61,34 +61,40 @@
 
 <div class="max-w-5xl mx-auto px-4">
     
-    <div id="financial-stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="max-w-5xl mx-auto px-4">
+    <div id="financial-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         </div>
 
-    <div class="flex justify-center mb-10">
-        <div id="unified-tax-reserve" class="w-full max-w-4xl">
-            </div>
-    </div>
-
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-    
-    <div class="lg:col-span-2 space-y-8">
-        <div class="glass-card p-8 bg-white/80 border-none shadow-sm">
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Performance Overview</h3>
-                    <p class="text-lg font-black italic text-gray-800">Revenue vs Expenses</p>
-                </div>
-                <select id="taxYearFilter" onchange="renderfinancials()" class="text-[10px] font-black uppercase tracking-widest border-2 border-pink-100 bg-white rounded-xl px-4 py-2 outline-none text-pink-500 cursor-pointer hover:border-pink-300 transition-all">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        
+        <div class="lg:col-span-2 glass-card p-8 bg-white/80 border-none">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Revenue vs Expenses</h3>
+                <select id="taxYearFilter" onchange="renderfinancials()" class="text-[10px] font-bold border-none bg-pink-50 rounded-lg p-2 outline-none text-pink-500 cursor-pointer">
                     <option value="2025-26">Tax Year 25/26</option>
                     <option value="2024-25">Tax Year 24/25</option>
                 </select>
             </div>
-            <div class="h-[350px]">
+            <div class="h-[300px]">
                 <canvas id="revenueChart"></canvas>
             </div>
         </div>
+
+        <div class="space-y-6">
+            <div id="unified-tax-reserve"></div>
+
+            <div class="glass-card p-6 bg-white/80 border-none">
+                <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-4">Spending Categories</h3>
+                <div id="expense-pills" class="flex flex-col gap-2"></div>
+            </div>
+            
+            <div class="glass-card p-5 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 border-none">
+                <p class="text-[9px] font-black text-emerald-500 uppercase mb-1">💡 Pro Tip</p>
+                <p class="text-[11px] text-gray-600 font-medium">Claim your "Home Office" flat rate to lower your taxable profit! 🌸</p>
+            </div>
+        </div>
+    </div>
+</div>
 
         <div id="expense-table-container">
             </div>
@@ -265,32 +271,24 @@ if (allowanceStatus) {
     const isHobby = totalBookedInYear < 1000;
     const reserveContainer = document.getElementById('unified-tax-reserve');
     if (reserveContainer) {
-        reserveContainer.innerHTML = `
-            <div class="glass-card p-6 mt-2 border-l-4 ${totalTaxNeeded > 0 ? 'border-amber-400 bg-amber-50/20' : 'border-emerald-400 bg-white/40'}">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div>
-                        <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Tax & NI Savings Goal</p>
-                        <h3 class="text-3xl font-black italic ${totalTaxNeeded > 0 ? 'text-gray-800' : 'text-emerald-500/40'}">£${totalTaxNeeded.toLocaleString(undefined, {minimumFractionDigits: 2})}</h3>
-                        <p class="text-[9px] font-bold text-gray-400 uppercase mt-1">
-                            ${totalTaxNeeded > 0 ? 'Move this to your business savings pot' : (isHobby ? 'Hobby Mode: No tax currently due' : 'Threshold passed: Tracking profit...')}
-                        </p>
-                    </div>
-                    ${totalTaxNeeded > 0 ? `
-                        <div class="flex-1 w-full max-w-xs">
-                            <div class="flex justify-between mb-2 font-black text-[9px] uppercase text-amber-600">
-                                <span>Reserve Intensity</span>
-                                <span>${((totalTaxNeeded / Math.max(1, netProfit)) * 100).toFixed(0)}% of profit</span>
-                            </div>
-                            <div class="w-full bg-gray-200/50 h-2 rounded-full overflow-hidden shadow-inner">
-                                <div class="bg-amber-400 h-full" style="width: ${(totalTaxNeeded / Math.max(1, netProfit)) * 100}%"></div>
-                            </div>
-                        </div>` : `
-                        <div class="hidden md:block">
-                            <span class="text-[10px] font-black text-emerald-500 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100 uppercase tracking-widest">Status: Tax Protected ✨</span>
-                        </div>`}
-                </div>
-            </div>`;
-    }
+       reserveContainer.innerHTML = `
+    <div class="glass-card p-6 border-l-4 ${totalTaxNeeded > 0 ? 'border-amber-400 bg-amber-50/30' : 'border-emerald-400 bg-emerald-50/20'}">
+        <p class="text-[9px] font-black uppercase text-pink-400 tracking-widest mb-1">Tax Savings Pot</p>
+        <div class="flex items-baseline gap-2">
+            <h3 class="text-2xl font-black italic text-emerald-800">£${totalTaxNeeded.toLocaleString(undefined, {minimumFractionDigits: 2})}</h3>
+            ${totalTaxNeeded > 0 ? `<span class="text-[10px] text-amber-600 font-bold">READY TO SAVE</span>` : ''}
+        </div>
+        
+        <div class="mt-4">
+            <div class="w-full bg-gray-200/50 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-amber-400 h-full transition-all duration-1000" style="width: ${Math.min(100, (totalTaxNeeded / Math.max(1, netProfit)) * 100)}%"></div>
+            </div>
+            <p class="text-[9px] font-bold text-gray-400 uppercase mt-2">
+                ${totalTaxNeeded > 0 ? 'Pot Intensity: ' + ((totalTaxNeeded / netProfit) * 100).toFixed(0) + '%' : (isHobby ? 'Hobby Mode Active 🐰' : 'Status: No Tax Due ✨')}
+            </p>
+        </div>
+    </div>
+`;
 
     // 8. Update Stats Grid
     document.getElementById('financial-stats').innerHTML = `
