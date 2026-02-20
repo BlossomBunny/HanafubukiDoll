@@ -99,7 +99,7 @@ async function renderinventory() {
                 return `
                 <div class="space-y-3">
                     <div class="flex justify-between items-center ml-6 mr-4">
-                        <h3 class="text-[11px] font-black uppercase text-gray-400 tracking-widest">${cat.title}</h3>
+                        <h3 class="text-[11px] font-black uppercase text-emerald-400 tracking-widest">${cat.title}</h3>
                         <button onclick="openStockModal(null, '${cat.key}')" 
                                 class="text-[9px] font-black uppercase text-pink-400 hover:text-pink-600 transition-all bg-pink-50/50 px-3 py-1 rounded-full">
                             + Add ${cat.key}
@@ -121,14 +121,14 @@ async function renderinventory() {
                                     const itemData = JSON.stringify(item).replace(/'/g, "\\'");
                                     return `
                                     <tr class="hover:bg-white/60 transition-colors">
-                                        <td class="p-4 text-sm font-bold text-gray-700">${item.sculpt_size}</td>
+                                        <td class="p-4 text-sm font-bold text-pink-700">${item.sculpt_size}</td>
                                         <td class="p-4">
                                             <span class="px-3 py-1 bg-white border border-pink-100 rounded-full text-[10px] font-black text-pink-400 uppercase">
                                                 ${item.skintone || '---'}
                                             </span>
                                         </td>
                                         <td class="p-4 text-center">
-                                            <span class="text-sm font-black ${item.quantity === 0 ? 'text-gray-300' : (item.quantity < 2 ? 'text-rose-500 animate-pulse' : 'text-gray-600')}">
+                                            <span class="text-sm font-black ${item.quantity === 0 ? 'text-pink-300' : (item.quantity < 2 ? 'text-rose-500 animate-pulse' : 'text-emerald-600')}">
                                                 ${item.quantity}
                                             </span>
                                         </td>
@@ -138,14 +138,14 @@ async function renderinventory() {
                                                     <button onclick="updateStock('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 font-bold transition-all shadow-sm">－</button>
                                                     <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 font-bold transition-all shadow-sm">＋</button>
                                                 </div>
-                                                <button onclick='openStockModal(${itemData})' class="text-gray-300 hover:text-pink-400 transition-colors" title="Edit Item">✎</button>
-                                                <button onclick="deleteStockItem('${item.id}')" class="text-gray-200 hover:text-rose-400 transition-colors" title="Delete Item">🗑️</button>
+                                                <button onclick='openStockModal(${itemData})' class="text-mint-300 hover:text-pink-400 transition-colors" title="Edit Item">✎</button>
+                                                <button onclick="deleteStockItem('${item.id}')" class="text-mint-200 hover:text-rose-400 transition-colors" title="Delete Item">🗑️</button>
                                             </div>
                                         </td>
                                     </tr>
                                 `}).join('') : `
                                     <tr>
-                                        <td colspan="4" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase tracking-widest italic">No items recorded in ${cat.key}</td>
+                                        <td colspan="4" class="p-10 text-center text-[10px] font-black text-pink-300 uppercase tracking-widest italic">No items recorded in ${cat.key}</td>
                                     </tr>`}
                             </tbody>
                         </table>
@@ -227,7 +227,7 @@ async function handleLogout() {
 <script src="global-scripts.js"></script>
   <div id="stockModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-pink-100">
-        <h3 id="stockModalTitle" class="text-2xl font-black italic mb-6 text-gray-800">Update Stock ♡</h3>
+        <h3 id="stockModalTitle" class="text-2xl font-black italic mb-6 text-emerald-500">Update Stock ♡</h3>
         <form id="stockForm" class="space-y-4">
             <input type="hidden" id="stockId">
             
@@ -259,7 +259,7 @@ async function handleLogout() {
             </div>
             
             <div class="flex gap-3 pt-4">
-                <button type="button" onclick="closeStockModal()" class="flex-1 py-4 text-gray-400 font-black text-[10px] uppercase">Cancel</button>
+                <button type="button" onclick="closeStockModal()" class="flex-1 py-4 text-pink-400 font-black text-[10px] uppercase">Cancel</button>
                 <button type="button" onclick="saveStockItem()" class="flex-[2] bg-pink-500 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-pink-600 transition-all">Save Stock ♡</button>
             </div>
         </form>
@@ -274,7 +274,7 @@ async function handleLogout() {
     <div id="accessMenu" class="w-72 bg-white rounded-3xl shadow-2xl border border-pink-50 p-6 hidden animate-fadeIn mb-2">
         <div class="flex justify-between items-center mb-6">
             <h3 class="font-black text-[10px] uppercase tracking-widest text-pink-500">Accessibility Settings</h3>
-            <button onclick="ComfortSettings.toggleMenu()" class="text-gray-300 hover:text-pink-500 text-2xl" aria-label="Close Menu">&times;</button>
+            <button onclick="ComfortSettings.toggleMenu()" class="text-mint-300 hover:text-pink-500 text-2xl" aria-label="Close Menu">&times;</button>
         </div>
         <div class="space-y-5">
             <label class="flex justify-between items-center cursor-pointer group">
