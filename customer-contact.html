@@ -529,12 +529,11 @@ async function finalSubmit() {
 
     const btn = document.querySelector('#step-4 button');
     
-  
     if (window.StudioLoader) {
         StudioLoader.show("Whisking your request away... ✨");
     }
     
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
 
     try {
         const fBase = document.getElementById('faceupBase').value;
@@ -549,21 +548,15 @@ async function finalSubmit() {
             finalCompany = "Volks";
         }
 
-  async function submitForm() {
-    const btn = document.getElementById('submitBtn');
-    if(btn) btn.disabled = true;
-
-    try {
-        if (window.StudioLoader) StudioLoader.show();
-
+        // Generate ID and upload images
         const commissionId = crypto.randomUUID(); 
-
         const faceupImages = await uploadSet('faceupFiles', 'faceup', commissionId);
         const maniImages = await uploadSet('maniFiles', 'manicure', commissionId);
         const eyeImages = await uploadSet('eyeFiles', 'eyes', commissionId);
 
+        // Send to Supabase
         const { error } = await _supabase.from('commissions').insert([{
-            id: commissionId, // We tell Supabase what the ID is
+            id: commissionId,
             customer_name: document.getElementById('custName').value,
             customer_email: document.getElementById('custEmail').value,
             social_handle: document.getElementById('socialHandle').value,
@@ -598,7 +591,7 @@ async function finalSubmit() {
     } catch (err) {
         console.error("Submission error:", err);
         showMagicAlert("Error", err.message || "Failed to send request", "error");
-        if(btn) btn.disabled = false;
+        if (btn) btn.disabled = false;
     } finally {
         if (window.StudioLoader) StudioLoader.hide();
     }
@@ -721,6 +714,7 @@ async function startBooking() {
     console.log("Toggle complete – container height:", container?.offsetHeight || 0);
 }
 </script>
+    
 <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
         <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
         <p class="text-[var(--text-muted)] text-sm mb-6">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
