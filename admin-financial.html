@@ -186,6 +186,61 @@ document.getElementById('expenseForm')?.addEventListener('submit', async (e) => 
         alert("This is an automatic shipping record derived from your sales. To change this, you must edit the commission's shipping cost.");
         return;
     }
+            async function uploadShippingReceipt(commissionId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,application/pdf';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {  // optional: 5MB limit
+            alert("File too large (max 5MB)");
+            return;
+        }
+
+        const fileExt = file.name.split('.').pop() || 'jpg';
+        const fileName = `shipping_${commissionId}_${Date.now()}.${fileExt}`;
+        const filePath = `shipping/${fileName}`;  // optional folder in bucket
+
+        const { data: uploadData, error: uploadError } = await _supabase.storage
+            .from('receipts')  // ← change to your actual bucket name if different
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (uploadError) {
+            alert("Upload failed: " + uploadError.message);
+            console.error(uploadError);
+            return;
+        }
+
+        // Get public URL
+        const { data: urlData } = _supabase.storage
+            .from('receipts')
+            .getPublicUrl(filePath);
+
+        const receiptUrl = urlData.publicUrl;
+
+        // Save to commissions
+        const { error: updateError } = await _supabase
+            .from('commissions')
+            .update({ shipping_receipt_url: receiptUrl })
+            .eq('id', commissionId);
+
+        if (updateError) {
+            alert("Failed to save receipt link: " + updateError.message);
+            console.error(updateError);
+        } else {
+            alert("Receipt uploaded and linked!");
+            renderfinancials();  // Refresh table → shows "View" link now
+        }
+    };
+
+    input.click();
+}
 
     // 2. Confirmation
     if (!confirm("Are you sure you want to remove this expense record?")) return;
@@ -292,16 +347,17 @@ async function renderfinancials() {
     if (incomeRes.error || expenseRes.error) return;
 
     // 2. Process Shipping
-    const shippingExpenses = incomeRes.data
-        .filter(c => Number(c.shipping_cost) > 0)
-        .map(c => ({
-            id: `ship-${c.id}`,
-            date: c.created_at,
-            category: 'Shipping',
-            description: `Postage for ${c.customer_name || 'Commission'}`,
-            amount: Number(c.shipping_cost),
-            is_virtual: true
-        }));
+const shippingExpenses = incomeRes.data
+    .filter(c => Number(c.shipping_cost) > 0)
+    .map(c => ({
+        id: `ship-${c.id}`,
+        date: c.created_at,
+        category: 'Shipping',
+        description: `Postage for ${c.customer_name || 'Commission'}`,
+        amount: Number(c.shipping_cost),
+        is_virtual: true,
+        reciept_url: c.shipping_receipt_url   // ← add this line (note spelling: reciept_url to match your existing table code)
+    }));
 
     // 3. Combine & Filter
     const allExpenses = [...expenseRes.data, ...shippingExpenses];
@@ -441,10 +497,18 @@ if (allowanceStatus) {
             <td class="py-4"><span class="px-2 py-1 rounded-md ${e.is_virtual ? 'bg-blue-100 text-blue-500' : 'bg-gray-100 text-gray-400'} text-[9px] font-black uppercase">${e.category}</span></td>
             <td class="py-4 text-xs font-bold text-gray-700">${e.description}</td>
             <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
-            <td class="py-4 text-center">${e.is_virtual ? '---' : (e.reciept_url ? `<a href="${e.reciept_url}" target="_blank">📎</a>` : '∅')}</td>
             <td class="py-4 text-center">
-                ${e.is_virtual ? '' : `<button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">×</button>`}
-            </td>
+    ${e.reciept_url 
+        ? `<a href="${e.reciept_url}" target="_blank" class="text-blue-500 hover:underline text-sm">📎 View</a>`
+        : (e.is_virtual 
+            ? `<button onclick="uploadShippingReceipt('${e.id.replace('ship-', '')}')" class="text-blue-500 hover:underline text-xs">+ Add receipt</button>`
+            : '∅')}
+</td>
+<td class="py-4 text-center">
+    ${e.is_virtual 
+        ? '' 
+        : `<button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">×</button>`}
+</td>
         </tr>`).join('') : `<tr><td colspan="6" class="py-10 text-center text-gray-300 italic text-xs">No records found.</td></tr>`;
 
     if (typeof initRevenueChart === 'function') initRevenueChart(incomeRes.data, filteredExpenses);
