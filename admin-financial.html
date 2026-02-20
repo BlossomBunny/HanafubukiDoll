@@ -49,10 +49,52 @@
         </div>
     </div>
 </div>
+   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <div class="lg:col-span-2 glass-card p-6 bg-white/50 border-none flex flex-col justify-center">
+        <div class="flex justify-between mb-2">
+            <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest">Trading Allowance Tracker (£1k Limit)</span>
+            <span id="allowanceStatus" class="text-[10px] font-black uppercase text-emerald-500 font-mono"></span>
+        </div>
+        <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+            <div id="allowanceBar" class="bg-emerald-400 h-full transition-all duration-1000" style="width: 0%"></div>
+        </div>
+        <p id="allowanceText" class="text-[9px] text-gray-400 mt-2 uppercase font-bold italic"></p>
+    </div>
+
+    <div id="strategyCard" class="glass-card p-6 border-2 border-dashed border-pink-100 flex flex-col items-center justify-center text-center">
+        <p class="text-[9px] font-black uppercase text-gray-400 mb-1">Recommended Tax Strategy</p>
+        <p id="strategyResult" class="text-xs font-black text-pink-500 uppercase italic">Calculating...</p>
+    </div>
+</div>
     <main class="max-w-6xl mx-auto p-4 md:p-10 space-y-10">
+        <div id="financial-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div class="glass-card p-6 animate-pulse bg-gray-50 h-32"></div>
+    <div class="glass-card p-6 animate-pulse bg-gray-50 h-32"></div>
+    <div class="glass-card p-6 animate-pulse bg-gray-50 h-32"></div>
+    <div class="glass-card p-6 animate-pulse bg-gray-50 h-32"></div>
+</div>
         <div id="financial-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             </div>
-
+<div class="glass-card p-8 mb-8 bg-gradient-to-br from-blue-50/50 to-pink-50/50 border-none shadow-inner">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="space-y-2 text-center md:text-left">
+            <h3 class="text-[11px] font-black uppercase tracking-[0.2em] text-blue-500">The Tax Pot</h3>
+            <p class="text-4xl font-black text-gray-800 italic" id="taxPotValue">£0.00</p>
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Amount to set aside in savings</p>
+        </div>
+        
+        <div class="flex-1 w-full max-w-md space-y-4">
+            <div class="flex justify-between text-[10px] font-black uppercase text-gray-400">
+                <span>Current Progress</span>
+                <span id="taxPotPercent">0% Saved</span>
+            </div>
+            <div class="w-full bg-white/50 rounded-full h-4 p-1 shadow-sm border border-white">
+                <div id="taxPotBar" class="bg-blue-400 h-full rounded-full transition-all duration-1000 shadow-lg" style="width: 0%"></div>
+            </div>
+            <p class="text-[9px] text-center text-gray-400 italic">Based on 20% Income Tax + 6% Class 4 NI (if applicable)</p>
+        </div>
+    </div>
+</div>
         <div class="glass-card p-8 bg-white/80">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Revenue vs Expenses</h3>
@@ -106,72 +148,133 @@
 
     <script>
         let revenueChart = null;
-
 async function renderfinancials() {
-    const taxYear = document.getElementById('taxYearFilter').value;
+    const taxYearFilter = document.getElementById('taxYearFilter');
+    if (!taxYearFilter) return;
+
+    const taxYear = taxYearFilter.value;
     const [startYear] = taxYear.split('-').map(Number);
     const startDate = new Date(startYear, 3, 6); 
     const endDate = new Date(startYear + 1, 3, 5);
 
     // 1. Fetch Data
-    const [incomeRes, expenseRes] = await Promise.all([
-        _supabase.from('commissions').select('*').not('price', 'is', null),
-        _supabase.from('studio_expenses').select('*').order('date', { ascending: false })
+    const [incomeRes, expenseRes, paymentsRes] = await Promise.all([
+        _supabase.from('commissions').select('total_price, created_at, shipping_cost'),
+        _supabase.from('studio_expenses').select('*').order('date', { ascending: false }),
+        _supabase.from('payments').select('amount, created_at')
     ]);
 
-    if (incomeRes.error || expenseRes.error) return;
+    if (incomeRes.error || expenseRes.error || paymentsRes.error) {
+        console.error("Fetch error:", incomeRes.error || expenseRes.error || paymentsRes.error);
+        return;
+    }
 
-    // 2. Filter by Tax Year
-    const filteredIncome = incomeRes.data.filter(j => {
-        const d = new Date(j.created_at);
-        return d >= startDate && d <= endDate;
-    });
-
+    // 2. Filter Data by Tax Year
     const filteredExpenses = expenseRes.data.filter(e => {
         const d = new Date(e.date);
         return d >= startDate && d <= endDate;
     });
-// 3. Totals & Logic
-const grossRevenue = filteredIncome.reduce((sum, j) => sum + (Number(j.price) || 0), 0);
-const totalExpenses = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-const netProfit = grossRevenue - totalExpenses;
 
-// Calculate Tax Estimate
-// Note: This assumes 20% flat for side-hustle logic. 
-// If sole-trader is your only income, first £12,570 is usually 0%.
-const taxPot = netProfit > 0 ? netProfit * 0.20 : 0;
-const class2NI = (netProfit > 12570) ? (netProfit - 12570) * 0.06 : 0; // 2024/25 NI Class 4 estimate
+    const filteredComms = incomeRes.data.filter(c => {
+        const d = new Date(c.created_at);
+        return d >= startDate && d <= endDate;
+    });
 
-// Update Header Stats
-document.getElementById('financial-stats').innerHTML = `
-    <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20">
-        <p class="text-[9px] font-black uppercase text-gray-400">Est. Tax Bill</p>
-        <p class="text-2xl font-black italic text-blue-600">£${(taxPot + class2NI).toLocaleString()}</p>
-        <p class="text-[8px] font-bold text-blue-400/60 uppercase">Incl. Income Tax & NI Reserve</p>
-    </div>
-`;
-    // 4. Update Header Stats
+    // 3. Calculate Core Logic
+    // Cash Received = True Turnover for UK Cash-Basis
+    const totalIncome = paymentsRes.data
+        .filter(p => {
+            const d = new Date(p.created_at);
+            return d >= startDate && d <= endDate;
+        })
+        .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+    // Shipping is an expense (customer pays you, you pay the courier)
+    const autoShipping = filteredComms.reduce((sum, c) => sum + (Number(c.shipping_cost) || 0), 0);
+    
+    // Manual Expenses from studio_expenses + Shipping
+    const totalOut = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0) + autoShipping;
+
+    const netProfit = totalIncome - totalOut;
+    
+    // Side Hustle Tax (Assumes you are a basic rate taxpayer in your full-time job)
+    const taxPot = netProfit > 1000 ? netProfit * 0.20 : 0; 
+    const class4NI = (netProfit > 12570) ? (netProfit - 12570) * 0.06 : 0;
+
+    // Pending = Money booked but not yet paid in cash
+    const totalBooked = filteredComms.reduce((sum, c) => sum + (Number(c.total_price) || 0), 0);
+    const pendingRevenue = totalBooked - totalIncome;
+
+    // 4. Update Threshold Tracker & Tax Strategy
+    const allowanceLimit = 1000;
+    const allowancePercent = Math.min((totalBooked / allowanceLimit) * 100, 100);
+    
+    const allowanceBar = document.getElementById('allowanceBar');
+    const allowanceStatus = document.getElementById('allowanceStatus');
+    const allowanceText = document.getElementById('allowanceText');
+    const strategyResult = document.getElementById('strategyResult');
+
+    if (allowanceBar) {
+        allowanceBar.style.width = `${allowancePercent}%`;
+        if (totalBooked >= allowanceLimit) {
+            allowanceBar.classList.add('bg-pink-500');
+            allowanceStatus.innerHTML = `<span class="text-pink-500">Threshold Reached! 🌸</span>`;
+            allowanceText.innerText = "You've passed £1k gross income. Registration with HMRC is required.";
+            
+            // Suggest best tax-saving strategy
+            if (totalOut > 1000) {
+                strategyResult.innerText = "Strategy: Claim Actual Expenses 🧾";
+                strategyResult.className = "text-xs font-black text-pink-500 uppercase italic";
+            } else {
+                strategyResult.innerText = "Strategy: Use Trading Allowance 💡";
+                strategyResult.className = "text-xs font-black text-blue-500 uppercase italic";
+            }
+        } else {
+            allowanceStatus.innerText = `£${totalBooked.toLocaleString()} / £1,000`;
+            allowanceText.innerText = `£${(allowanceLimit - totalBooked).toFixed(2)} remaining in your tax-free hobby allowance.`;
+            strategyResult.innerText = "Status: Hobby Mode 🧸";
+            strategyResult.className = "text-xs font-black text-emerald-500 uppercase italic";
+        }
+    }
+
+    // 5. Update Header Stats
     document.getElementById('financial-stats').innerHTML = `
         <div class="glass-card p-6 border-l-4 border-pink-400">
-            <p class="text-[9px] font-black uppercase text-gray-400">Turnover</p>
-            <p class="text-2xl font-black italic">£${grossRevenue.toLocaleString()}</p>
+            <p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p>
+            <p class="text-2xl font-black italic">£${totalIncome.toLocaleString()}</p>
+            <p class="text-[8px] font-bold text-pink-400/60 uppercase italic font-mono">Realized Turnover</p>
         </div>
         <div class="glass-card p-6 border-l-4 border-rose-400">
-            <p class="text-[9px] font-black uppercase text-gray-400">Expenses</p>
-            <p class="text-2xl font-black italic text-rose-500">£${totalExpenses.toLocaleString()}</p>
+            <p class="text-[9px] font-black uppercase text-gray-400">Total Expenses</p>
+            <p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p>
+            <p class="text-[8px] font-bold text-rose-400/60 uppercase">Manual + £${autoShipping} Shipping</p>
         </div>
         <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20">
             <p class="text-[9px] font-black uppercase text-gray-400">Net Profit</p>
             <p class="text-2xl font-black italic text-emerald-600">£${netProfit.toLocaleString()}</p>
+            <p class="text-[8px] font-bold text-emerald-400/60 uppercase tracking-tighter italic">HMRC Taxable Basis</p>
         </div>
         <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20">
-            <p class="text-[9px] font-black uppercase text-gray-400">Take-Home</p>
-            <p class="text-2xl font-black italic text-blue-600">£${(netProfit - taxPot).toLocaleString()}</p>
-            <p class="text-[8px] font-bold text-blue-400/60 uppercase">Post 20% Tax</p>
+            <p class="text-[9px] font-black uppercase text-gray-400">Pending Revenue</p>
+            <p class="text-2xl font-black italic text-blue-600">£${pendingRevenue.toLocaleString()}</p>
+            <p class="text-[8px] font-bold text-blue-400/60 uppercase">Unpaid Commission Balance</p>
+        </div>
+        <div class="glass-card p-6 border-l-4 border-gray-400 bg-gray-50/50 lg:col-span-4 mt-2">
+             <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-[9px] font-black uppercase text-gray-400 tracking-widest">Est. Tax & NI Reserve (Side Hustle)</p>
+                    <p class="text-xl font-black italic text-gray-700">£${(taxPot + class4NI).toLocaleString()}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[7px] text-gray-400 uppercase leading-tight">
+                        Calculated at 20% Income Tax.<br>NI Class 4 only applies if studio profit > £12,570.
+                    </p>
+                </div>
+             </div>
         </div>
     `;
 
-    // 5. Category Pills
+    // 6. Category Pills
     const catTotals = filteredExpenses.reduce((acc, curr) => {
         acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
         return acc;
@@ -184,7 +287,7 @@ document.getElementById('financial-stats').innerHTML = `
         </div>
     `).join('');
 
-    // 6. Expense Table with Delete Action
+    // 7. Expense Table Rendering
     const expenseBody = document.getElementById('expense-tbody');
     expenseBody.innerHTML = filteredExpenses.length ? filteredExpenses.map(e => `
         <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
@@ -205,55 +308,28 @@ document.getElementById('financial-stats').innerHTML = `
                 </button>
             </td>
         </tr>
-    `).join('') : `<tr><td colspan="6" class="py-10 text-center text-gray-300 italic text-xs">No expenses logged for this year.</td></tr>`;
+    `).join('') : `<tr><td colspan="6" class="py-10 text-center text-gray-300 italic text-xs">No expenses logged for this tax year.</td></tr>`;
 
-    initRevenueChart(filteredIncome, filteredExpenses);
-}
-        function updateTaxYearProgress() {
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    
-    // Tax year starts April 6th
-    let start = new Date(currentYear, 3, 6);
-    let end = new Date(currentYear + 1, 3, 5);
-    
-    // If we are currently between Jan 1st and April 5th, the tax year started LAST year
-    if (today < start) {
-        start = new Date(currentYear - 1, 3, 6);
-        end = new Date(currentYear, 3, 5);
-    }
-    
-    const total = end - start;
-    const progress = today - start;
-    const percentage = Math.min(Math.max((progress / total) * 100, 0), 100);
-    
-    const diffDays = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-    
-    document.getElementById('yearProgressBar').style.width = `${percentage}%`;
-    document.getElementById('daysRemaining').innerText = `${diffDays} days until Tax Year ends (April 5th)`;
-}
-// Call this on load
-updateTaxYearProgress();
-
-// 7. Delete Logic (DB + Storage Cleanup)
-async function deleteExpense(id, receiptUrl) {
-    if (!confirm("Are you sure you want to delete this expense record? 🌸")) return;
-
-    try {
-        // Cleanup storage if receipt exists
-        if (receiptUrl && receiptUrl !== '') {
-            const fileName = receiptUrl.split('/').pop();
-            await _supabase.storage.from('receipts').remove([`receipts/${fileName}`]);
-        }
-
-        const { error } = await _supabase.from('studio_expenses').delete().eq('id', id);
-        if (error) throw error;
-
-        renderfinancials(); // Refresh UI
-    } catch (err) {
-        console.error("Delete failed:", err.message);
+    // 8. Initialize Chart (Uses filteredComms for accurate booking data)
+    if (typeof initRevenueChart === 'function') {
+        initRevenueChart(filteredComms, filteredExpenses);
     }
 }
+// --- TAX POT TRACKER LOGIC ---
+const totalTaxNeeded = taxPot + class4NI;
+const taxPotValueEl = document.getElementById('taxPotValue');
+const taxPotBar = document.getElementById('taxPotBar');
+const taxPotPercent = document.getElementById('taxPotPercent');
+
+if (taxPotValueEl) {
+    taxPotValueEl.innerText = `£${totalTaxNeeded.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    
+    
+    const intensity = Math.min((totalTaxNeeded / netProfit) * 100, 100) || 0;
+    taxPotBar.style.width = `${intensity}%`;
+    taxPotPercent.innerText = `${intensity.toFixed(0)}% of Profit`;
+}
+        
         function initRevenueChart(income, expenses) {
             const ctx = document.getElementById('revenueChart').getContext('2d');
             if (revenueChart) revenueChart.destroy();
