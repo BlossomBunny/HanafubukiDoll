@@ -131,6 +131,113 @@
 </main>
     
  <script>
+
+   function openExpenseModal() {
+    document.getElementById('expenseModal').classList.remove('hidden');
+
+    // Set default date to today
+    document.querySelector('#expenseForm input[type="date"]').value = new Date().toISOString().split('T')[0];
+}
+
+function closeExpenseModal() {
+    document.getElementById('expenseModal').classList.add('hidden');
+    document.getElementById('expenseForm').reset();
+}
+
+// Handle the Form Submission
+document.getElementById('expenseForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    const expenseData = {
+
+        amount: parseFloat(formData.get('amount')),
+        category: formData.get('category'),
+        description: formData.get('description'),
+        date: formData.get('date')
+    };
+
+    const { error } = await _supabase.from('studio_expenses').insert([expenseData]);
+
+    if (error) {
+        alert("Error saving expense: " + error.message);
+    } else {
+        closeExpenseModal();
+        renderfinancials(); // Refresh the dashboard
+    }
+});
+
+        async function deleteExpense(id) {
+    // 1. Safety Check: Don't allow deleting 'Virtual' shipping rows
+    if (typeof id === 'string' && id.startsWith('ship-')) {
+        alert("This is an automatic shipping record derived from your sales. To change this, you must edit the commission's shipping cost.");
+        return;
+    }
+
+    // 2. Confirmation
+    if (!confirm("Are you sure you want to remove this expense record?")) return;
+
+            
+    // 3. Delete from Supabase
+    const { error } = await _supabase
+        .from('studio_expenses')
+        .delete()
+        .eq('id', id);
+
+
+    if (error) {
+        alert("Error deleting record: " + error.message);
+
+    } else {
+
+        // 4. Refresh the UI
+        renderfinancials();
+    }
+}
+     function exportToCSV() {
+    // 1. Grab the table rows
+    const rows = document.querySelectorAll("#expense-tbody tr");
+    if (rows.length === 0 || rows[0].innerText.includes("No records found")) {
+        alert("No data to export!");
+        return;
+    }
+
+    // 2. Define Headers
+    let csvContent = "Date,Category,Description,Amount,Type\n";
+
+    // 3. Loop through rows and clean data
+    rows.forEach(row => {
+
+        const cols = row.querySelectorAll("td");
+
+        if (cols.length >= 4) {
+
+            const date = cols[0].innerText;
+            const category = cols[1].innerText.trim();
+            const description = cols[2].innerText.replace(/,/g, ""); // Remove commas so CSV doesn't break
+            const amount = cols[3].innerText.replace("£", "");
+            const type = row.classList.contains('bg-blue-50/20') ? "Auto-Shipping" : "Manual Entry";
+
+            csvContent += `${date},${category},${description},${amount},${type}\n`;
+        }
+    });
+
+    // 4. Trigger Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    const taxYear = document.getElementById('taxYearFilter').value;
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Hanafubuki_Expenses_${taxYear}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+     
   let revenueChart = null;
 
 // Helper: Calculate days until April 5th
@@ -369,111 +476,8 @@ function initRevenueChart(incomeData, expenses) {
     });
 }
 
-function exportToCSV() {
-    // 1. Grab the table rows
-    const rows = document.querySelectorAll("#expense-tbody tr");
-    if (rows.length === 0 || rows[0].innerText.includes("No records found")) {
-        alert("No data to export!");
-        return;
-    }
 
-    // 2. Define Headers
-    let csvContent = "Date,Category,Description,Amount,Type\n";
-
-    // 3. Loop through rows and clean data
-    rows.forEach(row => {
-
-        const cols = row.querySelectorAll("td");
-
-        if (cols.length >= 4) {
-
-            const date = cols[0].innerText;
-            const category = cols[1].innerText.trim();
-            const description = cols[2].innerText.replace(/,/g, ""); // Remove commas so CSV doesn't break
-            const amount = cols[3].innerText.replace("£", "");
-            const type = row.classList.contains('bg-blue-50/20') ? "Auto-Shipping" : "Manual Entry";
-
-            csvContent += `${date},${category},${description},${amount},${type}\n`;
-        }
-    });
-
-    // 4. Trigger Download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    const taxYear = document.getElementById('taxYearFilter').value;
-
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Hanafubuki_Expenses_${taxYear}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-        function openExpenseModal() {
-    document.getElementById('expenseModal').classList.remove('hidden');
-
-    // Set default date to today
-    document.querySelector('#expenseForm input[type="date"]').value = new Date().toISOString().split('T')[0];
-}
-
-function closeExpenseModal() {
-    document.getElementById('expenseModal').classList.add('hidden');
-    document.getElementById('expenseForm').reset();
-}
-
-// Handle the Form Submission
-document.getElementById('expenseForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-
-    const expenseData = {
-
-        amount: parseFloat(formData.get('amount')),
-        category: formData.get('category'),
-        description: formData.get('description'),
-        date: formData.get('date')
-    };
-
-    const { error } = await _supabase.from('studio_expenses').insert([expenseData]);
-
-    if (error) {
-        alert("Error saving expense: " + error.message);
-    } else {
-        closeExpenseModal();
-        renderfinancials(); // Refresh the dashboard
-    }
-});
-
-        async function deleteExpense(id) {
-    // 1. Safety Check: Don't allow deleting 'Virtual' shipping rows
-    if (typeof id === 'string' && id.startsWith('ship-')) {
-        alert("This is an automatic shipping record derived from your sales. To change this, you must edit the commission's shipping cost.");
-        return;
-    }
-
-    // 2. Confirmation
-    if (!confirm("Are you sure you want to remove this expense record?")) return;
-
-            
-    // 3. Delete from Supabase
-    const { error } = await _supabase
-        .from('studio_expenses')
-        .delete()
-        .eq('id', id);
-
-
-    if (error) {
-        alert("Error deleting record: " + error.message);
-
-    } else {
-
-        // 4. Refresh the UI
-        renderfinancials();
-    }
-}
-
+     
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(renderfinancials, 500); 
 });
