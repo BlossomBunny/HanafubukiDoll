@@ -57,6 +57,18 @@ function initPage(session) {
     document.getElementById('view-inventory').classList.remove('hidden');
     renderinventory();
 }
+    const toneColors = {
+    'Semi-White':  'bg-[#fff5f5] text-pink-400 border-pink-100', 
+    'Milk':        'bg-[#fffaf5] text-orange-400 border-orange-100', 
+    'Flesh':       'bg-[#fffaf5] text-orange-400 border-orange-100',
+    'Cinnamon':    'bg-[#fefce8] text-yellow-600 border-yellow-200', 
+    'Tea':         'bg-[#fdf2f8] text-pink-600 border-pink-200',    
+    'Coffee':      'bg-[#fafaf9] text-stone-600 border-stone-200', 
+    'Cocoa':       'bg-[#451a03] text-white border-transparent',   
+    'Green':       'bg-emerald-500 text-white border-transparent', 
+    'Grey':        'bg-slate-200 text-slate-700 border-slate-300',  
+    'Black Navy':  'bg-[#0f172a] text-blue-200 border-transparent',
+};
 
 async function renderinventory() {
     const container = document.getElementById('view-inventory');
@@ -69,7 +81,12 @@ async function renderinventory() {
     container.innerHTML = `<div class="flex justify-center py-20"><span class="animate-bounce text-2xl">🌸</span></div>`;
     
     // 3. FETCH DATA
-    const { data: items, error } = await _supabase.from('inventory').select('*').order('sculpt_size', { ascending: true });
+   const { data: items, error } = await _supabase
+    .from('inventory')
+    .select('*')
+    .order('category', { ascending: true })   // Keep categories together
+    .order('skintone', { ascending: true })   // Group all same skintones together!
+    .order('sculpt_size', { ascending: true }); // Then sort by name
     
     if (error) {
         container.innerHTML = `<p class="text-center text-rose-500 p-10">Error loading inventory: ${error.message}</p>`;
@@ -93,7 +110,13 @@ async function renderinventory() {
                 </div>
                 <button onclick="openStockModal()" class="nav-btn nav-btn-pink shadow-sm hover:shadow-pink-100">+ Add New Stock</button>
             </div>
-
+            
+<div class="flex justify-end mb-4">
+    <select onchange="filterByTone(this.value)" class="text-[10px] font-black uppercase bg-white border border-pink-100 rounded-xl px-4 py-2 outline-none shadow-sm">
+        <option value="all">Show All Tones</option>
+        ${Object.keys(toneColors).map(t => `<option value="${t}">${t}</option>`).join('')}
+    </select>
+</div>
             ${categories.map(cat => {
                 const filtered = items.filter(i => i.category === cat.key);
                 return `
@@ -123,10 +146,15 @@ async function renderinventory() {
                                     <tr class="hover:bg-white/60 transition-colors">
                                         <td class="p-4 text-sm font-bold text-pink-700">${item.sculpt_size}</td>
                                         <td class="p-4">
-                                            <span class="px-3 py-1 bg-white border border-pink-100 rounded-full text-[10px] font-black text-pink-400 uppercase">
-                                                ${item.skintone || '---'}
-                                            </span>
-                                        </td>
+    ${(() => {
+        const toneStyle = toneColors[item.skintone] || 'bg-white border-pink-100 text-pink-400';
+        return `
+            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase border shadow-sm ${toneStyle}">
+                ${item.skintone || '---'}
+            </span>
+        `;
+    })()}
+</td>
                                         <td class="p-4 text-center">
                                             <span class="text-sm font-black ${item.quantity === 0 ? 'text-pink-300' : (item.quantity < 2 ? 'text-rose-500 animate-pulse' : 'text-emerald-600')}">
                                                 ${item.quantity}
@@ -218,10 +246,23 @@ async function deleteStockItem(id) {
     });
 }
 
+function filterByTone(tone) {
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        if (tone === 'all') {
+            row.classList.remove('hidden');
+            return;
+        }
+        const rowTone = row.querySelector('span').innerText.trim();
+        row.classList.toggle('hidden', rowTone !== tone.toUpperCase());
+    });
+}
+    
 async function handleLogout() {
     await _supabase.auth.signOut();
     window.location.href = 'login.html';
 }
+
 </script>
 
 <script src="global-scripts.js"></script>
