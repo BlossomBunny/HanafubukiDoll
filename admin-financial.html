@@ -144,7 +144,25 @@
     </main>
 
     <script>
-        let revenueChart = null;
+  let revenueChart = null;
+
+// Helper: Calculate days until April 5th
+function getTaxYearStats() {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const taxYearEnd = (today.getMonth() > 3 || (today.getMonth() === 3 && today.getDate() >= 6)) 
+        ? new Date(currentYear + 1, 3, 5) 
+        : new Date(currentYear, 3, 5);
+    const diff = taxYearEnd - today;
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+// Helper: Toggle Modal
+function toggleTaxModal() {
+    const modal = document.getElementById('taxHelpModal');
+    if (modal) modal.classList.toggle('hidden');
+}
+
 async function renderfinancials() {
     const taxYearFilter = document.getElementById('taxYearFilter');
     if (!taxYearFilter) return;
@@ -160,164 +178,143 @@ async function renderfinancials() {
         _supabase.from('studio_expenses').select('*').order('date', { ascending: false })
     ]);
 
-    if (incomeRes.error || expenseRes.error) {
-        console.error("Fetch error:", incomeRes.error || expenseRes.error);
-        return;
-    }
+    if (incomeRes.error || expenseRes.error) return;
 
-    // 2. Transform Shipping into "Virtual" Expense Rows
-    // This makes the shipping fees visible line-items in your records
+    // 2. Process Shipping
     const shippingExpenses = incomeRes.data
         .filter(c => Number(c.shipping_cost) > 0)
         .map(c => ({
-            id: `ship-${c.id}`, // Unique ID to prevent React/DOM issues
+            id: `ship-${c.id}`,
             date: c.created_at,
             category: 'Shipping',
             description: `Postage for ${c.customer_name || 'Commission'}`,
             amount: Number(c.shipping_cost),
-            is_virtual: true // Flag to distinguish from manual entries
+            is_virtual: true
         }));
 
-    // 3. Combine and Filter by Tax Year
+    // 3. Combine & Filter
     const allExpenses = [...expenseRes.data, ...shippingExpenses];
-    
     const filteredExpenses = allExpenses.filter(e => {
         const d = new Date(e.date);
         return d >= startDate && d <= endDate;
     });
 
-    // 4. Process Income (JSON Payments)
+    // 4. Income Math
     let totalIncomeInYear = 0;
     let totalBookedInYear = 0;
-
     incomeRes.data.forEach(comm => {
         const commDate = new Date(comm.created_at);
-        if (commDate >= startDate && commDate <= endDate) {
-            totalBookedInYear += (Number(comm.total_price) || 0);
-        }
-
+        if (commDate >= startDate && commDate <= endDate) totalBookedInYear += (Number(comm.total_price) || 0);
         if (Array.isArray(comm.payments)) {
             comm.payments.forEach(p => {
                 const pDate = new Date(p.date);
-                if (pDate >= startDate && pDate <= endDate) {
-                    totalIncomeInYear += (Number(p.amount) || 0);
-                }
+                if (pDate >= startDate && pDate <= endDate) totalIncomeInYear += (Number(p.amount) || 0);
             });
         }
     });
 
-    // 5. Core Calculations
+    // 5. CORE CALCULATIONS (Fixed order: calculate first!)
     const totalOut = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
     const netProfit = totalIncomeInYear - totalOut;
     const pendingRevenue = totalBookedInYear - totalIncomeInYear;
 
-// 6. Update Sleek Header
-const daysLeft = getTaxYearStats();
-document.getElementById('daysRemainingText').innerText = daysLeft;
-document.getElementById('taxYearDisplay').innerText = `${startYear}/${(startYear + 1).toString().slice(-2)}`;
+    const taxPot = netProfit > 1000 ? netProfit * 0.20 : 0; 
+    const class4NI = (netProfit > 12570) ? (netProfit - 12570) * 0.06 : 0;
+    const totalTaxNeeded = taxPot + class4NI;
 
-const allowanceLimit = 1000;
-const cashPercent = Math.min((totalIncomeInYear / allowanceLimit) * 100, 100);
-const pendingPercent = Math.min((pendingRevenue / allowanceLimit) * 100, 100 - cashPercent);
+    // 6. Header Update
+    const daysLeft = getTaxYearStats();
+    document.getElementById('daysRemainingText').innerText = daysLeft;
+    document.getElementById('taxYearDisplay').innerText = `${startYear}/${(startYear + 1).toString().slice(-2)}`;
 
-const allowanceBar = document.getElementById('allowanceBar');
-if (allowanceBar) {
-    allowanceBar.style.background = `linear-gradient(to right, #ec4899 ${cashPercent}%, #fbcfe8 ${cashPercent}%, #fbcfe8 ${cashPercent + pendingPercent}%, #f3f4f6 ${cashPercent + pendingPercent}%)`;
-    allowanceBar.style.width = '100%';
-}
+    const allowanceLimit = 1000;
+    const cashPercent = Math.min((totalIncomeInYear / allowanceLimit) * 100, 100);
+    const pendingPercent = Math.min((pendingRevenue / allowanceLimit) * 100, 100 - cashPercent);
 
-document.getElementById('allowanceStatus').innerText = 
-    totalIncomeInYear >= allowanceLimit ? "LIMIT REACHED" : `£${totalIncomeInYear} / £1,000`;
+    const allowanceBar = document.getElementById('allowanceBar');
+    if (allowanceBar) {
+        allowanceBar.style.background = `linear-gradient(to right, #ec4899 ${cashPercent}%, #fbcfe8 ${cashPercent}%, #fbcfe8 ${cashPercent + pendingPercent}%, #f3f4f6 ${cashPercent + pendingPercent}%)`;
+        allowanceBar.style.width = '100%';
+    }
+    document.getElementById('allowanceStatus').innerText = totalIncomeInYear >= allowanceLimit ? "LIMIT REACHED" : `£${totalIncomeInYear} / £1,000`;
 
-// 7. Render Unified Smart Reserve
-const reserveContainer = document.getElementById('unified-tax-reserve');
-const isHobby = totalBookedInYear < 1000;
-
-reserveContainer.innerHTML = `
-    <div class="glass-card p-6 mt-2 border-l-4 ${totalTaxNeeded > 0 ? 'border-amber-400 bg-amber-50/20' : 'border-emerald-400 bg-white/40'}">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div>
-                <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Tax & NI Savings Goal</p>
-                <h3 class="text-3xl font-black italic ${totalTaxNeeded > 0 ? 'text-gray-800' : 'text-emerald-500/40'}">
-                    £${totalTaxNeeded.toLocaleString(undefined, {minimumFractionDigits: 2})}
-                </h3>
-                <p class="text-[9px] font-bold text-gray-400 uppercase mt-1">
-                    ${totalTaxNeeded > 0 ? 'Move this to your business savings pot' : (isHobby ? 'Hobby Mode: No tax currently due' : 'Threshold passed: Calculating profit...')}
-                </p>
-            </div>
-
-            ${totalTaxNeeded > 0 ? `
-            <div class="flex-1 w-full max-w-xs">
-                <div class="flex justify-between mb-2 font-black text-[9px] uppercase">
-                    <span class="text-amber-600 font-black">Reserve Intensity</span>
-                    <span class="text-gray-400">${((totalTaxNeeded / netProfit) * 100).toFixed(0)}% of profit</span>
+    // 7. Render Unified Smart Reserve
+    const isHobby = totalBookedInYear < 1000;
+    const reserveContainer = document.getElementById('unified-tax-reserve');
+    if (reserveContainer) {
+        reserveContainer.innerHTML = `
+            <div class="glass-card p-6 mt-2 border-l-4 ${totalTaxNeeded > 0 ? 'border-amber-400 bg-amber-50/20' : 'border-emerald-400 bg-white/40'}">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div>
+                        <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Tax & NI Savings Goal</p>
+                        <h3 class="text-3xl font-black italic ${totalTaxNeeded > 0 ? 'text-gray-800' : 'text-emerald-500/40'}">£${totalTaxNeeded.toLocaleString(undefined, {minimumFractionDigits: 2})}</h3>
+                        <p class="text-[9px] font-bold text-gray-400 uppercase mt-1">
+                            ${totalTaxNeeded > 0 ? 'Move this to your business savings pot' : (isHobby ? 'Hobby Mode: No tax currently due' : 'Threshold passed: Tracking profit...')}
+                        </p>
+                    </div>
+                    ${totalTaxNeeded > 0 ? `
+                        <div class="flex-1 w-full max-w-xs">
+                            <div class="flex justify-between mb-2 font-black text-[9px] uppercase text-amber-600">
+                                <span>Reserve Intensity</span>
+                                <span>${((totalTaxNeeded / Math.max(1, netProfit)) * 100).toFixed(0)}% of profit</span>
+                            </div>
+                            <div class="w-full bg-gray-200/50 h-2 rounded-full overflow-hidden shadow-inner">
+                                <div class="bg-amber-400 h-full" style="width: ${(totalTaxNeeded / Math.max(1, netProfit)) * 100}%"></div>
+                            </div>
+                        </div>` : `
+                        <div class="hidden md:block">
+                            <span class="text-[10px] font-black text-emerald-500 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100 uppercase tracking-widest">Status: Tax Protected ✨</span>
+                        </div>`}
                 </div>
-                <div class="w-full bg-gray-200/50 h-2 rounded-full overflow-hidden shadow-inner">
-                    <div class="bg-amber-400 h-full" style="width: ${(totalTaxNeeded / netProfit) * 100}%"></div>
-                </div>
-            </div>` : `
-            <div class="hidden md:block">
-                <span class="text-[10px] font-black text-emerald-500 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100 uppercase tracking-widest">
-                    Status: Tax Protected ✨
-                </span>
-            </div>`}
-        </div>
-    </div>
-`;
-    // 8. Update Tax Pot Visuals
-    const taxPotValueEl = document.getElementById('taxPotValue');
-    if (taxPotValueEl) {
-        taxPotValueEl.innerText = `£${totalTaxNeeded.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-        const intensity = netProfit > 0 ? Math.min((totalTaxNeeded / netProfit) * 100, 100) : 0;
-        document.getElementById('taxPotBar').style.width = `${intensity}%`;
-        document.getElementById('taxPotPercent').innerText = `${intensity.toFixed(0)}% of Profit`;
+            </div>`;
     }
 
-    // 9. Category Pills (Now automatically includes the Shipping category)
+    // 8. Update Stats Grid
+    document.getElementById('financial-stats').innerHTML = `
+        <div class="glass-card p-6 border-l-4 border-pink-400">
+            <p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p>
+            <p class="text-2xl font-black italic">£${totalIncomeInYear.toLocaleString()}</p>
+        </div>
+        <div class="glass-card p-6 border-l-4 border-rose-400">
+            <p class="text-[9px] font-black uppercase text-gray-400">Total Expenses</p>
+            <p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p>
+        </div>
+        <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20">
+            <p class="text-[9px] font-black uppercase text-gray-400">Net Profit</p>
+            <p class="text-2xl font-black italic text-emerald-600">£${netProfit.toLocaleString()}</p>
+        </div>
+        <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20">
+            <p class="text-[9px] font-black uppercase text-gray-400">Pending Revenue</p>
+            <p class="text-2xl font-black italic text-blue-600">£${pendingRevenue.toLocaleString()}</p>
+        </div>`;
+
+    // 9. Categories and Table (Simplified)
     const catTotals = filteredExpenses.reduce((acc, curr) => {
         acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
         return acc;
     }, {});
-
     document.getElementById('expense-pills').innerHTML = Object.entries(catTotals).map(([cat, amt]) => `
         <div class="bg-white border border-pink-100 rounded-xl px-4 py-2 shadow-sm">
             <p class="text-[8px] font-black uppercase text-gray-400">${cat}</p>
             <p class="text-xs font-black text-gray-700">£${amt.toFixed(2)}</p>
-        </div>
-    `).join('');
+        </div>`).join('');
 
-    // 10. Table Rendering (Shipping rows highlighted blue)
-    const expenseBody = document.getElementById('expense-tbody');
-    expenseBody.innerHTML = filteredExpenses.length ? filteredExpenses.map(e => `
+    document.getElementById('expense-tbody').innerHTML = filteredExpenses.length ? filteredExpenses.map(e => `
         <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors ${e.is_virtual ? 'bg-blue-50/20' : ''}">
             <td class="py-4 pl-2 text-[11px] font-bold text-gray-500">${new Date(e.date).toLocaleDateString()}</td>
-            <td class="py-4">
-                <span class="px-2 py-1 rounded-md ${e.is_virtual ? 'bg-blue-100 text-blue-500' : 'bg-gray-100 text-gray-400'} text-[9px] font-black uppercase">
-                    ${e.category}
-                </span>
-            </td>
+            <td class="py-4"><span class="px-2 py-1 rounded-md ${e.is_virtual ? 'bg-blue-100 text-blue-500' : 'bg-gray-100 text-gray-400'} text-[9px] font-black uppercase">${e.category}</span></td>
             <td class="py-4 text-xs font-bold text-gray-700">${e.description}</td>
             <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
+            <td class="py-4 text-center">${e.is_virtual ? '---' : (e.reciept_url ? `<a href="${e.reciept_url}" target="_blank">📎</a>` : '∅')}</td>
             <td class="py-4 text-center">
-                ${e.is_virtual ? '<span class="text-[10px] text-blue-400 font-bold italic">AUTO</span>' : (e.reciept_url ? `<a href="${e.reciept_url}" target="_blank">📎</a>` : '∅')}
+                ${e.is_virtual ? '' : `<button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">×</button>`}
             </td>
-            <td class="py-4 text-center">
-                ${e.is_virtual ? '' : `
-                <button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                </button>`}
-            </td>
-        </tr>
-    `).join('') : `<tr><td colspan="6" class="py-10 text-center text-gray-300 italic text-xs">No records found.</td></tr>`;
+        </tr>`).join('') : `<tr><td colspan="6" class="py-10 text-center text-gray-300 italic text-xs">No records found.</td></tr>`;
 
-    // 11. Chart
-    if (typeof initRevenueChart === 'function') {
-        initRevenueChart(incomeRes.data, filteredExpenses);
-    }
+    if (typeof initRevenueChart === 'function') initRevenueChart(incomeRes.data, filteredExpenses);
 }
 
+// Chart Initialization
 function initRevenueChart(incomeData, expenses) {
     const ctx = document.getElementById('revenueChart').getContext('2d');
     if (window.revenueChartInstance) window.revenueChartInstance.destroy();
@@ -326,7 +323,6 @@ function initRevenueChart(incomeData, expenses) {
     const incData = new Array(12).fill(0);
     const expData = new Array(12).fill(0);
 
-    // Parse payments for chart (by actual payment date)
     incomeData.forEach(comm => {
         if (Array.isArray(comm.payments)) {
             comm.payments.forEach(p => {
@@ -355,153 +351,11 @@ function initRevenueChart(incomeData, expenses) {
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
     });
 }
-        function openExpenseModal() {
-            document.getElementById('expenseForm').reset();
-            document.getElementById('expDate').valueAsDate = new Date();
-            document.getElementById('expenseModal').classList.remove('hidden');
-        }
 
-        function closeExpenseModal() {
-            document.getElementById('expenseModal').classList.add('hidden');
-        }
-
-        async function saveExpense() {
-            const btn = document.getElementById('btnSaveExpense');
-            const file = document.getElementById('expFile').files[0];
-            btn.disabled = true;
-            btn.innerText = "Processing... ✨";
-
-            try {
-                let receiptUrl = null;
-                if (file) {
-                    const path = `receipts/${Date.now()}_${file.name}`;
-                    const { error: upErr } = await _supabase.storage.from('receipts').upload(path, file);
-                    if (upErr) throw upErr;
-                    receiptUrl = _supabase.storage.from('receipts').getPublicUrl(path).data.publicUrl;
-                }
-
-                const { error } = await _supabase.from('studio_expenses').insert([{
-                    date: document.getElementById('expDate').value,
-                    amount: parseFloat(document.getElementById('expAmount').value),
-                    category: document.getElementById('expCategory').value,
-                    description: document.getElementById('expDesc').value,
-                    reciept_url: receiptUrl
-                }]);
-
-                if (error) throw error;
-                closeExpenseModal();
-                renderfinancials();
-            } catch (err) {
-                alert(err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Save Expense ♡";
-            }
-        }
-
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(renderfinancials, 500); 
-        });
-
-        async function deleteExpense(id, receiptUrl) {
-    if (!confirm("Are you sure you want to delete this expense? This cannot be undone. 🌸")) return;
-
-    try {
-        // 1. If there's a receipt, delete it from Storage first
-        if (receiptUrl) {
-            // Extract the filename from the URL
-            const urlParts = receiptUrl.split('/');
-            const fileName = urlParts[urlParts.length - 1];
-            const filePath = `receipts/${fileName}`;
-
-            const { error: storageError } = await _supabase.storage
-                .from('receipts')
-                .remove([filePath]);
-            
-            if (storageError) console.warn("Storage cleanup failed, but proceeding with DB delete:", storageError);
-        }
-
-        // 2. Delete from the Database
-        const { error } = await _supabase
-            .from('studio_expenses')
-            .delete()
-            .eq('id', id);
-
-        if (error) throw error;
-
-        // 3. Refresh the UI
-        showMagicAlert("Deleted! ✨", "Expense record removed.", "success");
-        renderfinancials();
-
-    } catch (err) {
-        showMagicAlert("Error ☁️", err.message, "error");
-    }
-}
-
-        function exportToCSV() {
-    const taxYear = document.getElementById('taxYearFilter').value;
-    const rows = document.querySelectorAll('#expense-tbody tr');
-    
-    // Check if there is data to export
-    if (rows.length === 0 || rows[0].innerText.includes("No expenses")) {
-        showMagicAlert("Wait! 🌸", "There's no data to export for this year.", "error");
-        return;
-    }
-
-    let csvContent = "data:text/csv;charset=utf-8,Date,Category,Description,Amount,Receipt URL\n";
-
-    rows.forEach(row => {
-        const cols = row.querySelectorAll('td');
-        const rowData = [
-            cols[0].innerText, // Date
-            cols[1].innerText, // Category
-            `"${cols[2].innerText.replace(/"/g, '""')}"`, // Description (escaped)
-            cols[3].innerText.replace('£', '').replace(',', ''), // Amount
-            cols[4].querySelector('a')?.href || "No Receipt" // Receipt Link
-        ];
-        csvContent += rowData.join(",") + "\n";
-    });
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `HanafubukiDoll_Expenses_${taxYear}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-        function switchTab(tab) {
-    const settingsPanel = document.getElementById('panel-settings');
-    const taxPanel = document.getElementById('panel-tax');
-    const settingsBtn = document.getElementById('tab-settings');
-    const taxBtn = document.getElementById('tab-tax');
-
-    if (tab === 'settings') {
-        settingsPanel.classList.remove('hidden');
-        taxPanel.classList.add('hidden');
-        settingsBtn.classList.add('border-b-2', 'border-pink-500', 'text-pink-500', 'bg-pink-50/30');
-        taxBtn.classList.remove('border-b-2', 'border-pink-500', 'text-pink-500', 'bg-pink-50/30');
-        taxBtn.classList.add('text-gray-400');
-    } else {
-        settingsPanel.classList.add('hidden');
-        taxPanel.classList.remove('hidden');
-        taxBtn.classList.add('border-b-2', 'border-pink-500', 'text-pink-500', 'bg-pink-50/30');
-        settingsBtn.classList.remove('border-b-2', 'border-pink-500', 'text-pink-500', 'bg-pink-50/30');
-        settingsBtn.classList.add('text-gray-400');
-    }
-}
-        function getTaxYearStats() {
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    // Tax year ends April 5th
-    const taxYearEnd = (today.getMonth() > 3 || (today.getMonth() === 3 && today.getDate() >= 6)) 
-        ? new Date(currentYear + 1, 3, 5) 
-        : new Date(currentYear, 3, 5);
-    
-    const diff = taxYearEnd - today;
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
-}
+// Auto-run on load
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(renderfinancials, 500); 
+});
     </script>
 
     <div id="expenseModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
@@ -598,5 +452,33 @@ function initRevenueChart(incomeData, expenses) {
     <p class="text-sm tracking-widest uppercase font-bold text-pink-400 mb-4">HanafubukiDoll Aesthetic Studio</p>
     <p class="text-gray-400 text-sm mb-6">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
 </footer>
+    <div id="taxHelpModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+    <div class="bg-white rounded-[2.5rem] max-w-lg w-full p-8 shadow-2xl relative border border-pink-100">
+        <button onclick="toggleTaxModal()" class="absolute top-6 right-6 text-gray-400 hover:text-rose-500 text-2xl font-bold">×</button>
+        
+        <h3 class="text-xl font-black italic text-gray-800 mb-4">The Side Hustler's Roadmap 🗺️</h3>
+        
+        <div class="space-y-4">
+            <div class="p-4 bg-pink-50 rounded-2xl border border-pink-100">
+                <p class="text-[10px] font-black text-pink-500 uppercase">April 6th — April 5th</p>
+                <p class="text-xs text-gray-600 font-bold mt-1">The UK Tax Year. Record every payment received in this window.</p>
+            </div>
+            
+            <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest">October 5th Deadline</p>
+                <p class="text-xs text-gray-600 font-bold mt-1">If you crossed the £1,000 threshold in the previous tax year, register by this date.</p>
+            </div>
+
+            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">January 31st Deadline</p>
+                <p class="text-xs text-gray-600 font-bold mt-1">Deadline to file your return and pay the tax you owe.</p>
+            </div>
+        </div>
+
+        <a href="https://www.gov.uk/register-for-self-assessment" target="_blank" class="block w-full mt-6 text-center py-4 bg-pink-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-pink-600 transition-colors shadow-lg shadow-pink-200">
+            Register with HMRC 🔗
+        </a>
+    </div>
+</div>
 </body>
 </html>
