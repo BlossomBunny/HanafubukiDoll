@@ -135,6 +135,52 @@
             50% { transform: rotate(3deg) translateY(-3px); }
         }
     }
+    /* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 768px) {
+    /* Make the main layout stack vertically */
+    #adminMain {
+        flex-direction: column !important;
+        padding: 1rem !important;
+    }
+
+    /* Sticker drawer becomes a horizontal scrollable bar on mobile */
+    #stickerDrawer {
+        position: relative;
+        top: 0;
+        width: 100%;
+        display: flex;
+        overflow-x: auto;
+        padding: 1rem;
+        gap: 1rem;
+        border-radius: 1.5rem;
+        margin-bottom: 1rem;
+        white-space: nowrap;
+    }
+
+    #stickerDrawer h3, #calendar-trash {
+        display: none; /* Hide these to save space on mobile */
+    }
+
+    #stickerDrawer .flex {
+        flex-direction: row !important;
+    }
+
+    /* Shrink the calendar text for small screens */
+    .fc .fc-toolbar-title {
+        font-size: 1.2rem !important;
+    }
+
+    .fc-daygrid-day-number {
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 8px !important;
+        margin: 1px !important;
+    }
+
+    .fc-daygrid-day-frame {
+        min-height: 60px !important;
+    }
+}
 </style>
 </head>
 <body class="bg-[#fdfbfb] font-['Plus_Jakarta_Sans']">
@@ -283,17 +329,20 @@ let currentEditingId = null;
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("🌸 Initializing Planner...");
     
-    // 1. Initialize Draggables with Safety Check
+    // 1. Initialize Draggables
     initStickers();
     
-    // 2. Render the Calendar
+    // 2. Render the Calendar (The initial "draw")
     await renderPlanner();
 
-    // 3. Workbench Receiver Logic
+    // 3. Start the Real-Time Sync (The "Always Awake" mode)
+    setupRealTimePlanner();
+
+    // 4. Handle specific jobs passed via URL (if any)
     const urlParams = new URLSearchParams(window.location.search);
     const jobToOpen = urlParams.get('open');
-    if (jobToOpen) {
-         console.log("Job to open found:", jobToOpen);
+    if (jobToOpen && typeof openDrawer === "function") {
+         openDrawer(jobToOpen);
     }
 });
       function closeModal() { document.getElementById('eventModal').classList.add('hidden'); }
@@ -327,6 +376,9 @@ async function renderPlanner() {
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
     
+    // Detect mobile for independent settings
+    const isMobile = window.innerWidth < 768;
+
     try {
         const [{ data: jobs }, { data: events }] = await Promise.all([
             _supabase.from('commissions').select('*').not('arrived_at', 'is', null),
@@ -334,82 +386,95 @@ async function renderPlanner() {
         ]);
 
         calendar = new FullCalendar.Calendar(calendarEl, {
-    // ... header and other settings ...
-    height: 'auto', // ✨ Removes the inner scrollbar
-
-    events: [
-        // 🐰 MAP JOBS (Alternating Blue Variety)
-        ...(jobs || []).map((j, index) => ({
-            id: `job-${j.id}`,
-            title: `🐰 ${j.customer_name}`,
-            start: j.arrived_at,
-            end: new Date().toISOString(),
-            allDay: true,
-            // Alternates colors: Even index gets light blue, Odd gets deep blue
-            className: ['job-bar-style', index % 2 === 0 ? 'job-blue-light' : 'job-blue-deep'],
-            extendedProps: { 
-                isJob: true,
-                jobId: j.id 
-            }
-        })),
-        
-        // 🌸 MAP STICKERS (Stickers/Events)
-        ...(events || []).map(e => {
-            const isRange = e.start_date !== e.end_date;
-            return {
-                id: e.id,
-                title: isRange ? e.title : (e.title ? e.title.split(' ')[0] : '⭐'),
-                start: e.start_date,
-                end: e.end_date || e.start_date,
-                allDay: true,
-                backgroundColor: 'transparent',
-                borderColor: 'transparent',
-                className: [isRange ? 'range-bar-style' : 'sticker-style', `type-${e.type || 'stuff'}`],
-                extendedProps: { type: e.type, details: e.details, fullTitle: e.title }
-            };
-        })
-    ],
-
-    eventClick: function(info) {
-        // 1. IF IT IS A JOB: Open the Workbench Drawer
-        if (info.event.extendedProps.isJob) {
-            info.jsEvent.preventDefault();
-            const jobId = info.event.extendedProps.jobId;
-            
-            // Call your specific drawer function
-            if (typeof openDrawer === "function") {
-                openDrawer(jobId); 
-            }
-            return; 
-        }
-
-        // 2. IF IT IS A STICKER: Open the Edit Modal
-        currentEditingId = info.event.id;
-        const displayTitle = info.event.extendedProps.fullTitle || info.event.title;
-        
-        document.getElementById('editTitle').value = displayTitle || "";
-        document.getElementById('editDetails').value = info.event.extendedProps.details || "";
-        document.getElementById('editStart').value = info.event.startStr;
-        document.getElementById('editEnd').value = info.event.endStr || info.event.startStr;
-        document.getElementById('eventModal').classList.remove('hidden');
-    },
-            // --- DRAG & DROP LOGIC ---
-            eventReceive: async function(info) {
-                const title = info.event.title;
-                const startDate = info.event.startStr;
-                const newEvent = {
-                    title: title,
-                    type: info.event.extendedProps.type || 'stuff',
-                    start_date: startDate,
-                    end_date: startDate
-                };
-
-                const { data, error } = await _supabase.from('events').insert([newEvent]).select();
-                if (!error) {
-                    info.event.setProp('id', data[0].id);
-                    renderPlanner(); // Refresh to set the fullTitle prop
-                }
+            // --- Independent View Settings ---
+            initialView: isMobile ? 'listMonth' : 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: isMobile ? 'listMonth,dayGridDay' : 'dayGridMonth,dayGridWeek'
             },
+            
+            // --- Core Functionality ---
+            height: 'auto',
+            editable: true,
+            droppable: true,
+            fixedWeekCount: false,
+            handleWindowResize: true,
+
+            // --- Your Exact Event Mapping ---
+            events: [
+                // 🐰 MAP JOBS (Alternating Blue Variety)
+                ...(jobs || []).map((j, index) => ({
+                    id: `job-${j.id}`,
+                    title: `🐰 ${j.customer_name}`,
+                    start: j.arrived_at,
+                    end: new Date().toISOString(),
+                    allDay: true,
+                    className: ['job-bar-style', index % 2 === 0 ? 'job-blue-light' : 'job-blue-deep'],
+                    extendedProps: { 
+                        isJob: true,
+                        jobId: j.id 
+                    }
+                })),
+                
+                // 🌸 MAP STICKERS (Stickers/Events)
+                ...(events || []).map(e => {
+                    const isRange = e.start_date !== e.end_date;
+                    return {
+                        id: e.id,
+                        title: isRange ? e.title : (e.title ? e.title.split(' ')[0] : '⭐'),
+                        start: e.start_date,
+                        end: e.end_date || e.start_date,
+                        allDay: true,
+                        backgroundColor: 'transparent',
+                        borderColor: 'transparent',
+                        className: [isRange ? 'range-bar-style' : 'sticker-style', `type-${e.type || 'stuff'}`],
+                        extendedProps: { type: e.type, details: e.details, fullTitle: e.title }
+                    };
+                })
+            ],
+
+            // --- Event Handlers (PC & Mobile Compatible) ---
+            eventClick: function(info) {
+                if (info.event.extendedProps.isJob) {
+                    info.jsEvent.preventDefault();
+                    const jobId = info.event.extendedProps.jobId;
+                    if (typeof openDrawer === "function") {
+                        openDrawer(jobId); 
+                    }
+                    return; 
+                }
+
+                currentEditingId = info.event.id;
+                const displayTitle = info.event.extendedProps.fullTitle || info.event.title;
+                
+                document.getElementById('editTitle').value = displayTitle || "";
+                document.getElementById('editDetails').value = info.event.extendedProps.details || "";
+                document.getElementById('editStart').value = info.event.startStr;
+                document.getElementById('editEnd').value = info.event.endStr || info.event.startStr;
+                document.getElementById('eventModal').classList.remove('hidden');
+            },
+
+            eventReceive: async function(info) {
+    const title = info.event.title;
+    const startDate = info.event.startStr;
+    const newEvent = {
+        title: title,
+        type: info.event.extendedProps.type || 'stuff',
+        start_date: startDate,
+        end_date: startDate
+    };
+
+    const { data, error } = await _supabase.from('events').insert([newEvent]).select();
+    
+    if (error) {
+        info.revert(); 
+        showMagicAlert("Error", "Could not save sticker", "error");
+    } else {
+    
+        info.event.setProp('id', data[0].id);
+    }
+},
 
             eventDrop: async function(info) {
                 if (info.event.id.toString().startsWith('job-')) {
@@ -422,15 +487,17 @@ async function renderPlanner() {
                 }).eq('id', info.event.id);
             },
 
-            // --- TRASH LOGIC ---
+            // --- Trash Logic ---
             eventDragStart: function() {
                 const trash = document.getElementById('calendar-trash');
-                if(trash) trash.classList.add('opacity-100', 'border-rose-400', 'bg-rose-50');
+                if(trash && !isMobile) trash.classList.add('opacity-100', 'border-rose-400', 'bg-rose-50');
             },
 
             eventDragStop: function(info) {
                 const trashEl = document.getElementById('calendar-trash');
-                if(trashEl) trashEl.classList.remove('opacity-100', 'border-rose-400', 'bg-rose-50');
+                if(!trashEl || isMobile) return;
+
+                trashEl.classList.remove('opacity-100', 'border-rose-400', 'bg-rose-50');
                 
                 const rect = trashEl.getBoundingClientRect();
                 if (info.jsEvent.clientX >= rect.left && info.jsEvent.clientX <= rect.right &&
@@ -448,6 +515,29 @@ async function renderPlanner() {
     }
 }
 
+      // Function to handle live updates
+function setupRealTimePlanner() {
+    console.log("📡 Real-time sync activated...");
+
+    // Listen for changes in Events (Stickers)
+    _supabase
+        .channel('schema-db-changes')
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'events' }, 
+            (payload) => {
+                console.log('Change received!', payload);
+                calendar.refetchEvents(); // Automatically refreshes the UI
+            }
+        )
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'commissions' }, 
+            (payload) => {
+                calendar.refetchEvents();
+            }
+        )
+        .subscribe();
+}
+      
 async function deleteEvent(id) {
     const { error } = await _supabase.from('events').delete().eq('id', id);
     if (!error) {
