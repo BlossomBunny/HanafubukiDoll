@@ -41,15 +41,17 @@
             100% { transform: rotate(360deg); }
         }
 
-        .canvas-area {
-            background-image: radial-gradient(#fee2e2 1px, transparent 1px);
-            background-size: 20px 20px;
-            background-color: #ffffff !important;
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16 / 8; /* Shorter vertical profile */
-            min-height: 500px;
-        }
+.canvas-area {
+    background-image: radial-gradient(#fee2e2 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-color: #ffffff !important;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 8;
+    min-height: 500px;
+    touch-action: none; 
+    -webkit-overflow-scrolling: touch;
+}
 
         .draggable { 
             position: absolute !important; 
@@ -72,6 +74,17 @@
         
 .animate-spin { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        #collage-canvas {
+    transition: transform 0.3s ease-in-out;
+    /* Keeps the canvas from being cut off when scaled */
+    max-width: none !important; 
+}
+
+/* Ensure the container can handle the scaling */
+.xl\:col-span-4 {
+    overflow: hidden;
+}
     </style>
 </head>
 <body class="bg-[#fdfbfb]">
@@ -132,7 +145,11 @@
 </button>
                         </div>
                     </div>
-
+<div class="pt-2">
+    <button onclick="toggleView()" id="viewBtn" class="w-full bg-indigo-500 text-white p-3 rounded-2xl font-bold text-[10px] hover:bg-indigo-600 shadow-md transition-all">
+        🔍 Zoom Out (Full View)
+    </button>
+</div>
                     <div class="pt-4 border-t border-pink-50">
                         <button onclick="exportCollage()" class="w-full bg-emerald-500 text-white p-4 rounded-2xl font-bold text-xs hover:bg-emerald-600 shadow-lg">
                             💾 Save Collage
@@ -153,32 +170,54 @@
 
   <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. STATE VARIABLES
     let selectedElement = null;
     let topZIndex = 100;
 
-    // 2. INTERNAL HELPER: Draggable Logic
+    // --- IMPROVED DRAGGABLE LOGIC (Mouse + Touch) ---
     function makeDraggable(el) {
         let x = 0, y = 0, mx = 0, my = 0;
-        el.onmousedown = (e) => {
+
+        const onStart = (e) => {
             if (e.target.tagName === 'TEXTAREA') return;
-            e.preventDefault();
-            mx = e.clientX; my = e.clientY;
-            document.onmousemove = (ev) => {
-                x = mx - ev.clientX; y = my - ev.clientY;
-                mx = ev.clientX; my = ev.clientY;
-                el.style.top = (el.offsetTop - y) + "px";
-                el.style.left = (el.offsetLeft - x) + "px";
-            };
-            document.onmouseup = () => { 
-                document.onmousemove = null; 
-                document.onmouseup = null; 
-            };
+            // Handle both touch and mouse
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+            mx = clientX; 
+            my = clientY;
+
+            document.addEventListener('mousemove', onMove, { passive: false });
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchend', onEnd);
         };
+
+        const onMove = (e) => {
+            // Prevent scrolling while dragging on mobile
+            if (e.type === 'touchmove') e.preventDefault();
+
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+            x = mx - clientX;
+            y = my - clientY;
+            mx = clientX;
+            my = clientY;
+
+            el.style.top = (el.offsetTop - y) + "px";
+            el.style.left = (el.offsetLeft - x) + "px";
+        };
+
+        const onEnd = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('touchmove', onMove);
+        };
+
+        el.addEventListener('mousedown', onStart);
+        el.addEventListener('touchstart', onStart, { passive: false });
     }
 
-    // 3. WINDOW-SCOPED FUNCTIONS (Needed for HTML buttons)
-    
+    // --- WINDOW SCOPED FUNCTIONS ---
     window.selectItem = (el) => {
         if (selectedElement) selectedElement.classList.remove('selected');
         selectedElement = el;
@@ -197,14 +236,14 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.onload = (e) => {
                 const div = document.createElement('div');
                 div.className = "draggable p-2 bg-white shadow-xl rounded-lg";
-                div.style.left = "50px"; div.style.top = "50px"; div.style.width = "300px";
+                div.style.left = "20px"; div.style.top = "20px"; div.style.width = "250px";
                 div.dataset.rot = 0;
                 div.style.zIndex = topZIndex++;
                 div.innerHTML = `<img src="${e.target.result}" class="w-full rounded pointer-events-none block">`;
-                div.addEventListener('mousedown', (ev) => { 
-                    ev.stopPropagation(); 
-                    window.selectItem(div); 
-                });
+                
+                div.addEventListener('mousedown', (ev) => { ev.stopPropagation(); window.selectItem(div); });
+                div.addEventListener('touchstart', (ev) => { window.selectItem(div); });
+                
                 makeDraggable(div);
                 document.getElementById('collage-canvas').appendChild(div);
                 window.selectItem(div);
@@ -216,24 +255,23 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addNote = () => {
         const placeholder = document.getElementById('placeholder');
         if (placeholder) placeholder.style.display = 'none';
-        
         const div = document.createElement('div');
         div.className = "draggable note-item p-4 bg-pink-100 rounded-2xl shadow-lg border border-pink-200";
-        div.style.left = "100px"; div.style.top = "100px"; div.style.width = "250px"; div.style.height = "100px";
+        div.style.left = "40px"; div.style.top = "40px"; div.style.width = "200px";
         div.dataset.rot = 0;
         div.style.zIndex = topZIndex++;
-        div.innerHTML = `<textarea class="w-full h-full bg-transparent border-none outline-none text-[13px] font-bold text-pink-700 placeholder-pink-300 resize-none m-0 p-0 block"></textarea>`;
-        div.addEventListener('mousedown', (ev) => { 
-            ev.stopPropagation(); 
-            window.selectItem(div); 
-        });
+        div.innerHTML = `<textarea class="w-full h-24 bg-transparent border-none outline-none text-[13px] font-bold text-pink-700 placeholder-pink-300 resize-none block"></textarea>`;
+        
+        div.addEventListener('mousedown', (ev) => { ev.stopPropagation(); window.selectItem(div); });
+        div.addEventListener('touchstart', (ev) => { window.selectItem(div); });
+        
         makeDraggable(div);
         document.getElementById('collage-canvas').appendChild(div);
         window.selectItem(div);
     };
 
+    // --- TRANSFORM TOOLS ---
     window.changeWidth = (factor) => { if (selectedElement) selectedElement.style.width = (selectedElement.offsetWidth * factor) + "px"; };
-       
     window.changeRotation = (deg) => {
         if (selectedElement) {
             let r = (parseInt(selectedElement.dataset.rot) || 0) + deg;
@@ -241,77 +279,111 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedElement.style.transform = `rotate(${r}deg)`;
         }
     };
-
     window.bringToFront = () => { if (selectedElement) selectedElement.style.zIndex = ++topZIndex; };
     window.deleteSelected = () => { if (selectedElement) { selectedElement.remove(); selectedElement = null; } };
-    
     window.setNoteColor = (bg, text) => {
         if (!selectedElement) return;
         selectedElement.className = `draggable note-item p-4 rounded-2xl shadow-lg border border-pink-200 selected ${bg}`;
         const area = selectedElement.querySelector('textarea');
-        if (area) area.className = `w-full h-full bg-transparent border-none outline-none text-[13px] font-bold placeholder-pink-300 resize-none m-0 p-0 block ${text}`;
+        if (area) area.className = `w-full h-24 bg-transparent border-none outline-none text-[13px] font-bold placeholder-pink-300 resize-none block ${text}`;
     };
 
+    // --- FULL CANVAS EXPORT FIX ---
     window.exportCollage = async () => {
         const canvas = document.getElementById('collage-canvas');
         const btn = document.querySelector('button[onclick="exportCollage()"]');
         const originalText = btn.innerHTML;
 
         btn.disabled = true;
-        btn.innerHTML = `<span class="inline-flex items-center gap-2">Processing... ✨</span>`;
+        btn.innerHTML = `✨ Rendering...`;
         document.body.classList.add('exporting');
-        
         if (selectedElement) selectedElement.classList.remove('selected');
-        await new Promise(r => setTimeout(r, 200));
 
         try {
-            if (typeof html2canvas === 'undefined') throw new Error("Library loading...");
+            // We force html2canvas to look at the scrollWidth/scrollHeight 
+            // instead of the visible clientWidth
             const result = await html2canvas(canvas, { 
-                backgroundColor: '#ffffff', scale: 2, useCORS: true 
+                backgroundColor: '#ffffff',
+                scale: 2, // High quality
+                useCORS: true,
+                width: canvas.scrollWidth,
+                height: canvas.scrollHeight,
+                windowWidth: canvas.scrollWidth,
+                windowHeight: canvas.scrollHeight
             });
+
             const link = document.createElement('a');
-            link.download = `Hanafubuki-Ref-${Date.now()}.jpg`;
+            link.download = `Hanafubuki-Studio-${Date.now()}.jpg`;
             link.href = result.toDataURL("image/jpeg", 0.9);
             link.click();
         } catch (err) {
-        showMagicAlert("Oh No!", "The export failed. Please try again! ☁️", "error");
+            console.error(err);
+            alert("Export failed! Check your connection.");
         } finally {
             document.body.classList.remove('exporting');
-            if (selectedElement) selectedElement.classList.add('selected');
             btn.disabled = false;
             btn.innerHTML = originalText;
         }
     };
-    window.clearCanvas = () => {
-      showMagicAlert(
-        "Clear Workspace?", 
-        "Your progress will be lost! Are you sure you want to start again? ♡", 
-        "confirm", 
-        () => {
-            const canvas = document.getElementById('collage-canvas');
-            const placeholder = document.getElementById('placeholder');
-           
-            const items = canvas.querySelectorAll('.draggable');
-            items.forEach(item => item.remove());
 
-            if (placeholder) placeholder.style.display = 'flex';
-            
-            selectedElement = null;
-            const noteExtras = document.getElementById('noteExtras');
-            if (noteExtras) noteExtras.classList.add('hidden');
+    window.clearCanvas = () => {
+        if(confirm("Clear your workspace? ♡")) {
+            const canvas = document.getElementById('collage-canvas');
+            canvas.querySelectorAll('.draggable').forEach(item => item.remove());
+            document.getElementById('placeholder').style.display = 'flex';
         }
-    );
-};
-    // 4. CANVAS CLICK-AWAY
+    };
+
+    // Click away to deselect
     document.getElementById('collage-canvas').addEventListener('mousedown', (e) => {
         if (e.target.id === 'collage-canvas' || e.target.id === 'placeholder') {
             if (selectedElement) selectedElement.classList.remove('selected');
             selectedElement = null;
-            const extras = document.getElementById('noteExtras');
-            if (extras) extras.classList.add('hidden');
+            document.getElementById('noteExtras')?.classList.add('hidden');
         }
     });
 });
+      let isZoomedOut = false;
+
+window.toggleView = () => {
+    const canvas = document.getElementById('collage-canvas');
+    const btn = document.getElementById('viewBtn');
+    
+    if (!isZoomedOut) {
+        // Zoom Out: Scale the canvas down to fit the container width
+        const containerWidth = canvas.parentElement.offsetWidth;
+        const canvasWidth = canvas.offsetWidth;
+        const scale = containerWidth / canvasWidth;
+        
+        canvas.style.transformOrigin = "top left";
+        canvas.style.transform = `scale(${scale * 0.95})`; // 0.95 for a little padding
+        btn.innerHTML = "🔍 Zoom In (Edit Mode)";
+        isZoomedOut = true;
+    } else {
+        // Zoom In: Back to normal size for editing
+        canvas.style.transform = "scale(1)";
+        btn.innerHTML = "🔍 Zoom Out (Full View)";
+        isZoomedOut = false;
+    }
+};
+
+// Crucial: Update the Export function to reset zoom before saving
+const originalExport = window.exportCollage;
+window.exportCollage = async () => {
+    const canvas = document.getElementById('collage-canvas');
+    const wasZoomed = isZoomedOut;
+    
+    // Reset zoom temporarily for a clean high-res export
+    if (wasZoomed) canvas.style.transform = "scale(1)";
+    
+    await originalExport();
+    
+    // Put it back how the user had it
+    if (wasZoomed) {
+        const scale = canvas.parentElement.offsetWidth / canvas.offsetWidth;
+        canvas.style.transform = `scale(${scale * 0.95})`;
+    }
+};
 </script>
     
     <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
