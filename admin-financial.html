@@ -280,20 +280,69 @@ async function renderfinancials() {
 
     const endDate = new Date(startYear + 1, 3, 5);
 
-    // 1. Fetch Data
-    const [incomeRes, expenseRes] = await Promise.all([
-        _supabase.from('commissions').select('id, total_price, created_at, shipping_cost, payments, customer_name'),
-        _supabase.from('studio_expenses').select('*').order('date', { ascending: false })
-    ]);
+// 1. Fetch commissions (source of truth for shipping costs)
+const { data: commissions, error: incomeError } = await _supabase
+    .from('commissions')
+    .select('id, total_price, created_at, shipping_cost, payments, customer_name');
 
-    if (incomeRes.error || expenseRes.error) return;
+if (incomeError) {
+    console.error("Commissions fetch failed:", incomeError);
+    return;
+}
 
-    // 2. Combine & Filter
-    const allExpenses = [...expenseRes.data, ...shippingExpenses];
-    const filteredExpenses = allExpenses.filter(e => {
-        const d = new Date(e.date);
-        return d >= startDate && d <= endDate;
-    });
+// 2. Auto-create missing shipping expense rows (idempotent)
+const commissionsWithShipping = commissions.filter(c => Number(c.shipping_cost) > 0);
+
+for (const c of commissionsWithShipping) {
+    const { data: existing, error: checkError } = await _supabase
+        .from('studio_expenses')
+        .select('id')
+        .eq('commission_id', c.id)
+        .eq('category', 'Shipping')
+        .maybeSingle();
+
+    if (checkError) {
+        console.error(`Error checking shipping for commission ${c.id}:`, checkError);
+        continue;
+    }
+
+    if (!existing) {
+        const { error: insertError } = await _supabase
+            .from('studio_expenses')
+            .insert({
+                amount: Number(c.shipping_cost),
+                category: 'Shipping',
+                description: `Postage for ${c.customer_name || 'Commission'} (auto-created)`,
+                date: c.created_at.split('T')[0],  // ensure date-only if needed
+                commission_id: c.id,
+                source: 'shipping_auto'
+                // receipt_url remains null → user adds later
+            });
+
+        if (insertError) {
+            console.error(`Failed to create shipping expense for ${c.id}:`, insertError);
+        } else {
+            console.log(`Created shipping expense for commission ${c.id}`);
+        }
+    }
+}
+
+// 3. Fetch ALL expenses (now includes any newly created shipping ones)
+const { data: expenses, error: expenseError } = await _supabase
+    .from('studio_expenses')
+    .select('*')
+    .order('date', { ascending: false });
+
+if (expenseError) {
+    console.error("Expenses fetch failed:", expenseError);
+    return;
+}
+
+// 4. Filter by tax year
+const filteredExpenses = expenses.filter(e => {
+    const d = new Date(e.date);
+    return d >= startDate && d <= endDate;
+});
 
     // 3. Income Math
     let totalIncomeInYear = 0;
