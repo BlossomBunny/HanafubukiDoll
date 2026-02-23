@@ -313,10 +313,9 @@ for (const c of commissionsWithShipping) {
                 amount: Number(c.shipping_cost),
                 category: 'Shipping',
                 description: `Postage for ${c.customer_name || 'Commission'} (auto-created)`,
-                date: c.created_at.split('T')[0],  // ensure date-only if needed
+                date: c.created_at.split('T')[0],  // date-only
                 commission_id: c.id,
                 source: 'shipping_auto'
-                // receipt_url remains null → user adds later
             });
 
         if (insertError) {
@@ -327,7 +326,7 @@ for (const c of commissionsWithShipping) {
     }
 }
 
-// 3. Fetch ALL expenses (now includes any newly created shipping ones)
+// 3. Fetch ALL expenses (includes any newly created ones)
 const { data: expenses, error: expenseError } = await _supabase
     .from('studio_expenses')
     .select('*')
@@ -344,21 +343,19 @@ const filteredExpenses = expenses.filter(e => {
     return d >= startDate && d <= endDate;
 });
 
-    // 3. Income Math
-    let totalIncomeInYear = 0;
-    let totalBookedInYear = 0;
-    incomeRes.data.forEach(comm => {
-
-        const commDate = new Date(comm.created_at);
-        if (commDate >= startDate && commDate <= endDate) totalBookedInYear += (Number(comm.total_price) || 0);
-        if (Array.isArray(comm.payments)) {
-            comm.payments.forEach(p => {
-                const pDate = new Date(p.date);
-                if (pDate >= startDate && pDate <= endDate) totalIncomeInYear += (Number(p.amount) || 0);
-            });
-        }
-    });
-
+// 5. Income Math (fixed variable name)
+let totalIncomeInYear = 0;
+let totalBookedInYear = 0;
+commissions.forEach(comm => {
+    const commDate = new Date(comm.created_at);
+    if (commDate >= startDate && commDate <= endDate) totalBookedInYear += (Number(comm.total_price) || 0);
+    if (Array.isArray(comm.payments)) {
+        comm.payments.forEach(p => {
+            const pDate = new Date(p.date);
+            if (pDate >= startDate && pDate <= endDate) totalIncomeInYear += (Number(p.amount) || 0);
+        });
+    }
+});
     // 4. CORE CALCULATIONS (Fixed order: calculate first!)
    const totalOut = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
