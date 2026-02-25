@@ -361,20 +361,23 @@ async function openDrawer(id) {
                     <input id="shipCost" type="number" value="${job.shipping_cost || 0}" placeholder="Ship Cost £" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
                 </div>
 
-             <div class="space-y-4">
-    ${job.faceup_details && typeof job.faceup_details === 'object'
+           <div class="space-y-4">
+    ${job.faceup_details && Object.keys(job.faceup_details).length > 0
         ? renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink')
         : ''}
 
-    ${job.eye_details && typeof job.eye_details === 'object'
+    ${job.eye_details && Object.keys(job.eye_details).length > 0
         ? renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')
         : ''}
 
-    ${job.manicure_details && typeof job.manicure_details === 'object'
+    ${job.manicure_details && Object.keys(job.manicure_details).length > 0
         ? renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')
         : ''}
+        
+    ${(!job.faceup_details && !job.eye_details && !job.manicure_details) 
+        ? '<p class="text-[10px] text-gray-400 italic text-center py-4">No specific services recorded</p>' 
+        : ''}
 </div>
-
                 <div class="pt-8 border-t border-gray-100">
                      ${['Enquiry', 'Quote'].includes(job.status) ? `
                         <button onclick="showDeclineModal('${job.id}', '${job.customer_email || ''}', '${job.social_handle || ''}')" 
