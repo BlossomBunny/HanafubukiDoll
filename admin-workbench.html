@@ -450,12 +450,21 @@ function recalcBalance() {
         recordBtn.style.display = (payType === 'Paid in Full' && balance > 0) ? 'block' : 'none';
     }
 }
-    function renderServiceBlock(job, key, title, color) {
-    const data = job[`${key}_details`];
-    if (!data) return '';
-    const theme = color === 'pink' ? 'pink' : (color === 'blue' ? 'blue' : 'emerald');
+function renderServiceBlock(job, type, label, color) {
+    // Safety check: if the details for this type are missing, return nothing
+    const details = job[`${type}_details`];
+    if (!details) return '';
 
     return `
+    <div class="p-4 bg-${color}-50/30 rounded-3xl border border-${color}-100">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-[10px] font-black uppercase text-${color}-500">${label}</span>
+                <span class="text-[9px] font-bold text-gray-400">ID: ${job.id.slice(0,5)}</span>
+            </div>
+            <p class="text-xs text-gray-600 leading-relaxed">${details.notes || 'No specific notes recorded.'}</p>
+        </div>
+    `;
+}
         <div class="p-5 bg-white rounded-[2rem] border border-${theme}-50 space-y-4 shadow-sm">
             <div class="flex justify-between items-center border-b border-${theme}-50/50 pb-2">
                 <h4 class="text-[11px] font-black uppercase text-${theme}-500 tracking-wider">${title}</h4>
