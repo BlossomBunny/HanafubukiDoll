@@ -142,127 +142,29 @@
 
 </main>
     
- <script>
-
-   function openExpenseModal() {
-    document.getElementById('expenseModal').classList.remove('hidden');
-
-    // Set default date to today
-    document.querySelector('#expenseForm input[type="date"]').value = new Date().toISOString().split('T')[0];
+<script>
+// --- 1. MODAL & UI HELPERS ---
+function openExpenseModal() {
+    const modal = document.getElementById('expenseModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.querySelector('#expenseForm input[type="date"]').value = new Date().toISOString().split('T')[0];
+    }
 }
 
 function closeExpenseModal() {
-    document.getElementById('expenseModal').classList.add('hidden');
-    document.getElementById('expenseForm').reset();
-}
-
-// Handle the Form Submission
-document.getElementById('expenseForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-    
-    // Prepare data
-    const expenseData = {
-        amount: parseFloat(formData.get('amount')),
-        category: formData.get('category'),
-        description: formData.get('description'),
-        date: formData.get('date'),
-        source: 'manual' // Helpful for filtering later
-    };
-
-    console.log("Attempting to save:", expenseData);
-
-    // Try to save - check if your variable is 'supabase' or '_supabase'
-    const { data, error } = await _supabase
-        .from('studio_expenses')
-        .insert([expenseData])
-        .select(); // Adding .select() helps confirm the return
-
-    if (error) {
-        console.error("Supabase Error Details:", error);
-        alert(`Error saving expense: ${error.message} (${error.code})`);
-    } else {
-        console.log("Saved successfully:", data);
-        closeExpenseModal();
-        
-        // Use a small timeout to give Supabase a second to breathe
-        setTimeout(() => {
-            renderfinancials(); 
-        }, 500);
-    }
-});
-
-     async function deleteExpense(id) {
-    // 1. Safety Check: Don't allow deleting 'Virtual' shipping rows
-    if (typeof id === 'string' && id.startsWith('ship-')) {
-        alert("This is an automatic shipping record derived from your sales. To change this, you must edit the commission's shipping cost.");
-        return;
-    }
-
-    // 2. Confirmation
-    if (!confirm("Are you sure you want to remove this expense record?")) return;
-
-    // 3. Delete from Supabase
-    const { error } = await _supabase
-        .from('studio_expenses')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        alert("Error deleting record: " + error.message);
-    } else {
-        // 4. Refresh the UI
-        renderfinancials();
+    const modal = document.getElementById('expenseModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.getElementById('expenseForm').reset();
     }
 }
-     
-     function exportToCSV() {
-    // 1. Grab the table rows
-    const rows = document.querySelectorAll("#expense-tbody tr");
-    if (rows.length === 0 || rows[0].innerText.includes("No records found")) {
-        alert("No data to export!");
-        return;
-    }
 
-    // 2. Define Headers
-    let csvContent = "Date,Category,Description,Amount,Type\n";
-
-    // 3. Loop through rows and clean data
-    rows.forEach(row => {
-
-        const cols = row.querySelectorAll("td");
-
-        if (cols.length >= 4) {
-
-            const date = cols[0].innerText;
-            const category = cols[1].innerText.trim();
-            const description = cols[2].innerText.replace(/,/g, ""); // Remove commas so CSV doesn't break
-            const amount = cols[3].innerText.replace("£", "");
-            const type = row.classList.contains('bg-blue-50/20') ? "Auto-Shipping" : "Manual Entry";
-
-            csvContent += `${date},${category},${description},${amount},${type}\n`;
-        }
-    });
-
-    // 4. Trigger Download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    const taxYear = document.getElementById('taxYearFilter').value;
-
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Hanafubuki_Expenses_${taxYear}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+function toggleTaxModal() {
+    const modal = document.getElementById('taxHelpModal');
+    if (modal) modal.classList.toggle('hidden');
 }
 
-     
-  let revenueChart = null;
-
-// Helper: Calculate days until April 5th
 function getTaxYearStats() {
     const today = new Date();
     const currentYear = today.getFullYear();
@@ -273,371 +175,171 @@ function getTaxYearStats() {
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
-// Helper: Toggle Modal
-function toggleTaxModal() {
-    const modal = document.getElementById('taxHelpModal');
-    if (modal) modal.classList.toggle('hidden');
+// --- 2. DATA ACTIONS (DELETE/EXPORT/RECEIPT) ---
+async function deleteExpense(id) {
+    if (typeof id === 'string' && id.startsWith('ship-')) {
+        alert("This is an automatic shipping record. Edit the commission to change this.");
+        return;
+    }
+    if (!confirm("Remove this record?")) return;
+    const { error } = await _supabase.from('studio_expenses').delete().eq('id', id);
+    if (error) alert("Error: " + error.message);
+    else renderfinancials();
 }
+
+function exportToCSV() {
+    const rows = document.querySelectorAll("#expense-tbody tr");
+    if (!rows.length || rows[0].innerText.includes("No records found")) return alert("No data!");
+    
+    let csvContent = "Date,Category,Description,Amount,Type\n";
+    rows.forEach(row => {
+        const cols = row.querySelectorAll("td");
+        if (cols.length >= 4) {
+            const date = cols[0].innerText;
+            const cat = cols[1].innerText.trim();
+            const desc = cols[2].innerText.replace(/,/g, "");
+            const amt = cols[3].innerText.replace("£", "");
+            csvContent += `${date},${cat},${desc},${amt}\n`;
+        }
+    });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Hanafubuki_Expenses.csv`;
+    link.click();
+}
+
+// --- 3. CORE RENDERING ---
+let revenueChartInstance = null;
 
 async function renderfinancials() {
-
     const taxYearFilter = document.getElementById('taxYearFilter');
-
     if (!taxYearFilter) return;
 
-    const taxYear = taxYearFilter.value;
-
-    const [startYear] = taxYear.split('-').map(Number);
-
-    const startDate = new Date(startYear, 3, 6); 
-
+    const [startYear] = taxYearFilter.value.split('-').map(Number);
+    const startDate = new Date(startYear, 3, 6);
     const endDate = new Date(startYear + 1, 3, 5);
 
-// 1. Fetch commissions (source of truth for shipping costs)
-const { data: commissions, error: incomeError } = await _supabase
-    .from('commissions')
-    .select('id, total_price, created_at, shipping_cost, payments, customer_name');
+    const { data: commissions } = await _supabase.from('commissions').select('*');
+    const { data: expenses } = await _supabase.from('studio_expenses').select('*').order('date', { ascending: false });
 
-if (incomeError) {
-    console.error("Commissions fetch failed:", incomeError);
-    return;
-}
+    if (!commissions || !expenses) return;
 
-// 2. Auto-create missing shipping expense rows (idempotent)
-const commissionsWithShipping = commissions.filter(c => Number(c.shipping_cost) > 0);
+    const filteredExpenses = expenses.filter(e => {
+        const d = new Date(e.date);
+        return d >= startDate && d <= endDate;
+    });
 
-for (const c of commissionsWithShipping) {
-    const { data: existing, error: checkError } = await _supabase
-        .from('studio_expenses')
-        .select('id')
-        .eq('commission_id', c.id)
-        .eq('category', 'Shipping')
-        .maybeSingle();
-
-    if (checkError) {
-        console.error(`Error checking shipping for commission ${c.id}:`, checkError);
-        continue;
-    }
-
-    if (!existing) {
-        const { error: insertError } = await _supabase
-            .from('studio_expenses')
-            .insert({
-                amount: Number(c.shipping_cost),
-                category: 'Shipping',
-                description: `Postage for ${c.customer_name || 'Commission'} (auto-created)`,
-                date: c.created_at.split('T')[0],  // date-only
-                commission_id: c.id,
-                source: 'shipping_auto'
-            });
-
-        if (insertError) {
-            console.error(`Failed to create shipping expense for ${c.id}:`, insertError);
-        } else {
-            console.log(`Created shipping expense for commission ${c.id}`);
-        }
-    }
-}
-
-// 3. Fetch ALL expenses (includes any newly created ones)
-const { data: expenses, error: expenseError } = await _supabase
-    .from('studio_expenses')
-    .select('*')
-    .order('date', { ascending: false });
-
-if (expenseError) {
-    console.error("Expenses fetch failed:", expenseError);
-    return;
-}
-
-// 4. Filter by tax year
-const filteredExpenses = expenses.filter(e => {
-    const d = new Date(e.date);
-    return d >= startDate && d <= endDate;
-});
-
-// 5. Income Math (fixed variable name)
-let totalIncomeInYear = 0;
-let totalBookedInYear = 0;
-commissions.forEach(comm => {
-    const commDate = new Date(comm.created_at);
-    if (commDate >= startDate && commDate <= endDate) totalBookedInYear += (Number(comm.total_price) || 0);
-    if (Array.isArray(comm.payments)) {
-        comm.payments.forEach(p => {
-            const pDate = new Date(p.date);
-            if (pDate >= startDate && pDate <= endDate) totalIncomeInYear += (Number(p.amount) || 0);
+    // Math calculations
+    let totalIn = 0; let totalBooked = 0;
+    commissions.forEach(c => {
+        const d = new Date(c.created_at);
+        if (d >= startDate && d <= endDate) totalBooked += Number(c.total_price || 0);
+        if (c.payments) c.payments.forEach(p => {
+            if (new Date(p.date) >= startDate && new Date(p.date) <= endDate) totalIn += Number(p.amount || 0);
         });
-    }
-});
-    // 4. CORE CALCULATIONS (Fixed order: calculate first!)
-   const totalOut = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    });
 
-    const netProfit = totalIncomeInYear - totalOut;
+    const totalOut = filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    const profit = totalIn - totalOut;
+    const taxNeeded = profit > 1000 ? (profit * 0.20) : 0;
 
-    const pendingRevenue = totalBookedInYear - totalIncomeInYear;
-
-    const taxPot = netProfit > 1000 ? netProfit * 0.20 : 0; 
-   
-    const class4NI = (netProfit > 12570) ? (netProfit - 12570) * 0.06 : 0;
-    
-    const totalTaxNeeded = taxPot + class4NI;
-
-    // 5. Header Update
-    const daysLeft = getTaxYearStats();
-
-    document.getElementById('daysRemainingText').innerText = daysLeft;
-    document.getElementById('taxYearDisplay').innerText = `${startYear}/${(startYear + 1).toString().slice(-2)}`;
-
-    const allowanceLimit = 1000;
-
-    const cashPercent = Math.min((totalIncomeInYear / allowanceLimit) * 100, 100);
-
-    const pendingPercent = Math.min((pendingRevenue / allowanceLimit) * 100, 100 - cashPercent);
-
-   const allowanceBar = document.getElementById('allowanceBar');
-
-if (allowanceBar) {
-
-   allowanceBar.style.background = `linear-gradient(to right, 
-        #ec4899 ${cashPercent}%, 
-        rgba(96, 165, 250, 0.4) ${cashPercent}%, 
-        rgba(96, 165, 250, 0.4) ${cashPercent + pendingPercent}%, 
-        #f3f4f6 ${cashPercent + pendingPercent}%)`;
-    allowanceBar.style.width = '100%';
-}
-
-const allowanceStatus = document.getElementById('allowanceStatus');
-if (allowanceStatus) {
-    if (totalIncomeInYear >= allowanceLimit) {
-        allowanceStatus.innerHTML = `<span class="text-pink-600 font-black">LIMIT REACHED 📢</span>`;
-    } else {
-
-        allowanceStatus.innerHTML = `
-            <span class="text-pink-500">£${totalIncomeInYear} Cash</span> + 
-            <span class="text-blue-300 italic">£${pendingRevenue} Pending</span>`;
-    }
-}
-    // 6. Render Unified Smart Reserve
-    const isHobby = totalBookedInYear < 1000;
-
-    const reserveContainer = document.getElementById('unified-tax-reserve');
-    if (reserveContainer) {
-       reserveContainer.innerHTML = `
-    <div class="glass-card p-6 border-l-4 ${totalTaxNeeded > 0 ? 'border-amber-400 bg-amber-50/30' : 'border-emerald-400 bg-emerald-50/20'}">
-        <p class="text-[9px] font-black uppercase text-pink-400 tracking-widest mb-1">Tax Savings Pot</p>
-        <div class="flex items-baseline gap-2">
-
-            <h3 class="text-2xl font-black italic text-emerald-800">£${totalTaxNeeded.toLocaleString(undefined, {minimumFractionDigits: 2})}</h3>
-            ${totalTaxNeeded > 0 ? `<span class="text-[10px] text-amber-600 font-bold">READY TO SAVE</span>` : ''}
-        </div>
-
-           <div class="mt-4">
-            <div class="w-full bg-gray-200/50 h-1.5 rounded-full overflow-hidden">
-                <div class="bg-amber-400 h-full transition-all duration-1000" style="width: ${Math.min(100, (totalTaxNeeded / Math.max(1, netProfit)) * 100)}%"></div>
-            </div>
-
-            <p class="text-[9px] font-bold text-gray-400 uppercase mt-2">
-                ${totalTaxNeeded > 0 ? 'Pot Intensity: ' + ((totalTaxNeeded / netProfit) * 100).toFixed(0) + '%' : (isHobby ? 'Hobby Mode Active 🐰' : 'Status: No Tax Due ✨')}
-            </p>
-       </div>
-    </div>
-`;
-        
-    // 7. Update Stats Grid
+    // Update UI Stats
+    document.getElementById('daysRemainingText').innerText = getTaxYearStats();
     document.getElementById('financial-stats').innerHTML = `
         <div class="glass-card p-6 border-l-4 border-pink-400">
             <p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p>
-           <p class="text-2xl font-black italic">£${totalIncomeInYear.toLocaleString()}</p>
+            <p class="text-2xl font-black italic">£${totalIn.toLocaleString()}</p>
         </div>
-
         <div class="glass-card p-6 border-l-4 border-rose-400">
-            <p class="text-[9px] font-black uppercase text-gray-400">Total Expenses</p>
+            <p class="text-[9px] font-black uppercase text-gray-400">Expenses</p>
             <p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p>
         </div>
-
         <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20">
             <p class="text-[9px] font-black uppercase text-gray-400">Net Profit</p>
-            <p class="text-2xl font-black italic text-emerald-600">£${netProfit.toLocaleString()}</p>
-       </div>
-
+            <p class="text-2xl font-black italic text-emerald-600">£${profit.toLocaleString()}</p>
+        </div>
         <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20">
-           <p class="text-[9px] font-black uppercase text-gray-400">Pending Revenue</p>
-            <p class="text-2xl font-black italic text-blue-600">£${pendingRevenue.toLocaleString()}</p>
-        </div>`;
+            <p class="text-[9px] font-black uppercase text-gray-400">Tax Reserve</p>
+            <p class="text-2xl font-black italic text-blue-600">£${taxNeeded.toLocaleString()}</p>
+        </div>
+    `;
 
-    // 8. Categories and Table (Simplified)
-    const catTotals = filteredExpenses.reduce((acc, curr) => {
-        acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
-        return acc;
-    }, {});
+    // Render Table
+    document.getElementById('expense-tbody').innerHTML = filteredExpenses.map(e => `
+        <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
+            <td class="py-4 pl-2 text-[11px] font-bold text-gray-500">${new Date(e.date).toLocaleDateString()}</td>
+            <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase">${e.category}</span></td>
+            <td class="py-4 text-xs font-bold text-gray-700">${e.description}</td>
+            <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
+            <td class="py-4 text-center">
+                <button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">×</button>
+            </td>
+        </tr>
+    `).join('');
 
- document.getElementById('expense-pills').innerHTML = Object.entries(catTotals).map(([cat, amt]) => `
-    <div class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-pink-50">
-        <span class="text-[9px] font-black uppercase text-gray-400">${cat}</span>
-        <span class="text-xs font-black text-pink-500">£${amt.toFixed(2)}</span>
-    </div>
-`).join('');
+    initRevenueChart(commissions, filteredExpenses, startDate, endDate);
+}
 
-document.getElementById('expense-tbody').innerHTML = filteredExpenses.length ? filteredExpenses.map(e => `
-    <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
-        <td class="py-4 pl-2 text-[11px] font-bold text-gray-500">${new Date(e.date).toLocaleDateString()}</td>
-        <td class="py-4">
-            <span class="px-2 py-1 rounded-md bg-gray-100 text-gray-400 text-[9px] font-black uppercase">${e.category}</span>
-        </td>
-        <td class="py-4 text-xs font-bold text-gray-700">${e.description}</td>
-        <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
-        <td class="py-4 text-center">
-            ${e.receipt_url 
-                ? `
-                    <a href="${e.receipt_url}" target="_blank" class="text-blue-500 hover:underline text-sm mr-3">📎 View</a>
-                    <button onclick="deleteReceipt('${e.id}')" class="text-rose-500 hover:text-rose-700 text-xs">🗑 Delete</button>
-                  `
-                : `<button onclick="uploadReceipt('${e.id}')" class="text-blue-500 hover:underline text-xs">+ Add receipt</button>`}
-        </td>
-        <td class="py-4 text-center">
-            <button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">×</button>
-        </td>
-    </tr>
-`).join('') : `
-    <tr>
-        <td colspan="6" class="py-10 text-center text-gray-300 italic text-xs">No records found.</td>
-    </tr>
-`;
+function initRevenueChart(commissions, expenses, start, end) {
+    const ctx = document.getElementById('revenueChart');
+    if (!ctx) return;
+    if (revenueChartInstance) revenueChartInstance.destroy();
 
-// Chart Initialization
-function initRevenueChart(incomeData, expenses) {
-    const ctx = document.getElementById('revenueChart').getContext('2d');
-    if (window.revenueChartInstance) window.revenueChartInstance.destroy();
-
-    const labels = ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"];
-    const incData = new Array(12).fill(0);
-    const expData = new Array(12).fill(0);
-
-    incomeData.forEach(comm => {
-        if (Array.isArray(comm.payments)) {
-            comm.payments.forEach(p => {
-                let m = new Date(p.date).getMonth() - 3;
-                if (m < 0) m += 12;
-                if (m >= 0 && m < 12) incData[m] += (Number(p.amount) || 0);
-            });
-        }
-    });
-
-    expenses.forEach(e => {
-        let m = new Date(e.date).getMonth() - 3;
-        if (m < 0) m += 12;
-        if (m >= 0 && m < 12) expData[m] += (Number(e.amount) || 0);
-    });
-
-    window.revenueChartInstance = new Chart(ctx, {
+    // Chart logic...
+    revenueChartInstance = new Chart(ctx.getContext('2d'), {
         type: 'line',
         data: {
-            labels: labels,
-            datasets: [
-                { label: 'Income', data: incData, borderColor: '#f472b6', backgroundColor: 'rgba(244, 114, 182, 0.1)', fill: true, tension: 0.4 },
-                { label: 'Expenses', data: expData, borderColor: '#94a3b8', borderDash: [5, 5], tension: 0.4 }
-            ]
+            labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+            datasets: [{ label: 'Income', data: new Array(12).fill(0), borderColor: '#f472b6', tension: 0.4 }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
-
-     
+// --- 4. INITIALIZATION & EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(renderfinancials, 500); 
+    // Single Form Listener
+    const form = document.getElementById('expenseForm');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const formData = new FormData(form);
+            const expenseData = {
+                amount: parseFloat(formData.get('amount')),
+                category: formData.get('category'),
+                description: formData.get('description'),
+                date: formData.get('date'),
+                source: 'manual'
+            };
+
+            const { error } = await _supabase.from('studio_expenses').insert([expenseData]);
+
+            if (error) {
+                alert("Error: " + error.message);
+            } else {
+                closeExpenseModal();
+                renderfinancials();
+            }
+        });
+    }
+
+    // Export button
+    document.getElementById('export-csv-btn')?.addEventListener('click', exportToCSV);
+    // Log button
+    document.getElementById('log-expense-btn')?.addEventListener('click', openExpenseModal);
+
+    renderfinancials();
 });
-}
-}
-  
-document.addEventListener('DOMContentLoaded', function() {
-    const exportBtn = document.getElementById('export-csv-btn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', exportToCSV);
-    }
 
-    const addBtn = document.getElementById('log-expense-btn');
-    if (addBtn) {
-        addBtn.addEventListener('click', openExpenseModal);
-    }
-
-   });
-
-     function commissionIdFromVirtual(virtualId) {
-    return virtualId.replace('ship-', '');
-}
-
-    async function uploadReceipt(expenseId) {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*,application/pdf';
-
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        if (file.size > 5 * 1024 * 1024) {
-            alert("File too large (max 5MB)");
-            return;
-        }
-
-        const fileExt = file.name.split('.').pop() || 'jpg';
-        const fileName = `expense_${expenseId}_${Date.now()}.${fileExt}`;
-        const filePath = `expenses/${fileName}`;
-
-        const { error: uploadError } = await _supabase.storage
-            .from('receipts')
-            .upload(filePath, file, { upsert: false });
-
-        if (uploadError) {
-            alert("Upload failed: " + uploadError.message);
-            return;
-        }
-
-        const { data: urlData } = _supabase.storage.from('receipts').getPublicUrl(filePath);
-        const receiptUrl = urlData.publicUrl;
-
-        const { error: updateError } = await _supabase
-            .from('studio_expenses')
-            .update({ receipt_url: receiptUrl })
-            .eq('id', expenseId);
-
-        if (updateError) {
-            alert("Failed to save link: " + updateError.message);
-        } else {
-            alert("Receipt added!");
-            renderfinancials();  // ← refresh table
-        }
-    };
-
-    input.click();
-}
-
-// Delete receipt from any expense row
-async function deleteReceipt(expenseId) {
-    if (!confirm("Delete this receipt permanently?")) return;
-
-    const { error } = await _supabase
-        .from('studio_expenses')
-        .update({ receipt_url: null })
-        .eq('id', expenseId);
-
-    if (error) {
-        alert("Delete failed: " + error.message);
-    } else {
-        alert("Receipt removed");
-        renderfinancials();
-    }
-}
-    
-     
 async function handleLogout() {
-            await _supabase.auth.signOut();
-            window.location.href = 'customer-index.html';
-        }
-
-     
-    </script>
+    await _supabase.auth.signOut();
+    window.location.href = 'customer-index.html';
+}
+</script>
+    
     <div id="expenseModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
     <div class="bg-white rounded-[2.5rem] max-w-md w-full p-8 shadow-2xl border border-pink-100">
         <h3 class="text-xl font-black italic text-gray-800 mb-6">Log New Expense 🌸</h3>
@@ -665,10 +367,10 @@ async function handleLogout() {
                 <input type="date" name="date" required class="w-full px-5 py-3 rounded-2xl border-2 border-pink-50 focus:border-pink-200 outline-none font-bold">
             </div>
             
-            <div class="flex gap-3 pt-4">
-                <button type="button" onclick="closeExpenseModal()" class="flex-1 py-4 bg-gray-100 text-gray-500 font-black uppercase tracking-widest rounded-2xl hover:bg-gray-200 transition-all">Cancel</button>
-                <button type="submit" class="flex-1 py-4 bg-pink-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-pink-600 transition-all shadow-lg shadow-pink-200">Save</button>
-            </div>
+               <div class="flex gap-3 pt-4">
+    <button type="button" onclick="closeExpenseModal()" class="flex-1 py-4 bg-gray-100 text-gray-500 font-black uppercase tracking-widest rounded-2xl hover:bg-gray-200 transition-all">Cancel</button>
+    <button type="submit" class="flex-1 py-4 bg-pink-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-pink-600 transition-all shadow-lg shadow-pink-200">Save</button>
+</div>    
         </form>
     </div>
 </div>
