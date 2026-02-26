@@ -281,32 +281,49 @@ async function renderfinancials() {
     initRevenueChart(commissions, filteredExpenses, startDate, endDate);
 }
 
+// --- 1. Chart Initialization ---
 function initRevenueChart(commissions, expenses, start, end) {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) return;
-    if (revenueChartInstance) revenueChartInstance.destroy();
+    
+    // Use the global instance variable
+    if (window.revenueChartInstance) window.revenueChartInstance.destroy();
 
-    // Chart logic...
-    revenueChartInstance = new Chart(ctx.getContext('2d'), {
+    window.revenueChartInstance = new Chart(ctx.getContext('2d'), {
         type: 'line',
         data: {
             labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
-            datasets: [{ label: 'Income', data: new Array(12).fill(0), borderColor: '#f472b6', tension: 0.4 }]
+            datasets: [{ 
+                label: 'Income', 
+                data: new Array(12).fill(0), 
+                borderColor: '#f472b6', 
+                tension: 0.4 
+            }]
         },
         options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
-// --- 4. INITIALIZATION & EVENT LISTENERS ---
+// --- 2. Auth Helpers ---
+async function handleLogout() {
+    await _supabase.auth.signOut();
+    window.location.href = 'customer-index.html';
+}
+
+// --- 3. Single Unified Event Listener Block ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Single Form Listener
+    console.log("System Ready 🌸");
+
+    // A. Handle Expense Form Submission
     const form = document.getElementById('expenseForm');
     if (form) {
         form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // STOP URL parameters
             e.stopPropagation();
 
-            const formData = new FormData(form);
+            console.log("Form intercepted! Saving to Supabase...");
+
+            const formData = new FormData(e.target);
             const expenseData = {
                 amount: parseFloat(formData.get('amount')),
                 category: formData.get('category'),
@@ -318,26 +335,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const { error } = await _supabase.from('studio_expenses').insert([expenseData]);
 
             if (error) {
-                alert("Error: " + error.message);
+                alert("Supabase Error: " + error.message);
             } else {
+                console.log("Saved successfully!");
                 closeExpenseModal();
-                renderfinancials();
+                renderfinancials(); 
             }
         });
     }
 
-    // Export button
+    // B. Other Button Listeners
     document.getElementById('export-csv-btn')?.addEventListener('click', exportToCSV);
-    // Log button
     document.getElementById('log-expense-btn')?.addEventListener('click', openExpenseModal);
 
+    // C. Initial Data Load
     renderfinancials();
 });
-
-async function handleLogout() {
-    await _supabase.auth.signOut();
-    window.location.href = 'customer-index.html';
-}
 </script>
     
     <div id="expenseModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
