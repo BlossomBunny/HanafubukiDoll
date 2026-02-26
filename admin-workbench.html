@@ -323,11 +323,21 @@ async function openDrawer(id) {
                         </div>
                     </div>
 
-                    <div class="p-4 bg-white rounded-3xl border border-gray-100 grid grid-cols-2 gap-3">
-                        <input id="trackNum" type="text" value="${job.tracking_number || ''}" placeholder="Tracking Number" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
-                        <input id="shipCost" type="number" value="${job.shipping_cost || 0}" placeholder="Ship Cost £" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
-                    </div>
-                </div>
+                   <div class="p-4 bg-white rounded-3xl border border-gray-100 grid grid-cols-2 gap-3">
+    <div class="space-y-1">
+        <label class="text-[8px] font-black uppercase text-gray-400 ml-2">Tracking Number</label>
+        <input id="trackNum" type="text" value="${job.tracking_number || ''}" 
+               placeholder="e.g. GB123456789" 
+               class="w-full p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none border border-transparent focus:border-pink-100 transition-colors">
+    </div>
+
+    <div class="space-y-1">
+        <label class="text-[8px] font-black uppercase text-gray-400 ml-2">Shipping Fee</label>
+        <input id="shipCost" type="number" value="${job.shipping_cost || 0}" 
+               placeholder="£0.00" 
+               class="w-full p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none border border-transparent focus:border-pink-100 transition-colors">
+    </div>
+</div>
 
                 <div class="space-y-6 mt-6">
                     ${servicesHTML}
