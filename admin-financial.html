@@ -295,6 +295,25 @@ async function renderfinancials() {
         return d >= startDate && d <= endDate;
     });
 
+    // Calculate Category Totals
+const catTotals = filteredExpenses.reduce((acc, curr) => {
+    acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
+    return acc;
+}, {});
+
+// Render the Pills
+const pillsContainer = document.getElementById('expense-pills');
+if (pillsContainer) {
+    pillsContainer.innerHTML = Object.entries(catTotals)
+        .sort((a, b) => b[1] - a[1]) // Highest spend first
+        .map(([cat, amt]) => `
+            <div class="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-pink-50/50">
+                <span class="text-[10px] font-black uppercase text-gray-500">${cat}</span>
+                <span class="text-xs font-black text-pink-500">£${amt.toFixed(2)}</span>
+            </div>
+        `).join('') || '<p class="text-xs italic text-gray-400">No categories found</p>';
+}
+
     // Math calculations
     let totalIn = 0;
     commissions.forEach(c => {
@@ -334,7 +353,7 @@ async function renderfinancials() {
         <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
             <td class="py-4 pl-2 text-[11px] font-bold text-gray-500">${new Date(e.date).toLocaleDateString()}</td>
             <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase">${e.category}</span></td>
-            <td class="py-4 text-xs font-bold text-gray-700">${e.description}</td>
+            <td class="py-4 text-xs font-bold text-gray-700">${e.descspending byription}</td>
             <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
             <td class="py-4 text-center">
                 ${e.receipt_url 
@@ -357,13 +376,65 @@ function initRevenueChart(commissions, expenses) {
     if (!ctx) return;
     if (window.revenueChartInstance) window.revenueChartInstance.destroy();
 
+    // Map month index (0=Jan) to Tax Year Index (0=Apr, 11=Mar)
+    const getTaxMonthIndex = (dateStr) => {
+        const month = new Date(dateStr).getMonth();
+        const map = { 3:0, 4:1, 5:2, 6:3, 7:4, 8:5, 9:6, 10:7, 11:8, 0:9, 1:10, 2:11 };
+        return map[month];
+    };
+
+    const incomeData = new Array(12).fill(0);
+    const expenseData = new Array(12).fill(0);
+
+    // Populate Income (from payments array in commissions)
+    commissions.forEach(c => {
+        if (c.payments) {
+            c.payments.forEach(p => {
+                const idx = getTaxMonthIndex(p.date);
+                if (idx !== undefined) incomeData[idx] += Number(p.amount || 0);
+            });
+        }
+    });
+
+    // Populate Expenses
+    expenses.forEach(e => {
+        const idx = getTaxMonthIndex(e.date);
+        if (idx !== undefined) expenseData[idx] += Number(e.amount || 0);
+    });
+
     window.revenueChartInstance = new Chart(ctx.getContext('2d'), {
         type: 'line',
         data: {
             labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
-            datasets: [{ label: 'Income', data: new Array(12).fill(0), borderColor: '#f472b6', tension: 0.4 }]
+            datasets: [
+                { 
+                    label: 'Income', 
+                    data: incomeData, 
+                    borderColor: '#f472b6', // Pink
+                    backgroundColor: 'rgba(244, 114, 182, 0.1)',
+                    fill: true,
+                    tension: 0.4 
+                },
+                { 
+                    label: 'Expenses', 
+                    data: expenseData, 
+                    borderColor: '#94a3b8', // Gray
+                    borderDash: [5, 5],
+                    tension: 0.4 
+                }
+            ]
         },
-        options: { responsive: true, maintainAspectRatio: false }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true, position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { display: false } },
+                x: { grid: { display: false } }
+            }
+        }
     });
 }
 
