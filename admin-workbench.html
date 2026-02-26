@@ -370,9 +370,7 @@ async function openDrawer(id) {
         ? renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')
         : ''}
 
-    ${job.manicure_details && Object.keys(job.manicure_details).length > 0
-        ? renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald')
-        : ''}
+${true ? renderServiceBlock(job, 'manicure', '💅 Mani', 'emerald') : ''}
         
     ${(!job.faceup_details && !job.eye_details && !job.manicure_details) 
         ? '<p class="text-[10px] text-gray-400 italic text-center py-4">No specific services recorded</p>' 
