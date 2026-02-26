@@ -264,7 +264,23 @@ async function openDrawer(id) {
         const balance = Math.max(0, (job.total_price || 0) - paidTotal);
         const isPaidInFull = job.payment_method === 'Paid in Full';
         const isTrade = ['Trade', 'Gift'].includes(job.payment_method);
+        
+        // 1. Generate the Services Section First
+        const servicesHTML = ['faceup', 'eye', 'manicure'].map(type => {
+            const data = job[`${type}_details`];
+            // Only hide if the column is actually null/empty in the DB
+            if (!data || Object.keys(data).length === 0) return ''; 
+            
+            const labels = { faceup: '🎨 Faceup', eye: '👁️ Eyes', manicure: '💅 Manicure' };
+            const themes = { faceup: 'pink', eye: 'blue', manicure: 'emerald' };
+            return renderServiceBlock(job, type, labels[type], themes[type]);
+        }).join('');
 
+        const noServicesFallback = (!job.faceup_details && !job.eye_details && !job.manicure_details)
+            ? `<p class="text-[10px] text-gray-400 italic text-center py-10 bg-gray-50/50 rounded-[2rem]">No services recorded for this commission</p>`
+            : '';
+
+        // 2. Set the main InnerHTML
         content.innerHTML = `
             <div class="max-w-2xl mx-auto space-y-6 pb-24 px-4 text-gray-600">
                 <section class="flex justify-between items-start border-b border-pink-50 pb-6">
@@ -292,92 +308,32 @@ async function openDrawer(id) {
                         </label>
                     </div>
 
-                    <div id="tradeUI" class="${isTrade ? '' : 'hidden'} flex gap-3">
-                        <div class="flex-1 flex items-center justify-between bg-white p-3 rounded-2xl border border-gray-100">
-                            <span class="text-[9px] font-black uppercase text-gray-400">We Shipped</span>
-                            <input type="checkbox" id="weShipped" ${job.we_shipped ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
-                        </div>
-                        <div class="flex-1 flex items-center justify-between bg-white p-3 rounded-2xl border border-gray-100">
-                            <span class="text-[9px] font-black uppercase text-gray-400">Partner Shipped</span>
-                            <input type="checkbox" id="partnerShipped" ${job.partner_shipped ? 'checked' : ''} class="w-4 h-4 accent-emerald-500">
+                    <div id="moneyUI" class="${isTrade ? 'hidden' : ''} space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-white p-4 rounded-2xl border border-gray-100">
+                                <label class="text-[8px] font-black uppercase text-gray-400 block mb-1">Total Fee</label>
+                                <div class="flex items-center gap-1 font-black">
+                                    <span>£</span><input type="number" id="tPrice" value="${job.total_price || 0}" oninput="recalcBalance()" class="w-full outline-none bg-transparent">
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl border border-gray-100">
+                                <label class="text-[8px] font-black uppercase text-gray-400 block mb-1">Outstanding</label>
+                                <p id="balanceDisplay" class="font-black ${balance > 0 ? 'text-rose-400' : 'text-emerald-400'}">£${balance.toFixed(2)}</p>
+                            </div>
                         </div>
                     </div>
 
-                   <div id="moneyUI" class="${isTrade ? 'hidden' : ''} space-y-4">
-    <div class="grid grid-cols-2 gap-3">
-        <div class="bg-white p-4 rounded-2xl border border-gray-100">
-            <label class="text-[8px] font-black uppercase text-gray-400 block mb-1">Total Fee</label>
-            <div class="flex items-center gap-1 font-black">
-                <span>£</span><input type="number" id="tPrice" value="${job.total_price || 0}" oninput="recalcBalance()" class="w-full outline-none bg-transparent">
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl border border-gray-100 flex flex-col justify-center">
-            <label class="text-[8px] font-black uppercase text-gray-400 block mb-1">Outstanding</label>
-            <div class="flex justify-between items-center">
-                <p id="balanceDisplay" class="font-black ${balance > 0 ? 'text-rose-400' : 'text-emerald-400'}">£${balance.toFixed(2)}</p>
-                
-                ${isPaidInFull && balance > 0 ? `
-                    <button onclick="markAsPaidInFull('${job.id}', document.getElementById('tPrice').value)" 
-                            class="text-[8px] bg-amber-100 text-amber-600 px-3 py-1 rounded-lg uppercase font-black hover:bg-amber-200 border border-amber-200">
-                        Record Full Payment 💰
-                    </button>
-                ` : ''}
-            </div>
-        </div>
-    </div>
-
-   <div id="layawayExtra" class="${job.payment_method === 'Layaway' ? '' : 'hidden'} bg-white/50 p-4 rounded-2xl border border-dashed border-gray-200">
-    <p class="text-[9px] font-black uppercase text-gray-400 mb-3">Payment History (Layaway)</p>
-    
-    <div id="historyList" class="space-y-2 mb-3 max-h-32 overflow-y-auto">
-        ${payments.length ? payments.map((p, index) => `
-            <div class="flex justify-between items-center text-[10px] font-bold text-gray-500 bg-white p-2 rounded-lg border border-gray-50 group">
-                <div class="flex gap-3">
-                    <span class="text-gray-300">${new Date(p.date).toLocaleDateString()}</span>
-                    <span class="text-emerald-500">+£${Number(p.amount).toFixed(2)}</span>
-                </div>
-                <button onclick="deletePayment(${index})" 
-                        class="opacity-0 group-hover:opacity-100 text-rose-300 hover:text-rose-500 transition-all duration-200 px-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        `).join('') : '<p class="text-[10px] text-gray-300 italic px-2">No payments recorded yet ♡</p>'}
-    </div>
-
-    <div class="flex gap-2">
-        <input type="number" id="newPayAmt" placeholder="Add Amount" 
-               class="flex-1 p-2 rounded-xl bg-white border border-gray-100 text-[10px] font-bold outline-none focus:border-emerald-200 transition-colors">
-        <button onclick="addLayawayPayment()" 
-                class="px-4 py-2 bg-emerald-400 text-white text-[9px] font-black uppercase rounded-xl hover:bg-emerald-500 shadow-sm transition-all">
-            Add +
-        </button>
-    </div>
-</div>
-
-                <div class="p-4 bg-white rounded-3xl border border-gray-100 grid grid-cols-2 gap-3">
-                    <input id="trackNum" type="text" value="${job.tracking_number || ''}" placeholder="Tracking Number" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
-                    <input id="shipCost" type="number" value="${job.shipping_cost || 0}" placeholder="Ship Cost £" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
+                    <div class="p-4 bg-white rounded-3xl border border-gray-100 grid grid-cols-2 gap-3">
+                        <input id="trackNum" type="text" value="${job.tracking_number || ''}" placeholder="Tracking Number" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
+                        <input id="shipCost" type="number" value="${job.shipping_cost || 0}" placeholder="Ship Cost £" class="p-3 bg-gray-50 rounded-xl text-[10px] font-bold outline-none">
+                    </div>
                 </div>
 
-        <div class="space-y-6 mt-6">
-    <!-- Faceup -->
-    ${job.faceup_details && Object.keys(job.faceup_details || {}).length > 0
-        ? renderServiceBlock(job, 'faceup', '🎨 Faceup', 'pink')
-        : ''}
+                <div class="space-y-6 mt-6">
+                    ${servicesHTML}
+                    ${noServicesFallback}
+                </div>
 
-    <!-- Eyes -->
-    ${job.eye_details && Object.keys(job.eye_details || {}).length > 0
-        ? renderServiceBlock(job, 'eye', '👁️ Eyes', 'blue')
-        : ''}
-
-    ${renderServiceBlock(job, 'manicure', '💅 Manicure', 'emerald')}
-
-    ${(!job.faceup_details && !job.eye_details && !job.manicure_details)
-        ? '<p class="text-[10px] text-gray-400 italic text-center py-6 bg-gray-50/50 rounded-2xl p-6">No services recorded for this commission</p>'
-        : ''}
-</div>
                 <div class="pt-8 border-t border-gray-100">
                      ${['Enquiry', 'Quote'].includes(job.status) ? `
                         <button onclick="showDeclineModal('${job.id}', '${job.customer_email || ''}', '${job.social_handle || ''}')" 
@@ -388,22 +344,12 @@ async function openDrawer(id) {
                 </div>
             </div>`;
 
- drawer.classList.remove('translate-x-full');
+        drawer.classList.remove('translate-x-full');
 
     } catch (err) { 
         console.error("Open drawer error:", err); 
-        if (typeof showMagicAlert === 'function') {
-            showMagicAlert("Drawer Error", "Couldn't load job details.", "error");
-        }
     }
-}
-        function closeDrawer() {
-    const drawer = document.getElementById('editDrawer');
-    if (drawer) {
-        drawer.classList.add('translate-x-full');
-    }
-    activeJobId = null;
-}
+}       
        // Switches the UI between Paid in Full, Layaway, and Trade
 function updatePayMethod(val) {
     const layawayUI = document.getElementById('layawayExtra');
@@ -419,8 +365,7 @@ function updatePayMethod(val) {
         layawayUI.classList.toggle('hidden', val !== 'Layaway');
     }
 }
-
-
+        
 function recalcBalance() {
     const total = parseFloat(document.getElementById('tPrice').value) || 0;
     const payType = document.getElementById('payType')?.value;
@@ -451,51 +396,62 @@ function recalcBalance() {
     }
 }
 function renderServiceBlock(job, type, label, theme) {
-    const data = job[`${type}_details`];
+    const data = job[`${type}_details`] || {};
     const key = type; 
     
-    if (!data || typeof data !== 'object') return '';
+    // Ensure we have at least a status and images array to prevent UI breaks
+    const status = data.status || 'Pending';
+    const images = data.images || [];
+    const notes = data.notes || 'No specific instructions provided.';
+    const adminNotes = data.admin_notes || '';
+    const base = data.base || 'Standard';
 
     return `
-        <div class="p-5 bg-white rounded-[2rem] border border-${theme}-50 space-y-4 shadow-sm mb-4">
-            <div class="flex justify-between items-center border-b border-${theme}-50/50 pb-2">
+        <div class="p-5 bg-white rounded-[2rem] border border-${theme}-100/50 space-y-4 shadow-sm mb-4">
+            <div class="flex justify-between items-center border-b border-${theme}-50/50 pb-3">
                 <h4 class="text-[11px] font-black uppercase text-${theme}-500 tracking-wider">${label}</h4>
                 <div class="flex gap-2">
                     <button onclick="document.getElementById('${key}Upload').click()" 
-                            class="text-[9px] font-black uppercase bg-white border border-${theme}-100 text-${theme}-400 px-2 py-1 rounded-lg hover:bg-${theme}-50 transition-all">
-                        Upload +
+                            class="text-[9px] font-black uppercase bg-white border border-${theme}-100 text-${theme}-400 px-3 py-1.5 rounded-xl hover:bg-${theme}-50 transition-all">
+                        + Photo
                     </button>
                     <input type="file" id="${key}Upload" class="hidden" accept="image/*" multiple onchange="handleAdminUpload(this, '${key}')">
                     
-                    <select id="${key}Status" class="text-[10px] font-black uppercase bg-${theme}-50 px-2 py-1 rounded-lg border-none">
-                        <option value="Pending" ${data.status==='Pending'?'selected':''}>Pending</option>
-                        <option value="Working" ${data.status==='Working'?'selected':''}>Working</option>
-                        <option value="Completed" ${data.status==='Completed'?'selected':''}>Completed</option>
+                    <select id="${key}Status" class="text-[10px] font-black uppercase bg-${theme}-50 text-${theme}-600 px-2 py-1.5 rounded-xl border-none outline-none ring-1 ring-${theme}-100">
+                        <option value="Pending" ${status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option value="Working" ${status === 'Working' ? 'selected' : ''}>Working</option>
+                        <option value="Completed" ${status === 'Completed' ? 'selected' : ''}>Completed</option>
                     </select>
                 </div>
             </div>
             
             <div id="${key}ImageGrid" class="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-                ${(data.images || []).map(img => `
+                ${images.map(img => `
                     <div class="relative shrink-0 group">
-                        <img src="${img}" class="w-24 h-24 object-cover rounded-2xl border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform" onclick="openLightbox('${img}')">
+                        <img src="${img}" class="w-20 h-20 object-cover rounded-2xl border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform" onclick="openLightbox('${img}')">
                         <button onclick="removeImage('${key}', '${img}')" 
-                                class="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                                class="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md">×</button>
                     </div>
                 `).join('')}
-                ${(!data.images || data.images.length === 0) ? '<p class="text-[10px] text-gray-300 italic py-4">No images uploaded.</p>' : ''}
+                ${images.length === 0 ? '<p class="text-[9px] text-gray-300 italic py-4 pl-1">No progress photos yet ♡</p>' : ''}
             </div>
 
-            <div class="space-y-3">
-              <div class="p-3 bg-${theme}-50/30 rounded-2xl border border-${theme}-100/50">
-    <p class="text-[8px] font-black uppercase text-${theme}-400 mb-1">Service Type / Base:</p>
-    <p class="text-[10px] font-medium text-gray-700 mb-2">${data.base || 'Standard'}</p>
-    <p class="text-[8px] font-black uppercase text-${theme}-400 mb-1">Client Request:</p>
-    <p class="text-[10px] text-gray-600 italic">"${data.notes || 'No instructions.'}"</p>
-</div>
+            <div class="grid grid-cols-1 gap-3">
+                <div class="p-4 bg-${theme}-50/30 rounded-2xl border border-${theme}-100/30">
+                    <div class="mb-2">
+                        <span class="text-[8px] font-black uppercase text-${theme}-400 block">Service Base:</span>
+                        <span class="text-[10px] font-bold text-gray-700">${base}</span>
+                    </div>
+                    <div>
+                        <span class="text-[8px] font-black uppercase text-${theme}-400 block">Client Request:</span>
+                        <p class="text-[10px] text-gray-600 italic leading-relaxed">"${notes}"</p>
+                    </div>
+                </div>
                 <div>
-                    <p class="text-[8px] font-black uppercase text-gray-400 mb-1 ml-1">Artist Notes:</p>
-                    <textarea id="${key}Admin" class="w-full p-3 text-[10px] border border-gray-100 rounded-2xl h-20 bg-[#fafafa] resize-none" placeholder="Notes...">${data.admin_notes || ''}</textarea>
+                    <label class="text-[8px] font-black uppercase text-gray-400 mb-1 ml-2 block">Artist Studio Notes (Private)</label>
+                    <textarea id="${key}Admin" 
+                              class="w-full p-4 text-[10px] border border-gray-100 rounded-2xl h-24 bg-white focus:ring-2 focus:ring-${theme}-100 outline-none transition-all resize-none" 
+                              placeholder="Add private notes about this service...">${adminNotes}</textarea>
                 </div>
             </div>
         </div>`;
@@ -720,6 +676,14 @@ async function saveJobChanges() {
     lightbox.classList.remove('hidden');
 }
 
+ function closeDrawer() {
+    const drawer = document.getElementById('editDrawer');
+    if (drawer) {
+        drawer.classList.add('translate-x-full');
+    }
+    activeJobId = null;
+}
+        
 // Optional: Close on Escape key
 document.addEventListener('keydown', (e) => {
     if (e.key === "Escape") document.getElementById('lightbox').classList.add('hidden');
