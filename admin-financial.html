@@ -175,15 +175,58 @@ function getTaxYearStats() {
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
-// --- 2. DATA ACTIONS (DELETE/EXPORT/RECEIPT) ---
+// --- 2. DATA ACTIONS (DELETE/EXPORT/RECEIPTS) ---
 async function deleteExpense(id) {
-    if (typeof id === 'string' && id.startsWith('ship-')) {
-        alert("This is an automatic shipping record. Edit the commission to change this.");
-        return;
-    }
-    if (!confirm("Remove this record?")) return;
+    if (!confirm("Are you sure you want to remove this expense record?")) return;
     const { error } = await _supabase.from('studio_expenses').delete().eq('id', id);
     if (error) alert("Error: " + error.message);
+    else renderfinancials();
+}
+
+async function uploadReceipt(expenseId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,application/pdf';
+
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) return alert("File too large (max 5MB)");
+
+        const fileExt = file.name.split('.').pop() || 'jpg';
+        const fileName = `expense_${expenseId}_${Date.now()}.${fileExt}`;
+        const filePath = `expenses/${fileName}`;
+
+        const { error: uploadError } = await _supabase.storage
+            .from('receipts')
+            .upload(filePath, file, { upsert: false });
+
+        if (uploadError) return alert("Upload failed: " + uploadError.message);
+
+        const { data: urlData } = _supabase.storage.from('receipts').getPublicUrl(filePath);
+        
+        const { error: updateError } = await _supabase
+            .from('studio_expenses')
+            .update({ receipt_url: urlData.publicUrl })
+            .eq('id', expenseId);
+
+        if (updateError) alert("Failed to save link: " + updateError.message);
+        else {
+            alert("Receipt added! 🌸");
+            renderfinancials();
+        }
+    };
+    input.click();
+}
+
+async function removeReceipt(expenseId) {
+    if (!confirm("Delete this receipt permanently? 🎀")) return;
+    const { error } = await _supabase
+        .from('studio_expenses')
+        .update({ receipt_url: null })
+        .eq('id', expenseId);
+
+    if (error) alert("Delete failed: " + error.message);
     else renderfinancials();
 }
 
@@ -191,7 +234,7 @@ function exportToCSV() {
     const rows = document.querySelectorAll("#expense-tbody tr");
     if (!rows.length || rows[0].innerText.includes("No records found")) return alert("No data!");
     
-    let csvContent = "Date,Category,Description,Amount,Type\n";
+    let csvContent = "Date,Category,Description,Amount\n";
     rows.forEach(row => {
         const cols = row.querySelectorAll("td");
         if (cols.length >= 4) {
@@ -221,9 +264,31 @@ async function renderfinancials() {
     const endDate = new Date(startYear + 1, 3, 5);
 
     const { data: commissions } = await _supabase.from('commissions').select('*');
-    const { data: expenses } = await _supabase.from('studio_expenses').select('*').order('date', { ascending: false });
+    if (!commissions) return;
 
-    if (!commissions || !expenses) return;
+    // --- NEW: Auto-create missing shipping rows ---
+    const commissionsWithShipping = commissions.filter(c => Number(c.shipping_cost) > 0);
+    for (const c of commissionsWithShipping) {
+        const { data: existing } = await _supabase
+            .from('studio_expenses')
+            .select('id')
+            .eq('commission_id', c.id)
+            .maybeSingle();
+
+        if (!existing) {
+            await _supabase.from('studio_expenses').insert({
+                amount: Number(c.shipping_cost),
+                category: 'Shipping',
+                description: `Postage for ${c.customer_name || 'Commission'}`,
+                date: c.created_at.split('T')[0],
+                commission_id: c.id,
+                source: 'shipping_auto'
+            });
+        }
+    }
+
+    const { data: expenses } = await _supabase.from('studio_expenses').select('*').order('date', { ascending: false });
+    if (!expenses) return;
 
     const filteredExpenses = expenses.filter(e => {
         const d = new Date(e.date);
@@ -231,12 +296,11 @@ async function renderfinancials() {
     });
 
     // Math calculations
-    let totalIn = 0; let totalBooked = 0;
+    let totalIn = 0;
     commissions.forEach(c => {
-        const d = new Date(c.created_at);
-        if (d >= startDate && d <= endDate) totalBooked += Number(c.total_price || 0);
         if (c.payments) c.payments.forEach(p => {
-            if (new Date(p.date) >= startDate && new Date(p.date) <= endDate) totalIn += Number(p.amount || 0);
+            const pDate = new Date(p.date);
+            if (pDate >= startDate && pDate <= endDate) totalIn += Number(p.amount || 0);
         });
     });
 
@@ -244,7 +308,7 @@ async function renderfinancials() {
     const profit = totalIn - totalOut;
     const taxNeeded = profit > 1000 ? (profit * 0.20) : 0;
 
-    // Update UI Stats
+    // Update Stats
     document.getElementById('daysRemainingText').innerText = getTaxYearStats();
     document.getElementById('financial-stats').innerHTML = `
         <div class="glass-card p-6 border-l-4 border-pink-400">
@@ -273,149 +337,67 @@ async function renderfinancials() {
             <td class="py-4 text-xs font-bold text-gray-700">${e.description}</td>
             <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
             <td class="py-4 text-center">
+                ${e.receipt_url 
+                    ? `<a href="${e.receipt_url}" target="_blank" class="text-blue-500 hover:underline text-[10px] font-bold">VIEW 📎</a>
+                       <button onclick="removeReceipt('${e.id}')" class="text-rose-300 hover:text-rose-500 text-[10px] ml-2">DEL</button>`
+                    : `<button onclick="uploadReceipt('${e.id}')" class="text-gray-400 hover:text-blue-500 text-[10px]">+ RECEIPT</button>`
+                }
+            </td>
+            <td class="py-4 text-center">
                 <button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">×</button>
             </td>
         </tr>
     `).join('');
 
-    initRevenueChart(commissions, filteredExpenses, startDate, endDate);
+    initRevenueChart(commissions, filteredExpenses);
 }
 
-// --- 1. Chart Initialization ---
-function initRevenueChart(commissions, expenses, start, end) {
+function initRevenueChart(commissions, expenses) {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) return;
-    
-    // Use the global instance variable
     if (window.revenueChartInstance) window.revenueChartInstance.destroy();
 
     window.revenueChartInstance = new Chart(ctx.getContext('2d'), {
         type: 'line',
         data: {
             labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
-            datasets: [{ 
-                label: 'Income', 
-                data: new Array(12).fill(0), 
-                borderColor: '#f472b6', 
-                tension: 0.4 
-            }]
+            datasets: [{ label: 'Income', data: new Array(12).fill(0), borderColor: '#f472b6', tension: 0.4 }]
         },
         options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
-// --- 2. Auth Helpers ---
-async function handleLogout() {
-    await _supabase.auth.signOut();
-    window.location.href = 'customer-index.html';
-}
-
-async function uploadReceipt(expenseId) {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*,application/pdf';
-
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        if (file.size > 5 * 1024 * 1024) {
-            alert("File too large (max 5MB)");
-            return;
-        }
-
-        const fileExt = file.name.split('.').pop() || 'jpg';
-        const fileName = `expense_${expenseId}_${Date.now()}.${fileExt}`;
-        const filePath = `expenses/${fileName}`;
-
-        // Upload to Supabase Storage
-        const { error: uploadError } = await _supabase.storage
-            .from('receipts')
-            .upload(filePath, file, { upsert: false });
-
-        if (uploadError) {
-            alert("Upload failed: " + uploadError.message);
-            return;
-        }
-
-        // Get the Public URL
-        const { data: urlData } = _supabase.storage.from('receipts').getPublicUrl(filePath);
-        const receiptUrl = urlData.publicUrl;
-
-        // Update the database row with the new URL
-        const { error: updateError } = await _supabase
-            .from('studio_expenses')
-            .update({ receipt_url: receiptUrl })
-            .eq('id', expenseId);
-
-        if (updateError) {
-            alert("Failed to save link: " + updateError.message);
-        } else {
-            alert("Receipt added! 🌸");
-            renderfinancials(); // Refresh the table to show the 'View' link
-        }
-    };
-
-    input.click();
-}
-
-async function deleteReceipt(expenseId) {
-    if (!confirm("Delete this receipt permanently? 🎀")) return;
-
-    const { error } = await _supabase
-        .from('studio_expenses')
-        .update({ receipt_url: null })
-        .eq('id', expenseId);
-
-    if (error) {
-        alert("Delete failed: " + error.message);
-    } else {
-        alert("Receipt removed");
-        renderfinancials();
-    }
-}
-    
-// --- 3. Single Unified Event Listener Block ---
+// --- 4. INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("System Ready 🌸");
-
-    // A. Handle Expense Form Submission
     const form = document.getElementById('expenseForm');
     if (form) {
         form.addEventListener('submit', async (e) => {
-            e.preventDefault(); // STOP URL parameters
-            e.stopPropagation();
-
-            console.log("Form intercepted! Saving to Supabase...");
-
+            e.preventDefault();
             const formData = new FormData(e.target);
-            const expenseData = {
+            const { error } = await _supabase.from('studio_expenses').insert([{
                 amount: parseFloat(formData.get('amount')),
                 category: formData.get('category'),
                 description: formData.get('description'),
                 date: formData.get('date'),
                 source: 'manual'
-            };
+            }]);
 
-            const { error } = await _supabase.from('studio_expenses').insert([expenseData]);
-
-            if (error) {
-                alert("Supabase Error: " + error.message);
-            } else {
-                console.log("Saved successfully!");
+            if (error) alert(error.message);
+            else {
                 closeExpenseModal();
-                renderfinancials(); 
+                renderfinancials();
             }
         });
     }
-
-    // B. Other Button Listeners
     document.getElementById('export-csv-btn')?.addEventListener('click', exportToCSV);
     document.getElementById('log-expense-btn')?.addEventListener('click', openExpenseModal);
-
-    // C. Initial Data Load
     renderfinancials();
 });
+
+async function handleLogout() {
+    await _supabase.auth.signOut();
+    window.location.href = 'customer-index.html';
+}
 </script>
     
     <div id="expenseModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
