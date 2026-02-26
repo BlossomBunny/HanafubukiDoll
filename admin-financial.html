@@ -252,9 +252,6 @@ function exportToCSV() {
     link.click();
 }
 
-// --- 3. CORE RENDERING ---
-let revenueChartInstance = null;
-
 async function renderfinancials() {
     const taxYearFilter = document.getElementById('taxYearFilter');
     if (!taxYearFilter) return;
@@ -266,7 +263,7 @@ async function renderfinancials() {
     const { data: commissions } = await _supabase.from('commissions').select('*');
     if (!commissions) return;
 
-    // --- NEW: Auto-create missing shipping rows ---
+    // --- Auto-create missing shipping rows ---
     const commissionsWithShipping = commissions.filter(c => Number(c.shipping_cost) > 0);
     for (const c of commissionsWithShipping) {
         const { data: existing } = await _supabase
@@ -295,26 +292,25 @@ async function renderfinancials() {
         return d >= startDate && d <= endDate;
     });
 
-    // Calculate Category Totals
-const catTotals = filteredExpenses.reduce((acc, curr) => {
-    acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
-    return acc;
-}, {});
+    // --- 1. Calculate Category Totals (Fixed Logic) ---
+    const catTotals = filteredExpenses.reduce((acc, curr) => {
+        acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
+        return acc;
+    }, {});
 
-// Render the Pills
-const pillsContainer = document.getElementById('expense-pills');
-if (pillsContainer) {
-    pillsContainer.innerHTML = Object.entries(catTotals)
-        .sort((a, b) => b[1] - a[1]) // Highest spend first
-        .map(([cat, amt]) => `
-            <div class="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-pink-50/50">
-                <span class="text-[10px] font-black uppercase text-gray-500">${cat}</span>
-                <span class="text-xs font-black text-pink-500">£${amt.toFixed(2)}</span>
-            </div>
-        `).join('') || '<p class="text-xs italic text-gray-400">No categories found</p>';
-}
+    const pillsContainer = document.getElementById('expense-pills');
+    if (pillsContainer) {
+        pillsContainer.innerHTML = Object.entries(catTotals)
+            .sort((a, b) => b[1] - a[1])
+            .map(([cat, amt]) => `
+                <div class="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-pink-50/50">
+                    <span class="text-[10px] font-black uppercase text-gray-500">${cat}</span>
+                    <span class="text-xs font-black text-pink-500">£${amt.toFixed(2)}</span>
+                </div>
+            `).join('') || '<p class="text-xs italic text-gray-400">No categories found</p>';
+    }
 
-    // Math calculations
+    // --- 2. Math Calculations ---
     let totalIn = 0;
     commissions.forEach(c => {
         if (c.payments) c.payments.forEach(p => {
@@ -327,8 +323,11 @@ if (pillsContainer) {
     const profit = totalIn - totalOut;
     const taxNeeded = profit > 1000 ? (profit * 0.20) : 0;
 
-    // Update Stats
-    document.getElementById('daysRemainingText').innerText = getTaxYearStats();
+    // --- 3. Update UI Stats ---
+    const daysLeft = typeof getTaxYearStats === 'function' ? getTaxYearStats() : 0;
+    const daysEl = document.getElementById('daysRemainingText');
+    if (daysEl) daysEl.innerText = daysLeft;
+
     document.getElementById('financial-stats').innerHTML = `
         <div class="glass-card p-6 border-l-4 border-pink-400">
             <p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p>
@@ -348,12 +347,12 @@ if (pillsContainer) {
         </div>
     `;
 
-    // Render Table
+    // --- 4. Render Table (Typo Fixed: e.description) ---
     document.getElementById('expense-tbody').innerHTML = filteredExpenses.map(e => `
         <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
             <td class="py-4 pl-2 text-[11px] font-bold text-gray-500">${new Date(e.date).toLocaleDateString()}</td>
             <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase">${e.category}</span></td>
-            <td class="py-4 text-xs font-bold text-gray-700">${e.descspending byription}</td>
+            <td class="py-4 text-xs font-bold text-gray-700">${e.description}</td>
             <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
             <td class="py-4 text-center">
                 ${e.receipt_url 
@@ -370,7 +369,6 @@ if (pillsContainer) {
 
     initRevenueChart(commissions, filteredExpenses);
 }
-
 function initRevenueChart(commissions, expenses) {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) return;
