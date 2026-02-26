@@ -323,6 +323,29 @@ async function renderfinancials() {
     const profit = totalIn - totalOut;
     const taxNeeded = profit > 1000 ? (profit * 0.20) : 0;
 
+// --- Trading Allowance Tracker Logic ---
+const allowanceLimit = 1000;
+const allowancePercent = Math.min((totalIn / allowanceLimit) * 100, 100);
+const allowanceStatus = document.getElementById('allowanceStatus');
+const allowanceBar = document.getElementById('allowanceBar');
+
+if (allowanceStatus && allowanceBar) {
+    // Update the text
+    if (totalIn >= allowanceLimit) {
+        allowanceStatus.innerText = "Limit Reached! ⚠️";
+        allowanceStatus.className = "text-[9px] font-black text-rose-500 italic";
+        allowanceBar.className = "h-full bg-rose-500 transition-all duration-1000";
+    } else {
+        const remaining = allowanceLimit - totalIn;
+        allowanceStatus.innerText = `£${remaining.toLocaleString()} remaining`;
+        allowanceStatus.className = "text-[9px] font-black text-pink-500 italic";
+        allowanceBar.className = "h-full bg-pink-500 transition-all duration-1000";
+    }
+    
+    // Update the progress bar width
+    allowanceBar.style.width = `${allowancePercent}%`;
+}
+    
     // --- 3. Update UI Stats ---
     const daysLeft = typeof getTaxYearStats === 'function' ? getTaxYearStats() : 0;
     const daysEl = document.getElementById('daysRemainingText');
