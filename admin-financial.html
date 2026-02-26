@@ -310,6 +310,71 @@ async function handleLogout() {
     window.location.href = 'customer-index.html';
 }
 
+async function uploadReceipt(expenseId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,application/pdf';
+
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert("File too large (max 5MB)");
+            return;
+        }
+
+        const fileExt = file.name.split('.').pop() || 'jpg';
+        const fileName = `expense_${expenseId}_${Date.now()}.${fileExt}`;
+        const filePath = `expenses/${fileName}`;
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await _supabase.storage
+            .from('receipts')
+            .upload(filePath, file, { upsert: false });
+
+        if (uploadError) {
+            alert("Upload failed: " + uploadError.message);
+            return;
+        }
+
+        // Get the Public URL
+        const { data: urlData } = _supabase.storage.from('receipts').getPublicUrl(filePath);
+        const receiptUrl = urlData.publicUrl;
+
+        // Update the database row with the new URL
+        const { error: updateError } = await _supabase
+            .from('studio_expenses')
+            .update({ receipt_url: receiptUrl })
+            .eq('id', expenseId);
+
+        if (updateError) {
+            alert("Failed to save link: " + updateError.message);
+        } else {
+            alert("Receipt added! 🌸");
+            renderfinancials(); // Refresh the table to show the 'View' link
+        }
+    };
+
+    input.click();
+}
+
+async function deleteReceipt(expenseId) {
+    if (!confirm("Delete this receipt permanently? 🎀")) return;
+
+    const { error } = await _supabase
+        .from('studio_expenses')
+        .update({ receipt_url: null })
+        .eq('id', expenseId);
+
+    if (error) {
+        alert("Delete failed: " + error.message);
+    } else {
+        alert("Receipt removed");
+        renderfinancials();
+    }
+}
+    
 // --- 3. Single Unified Event Listener Block ---
 document.addEventListener('DOMContentLoaded', () => {
     console.log("System Ready 🌸");
