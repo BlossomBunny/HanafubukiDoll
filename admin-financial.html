@@ -161,22 +161,35 @@ document.getElementById('expenseForm')?.addEventListener('submit', async (e) => 
     e.preventDefault();
 
     const formData = new FormData(e.target);
-
+    
+    // Prepare data
     const expenseData = {
-
         amount: parseFloat(formData.get('amount')),
         category: formData.get('category'),
         description: formData.get('description'),
-        date: formData.get('date')
+        date: formData.get('date'),
+        source: 'manual' // Helpful for filtering later
     };
 
-    const { error } = await _supabase.from('studio_expenses').insert([expenseData]);
+    console.log("Attempting to save:", expenseData);
+
+    // Try to save - check if your variable is 'supabase' or '_supabase'
+    const { data, error } = await _supabase
+        .from('studio_expenses')
+        .insert([expenseData])
+        .select(); // Adding .select() helps confirm the return
 
     if (error) {
-        alert("Error saving expense: " + error.message);
+        console.error("Supabase Error Details:", error);
+        alert(`Error saving expense: ${error.message} (${error.code})`);
     } else {
+        console.log("Saved successfully:", data);
         closeExpenseModal();
-        renderfinancials(); // Refresh the dashboard
+        
+        // Use a small timeout to give Supabase a second to breathe
+        setTimeout(() => {
+            renderfinancials(); 
+        }, 500);
     }
 });
 
