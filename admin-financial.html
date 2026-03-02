@@ -389,26 +389,27 @@ if (allowanceStatus && allowanceBar) {
         </div>
     `;
 
-    // --- 4. Render Table (Typo Fixed: e.description) ---
-    document.getElementById('expense-tbody').innerHTML = filteredExpenses.map(e => `
-        <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
-            <td class="py-4 pl-2 text-[11px] font-bold text-gray-500">${new Date(e.date).toLocaleDateString()}</td>
-            <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase">${e.category}</span></td>
-            <td class="py-4 text-xs font-bold text-gray-700">${e.description}</td>
-            <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
-            <td class="py-4 text-center">
-                ${e.receipt_url 
-                    ? `<a href="${e.receipt_url}" target="_blank" class="text-blue-500 hover:underline text-[10px] font-bold">VIEW 📎</a>
-                       <button onclick="removeReceipt('${e.id}')" class="text-rose-300 hover:text-rose-500 text-[10px] ml-2">DEL</button>`
-                    : `<button onclick="uploadReceipt('${e.id}')" class="text-gray-400 hover:text-blue-500 text-[10px]">+ RECEIPT</button>`
-                }
-            </td>
-            <td class="py-4 text-center">
-                <button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">×</button>
-            </td>
-        </tr>
-    `).join('');
-
+// --- 4. Render Table (Updated with Category for Receipt Logic) ---
+document.getElementById('expense-tbody').innerHTML = filteredExpenses.map(e => `
+    <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
+        <td class="py-4 pl-2 text-[11px] font-bold text-gray-500">${new Date(e.date).toLocaleDateString()}</td>
+        <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase">${e.category}</span></td>
+        <td class="py-4 text-xs font-bold text-gray-700">${e.description}</td>
+        <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
+        <td class="py-4 text-center">
+            ${e.receipt_url 
+                ? `<a href="${e.receipt_url}" target="_blank" class="text-blue-500 hover:underline text-[10px] font-bold">VIEW 📎</a>
+                   <button onclick="removeReceipt('${e.id}')" class="text-rose-300 hover:text-rose-500 text-[10px] ml-2">DEL</button>`
+                // Note: passing e.category here!
+                : `<button onclick="uploadReceipt('${e.id}', '${e.category}')" class="text-gray-400 hover:text-blue-500 text-[10px] font-bold">+ RECEIPT</button>`
+            }
+        </td>
+        <td class="py-4 text-center">
+            <button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">×</button>
+        </td>
+    </tr>
+`).join('');
+    
     initRevenueChart(commissions, filteredExpenses);
 }
 function initRevenueChart(commissions, expenses) {
