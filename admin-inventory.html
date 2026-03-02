@@ -473,7 +473,16 @@ function updateModalFields() {
 }
 
 function showAuditReport(critical, warning) {
-    // Create a beautiful overlay for the report
+    // Helper function to create a readable name with category context
+    const getDisplayName = (i) => {
+        const category = i.category || 'Item';
+        const isEye = category === 'Eye Bases';
+        const name = i.brand ? `${i.brand} - ${i.item_name || i.sculpt_size}` : (i.sculpt_size || i.item_name);
+        
+        // Returns "Category: Name" (adding 'mm' if it's an eye base)
+        return `${category}: ${name}${isEye ? 'mm' : ''}`;
+    };
+
     const reportHtml = `
         <div id="auditOverlay" class="fixed inset-0 z-[200] bg-white/90 backdrop-blur-md flex items-center justify-center p-6 animate-fadeIn">
             <div class="max-w-2xl w-full bg-white rounded-[3rem] shadow-2xl border border-pink-100 p-10 max-h-[80vh] overflow-y-auto custom-scrollbar">
@@ -492,7 +501,7 @@ function showAuditReport(critical, warning) {
                             <div class="grid gap-2">
                                 ${critical.map(i => `
                                     <div class="flex justify-between items-center p-3 bg-rose-50 rounded-2xl border border-rose-100">
-                                        <span class="text-sm font-bold text-rose-700">${i.brand ? i.brand + ' - ' : ''}${i.sculpt_size || i.item_name}</span>
+                                        <span class="text-sm font-bold text-rose-700">${getDisplayName(i)}</span>
                                         ${i.order_url ? `<a href="${i.order_url}" target="_blank" class="text-xs font-black text-rose-500 underline">Buy ♡</a>` : ''}
                                     </div>
                                 `).join('')}
@@ -508,7 +517,7 @@ function showAuditReport(critical, warning) {
                             <div class="grid gap-2">
                                 ${warning.map(i => `
                                     <div class="flex justify-between items-center p-3 bg-amber-50 rounded-2xl border border-amber-100">
-                                        <span class="text-sm font-bold text-amber-700">${i.brand ? i.brand + ' - ' : ''}${i.sculpt_size || i.item_name}</span>
+                                        <span class="text-sm font-bold text-amber-700">${getDisplayName(i)}</span>
                                         ${i.order_url ? `<a href="${i.order_url}" target="_blank" class="text-xs font-black text-amber-500 underline">Link ♡</a>` : ''}
                                     </div>
                                 `).join('')}
