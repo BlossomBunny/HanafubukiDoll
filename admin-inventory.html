@@ -46,16 +46,21 @@
             </div>
         </div>
     </nav>
- <main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
-    <!-- INVENTORY TAB -->
-    <div id="view-inventory" class="tab-content hidden space-y-12 pb-20">
-        <!-- inventory content will be injected here -->
+<main id="adminMain" class="max-w-6xl mx-auto p-4 md:p-10 auth-hidden">
+    <div class="flex gap-4 mb-8">
+        <button onclick="switchInventoryTab('parts')" id="tab-parts" class="text-xs font-black uppercase tracking-widest pb-2 border-b-2 border-pink-500 text-pink-500">Doll Parts ♡</button>
+        <button onclick="switchInventoryTab('supplies')" id="tab-supplies" class="text-xs font-black uppercase tracking-widest pb-2 border-b-2 border-transparent text-gray-400 hover:text-pink-300">Art Supplies ♡</button>
     </div>
 
+    <div id="view-inventory" class="tab-content space-y-12 pb-20">
+        </div>
+
+    <div id="view-supplies" class="tab-content hidden space-y-12 pb-20">
+        </div>
+</main>
 <script>
 function initPage(session) {
-    document.getElementById('view-inventory').classList.remove('hidden');
-    renderinventory();
+    switchInventoryTab('parts'); 
 }
 
     function getToneStyle(tone) {
@@ -180,7 +185,7 @@ const items = rawItems.sort((a, b) => {
                                                     <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 font-bold transition-all shadow-sm">＋</button>
                                                 </div>
                                                 <button onclick='openStockModal(${itemData})' class="text-gray-300 hover:text-pink-400 transition-colors">✎</button>
-                                                <button onclick="deleteStockItem('${item.id}')" class="text-gray-200 hover:text-rose-400 transition-colors">🗑️</button>
+                                               <button onclick="deleteStockItem('${item.id}', '${item.category}')" class="text-gray-200 hover:text-rose-400 transition-colors">🗑️</button>
                                             </div>
                                         </td>
                                     </tr>`;
@@ -205,25 +210,45 @@ async function updateStock(id, change) {
 
 function openStockModal(item = null, categoryHint = '') {
     const modal = document.getElementById('stockModal');
+    // Default to 'Smartdoll Hands' if no category is provided
     const category = item?.category || categoryHint || 'Smartdoll Hands';
+    
+    // 1. Identify what type of item we are dealing with
+    const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels'].includes(category);
     const isEyes = category === 'Eye Bases';
 
+    // 2. Set the Title and ID
     document.getElementById('stockModalTitle').textContent = item ? 'Edit Stock ♡' : 'Add New Stock ♡';
     document.getElementById('stockId').value = item?.id || '';
+    
+    // 3. Set Category and immediately update the fields (Brand dropdown, etc.)
     document.getElementById('stockCategory').value = category;
-    
+    updateModalFields(); // This triggers the show/hide logic we wrote earlier
 
-    const sculptLabel = document.querySelector('label[for="stockSculpt"]');
-    const toneLabel = document.querySelector('label[for="stockSkintone"]');
-    
-    if (sculptLabel) sculptLabel.textContent = isEyes ? "Size (mm)" : "Sculpt/Size";
-    if (toneLabel) toneLabel.style.display = isEyes ? "none" : "block";
-    document.getElementById('stockSkintone').parentElement.style.display = isEyes ? "none" : "block";
+    // 4. Handle "Sculpt/Size" vs "Color/Code" Label
+    const sculptLabel = document.getElementById('labelSculpt');
+    if (sculptLabel) {
+        if (isSupply) sculptLabel.textContent = "Color/Code";
+        else if (isEyes) sculptLabel.textContent = "Size (mm)";
+        else sculptLabel.textContent = "Sculpt/Size";
+    }
 
+    // 5. Fill in the data values
     document.getElementById('stockSculpt').value = item?.sculpt_size || '';
-    document.getElementById('stockSkintone').value = item?.skintone || '';
     document.getElementById('stockQty').value = item?.quantity || 0;
+    document.getElementById('stockUrl').value = item?.order_url || '';
 
+    // 6. Handle Brand (only for supplies)
+    if (isSupply && item?.brand) {
+        document.getElementById('stockBrand').value = item.brand;
+    }
+
+    // 7. Handle Skintone (only for doll parts, hidden for eyes/supplies)
+    if (!isSupply && !isEyes) {
+        document.getElementById('stockSkintone').value = item?.skintone || '';
+    }
+
+    // Show the modal!
     modal.classList.remove('hidden');
 }
 
@@ -233,40 +258,65 @@ function closeStockModal() {
 
 async function saveStockItem() {
     const id = document.getElementById('stockId').value;
+    const category = document.getElementById('stockCategory').value;
+    
+    // Determine which table to save to
+    const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels'].includes(category);
+    const table = isSupply ? 'art_supplies' : 'inventory';
+
     const payload = {
-        category: document.getElementById('stockCategory').value,
+        category: category,
         sculpt_size: document.getElementById('stockSculpt').value.trim(),
-        skintone: document.getElementById('stockSkintone').value.trim() || 'Standard',
-        quantity: parseInt(document.getElementById('stockQty').value)
+        quantity: parseInt(document.getElementById('stockQty').value),
+        order_url: document.getElementById('stockUrl').value.trim()
     };
 
-    if (!payload.sculpt_size) {
-        showMagicAlert("Missing Info! ☁️", "Please enter a sculpt or size name.", "error");
-        return;
+    // Add specific fields based on type
+    if (isSupply) {
+        payload.brand = document.getElementById('stockBrand').value;
+    } else {
+        payload.skintone = document.getElementById('stockSkintone').value.trim() || 'Standard';
     }
 
     try {
         let error;
         if (id) {
-            ({ error } = await _supabase.from('inventory').update(payload).eq('id', id));
+            ({ error } = await _supabase.from(table).update(payload).eq('id', id));
         } else {
-            ({ error } = await _supabase.from('inventory').insert([payload]));
+            ({ error } = await _supabase.from(table).insert([payload]));
         }
 
         if (error) throw error;
         
-        showMagicAlert("Inventory Updated! 🌸", "Stock levels have been safely recorded.", "success");
+        showMagicAlert("Success! 🌸", "Inventory synced.", "success");
         closeStockModal();
-        renderinventory();
+        isSupply ? rendersupplies() : renderinventory();
     } catch (err) {
-        showMagicAlert("Save Failed ☁️", err.message, "error");
+        showMagicAlert("Error ☁️", err.message, "error");
     }
 }
+    
+async function deleteStockItem(id, category) {
 
-async function deleteStockItem(id) {
-    showMagicAlert("Delete Item? 🎀", "Are you sure you want to remove this stock record?", "confirm", async () => {
-        const { error } = await _supabase.from('inventory').delete().eq('id', id);
-        if (!error) renderinventory();
+    const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels'].includes(category);
+    const table = isSupply ? 'art_supplies' : 'inventory';
+
+    showMagicAlert("Delete Item? 🎀", "Are you sure you want to remove this record?", "confirm", async () => {
+        const { error } = await _supabase
+            .from(table)
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            showMagicAlert("Error ☁️", error.message, "error");
+        } else {
+           
+            if (isSupply) {
+                rendersupplies();
+            } else {
+                renderinventory();
+            }
+        }
     });
 }
 
@@ -281,6 +331,139 @@ function filterByTone(tone) {
         row.classList.toggle('hidden', rowTone !== tone.toUpperCase());
     });
 }
+
+    // Switch between Parts and Supplies
+function switchInventoryTab(tab) {
+    const partsView = document.getElementById('view-inventory');
+    const suppliesView = document.getElementById('view-supplies');
+    const partsTab = document.getElementById('tab-parts');
+    const suppliesTab = document.getElementById('tab-supplies');
+
+    if (tab === 'parts') {
+        partsView.classList.remove('hidden');
+        suppliesView.classList.add('hidden');
+        partsTab.classList.replace('border-transparent', 'border-pink-500');
+        partsTab.classList.replace('text-gray-400', 'text-pink-500');
+        suppliesTab.classList.replace('border-pink-500', 'border-transparent');
+        suppliesTab.classList.replace('text-pink-500', 'text-gray-400');
+        renderinventory();
+    } else {
+        partsView.classList.add('hidden');
+        suppliesView.classList.remove('hidden');
+        suppliesTab.classList.replace('border-transparent', 'border-pink-500');
+        suppliesTab.classList.replace('text-gray-400', 'text-pink-500');
+        partsTab.classList.replace('border-pink-500', 'border-transparent');
+        partsTab.classList.replace('text-pink-500', 'text-gray-400');
+        rendersupplies();
+    }
+}
+
+async function rendersupplies() {
+    const container = document.getElementById('view-supplies');
+    if (!container) return;
+
+    container.innerHTML = `<div class="flex justify-center py-20"><span class="animate-bounce text-2xl">🎨</span></div>`;
+    
+    // Fetching from a potential 'art_supplies' table in Supabase
+    const { data: supplies, error } = await _supabase.from('art_supplies').select('*').order('category', { ascending: true });
+
+    if (error) {
+        container.innerHTML = `<p class="text-center text-rose-500 p-10">Error: ${error.message}</p>`;
+        return;
+    }
+
+    const categories = ["Brushes", "Paints", "Pencils", "Pastels"];
+
+    container.innerHTML = `
+        <div class="space-y-10 animate-fadeIn">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h2 class="text-3xl font-black italic tracking-tighter text-pink-500">Art Supplies ♡</h2>
+                    <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Pigments & Tools Management</p>
+                </div>
+                <button onclick="openSupplyModal()" class="nav-btn nav-btn-pink shadow-sm">+ Add Supply Item</button>
+            </div>
+            
+            ${categories.map(cat => {
+                const filtered = supplies.filter(s => s.category === cat);
+                return `
+                <div class="space-y-3">
+                    <h3 class="ml-6 text-[11px] font-black uppercase text-gray-400 tracking-widest">${cat}</h3>
+                    <div class="glass-card overflow-hidden border border-pink-100/30 shadow-sm">
+                        <table class="w-full text-left">
+                            <thead class="bg-pink-50/40 border-b border-pink-50">
+                                <tr>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">Brand</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">Name/Size</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70 text-center">Qty</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70 text-right">Links & Adjust</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-pink-50/50">
+                                ${filtered.length ? filtered.map(item => `
+                                <tr class="hover:bg-white/60 transition-colors">
+                                    <td class="p-4 text-xs font-bold text-gray-700">${item.brand}</td>
+                                    <td class="p-4 text-xs text-gray-500 font-medium">${item.item_name}</td>
+                                    <td class="p-4 text-center">
+                                        <span class="text-sm font-black ${item.quantity < 1 ? 'text-rose-500' : 'text-gray-600'}">${item.quantity}</span>
+                                    </td>
+                                    <td class="p-4 text-right">
+                                        <div class="flex justify-end gap-2 items-center">
+                                            ${item.order_url ? `<a href="${item.order_url}" target="_blank" class="w-8 h-8 flex items-center justify-center rounded-xl bg-pink-50 text-pink-500 hover:bg-pink-100 transition-all text-xs" title="Order More">🛒</a>` : ''}
+                                            <div class="flex gap-1 border-l pl-2 border-pink-50">
+                                                <button onclick="updateSupplyStock('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-rose-500 font-bold">－</button>
+                                                <button onclick="updateSupplyStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-emerald-600 font-bold">＋</button>
+                                            </div>
+                                            <button onclick="deleteSupplyItem('${item.id}')" class="ml-2 text-gray-200 hover:text-rose-400 transition-colors">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>`).join('') : `<tr><td colspan="4" class="p-8 text-center text-[10px] uppercase text-gray-300 italic">Inventory empty</td></tr>`}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>`;
+}
+
+async function updateSupplyStock(id, change) {
+    const { data } = await _supabase.from('art_supplies').select('quantity').eq('id', id).single();
+    const newQty = Math.max(0, data.quantity + change);
+    await _supabase.from('art_supplies').update({ quantity: newQty }).eq('id', id);
+    rendersupplies();
+}
+
+    const brandData = {
+    'Brushes': ['Daler-Rowney System 3', 'Daler-Rowney Graduate', 'Winsor&Newton Cotman', 'ProArte Miniature', 'ProArte Masterstroke', 'Royal&Langnickel Mini Magestic'],
+    'Paints': ['Tamiya', 'Vallejo'],
+    'Pencils': ['Derwent', 'Derwent Inktense', 'Faber-Castell', 'Caran d’Ache'],
+    'Pastels': ['Sennelier', 'Rembrandt', 'PanPastel', 'Other'] // Added common pastel brands
+};
+
+function updateModalFields() {
+    const category = document.getElementById('stockCategory').value;
+    const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels'].includes(category);
+    const isEyes = category === 'Eye Bases';
+
+    const brandContainer = document.getElementById('brandContainer');
+    const brandSelect = document.getElementById('stockBrand');
+    const skintoneContainer = document.getElementById('skintoneContainer');
+    const labelSculpt = document.getElementById('labelSculpt');
+    const labelTone = document.getElementById('labelTone');
+
+    // Handle Brand Dropdown
+    if (isSupply) {
+        brandContainer.classList.remove('hidden');
+        brandSelect.innerHTML = brandData[category].map(b => `<option value="${b}">${b}</option>`).join('');
+        labelSculpt.textContent = "Color/Code";
+        skintoneContainer.classList.add('hidden'); // We use "Color" in the Sculpt field for supplies
+    } else {
+        brandContainer.classList.add('hidden');
+        labelSculpt.textContent = isEyes ? "Size (mm)" : "Sculpt/Size";
+        skintoneContainer.classList.toggle('hidden', isEyes);
+        labelTone.textContent = "Skintone";
+    }
+}
     
 async function handleLogout() {
     await _supabase.auth.signOut();
@@ -288,7 +471,7 @@ async function handleLogout() {
 }
 
 </script>
-  <div id="stockModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+<div id="stockModal" class="fixed inset-0 z-[150] hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-pink-100">
         <h3 id="stockModalTitle" class="text-2xl font-black italic mb-6 text-emerald-500">Update Stock ♡</h3>
         <form id="stockForm" class="space-y-4">
@@ -296,29 +479,48 @@ async function handleLogout() {
             
             <div>
                 <label class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Category</label>
-                <select id="stockCategory" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all">
-                    <option value="Smartdoll Hands">Smartdoll Hands</option>
-                    <option value="Dollfie Dream Hands">Dollfie Dream Hands</option>
-                    <option value="Smartdoll Heads">Smartdoll Heads</option>
-                    <option value="Dollfie Dream Heads">Dollfie Dream Heads</option>
-                    <option value="Eye Bases">Eye Bases</option>
+                <select id="stockCategory" onchange="updateModalFields()" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all">
+                    <optgroup label="Doll Parts">
+                        <option value="Smartdoll Hands">Smartdoll Hands</option>
+                        <option value="Dollfie Dream Hands">Dollfie Dream Hands</option>
+                        <option value="Smartdoll Heads">Smartdoll Heads</option>
+                        <option value="Dollfie Dream Heads">Dollfie Dream Heads</option>
+                        <option value="Eye Bases">Eye Bases</option>
+                    </optgroup>
+                    <optgroup label="Art Supplies">
+                        <option value="Brushes">Brushes</option>
+                        <option value="Paints">Paints</option>
+                        <option value="Pencils">Pencils</option>
+                        <option value="Pastels">Pastels</option>
+                    </optgroup>
                 </select>
+            </div>
+
+            <div id="brandContainer" class="hidden">
+                <label class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Brand</label>
+                <select id="stockBrand" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all"></select>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Sculpt/Size</label>
+                    <label id="labelSculpt" class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Sculpt/Size</label>
                     <input type="text" id="stockSculpt" placeholder="e.g. Kizuna" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all">
                 </div>
-                <div>
-                    <label class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Skintone</label>
+                <div id="skintoneContainer">
+                    <label id="labelTone" class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Skintone</label>
                     <input type="text" id="stockSkintone" placeholder="e.g. Milk" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all">
                 </div>
             </div>
 
-            <div>
-                <label class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Quantity</label>
-                <input type="number" id="stockQty" value="0" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all">
+            <div class="grid grid-cols-3 gap-3">
+                <div class="col-span-1">
+                    <label class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Qty</label>
+                    <input type="number" id="stockQty" value="0" class="w-full p-4 bg-gray-50 rounded-2xl border-none text-sm font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all">
+                </div>
+                <div class="col-span-2">
+                    <label class="text-[10px] font-black uppercase text-pink-400 ml-4 mb-1 block">Order Link (URL)</label>
+                    <input type="url" id="stockUrl" placeholder="https://..." class="w-full p-4 bg-gray-50 rounded-2xl border-none text-xs font-bold outline-none ring-2 ring-transparent focus:ring-pink-100 transition-all">
+                </div>
             </div>
             
             <div class="flex gap-3 pt-4">
@@ -328,6 +530,7 @@ async function handleLogout() {
         </form>
     </div>
 </div>
+    
       <footer class="py-20 text-center border-t border-pink-50 bg-white/30">
         <p class="text-sm tracking-widest uppercase font-bold text-[var(--accent-pink)] mb-4">HanafubukiDoll Aesthetic Studio</p>
         <p class="text-[var(--text-muted)] text-sm mb-6">© 2026 • Made with cherry blossoms and magic! 🐰🌸🌙</p>
