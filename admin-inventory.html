@@ -211,7 +211,7 @@ function openStockModal(item = null, categoryHint = '') {
 
     const sculptLabel = document.getElementById('labelSculpt');
     if (sculptLabel) {
-        if (isSupply) sculptLabel.textContent = "Color/Code";
+        if (isSupply) sculptLabel.textContent = "Colour/Code";
         else if (isEyes) sculptLabel.textContent = "Size (mm)";
         else sculptLabel.textContent = "Sculpt/Size";
     }
@@ -438,8 +438,8 @@ function updateModalFields() {
     if (isSupply) {
         brandContainer.classList.remove('hidden');
         brandSelect.innerHTML = brandData[category].map(b => `<option value="${b}">${b}</option>`).join('');
-        labelSculpt.textContent = "Color/Code";
-        skintoneContainer.classList.add('hidden'); // We use "Color" in the Sculpt field for supplies
+        labelSculpt.textContent = "Colour/Code";
+        skintoneContainer.classList.add('hidden'); 
     } else {
         brandContainer.classList.add('hidden');
         labelSculpt.textContent = isEyes ? "Size (mm)" : "Sculpt/Size";
