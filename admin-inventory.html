@@ -90,7 +90,6 @@ async function renderinventory() {
     const container = document.getElementById('view-inventory');
     if (!container) return;
 
-    container.classList.remove('hidden');
     container.innerHTML = `<div class="flex justify-center py-20"><span class="animate-bounce text-2xl">🌸</span></div>`;
     
     const { data: rawItems, error } = await _supabase.from('inventory').select('*');
@@ -207,7 +206,7 @@ function openStockModal(item = null, categoryHint = '') {
     categorySelect.disabled = !item; 
     categorySelect.style.opacity = !item ? "0.6" : "1";
 
-    updateModalFields(); // Call to adjust field visibility
+    updateModalFields(); 
 
     const sculptLabel = document.getElementById('labelSculpt');
     if (sculptLabel) {
@@ -249,12 +248,16 @@ async function saveStockItem() {
         order_url: document.getElementById('stockUrl').value.trim()
     };
 
-    if (isSupply) {
-        payload.brand = document.getElementById('stockBrand').value;
+   if (isSupply) {
+        
+        payload.item_name = document.getElementById('stockSculpt').value.trim();
+        
+        const brandValue = document.getElementById('stockBrand').value;
+        payload.brand = brandValue === "" ? null : brandValue;
     } else {
+        payload.sculpt_size = document.getElementById('stockSculpt').value.trim();
         payload.skintone = document.getElementById('stockSkintone').value.trim() || 'Standard';
     }
-
     try {
         let error;
         if (id) {
@@ -342,7 +345,7 @@ async function rendersupplies() {
     container.innerHTML = `<div class="flex justify-center py-20"><span class="animate-bounce text-2xl">🎨</span></div>`;
     
     const { data: supplies, error } = await _supabase.from('art_supplies').select('*').order('category', { ascending: true });
-
+ 
     if (error) {
         container.innerHTML = `<p class="text-center text-rose-500 p-10">Error: ${error.message}</p>`;
         return;
@@ -425,26 +428,33 @@ async function updateSupplyStock(id, change) {
 
 function updateModalFields() {
     const category = document.getElementById('stockCategory').value;
-    const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels'].includes(category);
+    // Added 'Misc Supplies' to the list
+    const supplyList = ['Brushes', 'Paints', 'Pencils', 'Pastels', 'Misc Supplies'];
+    const isSupply = supplyList.includes(category);
+    const isMisc = category === 'Misc Supplies';
     const isEyes = category === 'Eye Bases';
 
     const brandContainer = document.getElementById('brandContainer');
     const brandSelect = document.getElementById('stockBrand');
     const skintoneContainer = document.getElementById('skintoneContainer');
     const labelSculpt = document.getElementById('labelSculpt');
-    const labelTone = document.getElementById('labelTone');
 
-    // Handle Brand Dropdown
     if (isSupply) {
         brandContainer.classList.remove('hidden');
-        brandSelect.innerHTML = brandData[category].map(b => `<option value="${b}">${b}</option>`).join('');
-        labelSculpt.textContent = "Colour/Code";
+        
+        // Add a "Generic/None" option at the top
+        let options = `<option value="">-- No Brand / Generic --</option>`;
+        if (brandData[category]) {
+            options += brandData[category].map(b => `<option value="${b}">${b}</option>`).join('');
+        }
+        brandSelect.innerHTML = options;
+
+        labelSculpt.textContent = isMisc ? "Item Name" : "Colour/Code";
         skintoneContainer.classList.add('hidden'); 
     } else {
         brandContainer.classList.add('hidden');
         labelSculpt.textContent = isEyes ? "Size (mm)" : "Sculpt/Size";
         skintoneContainer.classList.toggle('hidden', isEyes);
-        labelTone.textContent = "Skintone";
     }
 }
 
@@ -558,11 +568,12 @@ async function handleLogout() {
                         <option value="Eye Bases">Eye Bases</option>
                     </optgroup>
                     <optgroup label="Art Supplies">
-                        <option value="Brushes">Brushes</option>
-                        <option value="Paints">Paints</option>
-                        <option value="Pencils">Pencils</option>
-                        <option value="Pastels">Pastels</option>
-                    </optgroup>
+    <option value="Brushes">Brushes</option>
+    <option value="Paints">Paints</option>
+    <option value="Pencils">Pencils</option>
+    <option value="Pastels">Pastels</option>
+    <option value="Misc Supplies">Misc Supplies</option>
+</optgroup>
                 </select>
             </div>
 
