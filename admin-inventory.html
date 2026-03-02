@@ -114,6 +114,7 @@ async function renderinventory() {
         { title: "Eye Bases (mm)", key: "Eye Bases" }
     ];
 
+    // --- START OF HTML GENERATION ---
     container.innerHTML = `
         <div class="max-w-6xl mx-auto space-y-10 pb-20 animate-fadeIn p-4 md:p-10">
             <div class="flex justify-between items-end mb-4">
@@ -155,29 +156,35 @@ async function renderinventory() {
                                             `<span class="px-3 py-1 rounded-full text-[9px] font-black uppercase border shadow-sm ${getToneStyle(item.skintone)}">${item.skintone || '---'}</span>`}
                                         </td>
                                         <td class="p-4 text-center">
-    <span class="text-sm font-black ${item.quantity === 0 ? 'bg-rose-500 text-white px-3 py-1 rounded-lg animate-pulse' : (item.quantity === 1 ? 'text-amber-500 font-bold' : 'text-gray-600')}">
-        ${item.quantity}
-    </span>
-</td>
-                                       <td class="p-4 text-right">
-    <div class="flex justify-end gap-3 items-center">
-        ${item.order_url ? `
-            <a href="${item.order_url}" target="_blank" 
-               class="w-8 h-8 flex items-center justify-center rounded-xl bg-pink-50 text-pink-500 hover:bg-pink-100 transition-all text-xs" 
-               title="Order More">
-               🛒
-            </a>` : ''}
-            
-        <div class="flex gap-1 mr-2 border-l pl-2 border-pink-50">
-            <button onclick="updateStock('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 font-bold transition-all shadow-sm">－</button>
-            <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-emerald-50 hover:text-emerald-600 font-bold transition-all shadow-sm">＋</button>
-        </div>
-        
-        <button onclick='openStockModal(${JSON.stringify(item).replace(/'/g, "\\'")})' class="text-gray-300 hover:text-pink-400 transition-colors">✎</button>
-        <button onclick="deleteStockItem('${item.id}', '${item.category}')" class="text-gray-200 hover:text-rose-400 transition-colors">🗑️</button>
-    </div>
-</td>
-                             
+                                            <span class="text-sm font-black ${item.quantity === 0 ? 'bg-rose-500 text-white px-3 py-1 rounded-lg animate-pulse' : (item.quantity === 1 ? 'text-amber-500 font-bold' : 'text-gray-600')}">
+                                                ${item.quantity}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-right">
+                                            <div class="flex justify-end gap-3 items-center">
+                                                ${item.order_url ? `
+                                                    <a href="${item.order_url}" target="_blank" 
+                                                       class="w-8 h-8 flex items-center justify-center rounded-xl bg-pink-50 text-pink-500 hover:bg-pink-100 transition-all text-xs" 
+                                                       title="Order More">🛒</a>` : ''}
+                                                <div class="flex gap-1 mr-2 border-l pl-2 border-pink-50/50">
+                                                    <button onclick="updateStock('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 font-bold transition-all shadow-sm">－</button>
+                                                    <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-emerald-50 hover:text-emerald-600 font-bold transition-all shadow-sm">＋</button>
+                                                </div>
+                                                <button onclick='openStockModal(${JSON.stringify(item).replace(/'/g, "\\'")})' class="text-gray-300 hover:text-pink-400 transition-colors">✎</button>
+                                                <button onclick="deleteStockItem('${item.id}', '${item.category}')" class="text-gray-200 hover:text-rose-400 transition-colors">🗑️</button>
+                                            </div>
+                                        </td>
+                                    </tr>`).join('') : `<tr><td colspan="4" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase tracking-widest italic">No items in ${cat.key}</td></tr>`}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>`;
+}
+
+// --- SUPPORTING FUNCTIONS (Defined outside the render string) ---
+
 async function updateStock(id, change) {
     const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
     const newQty = Math.max(0, data.quantity + change);
@@ -189,24 +196,19 @@ function openStockModal(item = null, categoryHint = '') {
     const modal = document.getElementById('stockModal');
     const categorySelect = document.getElementById('stockCategory');
     
-    // 1. Identify Category
     const category = item?.category || categoryHint || 'Smartdoll Hands';
     const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels'].includes(category);
     const isEyes = category === 'Eye Bases';
 
-    // 2. Set ID and Title
     document.getElementById('stockId').value = item?.id || '';
     document.getElementById('stockModalTitle').textContent = item ? 'Edit Item ♡' : `Add ${category} ♡`;
     
-    // 3. Set & Lock Category (NEW: Disables dropdown if it's a new item from a specific section)
     categorySelect.value = category;
     categorySelect.disabled = !item; 
     categorySelect.style.opacity = !item ? "0.6" : "1";
 
-    // 4. Update field visibility (Shows/Hides Brand & Skintone containers)
-    updateModalFields();
+    updateModalFields(); // Call to adjust field visibility
 
-    // 5. Handle "Sculpt/Size" vs "Color/Code" Label (Your logic preserved!)
     const sculptLabel = document.getElementById('labelSculpt');
     if (sculptLabel) {
         if (isSupply) sculptLabel.textContent = "Color/Code";
@@ -214,23 +216,19 @@ function openStockModal(item = null, categoryHint = '') {
         else sculptLabel.textContent = "Sculpt/Size";
     }
 
-    // 6. Fill in the data values
     document.getElementById('stockSculpt').value = item?.sculpt_size || '';
     document.getElementById('stockQty').value = item?.quantity || 0;
     document.getElementById('stockUrl').value = item?.order_url || '';
 
-    // 7. Handle Brand (Supplies only)
     if (isSupply && item?.brand) {
         document.getElementById('stockBrand').value = item.brand;
     }
 
-    // 8. Handle Skintone (Doll parts only, hides if Eye Bases or Supplies)
     const skintoneInput = document.getElementById('stockSkintone');
     if (skintoneInput) {
         skintoneInput.value = item?.skintone || '';
     }
 
-    // Show the modal!
     modal.classList.remove('hidden');
 }
 
@@ -241,8 +239,6 @@ function closeStockModal() {
 async function saveStockItem() {
     const id = document.getElementById('stockId').value;
     const category = document.getElementById('stockCategory').value;
-    
-    // Determine which table to save to
     const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels'].includes(category);
     const table = isSupply ? 'art_supplies' : 'inventory';
 
@@ -253,7 +249,6 @@ async function saveStockItem() {
         order_url: document.getElementById('stockUrl').value.trim()
     };
 
-    // Add specific fields based on type
     if (isSupply) {
         payload.brand = document.getElementById('stockBrand').value;
     } else {
