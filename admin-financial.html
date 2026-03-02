@@ -183,7 +183,7 @@ async function deleteExpense(id) {
     else renderfinancials();
 }
 
-async function uploadReceipt(expenseId) {
+async function uploadReceipt(expenseId, category = 'Other Business Cost') {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*,application/pdf';
@@ -191,34 +191,53 @@ async function uploadReceipt(expenseId) {
     input.onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // Visual feedback for mobile users
+        console.log(`Uploading ${file.name} to ${category}...`);
+
         if (file.size > 5 * 1024 * 1024) return alert("File too large (max 5MB)");
 
-        const fileExt = file.name.split('.').pop() || 'jpg';
-        const fileName = `expense_${expenseId}_${Date.now()}.${fileExt}`;
-        const filePath = `expenses/${fileName}`;
+        const fileExt = file.name.split('.').pop().toLowerCase() || 'jpg';
+        // Unique name to prevent mobile "duplicate filename" errors
+        const safeFileName = `rec_${expenseId}_${Date.now()}.${fileExt}`;
+        
+        // --- FOLDER LOGIC ---
+        let folder = 'expenses'; // Default
+        const catClean = category.trim().toLowerCase();
 
+        if (catClean === 'shipping' || catClean === 'packaging') {
+            folder = 'shipping';
+        }
+
+        const filePath = `${folder}/${safeFileName}`;
+
+        // --- SUPABASE UPLOAD ---
         const { error: uploadError } = await _supabase.storage
             .from('receipts')
-            .upload(filePath, file, { upsert: false });
+            .upload(filePath, file, { 
+                cacheControl: '3600',
+                upsert: false 
+            });
 
         if (uploadError) return alert("Upload failed: " + uploadError.message);
 
         const { data: urlData } = _supabase.storage.from('receipts').getPublicUrl(filePath);
         
+        // Update the database row
         const { error: updateError } = await _supabase
             .from('studio_expenses')
             .update({ receipt_url: urlData.publicUrl })
             .eq('id', expenseId);
 
-        if (updateError) alert("Failed to save link: " + updateError.message);
-        else {
-            alert("Receipt added! 🌸");
+        if (updateError) {
+            alert("Failed to link: " + updateError.message);
+        } else {
+            alert(`Receipt saved to ${folder} folder! 🌸`);
             renderfinancials();
         }
     };
     input.click();
 }
-
 async function removeReceipt(expenseId) {
     if (!confirm("Delete this receipt permanently? 🎀")) return;
     const { error } = await _supabase
