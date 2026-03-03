@@ -92,40 +92,54 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
         <!-- Chart card (spans 2 columns on lg screens) -->
-        <div class="lg:col-span-2 glass-card p-8 bg-white/80 border-none shadow-sm">
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Performance Overview</h3>
-                    <p class="text-lg font-black italic text-gray-800">Revenue vs Expenses</p>
-                </div>
-                <select id="taxYearFilter" onchange="renderfinancials()" class="text-[10px] font-black border-none bg-pink-50 rounded-lg p-2 outline-none text-pink-500 cursor-pointer">
-                    <option value="2025-26">Tax Year 25/26</option>
-                    <option value="2024-25">Tax Year 24/25</option>
-                </select>
+       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8 items-stretch">
+    
+    <div class="lg:col-span-6 glass-card p-6 bg-white/80 border-none shadow-sm flex flex-col">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-1">Performance</h3>
+                <p class="text-md font-black italic text-gray-800">Rev vs Expenses</p>
             </div>
-            <div class="h-[350px]">
-                <canvas id="revenueChart"></canvas>
-            </div>
+            <select id="taxYearFilter" onchange="renderfinancials()" class="text-[9px] font-black border-none bg-pink-50 rounded-lg p-1.5 outline-none text-pink-500 cursor-pointer">
+                <option value="2025-26">25/26</option>
+                <option value="2024-25">24/25</option>
+            </select>
         </div>
-
-        <!-- Sidebar: Tax reserve + categories + tip -->
-        <div class="space-y-6">
-            <div id="unified-tax-reserve"></div>
-
-            <div class="glass-card p-6 bg-white/80 border-none shadow-sm">
-                <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-4">Spending by Category</h3>
-                <div id="expense-pills" class="flex flex-col gap-2"></div>
-            </div>
-
-            <div class="glass-card p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-none">
-                <p class="text-[10px] font-black text-emerald-600 uppercase mb-2">💡 Quick Tip</p>
-                <p class="text-[11px] text-emerald-800 font-medium leading-relaxed">
-                    Working from home? Use the "Flat Rate" simplified expense to claim heat and light costs!
-                </p>
-            </div>
+        <div class="h-[250px]">
+            <canvas id="revenueChart"></canvas>
         </div>
     </div>
 
+    <div class="lg:col-span-3 glass-card p-6 bg-white/80 border-none shadow-sm flex flex-col">
+        <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4">Top Spending</h3>
+        <div id="expense-pills" class="flex flex-col gap-2 overflow-y-auto max-h-[250px] pr-1">
+            </div>
+    </div>
+
+    <div class="lg:col-span-3 glass-card p-6 bg-white/80 border-none shadow-sm flex flex-col">
+        <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4">Rev Sources ♡</h3>
+        <div class="relative flex-grow min-h-[180px]">
+            <canvas id="chartSources"></canvas>
+            
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span class="text-[7px] font-black uppercase text-gray-400">Total</span>
+                <span id="centerRevenueTotal" class="text-xs font-black text-gray-800">£0</span>
+            </div>
+        </div>
+    </div>
+</div>
+        
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div id="unified-tax-reserve"></div>
+    <div class="glass-card p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-none flex items-center gap-4">
+        <span class="text-2xl">💡</span>
+        <p class="text-[11px] text-emerald-800 font-medium leading-relaxed">
+            <strong class="uppercase text-[9px] block mb-1">Quick Tip</strong>
+            Claim "Flat Rate" simplified expenses for your home studio utilities!
+        </p>
+    </div>
+</div>
+        
     <!-- Expense Records table (full width, below the grid) -->
     <div class="glass-card p-8 bg-white/80 border-none shadow-sm">
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 md:gap-6">
@@ -340,7 +354,9 @@ async function renderfinancials() {
 
     // 1. Fetch Commissions
     const { data: commissions } = await _supabase.from('commissions').select('*');
-    if (!commissions) return;
+    const { data: sales } = await _supabase.from('sales').select('*');
+
+    if (!commissions || !sales) return;
 
     // 2. Sync Shipping rows and WAIT for them to finish
     const commissionsWithShipping = commissions.filter(c => Number(c.shipping_cost) > 0);
@@ -388,13 +404,13 @@ async function renderfinancials() {
     }
 
     // --- 2. Math Calculations ---
-    let totalIn = 0;
-    commissions.forEach(c => {
-        if (c.payments) c.payments.forEach(p => {
-            const pDate = new Date(p.date);
-            if (pDate >= startDate && pDate <= endDate) totalIn += Number(p.amount || 0);
-        });
+const filteredSales = sales.filter(s => {
+        const d = new Date(s.sale_date);
+        return d >= startDate && d <= endDate;
     });
+
+    // Total income is now the sum of your Sales Ledger
+    const totalIn = filteredSales.reduce((sum, s) => sum + Number(s.amount || 0), 0);
 
     const totalOut = filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
     const profit = totalIn - totalOut;
@@ -488,6 +504,45 @@ async function renderfinancials() {
     `).join('') || `<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records found for this period</td></tr>`;
 
     initRevenueChart(commissions, filteredExpenses);
+    renderRevenueSourceChart(filteredSales);
+}
+   function renderRevenueSourceChart(salesData) {
+    // 1. Group totals by category (Commission, SumUp, etc)
+    const totals = salesData.reduce((acc, s) => {
+        acc[s.category] = (acc[s.category] || 0) + Number(s.amount);
+        return acc;
+    }, {});
+
+    // 2. Update the "Total" number in the center of the ring
+    const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+    const centerEl = document.getElementById('centerRevenueTotal');
+    if (centerEl) centerEl.textContent = `£${grandTotal.toLocaleString()}`;
+
+    // 3. Draw the Chart
+    const ctx = document.getElementById('chartSources').getContext('2d');
+    
+    // Safety: Destroy old chart so it doesn't glitch when you change tax years
+    if (window.sourceChartInstance) window.sourceChartInstance.destroy();
+
+    window.sourceChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(totals),
+            datasets: [{
+                data: Object.values(totals),
+                backgroundColor: ['#f472b6', '#60a5fa', '#34d399', '#a78bfa', '#fbbf24'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            cutout: '80%', // Makes the ring thin and modern
+            plugins: {
+                legend: { display: false } // We'll use the doughnut center for the total instead
+            },
+            maintainAspectRatio: false,
+            responsive: true
+        }
+    });
 }
     
 function initRevenueChart(commissions, expenses) {
@@ -583,6 +638,151 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('log-expense-btn')?.addEventListener('click', openExpenseModal);
     renderfinancials();
 });
+
+    // --- SALES LEDGER RENDERER ---
+async function renderSales() {
+    const container = document.getElementById('view-sales'); // You'll need this div
+    
+    const { data: sales, error } = await _supabase
+        .from('sales')
+        .select('*')
+        .order('sale_date', { ascending: false });
+
+    container.innerHTML = `
+    <div class="space-y-6 p-4 md:p-10">
+        <div class="flex justify-between items-end">
+            <div>
+                <h2 class="text-3xl font-black italic text-pink-500">Sales Ledger ♡</h2>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Revenue Tracking</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="syncSumUp()" class="bg-blue-50 text-blue-600 text-[10px] font-black px-4 py-2 rounded-xl border border-blue-100">
+                    Sync SumUp 💳
+                </button>
+                <button onclick="openSalesModal()" class="bg-emerald-500 text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-sm">
+                    + Manual Sale
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-card overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gray-50/50 border-b">
+                    <tr class="text-[10px] font-black uppercase text-gray-400">
+                        <th class="p-4">Date</th>
+                        <th class="p-4">Category/Type</th>
+                        <th class="p-4">Amount</th>
+                        <th class="p-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    ${sales.map(s => `
+                        <tr class="text-xs">
+                            <td class="p-4 font-bold text-gray-600">${new Date(s.sale_date).toLocaleDateString('en-GB')}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 rounded-lg text-[9px] font-black uppercase ${getSourceStyle(s.source)}">
+                                    ${s.category} (${s.source})
+                                </span>
+                            </td>
+                            <td class="p-4 font-black text-emerald-500">£${s.amount.toFixed(2)}</td>
+                            <td class="p-4 text-right">
+                                <button onclick="editSale('${s.id}')" class="text-gray-300 hover:text-pink-400 mr-2">✎</button>
+                                <button onclick="deleteSale('${s.id}')" class="text-gray-300 hover:text-rose-400">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    `;
+}
+    // --- SALES ACTIONS ---
+
+function openSalesModal(sale = null) {
+    const modal = document.getElementById('salesModal'); // Ensure you have a modal with this ID
+    
+    // Set titles and IDs
+    document.getElementById('saleId').value = sale?.id || '';
+    document.getElementById('saleModalTitle').textContent = sale ? 'Edit Sale Record' : 'Log New Sale ♡';
+
+    // Fill fields
+    document.getElementById('saleDate').value = sale?.sale_date || new Date().toISOString().split('T')[0];
+    document.getElementById('saleAmount').value = sale?.amount || '';
+    document.getElementById('saleCategory').value = sale?.category || 'Commission';
+    document.getElementById('saleSource').value = sale?.source || 'Manual';
+    document.getElementById('saleDesc').value = sale?.description || '';
+
+    modal.classList.remove('hidden');
+}
+
+async function saveSale() {
+    const id = document.getElementById('saleId').value;
+    
+    const payload = {
+        sale_date: document.getElementById('saleDate').value,
+        amount: parseFloat(document.getElementById('saleAmount').value),
+        category: document.getElementById('saleCategory').value,
+        source: document.getElementById('saleSource').value,
+        description: document.getElementById('saleDesc').value.trim()
+    };
+
+    if (isNaN(payload.amount)) {
+        return showMagicAlert("Error", "Please enter a valid amount.", "error");
+    }
+
+    try {
+        let error;
+        if (id) {
+            ({ error } = await _supabase.from('sales').update(payload).eq('id', id));
+        } else {
+            ({ error } = await _supabase.from('sales').insert([payload]));
+        }
+
+        if (error) throw error;
+
+        showMagicAlert("Success! ✨", "Sale recorded in the ledger.", "success");
+        closeSalesModal();
+        renderSales(); // Refresh the list
+        
+        // If you have a financials dashboard, refresh it too
+        if (typeof renderfinancials === 'function') renderfinancials();
+
+    } catch (err) {
+        console.error("Sale Save Error:", err);
+        showMagicAlert("Error", err.message, "error");
+    }
+}
+
+function closeSalesModal() {
+    document.getElementById('salesModal').classList.add('hidden');
+}
+
+async function deleteSale(id) {
+    showMagicAlert(
+        "Delete Record?", 
+        "This will permanently remove this sale from your ledger.", 
+        "confirm", 
+        async () => {
+            const { error } = await _supabase.from('sales').delete().eq('id', id);
+            if (!error) {
+                renderSales();
+                if (typeof renderfinancials === 'function') renderfinancials();
+            }
+        }
+    );
+}
+
+// Helper for UI colors in the table
+function getSourceStyle(source) {
+    const styles = {
+        'SumUp': 'bg-blue-50 text-blue-600 border-blue-100',
+        'PayPal': 'bg-indigo-50 text-indigo-600 border-indigo-100',
+        'Cash': 'bg-emerald-50 text-emerald-600 border-emerald-100',
+        'Manual': 'bg-gray-50 text-gray-600 border-gray-100'
+    };
+    return styles[source] || 'bg-gray-50 text-gray-400';
+}
 
 async function handleLogout() {
     await _supabase.auth.signOut();
