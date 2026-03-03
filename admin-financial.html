@@ -404,12 +404,53 @@ async function renderfinancials() {
         const totalOut = filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
         const profit = totalIn - totalOut;
 
-        // Populate Header Stats
+        // 1. POPULATE THE STAT CARDS (Top Row)
+        const statsContainer = document.getElementById('financial-stats');
+        if (statsContainer) {
+            statsContainer.innerHTML = `
+                <div class="glass-card p-6 border-l-4 border-pink-400 bg-white/80">
+                    <p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p>
+                    <p class="text-2xl font-black italic text-gray-800">£${totalIn.toLocaleString()}</p>
+                </div>
+                <div class="glass-card p-6 border-l-4 border-rose-400 bg-white/80">
+                    <p class="text-[9px] font-black uppercase text-gray-400">Expenses</p>
+                    <p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p>
+                </div>
+                <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20">
+                    <p class="text-[9px] font-black uppercase text-gray-400">Net Profit</p>
+                    <p class="text-2xl font-black italic text-emerald-600">£${profit.toLocaleString()}</p>
+                </div>
+                <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20">
+                    <p class="text-[9px] font-black uppercase text-gray-400">Tax Reserve (20%)</p>
+                    <p class="text-2xl font-black italic text-blue-600">£${(profit > 0 ? profit * 0.2 : 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                </div>
+            `;
+        }
+
+        // 2. POPULATE SIDEBAR BREAKDOWN (Expense Pills)
+        const pillsContainer = document.getElementById('expense-pills');
+        if (pillsContainer) {
+            const catTotals = filteredExpenses.reduce((acc, curr) => {
+                acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
+                return acc;
+            }, {});
+
+            pillsContainer.innerHTML = Object.entries(catTotals)
+                .sort((a, b) => b[1] - a[1]) 
+                .map(([cat, amt]) => `
+                    <div class="flex justify-between items-center bg-gray-50/50 p-2 px-3 rounded-xl border border-pink-50/50">
+                        <span class="text-[9px] font-black uppercase text-gray-500 truncate mr-2">${cat}</span>
+                        <span class="text-xs font-black text-pink-500">£${amt.toFixed(0)}</span>
+                    </div>
+                `).join('') || '<p class="text-[10px] italic text-gray-400 text-center py-4">No records found.</p>';
+        }
+
+        // 3. HEADER STATS (YTD Mini Counters)
         if(document.getElementById('ytd-cash')) document.getElementById('ytd-cash').textContent = `£${totalIn.toLocaleString()}`;
         if(document.getElementById('ytd-out')) document.getElementById('ytd-out').textContent = `£${totalOut.toLocaleString()}`;
         if(document.getElementById('ytd-profit')) document.getElementById('ytd-profit').textContent = `£${profit.toLocaleString()}`;
 
-        // Allowance Bar
+        // 4. ALLOWANCE BAR
         const allowanceBar = document.getElementById('allowanceBar');
         if (allowanceBar) {
             const percentage = Math.min((totalIn / 1000) * 100, 100);
@@ -418,13 +459,13 @@ async function renderfinancials() {
             document.getElementById('allowanceStatus').textContent = totalIn >= 1000 ? "Limit Reached" : `£${(1000 - totalIn).toFixed(0)} remaining`;
         }
 
-        // Tables
+        // 5. TABLES
         const expBody = document.getElementById('expense-tbody');
         if (expBody) {
             expBody.innerHTML = filteredExpenses.map(e => `
                 <tr class="border-b border-pink-50/50 hover:bg-white/50 text-xs">
                     <td class="py-4 pl-2 font-bold text-gray-600">${new Date(e.date).toLocaleDateString('en-GB')}</td>
-                    <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-500">${e.category}</span></td>
+                    <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-500 border border-gray-200">${e.category}</span></td>
                     <td class="py-4">${e.description || '---'}</td>
                     <td class="py-4 text-right font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
                     <td class="py-4 text-center">
@@ -449,7 +490,7 @@ async function renderfinancials() {
                 </tr>`).join('') || '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No sales</td></tr>';
         }
 
-        // Charts
+        // 6. CHARTS
         initRevenueChart(filteredSales, filteredExpenses);
         renderRevenueSourceChart(filteredSales);
 
