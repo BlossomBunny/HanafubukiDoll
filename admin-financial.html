@@ -405,27 +405,36 @@ async function renderfinancials() {
         const profit = totalIn - totalOut;
 
         // 1. POPULATE THE STAT CARDS (Top Row)
-        const statsContainer = document.getElementById('financial-stats');
-        if (statsContainer) {
-            statsContainer.innerHTML = `
-                <div class="glass-card p-6 border-l-4 border-pink-400 bg-white/80">
-                    <p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p>
-                    <p class="text-2xl font-black italic text-gray-800">£${totalIn.toLocaleString()}</p>
-                </div>
-                <div class="glass-card p-6 border-l-4 border-rose-400 bg-white/80">
-                    <p class="text-[9px] font-black uppercase text-gray-400">Expenses</p>
-                    <p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p>
-                </div>
-                <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20">
-                    <p class="text-[9px] font-black uppercase text-gray-400">Net Profit</p>
-                    <p class="text-2xl font-black italic text-emerald-600">£${profit.toLocaleString()}</p>
-                </div>
-                <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20">
-                    <p class="text-[9px] font-black uppercase text-gray-400">Tax Reserve (20%)</p>
-                    <p class="text-2xl font-black italic text-blue-600">£${(profit > 0 ? profit * 0.2 : 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
-                </div>
-            `;
-        }
+       onst statsContainer = document.getElementById('financial-stats');
+if (statsContainer) {
+    // Calculate if profit is over the £1000 threshold
+    const taxApplicable = profit > 1000;
+    const taxAmount = taxApplicable ? profit * 0.2 : 0;
+
+    statsContainer.innerHTML = `
+        <div class="glass-card p-6 border-l-4 border-pink-400 bg-white/80">
+            <p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p>
+            <p class="text-2xl font-black italic text-gray-800">£${totalIn.toLocaleString()}</p>
+        </div>
+        <div class="glass-card p-6 border-l-4 border-rose-400 bg-white/80">
+            <p class="text-[9px] font-black uppercase text-gray-400">Expenses</p>
+            <p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p>
+        </div>
+        <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20">
+            <p class="text-[9px] font-black uppercase text-gray-400">Net Profit</p>
+            <p class="text-2xl font-black italic text-emerald-600">£${profit.toLocaleString()}</p>
+        </div>
+        <div class="glass-card p-6 border-l-4 border-blue-400 ${taxApplicable ? 'bg-blue-50/20' : 'bg-gray-50/50 opacity-60'}">
+            <p class="text-[9px] font-black uppercase text-gray-400">Tax Reserve (20%)</p>
+            <p class="text-2xl font-black italic ${taxApplicable ? 'text-blue-600' : 'text-gray-400'}">
+                £${taxAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}
+            </p>
+            <p class="text-[8px] font-bold mt-1 ${taxApplicable ? 'text-blue-400' : 'text-gray-400'}">
+                ${taxApplicable ? 'Trading Allowance Exceeded' : 'Under £1k Allowance'}
+            </p>
+        </div>
+    `;
+}
 
         // 2. POPULATE SIDEBAR BREAKDOWN (Expense Pills)
         const pillsContainer = document.getElementById('expense-pills');
