@@ -756,32 +756,60 @@ function initRevenueChart(sales, expenses) {
     });
 }
        
-// --- 4. INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('expenseForm');
     if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const { error } = await _supabase.from('studio_expenses').insert([{
-                amount: parseFloat(formData.get('amount')),
-                category: formData.get('category'),
-                description: formData.get('description'),
-                date: formData.get('date'),
-                source: 'manual'
-            }]);
-
-            if (error) alert(error.message);
-            else {
-                closeExpenseModal();
-                renderfinancials();
-            }
-        });
+        form.addEventListener('submit', handleExpenseSubmit);
     }
+    
     document.getElementById('export-csv-btn')?.addEventListener('click', exportToCSV);
-    document.getElementById('log-expense-btn')?.addEventListener('click', openExpenseModal);
+    // Note: Make sure your button has this ID or just use the onclick in HTML
+    document.getElementById('log-expense-btn')?.addEventListener('click', () => openExpenseModal());
+    
     renderfinancials();
 });
+
+async function handleExpenseSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const id = document.getElementById('expenseId').value; // Grab the hidden ID
+
+    const payload = {
+        amount: parseFloat(formData.get('amount')),
+        category: formData.get('category'),
+        description: formData.get('description'),
+        date: formData.get('date'),
+        source: 'manual'
+    };
+
+    try {
+        let error;
+        if (id) {
+            // Update existing
+            const result = await _supabase
+                .from('studio_expenses')
+                .update(payload)
+                .eq('id', id);
+            error = result.error;
+        } else {
+            // Insert new
+            const result = await _supabase
+                .from('studio_expenses')
+                .insert([payload]);
+            error = result.error;
+        }
+
+        if (error) throw error;
+
+        showMagicAlert("Success! ✨", id ? "Expense updated." : "Expense recorded.", "success");
+        closeExpenseModal();
+        renderfinancials();
+    } catch (err) {
+        console.error("Save Error:", err);
+        showMagicAlert("Error", err.message, "error");
+    }
+}
 
     // --- SALES LEDGER RENDERER ---
 async function renderSales() {
