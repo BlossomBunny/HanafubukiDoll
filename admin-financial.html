@@ -405,7 +405,7 @@ async function renderfinancials() {
         const profit = totalIn - totalOut;
 
         // 1. POPULATE THE STAT CARDS (Top Row)
-       onst statsContainer = document.getElementById('financial-stats');
+       const statsContainer = document.getElementById('financial-stats');
 if (statsContainer) {
     // Calculate if profit is over the £1000 threshold
     const taxApplicable = profit > 1000;
