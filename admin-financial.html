@@ -353,14 +353,16 @@ async function renderfinancials() {
     const startDate = new Date(startYear, 3, 6);
     const endDate = new Date(startYear + 1, 3, 5);
 
+    // Update the visual Tax Year label in the header
+    const displayLabel = document.getElementById('taxYearDisplay');
+    if (displayLabel) displayLabel.textContent = taxYearFilter.value.replace('-', '/');
+
     try {
-        // 1. Fetch data
         const { data: sales } = await _supabase.from('sales').select('*');
         const { data: expenses } = await _supabase.from('studio_expenses').select('*').order('date', { ascending: true });
 
         if (!sales || !expenses) return;
 
-        // 2. Filter data
         const filteredExpenses = expenses.filter(e => {
             const d = new Date(e.date);
             return d >= startDate && d <= endDate;
@@ -371,11 +373,41 @@ async function renderfinancials() {
             return d >= startDate && d <= endDate;
         });
 
-        // 3. Update Stats Cards
         const totalIn = filteredSales.reduce((sum, s) => sum + Number(s.amount || 0), 0);
         const totalOut = filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
         const profit = totalIn - totalOut;
 
+        // --- NEW: POPULATE HEADER STATS ---
+        document.getElementById('ytd-cash').textContent = `£${totalIn.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        document.getElementById('ytd-out').textContent = `£${totalOut.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        document.getElementById('ytd-profit').textContent = `£${profit.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+
+        // --- NEW: TRADING ALLOWANCE TRACKER (UK £1000 Limit) ---
+        const allowanceBar = document.getElementById('allowanceBar');
+        const allowanceStatus = document.getElementById('allowanceStatus');
+        if (allowanceBar && allowanceStatus) {
+            const allowanceLimit = 1000;
+            const percentage = Math.min((totalIn / allowanceLimit) * 100, 100);
+            
+            allowanceBar.style.width = `${percentage}%`;
+            // Color logic: turns rose if you've hit the limit and need to report to HMRC
+            allowanceBar.className = percentage >= 100 ? 'h-full bg-rose-400' : 'h-full bg-pink-400';
+            
+            allowanceStatus.textContent = totalIn >= allowanceLimit 
+                ? "Limit Reached (Register for Self-Assessment)" 
+                : `£${(allowanceLimit - totalIn).toFixed(0)} remaining`;
+        }
+
+        // --- NEW: COUNTDOWN TO APRIL 5th ---
+        const countdownText = document.getElementById('daysRemainingText');
+        if (countdownText) {
+            const now = new Date();
+            const diff = endDate - now;
+            const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            countdownText.textContent = days > 0 ? days : 0;
+        }
+
+        // 3. Update Stats Cards
         document.getElementById('financial-stats').innerHTML = `
             <div class="glass-card p-6 border-l-4 border-pink-400"><p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p><p class="text-2xl font-black italic">£${totalIn.toLocaleString()}</p></div>
             <div class="glass-card p-6 border-l-4 border-rose-400"><p class="text-[9px] font-black uppercase text-gray-400">Expenses</p><p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p></div>
@@ -387,7 +419,7 @@ async function renderfinancials() {
         if (typeof initRevenueChart === 'function') initRevenueChart(filteredSales, filteredExpenses);
         if (typeof renderRevenueSourceChart === 'function') renderRevenueSourceChart(filteredSales);
 
-        // 5. Populate Expense Table (Now inside the function!)
+        // 5. Populate Expense Table
         const expBody = document.getElementById('expense-tbody');
         if (expBody) {
             expBody.innerHTML = filteredExpenses.length > 0 
@@ -402,7 +434,7 @@ async function renderfinancials() {
                 : '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records found</td></tr>';
         }
 
-        // 6. Populate Sales Table (Now inside the function!)
+        // 6. Populate Sales Table
         const salesBody = document.getElementById('sales-tbody');
         if (salesBody) {
             salesBody.innerHTML = filteredSales.length > 0 
@@ -421,7 +453,7 @@ async function renderfinancials() {
         console.error("Critical Error:", err);
     }
 }
-    
+ 
  function renderRevenueSourceChart(salesData) {
     const ctx = document.getElementById('chartSources');
     if (!ctx) return;
