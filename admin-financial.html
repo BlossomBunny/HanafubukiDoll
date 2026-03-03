@@ -340,6 +340,7 @@ async function editExpense(id) {
         console.error("Error fetching expense:", err);
         showMagicAlert("Error", "Could not load expense data.", "error");
     }
+}
 
 function toggleTaxModal() {
     const modal = document.getElementById('taxHelpModal');
@@ -667,7 +668,7 @@ if (tipText) {
         "Did you travel for a gallery or con? Log those mileage or travel costs!",
         "Your website hosting and domain are 100% tax deductible."
     ];
-    
+
     if (profit > 12570) {
         tipText.textContent = "You're over the personal allowance! Consider a pension contribution to lower your tax bill.";
     } else {
@@ -675,20 +676,28 @@ if (tipText) {
     }
 }
 
- 
- function renderRevenueSourceChart(salesData) {
+// Moved outside of renderfinancials() — should be a top-level helper function
+function renderRevenueSourceChart(salesData) {
     const ctx = document.getElementById('chartSources');
     if (!ctx) return;
-    if (window.sourceChartInstance) window.sourceChartInstance.destroy();
+
+    // Clean up previous chart instance to prevent memory leaks / canvas errors
+    if (window.sourceChartInstance) {
+        window.sourceChartInstance.destroy();
+    }
 
     const totals = salesData.reduce((acc, s) => {
-        acc[s.category] = (acc[s.category] || 0) + Number(s.amount);
+        const category = s.category || 'Uncategorized';
+        acc[category] = (acc[category] || 0) + Number(s.amount || 0);
         return acc;
     }, {});
 
-    const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+    const grandTotal = Object.values(totals).reduce((sum, val) => sum + val, 0);
+
     const centerEl = document.getElementById('centerRevenueTotal');
-    if (centerEl) centerEl.textContent = `£${grandTotal.toLocaleString()}`;
+    if (centerEl) {
+        centerEl.textContent = `£${grandTotal.toLocaleString('en-GB', { minimumFractionDigits: 0 })}`;
+    }
 
     window.sourceChartInstance = new Chart(ctx.getContext('2d'), {
         type: 'doughnut',
@@ -696,14 +705,22 @@ if (tipText) {
             labels: Object.keys(totals),
             datasets: [{
                 data: Object.values(totals),
-                backgroundColor: ['#f472b6', '#60a5fa', '#34d399', '#a78bfa', '#fbbf24'],
+                backgroundColor: [
+                    '#f472b6',  // pink
+                    '#60a5fa',  // blue
+                    '#34d399',  // mint
+                    '#a78bfa',  // purple
+                    '#fbbf24'   // amber
+                ],
                 borderWidth: 4,
                 borderColor: '#ffffff'
             }]
         },
         options: {
             cutout: '75%',
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false }
+            },
             maintainAspectRatio: false,
             responsive: true
         }
