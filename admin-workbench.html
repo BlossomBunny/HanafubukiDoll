@@ -125,42 +125,46 @@ async function handleFullPaymentClick() {
 async function markAsPaidInFull(jobId, totalPrice) {
     showMagicAlert(
         "Confirm Full Payment? 💸",
-        `This will record a payment of £${totalPrice.toFixed(2)} and mark the order as fully paid.`,
+        `Recording payment of £${totalPrice.toFixed(2)}.`,
         "confirm",
         async () => {
             try {
-                // 1. Create the payment object
+                // 1. Fetch current job to avoid overwriting existing partial payments (if any)
+                const { data: job } = await _supabase
+                    .from('commissions')
+                    .select('payments')
+                    .eq('id', jobId)
+                    .single();
+
+                const currentPayments = job.payments || [];
+                
+                // 2. Add the new "Full" payment to the array instead of replacing it
                 const fullPayment = {
                     amount: totalPrice,
                     date: new Date().toISOString(),
-                    method: 'Manual/Full'
+                    method: 'Paid in Full'
                 };
 
-                // 2. Update Supabase: 
-                // We set status to 'Paid' AND put the money in the 'payments' array
                 const { error } = await _supabase
                     .from('commissions')
                     .update({
                         payment_status: 'Paid',
-                        payments: [fullPayment] // This overwrites/sets the payment history
+                        payments: [...currentPayments, fullPayment] 
                     })
                     .eq('id', jobId);
 
                 if (error) throw error;
 
-                // 3. UI Success Feedback
-                showMagicAlert("Success! ✨", "Payment recorded and balance cleared.", "success");
+                showMagicAlert("Success! ✨", "Payment added to history.", "success");
                 
-                // 4. THE REFRESH: This makes the "Outstanding" balance update to £0.00
-                await openDrawer(jobId); 
-                
+                // 3. REFRESH EVERYTHING
+                await openDrawer(jobId); // This re-renders the history list
                 if (typeof renderWorkbench === 'function') renderWorkbench();
-                if (typeof renderSummary === 'function') renderSummary();
                 if (typeof renderfinancials === 'function') renderfinancials();
 
             } catch (err) {
                 console.error("Payment error:", err);
-                showMagicAlert("Error", "Could not update payment: " + err.message, "error");
+                showMagicAlert("Error", err.message, "error");
             }
         }
     );
