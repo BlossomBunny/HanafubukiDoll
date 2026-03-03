@@ -374,8 +374,8 @@ async function renderfinancials() {
         `;
 
         // 3. Render the two big charts equally
-        initRevenueChart(filteredSales, filteredExpenses); // This makes the Bar Chart
-        renderRevenueSourceChart(filteredSales);           // This makes the Doughnut
+        initRevenueChart(filteredSales, filteredExpenses); 
+        renderRevenueSourceChart(filteredSales);          
 
         // 4. Render Sidebar Pills
         const catTotals = filteredExpenses.reduce((acc, curr) => {
@@ -410,10 +410,6 @@ async function renderfinancials() {
             </tr>
         `).join('') || '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records found</td></tr>';
     }
-
-    initRevenueChart(commissions, filteredExpenses);
-    
-    renderRevenueSourceChart(filteredSales);
     
  function renderRevenueSourceChart(salesData) {
     const ctx = document.getElementById('chartSources');
