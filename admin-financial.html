@@ -299,21 +299,18 @@ async function renderfinancials() {
     const { data: commissions } = await _supabase.from('commissions').select('*');
     if (!commissions) return;
 
-  // --- Auto-create/Sync shipping rows ---
-const commissionsWithShipping = commissions.filter(c => Number(c.shipping_cost) > 0);
-
-for (const c of commissionsWithShipping) {
-    await _supabase.from('studio_expenses').upsert({
-        amount: Number(c.shipping_cost),
-        category: 'Shipping',
-        description: `Postage for ${c.customer_name || 'Commission'}`,
-        date: c.created_at.split('T')[0],
-        commission_id: c.id,
-        source: 'shipping_auto'
-    }, { 
-        onConflict: 'commission_id' 
-    });
-}
+    // --- Auto-create/Sync shipping rows ---
+    const commissionsWithShipping = commissions.filter(c => Number(c.shipping_cost) > 0);
+    for (const c of commissionsWithShipping) {
+        await _supabase.from('studio_expenses').upsert({
+            amount: Number(c.shipping_cost),
+            category: 'Shipping',
+            description: `Postage for ${c.customer_name || 'Commission'}`,
+            date: c.created_at.split('T')[0],
+            commission_id: c.id,
+            source: 'shipping_auto'
+        }, { onConflict: 'commission_id' });
+    }
 
     const { data: expenses } = await _supabase.from('studio_expenses').select('*').order('date', { ascending: true });
     if (!expenses) return;
@@ -323,7 +320,7 @@ for (const c of commissionsWithShipping) {
         return d >= startDate && d <= endDate;
     });
 
-    // --- 1. Calculate Category Totals (Fixed Logic) ---
+    // --- 1. Calculate Category Totals ---
     const catTotals = filteredExpenses.reduce((acc, curr) => {
         acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
         return acc;
@@ -354,46 +351,41 @@ for (const c of commissionsWithShipping) {
     const profit = totalIn - totalOut;
     const taxNeeded = profit > 1000 ? (profit * 0.20) : 0;
 
-// --- Trading Allowance Tracker Logic ---
-const allowanceLimit = 1000;
-const allowancePercent = Math.min((totalIn / allowanceLimit) * 100, 100);
-const allowanceStatus = document.getElementById('allowanceStatus');
-const allowanceBar = document.getElementById('allowanceBar');
+    // --- 3. Update YTD Cards & Allowance Tracker ---
+    const updateElText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = `£${val.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    };
 
-if (allowanceStatus && allowanceBar) {
-    // Update the text
-    if (totalIn >= allowanceLimit) {
-        allowanceStatus.innerText = "Limit Reached! ⚠️";
-        allowanceStatus.className = "text-[9px] font-black text-rose-500 italic";
-        allowanceBar.className = "h-full bg-rose-500 transition-all duration-1000";
-    } else {
-        const remaining = allowanceLimit - totalIn;
-        allowanceStatus.innerText = `£${remaining.toLocaleString()} remaining`;
-        allowanceStatus.className = "text-[9px] font-black text-pink-500 italic";
-        allowanceBar.className = "h-full bg-pink-500 transition-all duration-1000";
+    updateElText('ytd-cash', totalIn);
+    updateElText('ytd-out', totalOut);
+    updateElText('ytd-profit', profit);
+
+    const allowanceLimit = 1000;
+    const allowancePercent = Math.min((totalIn / allowanceLimit) * 100, 100);
+    const allowanceStatus = document.getElementById('allowanceStatus');
+    const allowanceBar = document.getElementById('allowanceBar');
+
+    if (allowanceStatus && allowanceBar) {
+        if (totalIn >= allowanceLimit) {
+            allowanceStatus.innerText = "Limit Reached! ⚠️";
+            allowanceStatus.className = "text-[9px] font-black text-rose-500 italic";
+            allowanceBar.className = "h-full bg-rose-500 transition-all duration-1000";
+        } else {
+            const remaining = allowanceLimit - totalIn;
+            allowanceStatus.innerText = `£${remaining.toLocaleString()} remaining`;
+            allowanceStatus.className = "text-[9px] font-black text-pink-500 italic";
+            allowanceBar.className = "h-full bg-pink-500 transition-all duration-1000";
+        }
+        allowanceBar.style.width = `${allowancePercent}%`;
     }
-    
-    // Update the progress bar width
-    allowanceBar.style.width = `${allowancePercent}%`;
-}
 
-    // YTD Cards
-    const updateEl = (id, val, colorClass) => {
-    const el = document.getElementById(id);
-    if (el) el.innerText = `£${val.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-};
+    if (taxYearFilter) {
+        const display = document.getElementById('taxYearDisplay');
+        if (display) display.innerText = taxYearFilter.value;
+    }
 
-updateEl('ytd-cash', totalIn);
-updateEl('ytd-out', totalOut);
-updateEl('ytd-profit', profit);
-
-// Update the Tax Year Display too
-const taxYearFilter = document.getElementById('taxYearFilter');
-if (taxYearFilter) {
-    document.getElementById('taxYearDisplay').innerText = taxYearFilter.value;
-}
-    
-    // --- 3. Update UI Stats ---
+    // --- 4. Main Stats & Table Rendering ---
     const daysLeft = typeof getTaxYearStats === 'function' ? getTaxYearStats() : 0;
     const daysEl = document.getElementById('daysRemainingText');
     if (daysEl) daysEl.innerText = daysLeft;
@@ -417,38 +409,38 @@ if (taxYearFilter) {
         </div>
     `;
 
-// --- 4. Render Table (Updated with Category for Receipt Logic) ---
-document.getElementById('expense-tbody').innerHTML = filteredExpenses.map(e => `
-    <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
-        <td class="py-4 pl-2">
-            <span class="text-[10px] font-black text-pink-400 bg-pink-50 px-2 py-1 rounded-md">
-                ${new Date(e.date).toLocaleDateString('en-GB')}
-            </span>
-        </td>
-        <td class="py-4">
-            <span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-500 border border-gray-200">
-                ${e.category}
-            </span>
-        </td>
-        <td class="py-4 text-xs font-bold text-gray-700">${e.description || '---'}</td>
-        <td class="py-4 text-right text-xs font-black text-rose-500">
-            -£${Number(e.amount).toFixed(2)}
-        </td>
-        <td class="py-4 text-center">
-            <div class="flex items-center justify-center gap-3">
-                ${e.receipt_url 
-                    ? `<a href="${e.receipt_url}" target="_blank" class="text-blue-500 hover:scale-110 transition-transform" title="View Receipt">📎</a>
-                       <button onclick="removeReceipt('${e.id}')" class="text-rose-300 hover:text-rose-500 text-[10px] font-bold">DEL</button>`
-                    : `<button onclick="uploadReceipt('${e.id}', '${e.category}')" class="text-gray-300 hover:text-blue-500 text-[9px] font-black uppercase tracking-tighter border border-dashed border-gray-300 px-2 py-1 rounded-lg">+ Receipt</button>`
-                }
-                <button onclick="deleteExpense('${e.id}')" class="text-gray-200 hover:text-rose-500 ml-2 transition-colors">🗑️</button>
-            </div>
-        </td>
-    </tr>
-`).join('') || `<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records found for this period</td></tr>`;
-    
+    document.getElementById('expense-tbody').innerHTML = filteredExpenses.map(e => `
+        <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
+            <td class="py-4 pl-2">
+                <span class="text-[10px] font-black text-pink-400 bg-pink-50 px-2 py-1 rounded-md">
+                    ${new Date(e.date).toLocaleDateString('en-GB')}
+                </span>
+            </td>
+            <td class="py-4">
+                <span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-500 border border-gray-200">
+                    ${e.category}
+                </span>
+            </td>
+            <td class="py-4 text-xs font-bold text-gray-700">${e.description || '---'}</td>
+            <td class="py-4 text-right text-xs font-black text-rose-500">
+                £${Number(e.amount).toFixed(2)}
+            </td>
+            <td class="py-4 text-center">
+                <div class="flex items-center justify-center gap-3">
+                    ${e.receipt_url 
+                        ? `<a href="${e.receipt_url}" target="_blank" class="text-blue-500 hover:scale-110 transition-transform">📎</a>
+                           <button onclick="removeReceipt('${e.id}')" class="text-rose-300 hover:text-rose-500 text-[10px] font-bold">DEL</button>`
+                        : `<button onclick="uploadReceipt('${e.id}', '${e.category}')" class="text-gray-300 hover:text-blue-500 text-[9px] font-black uppercase tracking-tighter border border-dashed border-gray-300 px-2 py-1 rounded-lg">+ Receipt</button>`
+                    }
+                    <button onclick="deleteExpense('${e.id}')" class="text-gray-200 hover:text-rose-500 ml-2 transition-colors">🗑️</button>
+                </div>
+            </td>
+        </tr>
+    `).join('') || `<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records found for this period</td></tr>`;
+
     initRevenueChart(commissions, filteredExpenses);
 }
+    
 function initRevenueChart(commissions, expenses) {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) return;
