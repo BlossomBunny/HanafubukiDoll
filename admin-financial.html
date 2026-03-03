@@ -341,7 +341,6 @@ async function editExpense(id) {
         showMagicAlert("Error", "Could not load expense data.", "error");
     }
 }
-    }
 
 function toggleTaxModal() {
     const modal = document.getElementById('taxHelpModal');
@@ -676,7 +675,7 @@ if (tipText) {
         tipText.textContent = tips[Math.floor(Math.random() * tips.length)];
     }
 }
-        }
+
  
  function renderRevenueSourceChart(salesData) {
     const ctx = document.getElementById('chartSources');
