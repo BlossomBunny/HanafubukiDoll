@@ -95,7 +95,7 @@
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-1">Performance</h3>
-                <p class="text-md font-black italic text-gray-800">Rev vs Expenses</p>
+                <p class="text-md font-black italic text-gray-800">Revenue vs Expenses</p>
             </div>
             <select id="taxYearFilter" onchange="renderfinancials()" class="text-[9px] font-black border-none bg-pink-50 rounded-lg p-1.5 outline-none text-pink-500 cursor-pointer">
                 <option value="2025-26">25/26</option>
@@ -108,13 +108,13 @@
     </div>
 
     <div class="lg:col-span-3 glass-card p-6 bg-white/80 border-none shadow-sm flex flex-col">
-        <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4">Top Spending</h3>
+        <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4">Expenses Breakdown</h3>
         <div id="expense-pills" class="flex flex-col gap-2 overflow-y-auto max-h-[250px] pr-1">
             </div>
     </div>
 
     <div class="lg:col-span-3 glass-card p-6 bg-white/80 border-none shadow-sm flex flex-col">
-        <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4">Rev Sources ♡</h3>
+        <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4">Revenue Sources ♡</h3>
         <div class="relative flex-grow min-h-[180px]">
             <canvas id="chartSources"></canvas>
             
