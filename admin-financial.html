@@ -78,12 +78,11 @@
     </button>
 </div>
     
- <main class="max-w-[1600px] mx-auto p-4 md:p-10 space-y-10">
-    <div id="financial-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+<main class="max-w-[1600px] mx-auto p-4 md:p-10 space-y-10">
+    <div id="financial-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        
         <div class="lg:col-span-5 glass-card p-8 bg-white/80 flex flex-col min-h-[500px]">
             <div class="flex justify-between items-center mb-6">
                 <div>
@@ -95,15 +94,12 @@
                     <option value="2024-25">24/25</option>
                 </select>
             </div>
-            <div class="flex-grow relative">
-                <canvas id="revenueChart"></canvas>
-            </div>
+            <div class="flex-grow relative"><canvas id="revenueChart"></canvas></div>
         </div>
 
         <div class="lg:col-span-5 glass-card p-8 bg-white/80 flex flex-col min-h-[500px]">
             <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Income Streams</h3>
             <p class="text-xl font-black italic text-gray-800 mb-6 leading-none">Revenue Sources ♡</p>
-            
             <div class="flex-grow relative flex items-center justify-center">
                 <div class="w-full aspect-square max-w-[340px] relative">
                     <canvas id="chartSources"></canvas>
@@ -118,60 +114,51 @@
         <div class="lg:col-span-2 flex flex-col gap-4">
             <div class="glass-card p-5 bg-white/80 flex-grow">
                 <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4">Breakdown</h3>
-                <div id="expense-pills" class="flex flex-col gap-2">
-                    </div>
+                <div id="expense-pills" class="flex flex-col gap-2"></div>
             </div>
             <div class="glass-card p-4 bg-lime-50/50 border-lime-100 border text-lime-700">
-                <p class="text-[8px] font-black uppercase mb-1">💡 Tip</p>
-                <p class="text-[10px] font-bold leading-tight italic">Claim home office costs!</p>
+                <p class="text-[8px] font-black uppercase mb-1 leading-none">💡 Tip</p>
+                <p class="text-[10px] font-bold leading-tight italic">Claim your home studio utilities!</p>
             </div>
         </div>
     </div>
 
-    </main>
-
-    <div class="glass-card p-8 bg-white/80 border-none shadow-sm mt-10">
-    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <div>
-            <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Sales Ledger</h3>
-            <p class="text-[9px] text-gray-400 uppercase font-bold italic">Revenue & Income Tracking</p>
-        </div>
-        <button onclick="openSalesModal()" class="nav-btn nav-btn-mint text-[10px] px-4 py-2">+ Log Sale</button>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-left min-w-[640px]">
-            <thead>
-                <tr class="text-[10px] uppercase text-gray-400 border-b border-pink-50">
-                    <th class="pb-4 pl-2">Date</th>
-                    <th class="pb-4">Category</th>
-                    <th class="pb-4">Source</th>
-                    <th class="pb-4 text-right">Amount</th>
-                    <th class="pb-4 text-center">Action</th>
-                </tr>
-            </thead>
-            <tbody id="sales-tbody" class="text-sm">
-                </tbody>
-        </table>
-    </div>
-</div>
-       
-       <!-- Expense Records table (full width, below the grid) -->
     <div class="glass-card p-8 bg-white/80 border-none shadow-sm">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 md:gap-6">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+                <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Sales Ledger</h3>
+                <p class="text-[9px] text-gray-400 uppercase font-bold italic">Revenue & Income Tracking</p>
+            </div>
+            <button onclick="openSalesModal()" class="nav-btn nav-btn-mint text-[10px] px-4 py-2">+ Log Sale</button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left min-w-[640px]">
+                <thead>
+                    <tr class="text-[10px] uppercase text-gray-400 border-b border-pink-50">
+                        <th class="pb-4 pl-2">Date</th>
+                        <th class="pb-4">Category</th>
+                        <th class="pb-4">Source</th>
+                        <th class="pb-4 text-right">Amount</th>
+                        <th class="pb-4 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="sales-tbody" class="text-sm"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="glass-card p-8 bg-white/80 border-none shadow-sm">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div>
                 <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Expense Records</h3>
                 <p class="text-[9px] text-gray-400 uppercase font-bold italic">Self-Assessment Audit Trail</p>
             </div>
-            
-            <div class="flex gap-3 sm:gap-4">
-                <button id="export-csv-btn" class="nav-btn nav-btn-pink text-[10px] whitespace-nowrap px-4 py-2">💾 Export CSV</button>
-                <button id="log-expense-btn" class="nav-btn nav-btn-mint text-[10px] whitespace-nowrap px-4 py-2">+ Log Expense</button>
+            <div class="flex gap-3">
+                <button id="export-csv-btn" class="nav-btn nav-btn-pink text-[10px] px-4 py-2">Export CSV</button>
+                <button onclick="openExpenseModal()" class="nav-btn nav-btn-mint text-[10px] px-4 py-2">+ Log Expense</button>
             </div>
         </div>
-
         <div class="overflow-x-auto">
-            
             <table class="w-full text-left min-w-[640px]">
                 <thead>
                     <tr class="text-[10px] uppercase text-gray-400 border-b border-pink-50">
@@ -186,7 +173,6 @@
             </table>
         </div>
     </div>
-
 </main>
     
 <script>
@@ -359,7 +345,6 @@ function exportToCSV() {
     link.download = `Hanafubuki_Expenses.csv`;
     link.click();
 }
-
 async function renderfinancials() {
     const taxYearFilter = document.getElementById('taxYearFilter');
     if (!taxYearFilter) return;
@@ -369,13 +354,13 @@ async function renderfinancials() {
     const endDate = new Date(startYear + 1, 3, 5);
 
     try {
-        // Fetch everything from Supabase
+        // 1. Fetch data
         const { data: sales } = await _supabase.from('sales').select('*');
         const { data: expenses } = await _supabase.from('studio_expenses').select('*').order('date', { ascending: true });
 
         if (!sales || !expenses) return;
 
-        // Filter by the selected Tax Year
+        // 2. Filter data
         const filteredExpenses = expenses.filter(e => {
             const d = new Date(e.date);
             return d >= startDate && d <= endDate;
@@ -386,12 +371,11 @@ async function renderfinancials() {
             return d >= startDate && d <= endDate;
         });
 
-        // 1. Calculate Totals for Stats Cards
+        // 3. Update Stats Cards
         const totalIn = filteredSales.reduce((sum, s) => sum + Number(s.amount || 0), 0);
         const totalOut = filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
         const profit = totalIn - totalOut;
 
-        // 2. Update Stats Cards (Top row)
         document.getElementById('financial-stats').innerHTML = `
             <div class="glass-card p-6 border-l-4 border-pink-400"><p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p><p class="text-2xl font-black italic">£${totalIn.toLocaleString()}</p></div>
             <div class="glass-card p-6 border-l-4 border-rose-400"><p class="text-[9px] font-black uppercase text-gray-400">Expenses</p><p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p></div>
@@ -399,73 +383,43 @@ async function renderfinancials() {
             <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20"><p class="text-[9px] font-black uppercase text-gray-400">Tax Reserve</p><p class="text-2xl font-black italic text-blue-600">£${(profit > 1000 ? profit * 0.2 : 0).toLocaleString()}</p></div>
         `;
 
-        // 3. Render the two big charts equally
-        initRevenueChart(filteredSales, filteredExpenses); 
-        renderRevenueSourceChart(filteredSales);          
+        // 4. Render Charts
+        if (typeof initRevenueChart === 'function') initRevenueChart(filteredSales, filteredExpenses);
+        if (typeof renderRevenueSourceChart === 'function') renderRevenueSourceChart(filteredSales);
 
-        // 4. Render Sidebar Pills
-        const catTotals = filteredExpenses.reduce((acc, curr) => {
-            acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
-            return acc;
-        }, {});
-        document.getElementById('expense-pills').innerHTML = Object.entries(catTotals)
-            .sort((a, b) => b[1] - a[1])
-            .map(([cat, amt]) => `
-                <div class="flex justify-between items-center bg-gray-50/50 p-2 rounded-xl border border-pink-50/50">
-                    <span class="text-[9px] font-black uppercase text-gray-500">${cat}</span>
-                    <span class="text-xs font-black text-pink-500">£${amt.toFixed(0)}</span>
-                </div>
-            `).join('') || '<p class="text-xs italic text-gray-400">No data</p>';
+        // 5. Populate Expense Table (Now inside the function!)
+        const expBody = document.getElementById('expense-tbody');
+        if (expBody) {
+            expBody.innerHTML = filteredExpenses.length > 0 
+                ? filteredExpenses.map(e => `
+                    <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
+                        <td class="py-4 pl-2"><span class="text-[10px] font-black text-pink-400 bg-pink-50 px-2 py-1 rounded-md">${new Date(e.date).toLocaleDateString('en-GB')}</span></td>
+                        <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-500 border border-gray-200">${e.category}</span></td>
+                        <td class="py-4 text-xs font-bold text-gray-700">${e.description || '---'}</td>
+                        <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
+                        <td class="py-4 text-center"><button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">🗑️</button></td>
+                    </tr>`).join('')
+                : '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records found</td></tr>';
+        }
+
+        // 6. Populate Sales Table (Now inside the function!)
+        const salesBody = document.getElementById('sales-tbody');
+        if (salesBody) {
+            salesBody.innerHTML = filteredSales.length > 0 
+                ? filteredSales.map(s => `
+                    <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
+                        <td class="py-4 pl-2 text-xs font-bold text-gray-600">${new Date(s.sale_date).toLocaleDateString('en-GB')}</td>
+                        <td class="py-4"><span class="px-2 py-1 rounded-md bg-pink-50 text-[9px] font-black uppercase text-pink-500">${s.category}</span></td>
+                        <td class="py-4 text-xs text-gray-500 uppercase font-black">${s.source || 'Manual'}</td>
+                        <td class="py-4 text-right text-xs font-black text-emerald-500">£${Number(s.amount).toFixed(2)}</td>
+                        <td class="py-4 text-center"><button onclick="deleteSale('${s.id}')" class="text-gray-300 hover:text-rose-500">🗑️</button></td>
+                    </tr>`).join('')
+                : '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No sales recorded</td></tr>';
+        }
 
     } catch (err) {
         console.error("Critical Error:", err);
     }
-}
-    // 5. Render Table
-    const tbody = document.getElementById('expense-tbody');
-if (tbody) {
-
-    tbody.innerHTML = filteredExpenses.length > 0 
-        ? filteredExpenses.map(e => `
-            <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
-                <td class="py-4 pl-2">
-                    <span class="text-[10px] font-black text-pink-400 bg-pink-50 px-2 py-1 rounded-md">
-                        ${new Date(e.date).toLocaleDateString('en-GB')}
-                    </span>
-                </td>
-                <td class="py-4">
-                    <span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-500 border border-gray-200">
-                        ${e.category}
-                    </span>
-                </td>
-                <td class="py-4 text-xs font-bold text-gray-700">${e.description || '---'}</td>
-                <td class="py-4 text-right text-xs font-black text-rose-500">
-                    £${Number(e.amount).toFixed(2)}
-                </td>
-                <td class="py-4 text-center">
-                    <button onclick="deleteExpense('${e.id}')" class="text-gray-200 hover:text-rose-500 transition-colors">🗑️</button>
-                </td>
-            </tr>
-        `).join('')
-        : '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records found for this period</td></tr>';
-}
-    
-    // 7. Render Sales Table
-const salesTbody = document.getElementById('sales-tbody');
-if (salesTbody) {
-    salesTbody.innerHTML = filteredSales.length > 0 
-        ? filteredSales.map(s => `
-            <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
-                <td class="py-4 pl-2 text-xs font-bold text-gray-600">${new Date(s.sale_date).toLocaleDateString('en-GB')}</td>
-                <td class="py-4"><span class="px-2 py-1 rounded-md bg-pink-50 text-[9px] font-black uppercase text-pink-500">${s.category}</span></td>
-                <td class="py-4 text-xs text-gray-500 uppercase font-black">${s.source}</td>
-                <td class="py-4 text-right text-xs font-black text-emerald-500">£${Number(s.amount).toFixed(2)}</td>
-                <td class="py-4 text-center">
-                    <button onclick="deleteSale('${s.id}')" class="text-gray-200 hover:text-rose-500 transition-colors">🗑️</button>
-                </td>
-            </tr>
-        `).join('')
-        : '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No sales recorded</td></tr>';
 }
     
  function renderRevenueSourceChart(salesData) {
