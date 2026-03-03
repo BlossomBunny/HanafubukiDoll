@@ -78,67 +78,57 @@
     </button>
 </div>
     
-   <main class="max-w-5xl mx-auto p-4 md:p-10 space-y-10">
-
-    <!-- 4 stat cards (Cash, Expenses, Profit, Pending) -->
+ <main class="max-w-[1600px] mx-auto p-4 md:p-10 space-y-10">
     <div id="financial-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <div class="glass-card p-6 animate-pulse bg-gray-50 h-24"></div>
-        <div class="glass-card p-6 animate-pulse bg-gray-50 h-24"></div>
-        <div class="glass-card p-6 animate-pulse bg-gray-50 h-24"></div>
-        <div class="glass-card p-6 animate-pulse bg-gray-50 h-24"></div>
-    </div>
-        
-        <!-- Chart card (spans 2 columns on lg screens) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10 items-stretch">
-    
-    <div class="lg:col-span-5 glass-card p-8 bg-white/80 border-none shadow-sm flex flex-col min-h-[450px]">
-        <div class="flex justify-between items-start mb-6">
-            <div>
-                <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Performance</h3>
-                <p class="text-xl font-black italic text-gray-800 leading-none">Revenue vs Expenses</p>
-            </div>
-            <select id="taxYearFilter" onchange="renderfinancials()" class="text-[10px] font-black border-none bg-pink-50 rounded-lg p-2 outline-none text-pink-500">
-                <option value="2025-26">25/26</option>
-                <option value="2024-25">24/25</option>
-            </select>
         </div>
-        <div class="flex-grow relative">
-            <canvas id="revenueChart"></canvas>
-        </div>
-    </div>
 
-    <div class="lg:col-span-5 glass-card p-8 bg-white/80 border-none shadow-sm flex flex-col min-h-[450px]">
-        <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Income Streams</h3>
-        <p class="text-xl font-black italic text-gray-800 mb-6 leading-none">Revenue Sources ♡</p>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
-        <div class="flex-grow relative flex items-center justify-center">
-            <div class="w-full aspect-square max-w-[320px] relative">
-                <canvas id="chartSources"></canvas>
-                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span class="text-[9px] font-black uppercase text-gray-400">Total</span>
-                    <span id="centerRevenueTotal" class="text-lg font-black text-gray-800">£0</span>
+        <div class="lg:col-span-5 glass-card p-8 bg-white/80 flex flex-col min-h-[500px]">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Performance</h3>
+                    <p class="text-xl font-black italic text-gray-800 leading-none">Revenue vs Expenses</p>
+                </div>
+                <select id="taxYearFilter" onchange="renderfinancials()" class="text-[10px] font-black border-none bg-pink-50 rounded-lg p-2 text-pink-500">
+                    <option value="2025-26">25/26</option>
+                    <option value="2024-25">24/25</option>
+                </select>
+            </div>
+            <div class="flex-grow relative">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <div class="lg:col-span-5 glass-card p-8 bg-white/80 flex flex-col min-h-[500px]">
+            <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Income Streams</h3>
+            <p class="text-xl font-black italic text-gray-800 mb-6 leading-none">Revenue Sources ♡</p>
+            
+            <div class="flex-grow relative flex items-center justify-center">
+                <div class="w-full aspect-square max-w-[340px] relative">
+                    <canvas id="chartSources"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span class="text-[9px] font-black uppercase text-gray-400">Total</span>
+                        <span id="centerRevenueTotal" class="text-xl font-black text-gray-800">£0</span>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <div class="lg:col-span-2 flex flex-col gap-4">
+            <div class="glass-card p-5 bg-white/80 flex-grow">
+                <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4">Breakdown</h3>
+                <div id="expense-pills" class="flex flex-col gap-2">
+                    </div>
+            </div>
+            <div class="glass-card p-4 bg-lime-50/50 border-lime-100 border text-lime-700">
+                <p class="text-[8px] font-black uppercase mb-1">💡 Tip</p>
+                <p class="text-[10px] font-bold leading-tight italic">Claim home office costs!</p>
+            </div>
+        </div>
     </div>
 
-    <div class="lg:col-span-2 flex flex-col gap-4">
-        <div class="glass-card p-5 bg-white/80 border-none shadow-sm flex-grow">
-            <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4 leading-tight">Spending Breakdown</h3>
-            <div id="expense-pills" class="flex flex-col gap-2 overflow-y-auto max-h-[220px]">
-                </div>
-        </div>
-
-        <div class="glass-card p-4 bg-lime-50/50 border-lime-100 border text-lime-700">
-            <p class="text-[8px] font-black uppercase mb-1">💡 Quick Tip</p>
-            <p class="text-[10px] font-bold leading-tight italic">Claim your home studio utilities!</p>
-        </div>
-        <div class="glass-card p-4 bg-pink-50/50 border-pink-100 border text-pink-700">
-            <p class="text-[8px] font-black uppercase mb-1">📅 Reminder</p>
-            <p class="text-[10px] font-bold leading-tight italic">Quarterly check-in due soon.</p>
-        </div>
-    </div>
-</div>
+    </main>
        
        <!-- Expense Records table (full width, below the grid) -->
     <div class="glass-card p-8 bg-white/80 border-none shadow-sm">
@@ -352,75 +342,60 @@ async function renderfinancials() {
     const startDate = new Date(startYear, 3, 6);
     const endDate = new Date(startYear + 1, 3, 5);
 
-    // 1. Fetch Everything
-    const { data: commissions } = await _supabase.from('commissions').select('*');
-    const { data: sales } = await _supabase.from('sales').select('*');
-    const { data: expenses } = await _supabase.from('studio_expenses').select('*').order('date', { ascending: true });
+    try {
+        // Fetch everything from Supabase
+        const { data: sales } = await _supabase.from('sales').select('*');
+        const { data: expenses } = await _supabase.from('studio_expenses').select('*').order('date', { ascending: true });
 
-    if (!commissions || !sales || !expenses) return;
+        if (!sales || !expenses) return;
 
-    // 2. Filter Data
-    const filteredExpenses = expenses.filter(e => {
-        const d = new Date(e.date);
-        return d >= startDate && d <= endDate;
-    });
+        // Filter by the selected Tax Year
+        const filteredExpenses = expenses.filter(e => {
+            const d = new Date(e.date);
+            return d >= startDate && d <= endDate;
+        });
 
-    const filteredSales = sales.filter(s => {
-        const d = new Date(s.sale_date);
-        return d >= startDate && d <= endDate;
-    });
+        const filteredSales = sales.filter(s => {
+            const d = new Date(s.sale_date);
+            return d >= startDate && d <= endDate;
+        });
 
-    // 3. Math Calculations
-    const totalIn = filteredSales.reduce((sum, s) => sum + Number(s.amount || 0), 0);
-    const totalOut = filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
-    const profit = totalIn - totalOut;
-    const taxNeeded = profit > 1000 ? (profit * 0.20) : 0;
+        // 1. Calculate Totals for Stats Cards
+        const totalIn = filteredSales.reduce((sum, s) => sum + Number(s.amount || 0), 0);
+        const totalOut = filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+        const profit = totalIn - totalOut;
 
-    // --- Update Global UI (Stats Cards & Allowance Bar) ---
-    const updateElText = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = `£${val.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    };
-
-    updateElText('ytd-cash', totalIn);
-    updateElText('ytd-out', totalOut);
-    updateElText('ytd-profit', profit);
-
-    // Update the visual stats grid
-    const statsContainer = document.getElementById('financial-stats');
-    if (statsContainer) {
-        statsContainer.innerHTML = `
+        // 2. Update Stats Cards (Top row)
+        document.getElementById('financial-stats').innerHTML = `
             <div class="glass-card p-6 border-l-4 border-pink-400"><p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p><p class="text-2xl font-black italic">£${totalIn.toLocaleString()}</p></div>
             <div class="glass-card p-6 border-l-4 border-rose-400"><p class="text-[9px] font-black uppercase text-gray-400">Expenses</p><p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p></div>
             <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20"><p class="text-[9px] font-black uppercase text-gray-400">Net Profit</p><p class="text-2xl font-black italic text-emerald-600">£${profit.toLocaleString()}</p></div>
-            <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20"><p class="text-[9px] font-black uppercase text-gray-400">Tax Reserve</p><p class="text-2xl font-black italic text-blue-600">£${taxNeeded.toLocaleString()}</p></div>
+            <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20"><p class="text-[9px] font-black uppercase text-gray-400">Tax Reserve</p><p class="text-2xl font-black italic text-blue-600">£${(profit > 1000 ? profit * 0.2 : 0).toLocaleString()}</p></div>
         `;
-    }
 
-    // 4. Render the Big Visuals
-    // Pass filteredSales to your main chart so it matches the totals
-    initRevenueChart(filteredSales, filteredExpenses);
-    renderRevenueSourceChart(filteredSales);
+        // 3. Render the two big charts equally
+        initRevenueChart(filteredSales, filteredExpenses); // This makes the Bar Chart
+        renderRevenueSourceChart(filteredSales);           // This makes the Doughnut
 
-    // 5. Render Sidebar (Pills)
-    const catTotals = filteredExpenses.reduce((acc, curr) => {
-        acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
-        return acc;
-    }, {});
-
-    const pillsContainer = document.getElementById('expense-pills');
-    if (pillsContainer) {
-        pillsContainer.innerHTML = Object.entries(catTotals)
+        // 4. Render Sidebar Pills
+        const catTotals = filteredExpenses.reduce((acc, curr) => {
+            acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
+            return acc;
+        }, {});
+        document.getElementById('expense-pills').innerHTML = Object.entries(catTotals)
             .sort((a, b) => b[1] - a[1])
             .map(([cat, amt]) => `
-                <div class="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-pink-50/50">
-                    <span class="text-[10px] font-black uppercase text-gray-500">${cat}</span>
-                    <span class="text-xs font-black text-pink-500">£${amt.toFixed(2)}</span>
+                <div class="flex justify-between items-center bg-gray-50/50 p-2 rounded-xl border border-pink-50/50">
+                    <span class="text-[9px] font-black uppercase text-gray-500">${cat}</span>
+                    <span class="text-xs font-black text-pink-500">£${amt.toFixed(0)}</span>
                 </div>
-            `).join('') || '<p class="text-xs italic text-gray-400 text-center">No categories</p>';
-    }
+            `).join('') || '<p class="text-xs italic text-gray-400">No data</p>';
 
-    // 6. Render Table
+    } catch (err) {
+        console.error("Critical Error:", err);
+    }
+}
+    // 5. Render Table
     const tbody = document.getElementById('expense-tbody');
     if (tbody) {
         tbody.innerHTML = filteredExpenses.map(e => `
