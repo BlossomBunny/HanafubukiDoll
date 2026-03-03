@@ -89,54 +89,57 @@
     </div>
         
         <!-- Chart card (spans 2 columns on lg screens) -->
-       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8 items-stretch">
-    
-    <div class="lg:col-span-6 glass-card p-6 bg-white/80 border-none shadow-sm flex flex-col">
-        <div class="flex justify-between items-center mb-6">
+     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10 items-stretch">
+
+    <div class="lg:col-span-5 glass-card p-8 bg-white/80 border-none shadow-sm min-h-[450px] flex flex-col">
+        <div class="flex justify-between items-center mb-8">
             <div>
-                <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-1">Performance</h3>
-                <p class="text-md font-black italic text-gray-800">Revenue vs Expenses</p>
+                <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Performance</h3>
+                <p class="text-xl font-black italic text-gray-800">Revenue vs Expenses</p>
             </div>
-            <select id="taxYearFilter" onchange="renderfinancials()" class="text-[9px] font-black border-none bg-pink-50 rounded-lg p-1.5 outline-none text-pink-500 cursor-pointer">
+            <select id="taxYearFilter" onchange="renderfinancials()" class="text-[10px] font-black border-none bg-pink-50 rounded-lg p-2 outline-none text-pink-500 cursor-pointer">
                 <option value="2025-26">25/26</option>
                 <option value="2024-25">24/25</option>
             </select>
         </div>
-        <div class="h-[250px]">
+        <div class="flex-grow relative">
             <canvas id="revenueChart"></canvas>
         </div>
     </div>
 
-    <div class="lg:col-span-3 glass-card p-6 bg-white/80 border-none shadow-sm flex flex-col">
-        <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4">Expenses Breakdown</h3>
-        <div id="expense-pills" class="flex flex-col gap-2 overflow-y-auto max-h-[250px] pr-1">
-            </div>
-    </div>
-
-    <div class="lg:col-span-3 glass-card p-6 bg-white/80 border-none shadow-sm flex flex-col">
-        <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4">Revenue Sources ♡</h3>
-        <div class="relative flex-grow min-h-[180px]">
-            <canvas id="chartSources"></canvas>
-            
-            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span class="text-[7px] font-black uppercase text-gray-400">Total</span>
-                <span id="centerRevenueTotal" class="text-xs font-black text-gray-800">£0</span>
+    <div class="lg:col-span-5 glass-card p-8 bg-white/80 border-none shadow-sm min-h-[450px] flex flex-col">
+        <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Income Streams</h3>
+        <p class="text-xl font-black italic text-gray-800 mb-8">Revenue Sources ♡</p>
+        
+        <div class="flex-grow relative flex items-center justify-center">
+            <div class="w-full aspect-square max-w-[320px] relative">
+                <canvas id="chartSources"></canvas>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span class="text-[9px] font-black uppercase text-gray-400">Total Revenue</span>
+                    <span id="centerRevenueTotal" class="text-lg font-black text-gray-800">£0</span>
+                </div>
             </div>
         </div>
     </div>
-</div>
-        
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div id="unified-tax-reserve"></div>
-    <div class="glass-card p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-none flex items-center gap-4">
-        <span class="text-2xl">💡</span>
-        <p class="text-[11px] text-emerald-800 font-medium leading-relaxed">
-            <strong class="uppercase text-[9px] block mb-1">Quick Tip</strong>
-            Claim "Flat Rate" simplified expenses for your home studio utilities!
-        </p>
+
+    <div class="lg:col-span-2 flex flex-col gap-4">
+        <div class="glass-card p-5 bg-white/80 border-none shadow-sm flex-grow">
+            <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4 leading-tight">Spending Breakdown</h3>
+            <div id="expense-pills" class="flex flex-col gap-2 overflow-y-auto max-h-[200px]">
+                </div>
+        </div>
+
+        <div class="glass-card p-4 bg-lime-50/50 border-lime-100 border text-lime-700">
+            <p class="text-[8px] font-black uppercase mb-1">💡 Tip</p>
+            <p class="text-[10px] font-medium leading-tight">Claim home studio costs!</p>
+        </div>
+        <div class="glass-card p-4 bg-blue-50/50 border-blue-100 border text-blue-700">
+            <p class="text-[8px] font-black uppercase mb-1">📅 Note</p>
+            <p class="text-[10px] font-medium leading-tight">Tax check-in due April.</p>
+        </div>
     </div>
 </div>
-        
+       
     <!-- Expense Records table (full width, below the grid) -->
     <div class="glass-card p-8 bg-white/80 border-none shadow-sm">
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 md:gap-6">
@@ -501,6 +504,7 @@ const filteredSales = sales.filter(s => {
     `).join('') || `<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records found for this period</td></tr>`;
 
     initRevenueChart(commissions, filteredExpenses);
+    
     renderRevenueSourceChart(filteredSales);
 }
    function renderRevenueSourceChart(salesData) {
@@ -521,26 +525,35 @@ const filteredSales = sales.filter(s => {
     // Safety: Destroy old chart so it doesn't glitch when you change tax years
     if (window.sourceChartInstance) window.sourceChartInstance.destroy();
 
-    window.sourceChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(totals),
-            datasets: [{
-                data: Object.values(totals),
-                backgroundColor: ['#f472b6', '#60a5fa', '#34d399', '#a78bfa', '#fbbf24'],
-                borderWidth: 0
-            }]
+   window.sourceChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(totals),
+        datasets: [{
+            data: Object.values(totals),
+            backgroundColor: ['#f472b6', '#60a5fa', '#34d399', '#a78bfa', '#fbbf24'],
+            hoverOffset: 20, // Makes segments pop out on hover
+            borderWidth: 4,  // Adds a white "slice" look between segments
+            borderColor: '#ffffff'
+        }]
+    },
+    options: {
+        cutout: '75%', // Perfect balance for the center total
+        plugins: {
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    usePointStyle: true,
+                    padding: 20,
+                    font: { size: 11, weight: '600' }
+                }
+            }
         },
-        options: {
-            cutout: '80%', // Makes the ring thin and modern
-            plugins: {
-                legend: { display: false } // We'll use the doughnut center for the total instead
-            },
-            maintainAspectRatio: false,
-            responsive: true
-        }
-    });
-}
+        maintainAspectRatio: false,
+        responsive: true
+    }
+});
     
 function initRevenueChart(commissions, expenses) {
     const ctx = document.getElementById('revenueChart');
