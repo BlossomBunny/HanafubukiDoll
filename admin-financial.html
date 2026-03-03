@@ -89,15 +89,15 @@
     </div>
         
         <!-- Chart card (spans 2 columns on lg screens) -->
-     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10 items-stretch">
-
-    <div class="lg:col-span-5 glass-card p-8 bg-white/80 border-none shadow-sm min-h-[450px] flex flex-col">
-        <div class="flex justify-between items-center mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10 items-stretch">
+    
+    <div class="lg:col-span-5 glass-card p-8 bg-white/80 border-none shadow-sm flex flex-col min-h-[450px]">
+        <div class="flex justify-between items-start mb-6">
             <div>
                 <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Performance</h3>
-                <p class="text-xl font-black italic text-gray-800">Revenue vs Expenses</p>
+                <p class="text-xl font-black italic text-gray-800 leading-none">Revenue vs Expenses</p>
             </div>
-            <select id="taxYearFilter" onchange="renderfinancials()" class="text-[10px] font-black border-none bg-pink-50 rounded-lg p-2 outline-none text-pink-500 cursor-pointer">
+            <select id="taxYearFilter" onchange="renderfinancials()" class="text-[10px] font-black border-none bg-pink-50 rounded-lg p-2 outline-none text-pink-500">
                 <option value="2025-26">25/26</option>
                 <option value="2024-25">24/25</option>
             </select>
@@ -107,15 +107,15 @@
         </div>
     </div>
 
-    <div class="lg:col-span-5 glass-card p-8 bg-white/80 border-none shadow-sm min-h-[450px] flex flex-col">
+    <div class="lg:col-span-5 glass-card p-8 bg-white/80 border-none shadow-sm flex flex-col min-h-[450px]">
         <h3 class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Income Streams</h3>
-        <p class="text-xl font-black italic text-gray-800 mb-8">Revenue Sources ♡</p>
+        <p class="text-xl font-black italic text-gray-800 mb-6 leading-none">Revenue Sources ♡</p>
         
         <div class="flex-grow relative flex items-center justify-center">
             <div class="w-full aspect-square max-w-[320px] relative">
                 <canvas id="chartSources"></canvas>
                 <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span class="text-[9px] font-black uppercase text-gray-400">Total Revenue</span>
+                    <span class="text-[9px] font-black uppercase text-gray-400">Total</span>
                     <span id="centerRevenueTotal" class="text-lg font-black text-gray-800">£0</span>
                 </div>
             </div>
@@ -125,22 +125,22 @@
     <div class="lg:col-span-2 flex flex-col gap-4">
         <div class="glass-card p-5 bg-white/80 border-none shadow-sm flex-grow">
             <h3 class="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-4 leading-tight">Spending Breakdown</h3>
-            <div id="expense-pills" class="flex flex-col gap-2 overflow-y-auto max-h-[200px]">
+            <div id="expense-pills" class="flex flex-col gap-2 overflow-y-auto max-h-[220px]">
                 </div>
         </div>
 
         <div class="glass-card p-4 bg-lime-50/50 border-lime-100 border text-lime-700">
-            <p class="text-[8px] font-black uppercase mb-1">💡 Tip</p>
-            <p class="text-[10px] font-medium leading-tight">Claim home studio costs!</p>
+            <p class="text-[8px] font-black uppercase mb-1">💡 Quick Tip</p>
+            <p class="text-[10px] font-bold leading-tight italic">Claim your home studio utilities!</p>
         </div>
-        <div class="glass-card p-4 bg-blue-50/50 border-blue-100 border text-blue-700">
-            <p class="text-[8px] font-black uppercase mb-1">📅 Note</p>
-            <p class="text-[10px] font-medium leading-tight">Tax check-in due April.</p>
+        <div class="glass-card p-4 bg-pink-50/50 border-pink-100 border text-pink-700">
+            <p class="text-[8px] font-black uppercase mb-1">📅 Reminder</p>
+            <p class="text-[10px] font-bold leading-tight italic">Quarterly check-in due soon.</p>
         </div>
     </div>
 </div>
        
-    <!-- Expense Records table (full width, below the grid) -->
+       <!-- Expense Records table (full width, below the grid) -->
     <div class="glass-card p-8 bg-white/80 border-none shadow-sm">
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 md:gap-6">
             <div>
@@ -352,40 +352,57 @@ async function renderfinancials() {
     const startDate = new Date(startYear, 3, 6);
     const endDate = new Date(startYear + 1, 3, 5);
 
-    // 1. Fetch Commissions
+    // 1. Fetch Everything
     const { data: commissions } = await _supabase.from('commissions').select('*');
     const { data: sales } = await _supabase.from('sales').select('*');
+    const { data: expenses } = await _supabase.from('studio_expenses').select('*').order('date', { ascending: true });
 
-    if (!commissions || !sales) return;
+    if (!commissions || !sales || !expenses) return;
 
-    // 2. Sync Shipping rows and WAIT for them to finish
-    const commissionsWithShipping = commissions.filter(c => Number(c.shipping_cost) > 0);
-    
-    // Using Promise.all ensures we wait for EVERY sync to complete
-    await Promise.all(commissionsWithShipping.map(async (c) => {
-        return _supabase.from('studio_expenses').upsert({
-            amount: Number(c.shipping_cost),
-            category: 'Shipping',
-            description: `Postage for ${c.customer_name || 'Commission'}`,
-            date: c.created_at ? c.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
-            commission_id: c.id,
-            source: 'shipping_auto'
-        }, { onConflict: 'commission_id' });
-    }));
-
-    // 3. Fetch Expenses (Now guaranteed to include the new shipping rows)
-    const { data: expenses } = await _supabase.from('studio_expenses')
-        .select('*')
-        .order('date', { ascending: true });
-        
-    if (!expenses) return;
-
+    // 2. Filter Data
     const filteredExpenses = expenses.filter(e => {
         const d = new Date(e.date);
         return d >= startDate && d <= endDate;
     });
 
-    // --- 1. Calculate Category Totals ---
+    const filteredSales = sales.filter(s => {
+        const d = new Date(s.sale_date);
+        return d >= startDate && d <= endDate;
+    });
+
+    // 3. Math Calculations
+    const totalIn = filteredSales.reduce((sum, s) => sum + Number(s.amount || 0), 0);
+    const totalOut = filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    const profit = totalIn - totalOut;
+    const taxNeeded = profit > 1000 ? (profit * 0.20) : 0;
+
+    // --- Update Global UI (Stats Cards & Allowance Bar) ---
+    const updateElText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = `£${val.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    };
+
+    updateElText('ytd-cash', totalIn);
+    updateElText('ytd-out', totalOut);
+    updateElText('ytd-profit', profit);
+
+    // Update the visual stats grid
+    const statsContainer = document.getElementById('financial-stats');
+    if (statsContainer) {
+        statsContainer.innerHTML = `
+            <div class="glass-card p-6 border-l-4 border-pink-400"><p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p><p class="text-2xl font-black italic">£${totalIn.toLocaleString()}</p></div>
+            <div class="glass-card p-6 border-l-4 border-rose-400"><p class="text-[9px] font-black uppercase text-gray-400">Expenses</p><p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p></div>
+            <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20"><p class="text-[9px] font-black uppercase text-gray-400">Net Profit</p><p class="text-2xl font-black italic text-emerald-600">£${profit.toLocaleString()}</p></div>
+            <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20"><p class="text-[9px] font-black uppercase text-gray-400">Tax Reserve</p><p class="text-2xl font-black italic text-blue-600">£${taxNeeded.toLocaleString()}</p></div>
+        `;
+    }
+
+    // 4. Render the Big Visuals
+    // Pass filteredSales to your main chart so it matches the totals
+    initRevenueChart(filteredSales, filteredExpenses);
+    renderRevenueSourceChart(filteredSales);
+
+    // 5. Render Sidebar (Pills)
     const catTotals = filteredExpenses.reduce((acc, curr) => {
         acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
         return acc;
@@ -400,109 +417,25 @@ async function renderfinancials() {
                     <span class="text-[10px] font-black uppercase text-gray-500">${cat}</span>
                     <span class="text-xs font-black text-pink-500">£${amt.toFixed(2)}</span>
                 </div>
-            `).join('') || '<p class="text-xs italic text-gray-400">No categories found</p>';
+            `).join('') || '<p class="text-xs italic text-gray-400 text-center">No categories</p>';
     }
 
-    // --- 2. Math Calculations ---
-const filteredSales = sales.filter(s => {
-        const d = new Date(s.sale_date);
-        return d >= startDate && d <= endDate;
-    });
-
-    // Total income is now the sum of your Sales Ledger
-    const totalIn = filteredSales.reduce((sum, s) => sum + Number(s.amount || 0), 0);
-
-    const totalOut = filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
-    const profit = totalIn - totalOut;
-    const taxNeeded = profit > 1000 ? (profit * 0.20) : 0;
-
-    // --- 3. Update YTD Cards & Allowance Tracker ---
-    const updateElText = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = `£${val.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    };
-
-    updateElText('ytd-cash', totalIn);
-    updateElText('ytd-out', totalOut);
-    updateElText('ytd-profit', profit);
-
-    const allowanceLimit = 1000;
-    const allowancePercent = Math.min((totalIn / allowanceLimit) * 100, 100);
-    const allowanceStatus = document.getElementById('allowanceStatus');
-    const allowanceBar = document.getElementById('allowanceBar');
-
-    if (allowanceStatus && allowanceBar) {
-        if (totalIn >= allowanceLimit) {
-            allowanceStatus.innerText = "Limit Reached! ⚠️";
-            allowanceStatus.className = "text-[9px] font-black text-rose-500 italic";
-            allowanceBar.className = "h-full bg-rose-500 transition-all duration-1000";
-        } else {
-            const remaining = allowanceLimit - totalIn;
-            allowanceStatus.innerText = `£${remaining.toLocaleString()} remaining`;
-            allowanceStatus.className = "text-[9px] font-black text-pink-500 italic";
-            allowanceBar.className = "h-full bg-pink-500 transition-all duration-1000";
-        }
-        allowanceBar.style.width = `${allowancePercent}%`;
+    // 6. Render Table
+    const tbody = document.getElementById('expense-tbody');
+    if (tbody) {
+        tbody.innerHTML = filteredExpenses.map(e => `
+            <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
+                <td class="py-4 pl-2"><span class="text-[10px] font-black text-pink-400 bg-pink-50 px-2 py-1 rounded-md">${new Date(e.date).toLocaleDateString('en-GB')}</span></td>
+                <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-500 border border-gray-200">${e.category}</span></td>
+                <td class="py-4 text-xs font-bold text-gray-700">${e.description || '---'}</td>
+                <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
+                <td class="py-4 text-center">
+                    <button onclick="deleteExpense('${e.id}')" class="text-gray-200 hover:text-rose-500 transition-colors">🗑️</button>
+                </td>
+            </tr>
+        `).join('') || '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records found</td></tr>';
     }
-
-    if (taxYearFilter) {
-        const display = document.getElementById('taxYearDisplay');
-        if (display) display.innerText = taxYearFilter.value;
-    }
-
-    // --- 4. Main Stats & Table Rendering ---
-    const daysLeft = typeof getTaxYearStats === 'function' ? getTaxYearStats() : 0;
-    const daysEl = document.getElementById('daysRemainingText');
-    if (daysEl) daysEl.innerText = daysLeft;
-
-    document.getElementById('financial-stats').innerHTML = `
-        <div class="glass-card p-6 border-l-4 border-pink-400">
-            <p class="text-[9px] font-black uppercase text-gray-400">Cash Received</p>
-            <p class="text-2xl font-black italic">£${totalIn.toLocaleString()}</p>
-        </div>
-        <div class="glass-card p-6 border-l-4 border-rose-400">
-            <p class="text-[9px] font-black uppercase text-gray-400">Expenses</p>
-            <p class="text-2xl font-black italic text-rose-500">£${totalOut.toLocaleString()}</p>
-        </div>
-        <div class="glass-card p-6 border-l-4 border-emerald-400 bg-emerald-50/20">
-            <p class="text-[9px] font-black uppercase text-gray-400">Net Profit</p>
-            <p class="text-2xl font-black italic text-emerald-600">£${profit.toLocaleString()}</p>
-        </div>
-        <div class="glass-card p-6 border-l-4 border-blue-400 bg-blue-50/20">
-            <p class="text-[9px] font-black uppercase text-gray-400">Tax Reserve</p>
-            <p class="text-2xl font-black italic text-blue-600">£${taxNeeded.toLocaleString()}</p>
-        </div>
-    `;
-
-    document.getElementById('expense-tbody').innerHTML = filteredExpenses.map(e => `
-        <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
-            <td class="py-4 pl-2">
-                <span class="text-[10px] font-black text-pink-400 bg-pink-50 px-2 py-1 rounded-md">
-                    ${new Date(e.date).toLocaleDateString('en-GB')}
-                </span>
-            </td>
-            <td class="py-4">
-                <span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-500 border border-gray-200">
-                    ${e.category}
-                </span>
-            </td>
-            <td class="py-4 text-xs font-bold text-gray-700">${e.description || '---'}</td>
-            <td class="py-4 text-right text-xs font-black text-rose-500">
-                £${Number(e.amount).toFixed(2)}
-            </td>
-            <td class="py-4 text-center">
-                <div class="flex items-center justify-center gap-3">
-                    ${e.receipt_url 
-                        ? `<a href="${e.receipt_url}" target="_blank" class="text-blue-500 hover:scale-110 transition-transform">📎</a>
-                           <button onclick="removeReceipt('${e.id}')" class="text-rose-300 hover:text-rose-500 text-[10px] font-bold">DEL</button>`
-                        : `<button onclick="uploadReceipt('${e.id}', '${e.category}')" class="text-gray-300 hover:text-blue-500 text-[9px] font-black uppercase tracking-tighter border border-dashed border-gray-300 px-2 py-1 rounded-lg">+ Receipt</button>`
-                    }
-                    <button onclick="deleteExpense('${e.id}')" class="text-gray-200 hover:text-rose-500 ml-2 transition-colors">🗑️</button>
-                </div>
-            </td>
-        </tr>
-    `).join('') || `<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records found for this period</td></tr>`;
-
+}
     initRevenueChart(commissions, filteredExpenses);
     
     renderRevenueSourceChart(filteredSales);
