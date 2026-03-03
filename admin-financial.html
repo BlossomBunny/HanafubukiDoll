@@ -338,23 +338,30 @@ async function renderfinancials() {
     const startDate = new Date(startYear, 3, 6);
     const endDate = new Date(startYear + 1, 3, 5);
 
+    // 1. Fetch Commissions
     const { data: commissions } = await _supabase.from('commissions').select('*');
     if (!commissions) return;
 
-    // --- Auto-create/Sync shipping rows ---
+    // 2. Sync Shipping rows and WAIT for them to finish
     const commissionsWithShipping = commissions.filter(c => Number(c.shipping_cost) > 0);
-    for (const c of commissionsWithShipping) {
-        await _supabase.from('studio_expenses').upsert({
+    
+    // Using Promise.all ensures we wait for EVERY sync to complete
+    await Promise.all(commissionsWithShipping.map(async (c) => {
+        return _supabase.from('studio_expenses').upsert({
             amount: Number(c.shipping_cost),
             category: 'Shipping',
             description: `Postage for ${c.customer_name || 'Commission'}`,
-            date: c.created_at.split('T')[0],
+            date: c.created_at ? c.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
             commission_id: c.id,
             source: 'shipping_auto'
         }, { onConflict: 'commission_id' });
-    }
+    }));
 
-    const { data: expenses } = await _supabase.from('studio_expenses').select('*').order('date', { ascending: true });
+    // 3. Fetch Expenses (Now guaranteed to include the new shipping rows)
+    const { data: expenses } = await _supabase.from('studio_expenses')
+        .select('*')
+        .order('date', { ascending: true });
+        
     if (!expenses) return;
 
     const filteredExpenses = expenses.filter(e => {
