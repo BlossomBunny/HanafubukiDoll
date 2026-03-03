@@ -77,7 +77,41 @@
         Deadlines & Help 🌸
     </button>
 </div>
+    <div class="glass-card p-4 mb-6 bg-white/60 border-none flex flex-wrap items-center gap-4">
+    <div class="flex items-center gap-2">
+        <label class="text-[9px] font-black uppercase text-gray-400">Tax Year</label>
+        <select id="taxYearFilter" onchange="renderfinancials()" class="text-xs font-bold border-none bg-pink-50 rounded-lg px-3 py-2 text-pink-600 focus:ring-2 focus:ring-pink-200 outline-none">
+            <option value="2024-25">2024/25</option>
+            <option value="2025-26" selected>2025/26</option>
+            <option value="2026-27">2026/27</option>
+        </select>
+    </div>
+
+    <div class="flex items-center gap-2">
+        <label class="text-[9px] font-black uppercase text-gray-400">Period</label>
+        <select id="monthFilter" onchange="renderfinancials()" class="text-xs font-bold border-none bg-pink-50 rounded-lg px-3 py-2 text-pink-600 focus:ring-2 focus:ring-pink-200 outline-none">
+            <option value="all">Entire Year</option>
+            <option value="0">April</option>
+            <option value="1">May</option>
+            <option value="2">June</option>
+            <option value="3">July</option>
+            <option value="4">August</option>
+            <option value="5">September</option>
+            <option value="6">October</option>
+            <option value="7">November</option>
+            <option value="8">December</option>
+            <option value="9">January</option>
+            <option value="10">February</option>
+            <option value="11">March</option>
+        </select>
+    </div>
     
+    <div class="ml-auto">
+        <button onclick="location.reload()" class="text-[9px] font-black uppercase text-gray-400 hover:text-pink-500 transition-colors">
+            🔄 Reset View
+        </button>
+    </div>
+</div>
 <main class="max-w-[1600px] mx-auto p-4 md:p-10 space-y-10">
     <div id="financial-stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         </div>
@@ -141,7 +175,7 @@
     <div class="glass-card p-8 bg-white/80 border-none shadow-sm">
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div>
-                <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Sales Ledger</h3>
+                <h3 class="text-xs font-black uppercase text-gray-400 tracking-widest">Sales Records</h3>
                 <p class="text-[9px] text-gray-400 uppercase font-bold italic">Revenue & Income Tracking</p>
             </div>
             <button onclick="openSalesModal()" class="nav-btn nav-btn-mint text-[10px] px-4 py-2">+ Log Sale</button>
@@ -200,11 +234,110 @@ function openExpenseModal() {
     }
 }
 
+    async function saveExpense() {
+    // 1. Grab the ID from our new hidden input
+    const id = document.getElementById('expenseId').value;
+    const form = document.getElementById('expenseForm');
+    
+    // 2. Collect data from the form
+    const payload = {
+        amount: parseFloat(form.querySelector('[name="amount"]').value),
+        category: form.querySelector('[name="category"]').value,
+        description: form.querySelector('[name="description"]').value,
+        date: form.querySelector('[name="date"]').value
+    };
+
+    // 3. Validation
+    if (isNaN(payload.amount)) {
+        return showMagicAlert("Error", "Please enter a valid amount.", "error");
+    }
+
+    try {
+        let error;
+        
+        if (id) {
+            // If ID exists, we are UPDATING
+            const result = await _supabase
+                .from('studio_expenses')
+                .update(payload)
+                .eq('id', id);
+            error = result.error;
+        } else {
+            // If no ID, we are INSERTING a new record
+            const result = await _supabase
+                .from('studio_expenses')
+                .insert([payload]);
+            error = result.error;
+        }
+
+        if (error) throw error;
+
+        // 4. Success UI
+        showMagicAlert("Success! ✨", "Expense records updated.", "success");
+        closeExpenseModal();
+        
+        // 5. Refresh the dashboard
+        if (typeof renderfinancials === 'function') renderfinancials();
+
+    } catch (err) {
+        console.error("Expense Save Error:", err);
+        showMagicAlert("Error", err.message, "error");
+    }
+}
+
 function closeExpenseModal() {
     const modal = document.getElementById('expenseModal');
     if (modal) {
         modal.classList.add('hidden');
         document.getElementById('expenseForm').reset();
+    }
+}
+
+    // Function to fetch a specific sale and open the modal
+async function editSale(id) {
+    try {
+        const { data, error } = await _supabase
+            .from('sales')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        if (data) openSalesModal(data); // Pass the data into your existing function
+    } catch (err) {
+        console.error("Error fetching sale:", err);
+        showMagicAlert("Error", "Could not load sale data.", "error");
+    }
+}
+
+// Function to fetch a specific expense and open the modal
+async function editExpense(id) {
+    try {
+        const { data, error } = await _supabase
+            .from('studio_expenses')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        
+        // Populate and open modal
+        const modal = document.getElementById('expenseModal');
+        if (modal && data) {
+            document.getElementById('expenseId').value = data.id;
+            document.getElementById('expenseModalTitle').textContent = 'Edit Expense Record';
+            
+            const form = document.getElementById('expenseForm');
+            form.querySelector('input[name="date"]').value = data.date;
+            form.querySelector('select[name="category"]').value = data.category;
+            form.querySelector('input[name="description"]').value = data.description;
+            form.querySelector('input[name="amount"]').value = data.amount;
+            
+            modal.classList.remove('hidden');
+        }
+    } catch (err) {
+        console.error("Error fetching expense:", err);
+        showMagicAlert("Error", "Could not load expense data.", "error");
     }
 }
 
@@ -225,10 +358,21 @@ function getTaxYearStats() {
 
 // --- 2. DATA ACTIONS (DELETE/EXPORT/RECEIPTS) ---
 async function deleteExpense(id) {
-    if (!confirm("Are you sure you want to remove this expense record?")) return;
-    const { error } = await _supabase.from('studio_expenses').delete().eq('id', id);
-    if (error) alert("Error: " + error.message);
-    else renderfinancials();
+    showMagicAlert(
+        "Delete Expense?", 
+        "This will permanently remove this record from your audit trail.", 
+        "confirm", 
+        async () => {
+            const { error } = await _supabase.from('studio_expenses').delete().eq('id', id);
+            
+            if (error) {
+                showMagicAlert("Error", error.message, "error");
+            } else {
+                // Success! Refresh the dashboard
+                if (typeof renderfinancials === 'function') renderfinancials();
+            }
+        }
+    );
 }
 
 async function uploadReceipt(expenseId, category = 'Other Business Cost') {
@@ -362,7 +506,7 @@ function exportToCSV() {
 }
 async function renderfinancials() {
     const taxYearFilter = document.getElementById('taxYearFilter');
-    const monthFilter = document.getElementById('monthFilter'); // Make sure this ID exists in your HTML
+    const monthFilter = document.getElementById('monthFilter');
     if (!taxYearFilter || !monthFilter) return;
 
     const [startYear] = taxYearFilter.value.split('-').map(Number);
@@ -452,17 +596,22 @@ async function renderfinancials() {
         if (typeof initRevenueChart === 'function') initRevenueChart(filteredSales, filteredExpenses);
         if (typeof renderRevenueSourceChart === 'function') renderRevenueSourceChart(filteredSales);
 
-        // 5. Populate Expense Table
+      // 5. Populate Expense Table
         const expBody = document.getElementById('expense-tbody');
         if (expBody) {
             expBody.innerHTML = filteredExpenses.length > 0 
                 ? filteredExpenses.map(e => `
                     <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
-                        <td class="py-4 pl-2"><span class="text-[10px] font-black text-pink-400 bg-pink-50 px-2 py-1 rounded-md">${new Date(e.date).toLocaleDateString('en-GB')}</span></td>
+                        <td class="py-4 pl-2 font-bold text-gray-600 text-xs">${new Date(e.date).toLocaleDateString('en-GB')}</td>
                         <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-500 border border-gray-200">${e.category}</span></td>
-                        <td class="py-4 text-xs font-bold text-gray-700">${e.description || '---'}</td>
+                        <td class="py-4 text-xs font-medium text-gray-700">${e.description || '---'}</td>
                         <td class="py-4 text-right text-xs font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
-                        <td class="py-4 text-center"><button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-rose-500">🗑️</button></td>
+                        <td class="py-4 text-center">
+                            <div class="flex justify-center gap-2">
+                                <button onclick="editExpense('${e.id}')" class="text-gray-300 hover:text-blue-500 transition-colors">✏️</button>
+                                <button onclick="deleteExpense('${e.id}')" class="text-gray-200 hover:text-rose-500 transition-colors">🗑️</button>
+                            </div>
+                        </td>
                     </tr>`).join('')
                 : '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records found</td></tr>';
         }
@@ -475,9 +624,14 @@ async function renderfinancials() {
                     <tr class="border-b border-pink-50/50 hover:bg-white/50 transition-colors">
                         <td class="py-4 pl-2 text-xs font-bold text-gray-600">${new Date(s.sale_date).toLocaleDateString('en-GB')}</td>
                         <td class="py-4"><span class="px-2 py-1 rounded-md bg-pink-50 text-[9px] font-black uppercase text-pink-500">${s.category}</span></td>
-                        <td class="py-4 text-xs text-gray-500 uppercase font-black">${s.source || 'Manual'}</td>
+                        <td class="py-4 text-[9px] text-gray-400 uppercase font-black">${s.source || 'Manual'}</td>
                         <td class="py-4 text-right text-xs font-black text-emerald-500">£${Number(s.amount).toFixed(2)}</td>
-                        <td class="py-4 text-center"><button onclick="deleteSale('${s.id}')" class="text-gray-300 hover:text-rose-500">🗑️</button></td>
+                        <td class="py-4 text-center">
+                            <div class="flex justify-center gap-2">
+                                <button onclick="editSale('${s.id}')" class="text-gray-300 hover:text-blue-500 transition-colors">✏️</button>
+                                <button onclick="deleteSale('${s.id}')" class="text-gray-200 hover:text-rose-500 transition-colors">🗑️</button>
+                            </div>
+                        </td>
                     </tr>`).join('')
                 : '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No sales recorded</td></tr>';
         }
