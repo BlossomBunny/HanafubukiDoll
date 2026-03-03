@@ -209,47 +209,52 @@ async function uploadReceipt(expenseId, category = 'Other Business Cost') {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Visual feedback for mobile users
-        console.log(`Uploading ${file.name} to ${category}...`);
+        console.log("Starting upload for ID:", expenseId);
 
         if (file.size > 5 * 1024 * 1024) return alert("File too large (max 5MB)");
 
+        // Ensure we have a valid extension
         const fileExt = file.name.split('.').pop().toLowerCase() || 'jpg';
-        // Unique name to prevent mobile "duplicate filename" errors
-        const safeFileName = `rec_${expenseId}_${Date.now()}.${fileExt}`;
         
-        // --- FOLDER LOGIC ---
-        let folder = 'expenses'; // Default
-        const catClean = category.trim().toLowerCase();
-
-        if (catClean === 'shipping' || catClean === 'packaging') {
+        // Use a cleaner filename structure
+        const safeFileName = `${expenseId}_${Date.now()}.${fileExt}`;
+        
+        // Simplified Folder Logic - ensures we always have a valid path
+        let folder = 'expenses';
+        const catClean = String(category).toLowerCase();
+        if (catClean.includes('shipping') || catClean.includes('packaging')) {
             folder = 'shipping';
         }
 
         const filePath = `${folder}/${safeFileName}`;
 
         // --- SUPABASE UPLOAD ---
-        const { error: uploadError } = await _supabase.storage
+        const { data, error: uploadError } = await _supabase.storage
             .from('receipts')
             .upload(filePath, file, { 
-                cacheControl: '3600',
-                upsert: false 
+                cacheControl: '3600', 
+                upsert: true
             });
 
-        if (uploadError) return alert("Upload failed: " + uploadError.message);
+        if (uploadError) {
+            console.error("Storage Error:", uploadError);
+            return alert("Upload failed: " + uploadError.message);
+        }
 
-        const { data: urlData } = _supabase.storage.from('receipts').getPublicUrl(filePath);
-        
-        // Update the database row
+        const { data: urlData } = _supabase.storage
+            .from('receipts')
+            .getPublicUrl(filePath);
+ 
         const { error: updateError } = await _supabase
             .from('studio_expenses')
             .update({ receipt_url: urlData.publicUrl })
             .eq('id', expenseId);
 
         if (updateError) {
-            alert("Failed to link: " + updateError.message);
+            console.error("Database Link Error:", updateError);
+            alert("Failed to link receipt to database: " + updateError.message);
         } else {
-            alert(`Receipt saved to ${folder} folder! 🌸`);
+            alert(`Receipt saved! 🌸`);
             renderfinancials();
         }
     };
@@ -257,13 +262,50 @@ async function uploadReceipt(expenseId, category = 'Other Business Cost') {
 }
 async function removeReceipt(expenseId) {
     if (!confirm("Delete this receipt permanently? 🎀")) return;
-    const { error } = await _supabase
-        .from('studio_expenses')
-        .update({ receipt_url: null })
-        .eq('id', expenseId);
 
-    if (error) alert("Delete failed: " + error.message);
-    else renderfinancials();
+    // 1. Get the current receipt URL from the database first
+    const { data: expense, error: fetchError } = await _supabase
+        .from('studio_expenses')
+        .select('receipt_url')
+        .eq('id', expenseId)
+        .single();
+
+    if (fetchError || !expense?.receipt_url) {
+        alert("Could not find the receipt link to delete.");
+        return;
+    }
+
+    try {
+    
+        const urlParts = expense.receipt_url.split('/receipts/');
+        const filePath = urlParts[1]; 
+
+        if (filePath) {
+        
+            const { error: storageError } = await _supabase.storage
+                .from('receipts')
+                .remove([filePath]);
+
+            if (storageError) {
+                console.error("Storage deletion failed:", storageError);
+              }
+        }
+
+      
+        const { error: dbError } = await _supabase
+            .from('studio_expenses')
+            .update({ receipt_url: null })
+            .eq('id', expenseId);
+
+        if (dbError) throw dbError;
+
+        alert("Receipt file and link removed! ✨");
+        renderfinancials();
+
+    } catch (err) {
+        console.error("Deletion process error:", err);
+        alert("Delete failed: " + err.message);
+    }
 }
 
 function exportToCSV() {
