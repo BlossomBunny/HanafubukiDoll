@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="global-style.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:,">
     <style>
         .nav-btn { @apply px-5 py-2 rounded-full font-bold text-sm transition-all; }
         .nav-btn-pink { @apply bg-pink-50 text-pink-500 hover:bg-pink-100; }
@@ -656,12 +657,14 @@ if (pillsContainer) {
 }
 
 // --- 8. DYNAMIC STUDIO TIPS ---
-const tipText = document.querySelector('.glass-card.bg-lime-50\/50 p.italic');
+const tipBox = document.querySelector('.bg-lime-50\\/50') || document.querySelector('.bg-lime-50');
+const tipText = tipBox ? tipBox.querySelector('p.italic') : null;
+
 if (tipText) {
     const tips = [
         "Claim your home studio utilities (heat/light) as a % of floor space!",
         "Don't forget to log software subscriptions like Adobe or Clip Studio.",
-        "Snap a photo and upload your receipts to avoid piles of paper!.",
+        "Upload receipts for any physical supplies.",
         "Did you travel for a gallery or con? Log those mileage or travel costs!",
         "Your website hosting and domain are 100% tax deductible."
     ];
@@ -670,11 +673,6 @@ if (tipText) {
         tipText.textContent = "You're over the personal allowance! Consider a pension contribution to lower your tax bill.";
     } else {
         tipText.textContent = tips[Math.floor(Math.random() * tips.length)];
-    }
-}
-
-    } catch (err) {
-        console.error("Critical Error:", err);
     }
 }
  
