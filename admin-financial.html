@@ -595,6 +595,66 @@ function exportToCSV() {
     
     countdownText.textContent = diffDays > 0 ? diffDays : 0;
 }
+        async function editSale(id) {
+    try {
+        const { data, error } = await _supabase
+            .from('sales')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        
+        if (data) {
+            // Populate the hidden ID field
+            document.getElementById('saleId').value = data.id;
+            document.getElementById('saleModalTitle').textContent = 'Edit Sale Record';
+
+            // Populate the input fields using the correct IDs from your HTML
+            document.getElementById('saleAmount').value = data.amount;
+            document.getElementById('saleCategory').value = data.category;
+            document.getElementById('saleSource').value = data.source;
+            document.getElementById('saleDesc').value = data.description || '';
+            document.getElementById('saleDate').value = data.sale_date;
+
+            // Show the modal
+            document.getElementById('salesModal').classList.remove('hidden');
+        }
+    } catch (err) {
+        console.error("Error fetching sale:", err);
+        showMagicAlert("Error", "Could not load sale data.", "error");
+    }
+}
+        async function editExpense(id) {
+    try {
+        const { data, error } = await _supabase
+            .from('studio_expenses')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        
+        const modal = document.getElementById('expenseModal');
+        if (modal && data) {
+            // Set the hidden ID so handleExpenseSubmit knows to UPDATE instead of INSERT
+            document.getElementById('expenseId').value = data.id;
+            document.getElementById('expenseModalTitle').textContent = 'Edit Expense Record';
+            
+            // Map the database fields to your form inputs
+            const form = document.getElementById('expenseForm');
+            form.querySelector('input[name="amount"]').value = data.amount;
+            form.querySelector('select[name="category"]').value = data.category;
+            form.querySelector('input[name="description"]').value = data.description;
+            form.querySelector('input[name="date"]').value = data.date;
+            
+            modal.classList.remove('hidden');
+        }
+    } catch (err) {
+        console.error("Error fetching expense:", err);
+        showMagicAlert("Error", "Could not load expense data.", "error");
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('expenseForm')?.addEventListener('submit', handleExpenseSubmit);
