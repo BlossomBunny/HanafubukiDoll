@@ -63,16 +63,10 @@
 <script>
 function initPage(session) {
     switchInventoryTab('parts');
-    runMonthlyAudit(); //
+    runMonthlyAudit();
 }
 
-    function getToneStyle(tone) {
-    const normalized = tone ? tone.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : '';
-    
-    return toneColors[normalized] || 'bg-white border-pink-100 text-pink-400';
-}
-    
-   const toneColors = {
+const toneColors = {
     'Semi-White':  'bg-red-50 text-red-600 border-red-100',
     'Milk':        'bg-orange-50 text-orange-600 border-orange-100',
     'Flesh':       'bg-orange-50 text-orange-600 border-orange-100',
@@ -86,6 +80,19 @@ function initPage(session) {
     'Black Navy':  'bg-slate-700 text-slate-50 border-slate-800',
 };
 
+const brandData = {
+    'Brushes': ['Daler-Rowney System 3', 'Daler-Rowney Graduate', 'Winsor&Newton Cotman', 'ProArte Miniature', 'ProArte Masterstroke', 'Royal&Langnickel Mini Magestic'],
+    'Paints': ['Tamiya', 'Vallejo'],
+    'Pencils': ['Derwent', 'Derwent Inktense', 'Faber-Castell', 'Caran d’Ache'],
+    'Pastels': ['Sennelier', 'Rembrandt', 'PanPastel', 'Other']
+};
+
+function getToneStyle(tone) {
+    const normalized = tone ? tone.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : '';
+    return toneColors[normalized] || 'bg-white border-pink-100 text-pink-400';
+}
+
+// --- DOLL PARTS RENDERER ---
 async function renderinventory() {
     const container = document.getElementById('view-inventory');
     if (!container) return;
@@ -113,7 +120,6 @@ async function renderinventory() {
         { title: "Eye Bases (mm)", key: "Eye Bases" }
     ];
 
-    // --- START OF HTML GENERATION ---
     container.innerHTML = `
         <div class="max-w-6xl mx-auto space-y-10 pb-20 animate-fadeIn p-4 md:p-10">
             <div class="flex justify-between items-end mb-4">
@@ -161,19 +167,16 @@ async function renderinventory() {
                                         </td>
                                         <td class="p-4 text-right">
                                             <div class="flex justify-end gap-3 items-center">
-                                                ${item.order_url ? `
-                                                    <a href="${item.order_url}" target="_blank" 
-                                                       class="w-8 h-8 flex items-center justify-center rounded-xl bg-pink-50 text-pink-500 hover:bg-pink-100 transition-all text-xs" 
-                                                       title="Order More">🛒</a>` : ''}
+                                                ${item.order_url ? `<a href="${item.order_url}" target="_blank" class="w-8 h-8 flex items-center justify-center rounded-xl bg-pink-50 text-pink-500 hover:bg-pink-100 transition-all text-xs">🛒</a>` : ''}
                                                 <div class="flex gap-1 mr-2 border-l pl-2 border-pink-50/50">
-                                                    <button onclick="updateStock('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 font-bold transition-all shadow-sm">－</button>
-                                                    <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-emerald-50 hover:text-emerald-600 font-bold transition-all shadow-sm">＋</button>
+                                                    <button onclick="updateStock('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-rose-500 font-bold">－</button>
+                                                    <button onclick="updateStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-emerald-600 font-bold">＋</button>
                                                 </div>
                                                 <button onclick='openStockModal(${JSON.stringify(item).replace(/'/g, "\\'")})' class="text-gray-300 hover:text-pink-400 transition-colors">✎</button>
                                                 <button onclick="deleteStockItem('${item.id}', '${item.category}')" class="text-gray-200 hover:text-rose-400 transition-colors">🗑️</button>
                                             </div>
                                         </td>
-                                    </tr>`).join('') : `<tr><td colspan="4" class="p-10 text-center text-[10px] font-black text-gray-300 uppercase tracking-widest italic">No items in ${cat.key}</td></tr>`}
+                                    </tr>`).join('') : `<tr><td colspan="4" class="p-10 text-center text-gray-300 italic">No items in ${cat.key}</td></tr>`}
                             </tbody>
                         </table>
                     </div>
@@ -182,162 +185,7 @@ async function renderinventory() {
         </div>`;
 }
 
-// --- SUPPORTING FUNCTIONS (Defined outside the render string) ---
-
-async function updateStock(id, change) {
-    const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
-    const newQty = Math.max(0, data.quantity + change);
-    await _supabase.from('inventory').update({ quantity: newQty }).eq('id', id);
-    renderinventory();
-}
-
-function openStockModal(item = null, categoryHint = '') {
-    const modal = document.getElementById('stockModal');
-    const categorySelect = document.getElementById('stockCategory');
-    
-    const category = item?.category || categoryHint || 'Smartdoll Hands';
-    const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels'].includes(category);
-    const isEyes = category === 'Eye Bases';
-
-    document.getElementById('stockId').value = item?.id || '';
-    document.getElementById('stockModalTitle').textContent = item ? 'Edit Item ♡' : `Add ${category} ♡`;
-    
-    categorySelect.value = category;
-    categorySelect.disabled = !item; 
-    categorySelect.style.opacity = !item ? "0.6" : "1";
-
-    updateModalFields(); 
-
-    const sculptLabel = document.getElementById('labelSculpt');
-    if (sculptLabel) {
-        if (isSupply) sculptLabel.textContent = "Colour/Code";
-        else if (isEyes) sculptLabel.textContent = "Size (mm)";
-        else sculptLabel.textContent = "Sculpt/Size";
-    }
-
-    document.getElementById('stockSculpt').value = item?.sculpt_size || '';
-    document.getElementById('stockQty').value = item?.quantity || 0;
-    document.getElementById('stockUrl').value = item?.order_url || '';
-
-    if (isSupply && item?.brand) {
-        document.getElementById('stockBrand').value = item.brand;
-    }
-
-    const skintoneInput = document.getElementById('stockSkintone');
-    if (skintoneInput) {
-        skintoneInput.value = item?.skintone || '';
-    }
-
-    modal.classList.remove('hidden');
-}
-
-function closeStockModal() {
-    document.getElementById('stockModal').classList.add('hidden');
-}
-
-async function saveStockItem() {
-    const id = document.getElementById('stockId').value;
-    const category = document.getElementById('stockCategory').value;
-    const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels'].includes(category);
-    const table = isSupply ? 'art_supplies' : 'inventory';
-
-    const payload = {
-        category: category,
-        sculpt_size: document.getElementById('stockSculpt').value.trim(),
-        quantity: parseInt(document.getElementById('stockQty').value),
-        order_url: document.getElementById('stockUrl').value.trim()
-    };
-
-   if (isSupply) {
-        
-        payload.item_name = document.getElementById('stockSculpt').value.trim();
-        
-        const brandValue = document.getElementById('stockBrand').value;
-        payload.brand = brandValue === "" ? null : brandValue;
-    } else {
-        payload.sculpt_size = document.getElementById('stockSculpt').value.trim();
-        payload.skintone = document.getElementById('stockSkintone').value.trim() || 'Standard';
-    }
-    try {
-        let error;
-        if (id) {
-            ({ error } = await _supabase.from(table).update(payload).eq('id', id));
-        } else {
-            ({ error } = await _supabase.from(table).insert([payload]));
-        }
-
-        if (error) throw error;
-        
-        showMagicAlert("Success! 🌸", "Inventory synced.", "success");
-        closeStockModal();
-        isSupply ? rendersupplies() : renderinventory();
-    } catch (err) {
-        showMagicAlert("Error ☁️", err.message, "error");
-    }
-}
-    
-async function deleteStockItem(id, category) {
-
-    const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels'].includes(category);
-    const table = isSupply ? 'art_supplies' : 'inventory';
-
-    showMagicAlert("Delete Item? 🎀", "Are you sure you want to remove this record?", "confirm", async () => {
-        const { error } = await _supabase
-            .from(table)
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            showMagicAlert("Error ☁️", error.message, "error");
-        } else {
-           
-            if (isSupply) {
-                rendersupplies();
-            } else {
-                renderinventory();
-            }
-        }
-    });
-}
-
-function filterByTone(tone) {
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach(row => {
-        if (tone === 'all') {
-            row.classList.remove('hidden');
-            return;
-        }
-        const rowTone = row.querySelector('span').innerText.trim();
-        row.classList.toggle('hidden', rowTone !== tone.toUpperCase());
-    });
-}
-
-    // Switch between Parts and Supplies
-function switchInventoryTab(tab) {
-    const partsView = document.getElementById('view-inventory');
-    const suppliesView = document.getElementById('view-supplies');
-    const partsTab = document.getElementById('tab-parts');
-    const suppliesTab = document.getElementById('tab-supplies');
-
-    if (tab === 'parts') {
-        partsView.classList.remove('hidden');
-        suppliesView.classList.add('hidden');
-        partsTab.classList.replace('border-transparent', 'border-pink-500');
-        partsTab.classList.replace('text-gray-400', 'text-pink-500');
-        suppliesTab.classList.replace('border-pink-500', 'border-transparent');
-        suppliesTab.classList.replace('text-pink-500', 'text-gray-400');
-        renderinventory();
-    } else {
-        partsView.classList.add('hidden');
-        suppliesView.classList.remove('hidden');
-        suppliesTab.classList.replace('border-transparent', 'border-pink-500');
-        suppliesTab.classList.replace('text-gray-400', 'text-pink-500');
-        partsTab.classList.replace('border-pink-500', 'border-transparent');
-        partsTab.classList.replace('text-pink-500', 'text-gray-400');
-        rendersupplies();
-    }
-}
-
+// --- ART SUPPLIES RENDERER ---
 async function rendersupplies() {
     const container = document.getElementById('view-supplies');
     if (!container) return;
@@ -351,11 +199,10 @@ async function rendersupplies() {
         return;
     }
 
-    // ADDED "Misc Supplies" to this list to make the table appear
     const categories = ["Brushes", "Paints", "Pencils", "Pastels", "Misc Supplies"];
 
     container.innerHTML = `
-        <div class="space-y-10 animate-fadeIn">
+        <div class="space-y-10 animate-fadeIn p-4 md:p-10">
             <div class="flex justify-between items-end">
                 <div>
                     <h2 class="text-3xl font-black italic tracking-tighter text-pink-500">Art Supplies ♡</h2>
@@ -385,21 +232,24 @@ async function rendersupplies() {
                                     <td class="p-4 text-xs font-bold text-gray-700">
                                         ${item.brand || '<span class="text-gray-300 italic">---</span>'}
                                     </td>
-                                    <td class="p-4 text-xs text-gray-500 font-medium">${item.item_name}</td>
+                                    <td class="p-4 text-xs text-gray-500 font-medium">
+                                        ${item.item_name || item.sculpt_size || '---'}
+                                    </td>
                                     <td class="p-4 text-center">
                                         <span class="text-sm font-black ${item.quantity < 1 ? 'text-rose-500' : 'text-gray-600'}">${item.quantity}</span>
                                     </td>
                                     <td class="p-4 text-right">
                                         <div class="flex justify-end gap-2 items-center">
-                                            ${item.order_url ? `<a href="${item.order_url}" target="_blank" class="w-8 h-8 flex items-center justify-center rounded-xl bg-pink-50 text-pink-500 hover:bg-pink-100 transition-all text-xs" title="Order More">🛒</a>` : ''}
+                                            ${item.order_url ? `<a href="${item.order_url}" target="_blank" class="w-8 h-8 flex items-center justify-center rounded-xl bg-pink-50 text-pink-500 hover:bg-pink-100 transition-all text-xs">🛒</a>` : ''}
                                             <div class="flex gap-1 border-l pl-2 border-pink-50">
                                                 <button onclick="updateSupplyStock('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-rose-500 font-bold">－</button>
                                                 <button onclick="updateSupplyStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-emerald-600 font-bold">＋</button>
                                             </div>
+                                            <button onclick='openStockModal(${JSON.stringify(item).replace(/'/g, "\\'")})' class="text-gray-300 hover:text-pink-400 transition-colors">✎</button>
                                             <button onclick="deleteStockItem('${item.id}', '${item.category}')" class="ml-2 text-gray-200 hover:text-rose-400 transition-colors">🗑️</button>
                                         </div>
                                     </td>
-                                </tr>`).join('') : `<tr><td colspan="4" class="p-8 text-center text-[10px] uppercase text-gray-300 italic">Inventory empty</td></tr>`}
+                                </tr>`).join('') : `<tr><td colspan="4" class="p-8 text-center text-gray-300 italic">Inventory empty</td></tr>`}
                             </tbody>
                         </table>
                     </div>
@@ -407,62 +257,36 @@ async function rendersupplies() {
             }).join('')}
         </div>`;
 }
-    <div class="glass-card overflow-hidden border border-pink-100/30 shadow-sm">
-                        <table class="w-full text-left">
-                            <thead class="bg-pink-50/40 border-b border-pink-50">
-                                <tr>
-                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">Brand</th>
-                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70">Name/Size</th>
-                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70 text-center">Qty</th>
-                                    <th class="p-4 text-[10px] font-black uppercase text-pink-500/70 text-right">Links & Adjust</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-pink-50/50">
-                                ${filtered.length ? filtered.map(item => `
-                                <tr class="hover:bg-white/60 transition-colors">
-                                    <td class="p-4 text-xs font-bold text-gray-700">${item.brand}</td>
-                                    <td class="p-4 text-xs text-gray-500 font-medium">${item.sculpt_size}</td>
-                                    <td class="p-4 text-center">
-    <span class="text-sm font-black ${item.quantity === 0 ? 'bg-rose-500 text-white px-3 py-1 rounded-lg animate-pulse' : (item.quantity === 1 ? 'text-amber-500 font-bold' : 'text-gray-600')}">
-        ${item.quantity}
-    </span>
-</td>
-                                    <td class="p-4 text-right">
-                                        <div class="flex justify-end gap-2 items-center">
-                                            ${item.order_url ? `<a href="${item.order_url}" target="_blank" class="w-8 h-8 flex items-center justify-center rounded-xl bg-pink-50 text-pink-500 hover:bg-pink-100 transition-all text-xs" title="Order More">🛒</a>` : ''}
-                                            <div class="flex gap-1 border-l pl-2 border-pink-50">
-                                                <button onclick="updateSupplyStock('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-rose-500 font-bold">－</button>
-                                                <button onclick="updateSupplyStock('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-400 hover:text-emerald-600 font-bold">＋</button>
-                                            </div>
-                                            <button onclick="openStockModal(${JSON.stringify(item).replace(/'/g, "\\'")})" class="text-gray-300 hover:text-pink-400 transition-colors">✎</button>
-                                            <button onclick="deleteStockItem('${item.id}', '${item.category}')" class="ml-2 text-gray-200 hover:text-rose-400 transition-colors">🗑️</button>
-                                        </div>
-                                    </td>
-                                </tr>`).join('') : `<tr><td colspan="4" class="p-8 text-center text-[10px] uppercase text-gray-300 italic">Inventory empty</td></tr>`}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>`;
-            }).join('')}
-        </div>`;
-}
-async function updateSupplyStock(id, change) {
-    const { data } = await _supabase.from('art_supplies').select('quantity').eq('id', id).single();
-    const newQty = Math.max(0, data.quantity + change);
-    await _supabase.from('art_supplies').update({ quantity: newQty }).eq('id', id);
-    rendersupplies();
+
+// --- TAB SYSTEM ---
+function switchInventoryTab(tab) {
+    const partsView = document.getElementById('view-inventory');
+    const suppliesView = document.getElementById('view-supplies');
+    const partsTab = document.getElementById('tab-parts');
+    const suppliesTab = document.getElementById('tab-supplies');
+
+    if (tab === 'parts') {
+        partsView.classList.remove('hidden');
+        suppliesView.classList.add('hidden');
+        partsTab.classList.replace('border-transparent', 'border-pink-500');
+        partsTab.classList.replace('text-gray-400', 'text-pink-500');
+        suppliesTab.classList.replace('border-pink-500', 'border-transparent');
+        suppliesTab.classList.replace('text-pink-500', 'text-gray-400');
+        renderinventory();
+    } else {
+        partsView.classList.add('hidden');
+        suppliesView.classList.remove('hidden');
+        suppliesTab.classList.replace('border-transparent', 'border-pink-500');
+        suppliesTab.classList.replace('text-gray-400', 'text-pink-500');
+        partsTab.classList.replace('border-pink-500', 'border-transparent');
+        partsTab.classList.replace('text-pink-500', 'text-gray-400');
+        rendersupplies();
+    }
 }
 
-    const brandData = {
-    'Brushes': ['Daler-Rowney System 3', 'Daler-Rowney Graduate', 'Winsor&Newton Cotman', 'ProArte Miniature', 'ProArte Masterstroke', 'Royal&Langnickel Mini Magestic'],
-    'Paints': ['Tamiya', 'Vallejo'],
-    'Pencils': ['Derwent', 'Derwent Inktense', 'Faber-Castell', 'Caran d’Ache'],
-    'Pastels': ['Sennelier', 'Rembrandt', 'PanPastel', 'Other'] // Added common pastel brands
-};
-
+// --- MODAL & DATA ACTIONS ---
 function updateModalFields() {
     const category = document.getElementById('stockCategory').value;
-    // Added 'Misc Supplies' to the list
     const supplyList = ['Brushes', 'Paints', 'Pencils', 'Pastels', 'Misc Supplies'];
     const isSupply = supplyList.includes(category);
     const isMisc = category === 'Misc Supplies';
@@ -475,14 +299,11 @@ function updateModalFields() {
 
     if (isSupply) {
         brandContainer.classList.remove('hidden');
-        
-        // Add a "Generic/None" option at the top
         let options = `<option value="">-- No Brand / Generic --</option>`;
         if (brandData[category]) {
             options += brandData[category].map(b => `<option value="${b}">${b}</option>`).join('');
         }
         brandSelect.innerHTML = options;
-
         labelSculpt.textContent = isMisc ? "Item Name" : "Colour/Code";
         skintoneContainer.classList.add('hidden'); 
     } else {
@@ -492,90 +313,141 @@ function updateModalFields() {
     }
 }
 
-    async function runMonthlyAudit(forceManual = false) {
+function openStockModal(item = null, categoryHint = '') {
+    const modal = document.getElementById('stockModal');
+    const categorySelect = document.getElementById('stockCategory');
+    
+    const category = item?.category || categoryHint || 'Smartdoll Hands';
+    const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels', 'Misc Supplies'].includes(category);
+
+    document.getElementById('stockId').value = item?.id || '';
+    document.getElementById('stockModalTitle').textContent = item ? 'Edit Item ♡' : `Add ${category} ♡`;
+    
+    categorySelect.value = category;
+    categorySelect.disabled = !item; 
+    
+    updateModalFields(); 
+
+    document.getElementById('stockSculpt').value = item?.item_name || item?.sculpt_size || '';
+    document.getElementById('stockQty').value = item?.quantity || 0;
+    document.getElementById('stockUrl').value = item?.order_url || '';
+
+    if (isSupply) {
+        document.getElementById('stockBrand').value = item?.brand || '';
+    } else {
+        document.getElementById('stockSkintone').value = item?.skintone || '';
+    }
+
+    modal.classList.remove('hidden');
+}
+
+async function saveStockItem() {
+    const id = document.getElementById('stockId').value;
+    const category = document.getElementById('stockCategory').value;
+    const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels', 'Misc Supplies'].includes(category);
+    const table = isSupply ? 'art_supplies' : 'inventory';
+
+    const payload = {
+        category: category,
+        quantity: parseInt(document.getElementById('stockQty').value),
+        order_url: document.getElementById('stockUrl').value.trim()
+    };
+
+    if (isSupply) {
+        payload.item_name = document.getElementById('stockSculpt').value.trim();
+        const brandValue = document.getElementById('stockBrand').value;
+        payload.brand = brandValue === "" ? null : brandValue;
+    } else {
+        payload.sculpt_size = document.getElementById('stockSculpt').value.trim();
+        payload.skintone = document.getElementById('stockSkintone').value.trim() || 'Standard';
+    }
+
+    try {
+        let error;
+        if (id) {
+            ({ error } = await _supabase.from(table).update(payload).eq('id', id));
+        } else {
+            ({ error } = await _supabase.from(table).insert([payload]));
+        }
+        if (error) throw error;
+        
+        closeStockModal();
+        isSupply ? rendersupplies() : renderinventory();
+    } catch (err) {
+        alert(err.message);
+    }
+}
+
+async function updateStock(id, change) {
+    const { data } = await _supabase.from('inventory').select('quantity').eq('id', id).single();
+    const newQty = Math.max(0, data.quantity + change);
+    await _supabase.from('inventory').update({ quantity: newQty }).eq('id', id);
+    renderinventory();
+}
+
+async function updateSupplyStock(id, change) {
+    const { data } = await _supabase.from('art_supplies').select('quantity').eq('id', id).single();
+    const newQty = Math.max(0, data.quantity + change);
+    await _supabase.from('art_supplies').update({ quantity: newQty }).eq('id', id);
+    rendersupplies();
+}
+
+function closeStockModal() {
+    document.getElementById('stockModal').classList.add('hidden');
+}
+
+async function deleteStockItem(id, category) {
+    const isSupply = ['Brushes', 'Paints', 'Pencils', 'Pastels', 'Misc Supplies'].includes(category);
+    const table = isSupply ? 'art_supplies' : 'inventory';
+
+    if(confirm("Are you sure you want to remove this record?")) {
+        const { error } = await _supabase.from(table).delete().eq('id', id);
+        isSupply ? rendersupplies() : renderinventory();
+    }
+}
+
+// --- AUDIT SYSTEM ---
+async function runMonthlyAudit(forceManual = false) {
     const today = new Date();
     const lastAudit = localStorage.getItem('last_stock_audit');
     const currentMonth = today.getMonth() + 1 + '-' + today.getFullYear();
 
-    // Only run automatically on the 1st of the month if not already done
     if (!forceManual && (today.getDate() !== 1 || lastAudit === currentMonth)) return;
 
-    // Fetch data from both tables
     const { data: parts } = await _supabase.from('inventory').select('*');
     const { data: supplies } = await _supabase.from('art_supplies').select('*');
 
     const allItems = [...(parts || []), ...(supplies || [])];
-    
     const critical = allItems.filter(i => i.quantity === 0);
     const warning = allItems.filter(i => i.quantity === 1);
 
     if (critical.length > 0 || warning.length > 0) {
         showAuditReport(critical, warning);
     }
-
     localStorage.setItem('last_stock_audit', currentMonth);
 }
 
 function showAuditReport(critical, warning) {
-    // Helper function to create a readable name with category context
     const getDisplayName = (i) => {
         const category = i.category || 'Item';
-        const isEye = category === 'Eye Bases';
         const name = i.brand ? `${i.brand} - ${i.item_name || i.sculpt_size}` : (i.sculpt_size || i.item_name);
-        
-        // Returns "Category: Name" (adding 'mm' if it's an eye base)
-        return `${category}: ${name}${isEye ? 'mm' : ''}`;
+        return `${category}: ${name}${category === 'Eye Bases' ? 'mm' : ''}`;
     };
 
     const reportHtml = `
         <div id="auditOverlay" class="fixed inset-0 z-[200] bg-white/90 backdrop-blur-md flex items-center justify-center p-6 animate-fadeIn">
-            <div class="max-w-2xl w-full bg-white rounded-[3rem] shadow-2xl border border-pink-100 p-10 max-h-[80vh] overflow-y-auto custom-scrollbar">
+            <div class="max-w-2xl w-full bg-white rounded-[3rem] shadow-2xl border border-pink-100 p-10 max-h-[80vh] overflow-y-auto">
                 <div class="text-center mb-8">
                     <span class="text-4xl">🗓️</span>
                     <h2 class="text-2xl font-black italic text-pink-500 mt-2">Monthly Stock Round-up</h2>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status Report for ${new Date().toLocaleString('default', { month: 'long' })}</p>
                 </div>
-
                 <div class="space-y-6">
-                    ${critical.length ? `
-                        <div>
-                            <h3 class="text-rose-500 font-black text-xs uppercase mb-3 flex items-center gap-2">
-                                <span class="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span> Critical: Out of Stock (Order Now)
-                            </h3>
-                            <div class="grid gap-2">
-                                ${critical.map(i => `
-                                    <div class="flex justify-between items-center p-3 bg-rose-50 rounded-2xl border border-rose-100">
-                                        <span class="text-sm font-bold text-rose-700">${getDisplayName(i)}</span>
-                                        ${i.order_url ? `<a href="${i.order_url}" target="_blank" class="text-xs font-black text-rose-500 underline">Buy ♡</a>` : ''}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${warning.length ? `
-                        <div>
-                            <h3 class="text-amber-500 font-black text-xs uppercase mb-3 flex items-center gap-2">
-                                <span class="w-2 h-2 bg-amber-500 rounded-full"></span> Warning: Low Stock (1 Remaining)
-                            </h3>
-                            <div class="grid gap-2">
-                                ${warning.map(i => `
-                                    <div class="flex justify-between items-center p-3 bg-amber-50 rounded-2xl border border-amber-100">
-                                        <span class="text-sm font-bold text-amber-700">${getDisplayName(i)}</span>
-                                        ${i.order_url ? `<a href="${i.order_url}" target="_blank" class="text-xs font-black text-amber-500 underline">Link ♡</a>` : ''}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
+                    ${critical.length ? `<h3 class="text-rose-500 font-black text-xs uppercase">Critical (0 Qty)</h3>` + critical.map(i => `<div class="p-3 bg-rose-50 rounded-2xl border border-rose-100 flex justify-between"><span>${getDisplayName(i)}</span>${i.order_url ? `<a href="${i.order_url}" class="underline">Buy</a>`:''}</div>`).join('') : ''}
+                    ${warning.length ? `<h3 class="text-amber-500 font-black text-xs uppercase">Warning (1 Qty)</h3>` + warning.map(i => `<div class="p-3 bg-amber-50 rounded-2xl border border-amber-100 flex justify-between"><span>${getDisplayName(i)}</span>${i.order_url ? `<a href="${i.order_url}" class="underline">Link</a>`:''}</div>`).join('') : ''}
                 </div>
-
-                <button onclick="document.getElementById('auditOverlay').remove()" class="w-full mt-10 py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-lg hover:bg-emerald-600 transition-all">
-                    Got it, thanks! 🌸
-                </button>
+                <button onclick="document.getElementById('auditOverlay').remove()" class="w-full mt-10 py-4 bg-emerald-500 text-white font-black rounded-2xl">Got it! 🌸</button>
             </div>
-        </div>
-    `;
+        </div>`;
     document.body.insertAdjacentHTML('beforeend', reportHtml);
 }
     
