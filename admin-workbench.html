@@ -107,40 +107,60 @@ let currentDeclineJobId = null; // For the decline modal
 let currentDeclineEmail = '';
 let currentDeclineHandle = '';
 
+// This helper grabs the data from the UI and passes it to the worker function
+async function handleFullPaymentClick() {
+    const totalPrice = parseFloat(document.getElementById('tPrice').value) || 0;
+    
+    if (!activeJobId) {
+        return alert("No active job ID found. Please try closing and reopening the drawer.");
+    }
+    
+    if (totalPrice <= 0) {
+        return alert("Please enter a Total Fee before marking as paid.");
+    }
+
+    await markAsPaidInFull(activeJobId, totalPrice);
+}
+
 async function markAsPaidInFull(jobId, totalPrice) {
     showMagicAlert(
-        "Confirm Payment? 💸",
-        `This will record a full payment of £${totalPrice}. Proceed?`,
+        "Confirm Full Payment? 💸",
+        `This will record a payment of £${totalPrice.toFixed(2)} and mark the order as fully paid.`,
         "confirm",
         async () => {
             try {
-                // 1. Create the payment "sticker" for the database
+                // 1. Create the payment object
                 const fullPayment = {
-                    amount: Number(totalPrice),
+                    amount: totalPrice,
                     date: new Date().toISOString(),
                     method: 'Manual/Full'
                 };
 
-                // 2. Update Supabase
+                // 2. Update Supabase: 
+                // We set status to 'Paid' AND put the money in the 'payments' array
                 const { error } = await _supabase
                     .from('commissions')
                     .update({
                         payment_status: 'Paid',
-                        payments: [fullPayment] // This puts the money where the dashboard can see it!
+                        payments: [fullPayment] // This overwrites/sets the payment history
                     })
                     .eq('id', jobId);
 
                 if (error) throw error;
 
-                showMagicAlert("Success! ✨", "Job marked as paid and revenue updated.", "success");
+                // 3. UI Success Feedback
+                showMagicAlert("Success! ✨", "Payment recorded and balance cleared.", "success");
                 
-                // Refresh whatever view you are on
+                // 4. THE REFRESH: This makes the "Outstanding" balance update to £0.00
+                await openDrawer(jobId); 
+                
                 if (typeof renderWorkbench === 'function') renderWorkbench();
                 if (typeof renderSummary === 'function') renderSummary();
+                if (typeof renderfinancials === 'function') renderfinancials();
 
             } catch (err) {
                 console.error("Payment error:", err);
-                showMagicAlert("Error", "Could not update payment.", "error");
+                showMagicAlert("Error", "Could not update payment: " + err.message, "error");
             }
         }
     );
