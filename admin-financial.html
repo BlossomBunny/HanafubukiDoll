@@ -440,121 +440,84 @@ async function renderfinancials() {
     
     renderRevenueSourceChart(filteredSales);
     
-   function renderRevenueSourceChart(salesData) {
-    // 1. Group totals by category (Commission, SumUp, etc)
+ function renderRevenueSourceChart(salesData) {
+    const ctx = document.getElementById('chartSources');
+    if (!ctx) return;
+    if (window.sourceChartInstance) window.sourceChartInstance.destroy();
+
     const totals = salesData.reduce((acc, s) => {
         acc[s.category] = (acc[s.category] || 0) + Number(s.amount);
         return acc;
     }, {});
 
-    // 2. Update the "Total" number in the center of the ring
     const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
     const centerEl = document.getElementById('centerRevenueTotal');
     if (centerEl) centerEl.textContent = `£${grandTotal.toLocaleString()}`;
 
-    // 3. Draw the Chart
-    const ctx = document.getElementById('chartSources').getContext('2d');
-    
-    // Safety: Destroy old chart so it doesn't glitch when you change tax years
-    if (window.sourceChartInstance) window.sourceChartInstance.destroy();
-
-   window.sourceChartInstance = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-        labels: Object.keys(totals),
-        datasets: [{
-            data: Object.values(totals),
-            backgroundColor: ['#f472b6', '#60a5fa', '#34d399', '#a78bfa', '#fbbf24'],
-            hoverOffset: 20, // Makes segments pop out on hover
-            borderWidth: 4,  // Adds a white "slice" look between segments
-            borderColor: '#ffffff'
-        }]
-    },
-    options: {
-        cutout: '75%', // Perfect balance for the center total
-        plugins: {
-            legend: {
-                display: true,
-                position: 'bottom',
-                labels: {
-                    usePointStyle: true,
-                    padding: 20,
-                    font: { size: 11, weight: '600' }
-                }
-            }
+    window.sourceChartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(totals),
+            datasets: [{
+                data: Object.values(totals),
+                backgroundColor: ['#f472b6', '#60a5fa', '#34d399', '#a78bfa', '#fbbf24'],
+                borderWidth: 4,
+                borderColor: '#ffffff'
+            }]
         },
-        maintainAspectRatio: false,
-        responsive: true
-    }
-});
-    
-function initRevenueChart(commissions, expenses) {
-    const ctx = document.getElementById('revenueChart');
-    if (!ctx) return;
-    if (window.revenueChartInstance) window.revenueChartInstance.destroy();
-
-    // Map month index (0=Jan) to Tax Year Index (0=Apr, 11=Mar)
-    const getTaxMonthIndex = (dateStr) => {
-        const month = new Date(dateStr).getMonth();
-        const map = { 3:0, 4:1, 5:2, 6:3, 7:4, 8:5, 9:6, 10:7, 11:8, 0:9, 1:10, 2:11 };
-        return map[month];
-    };
-
-    const incomeData = new Array(12).fill(0);
-    const expenseData = new Array(12).fill(0);
-
-    // Populate Income (from payments array in commissions)
-    commissions.forEach(c => {
-        if (c.payments) {
-            c.payments.forEach(p => {
-                const idx = getTaxMonthIndex(p.date);
-                if (idx !== undefined) incomeData[idx] += Number(p.amount || 0);
-            });
+        options: {
+            cutout: '75%',
+            plugins: { legend: { display: false } },
+            maintainAspectRatio: false,
+            responsive: true
         }
     });
+}
+    
+function initRevenueChart(sales, expenses) {
+    const ctx = document.getElementById('revenueChart');
+    if (!ctx) return;
+    
+    // Safety: Destroy old chart to prevent flickering
+    if (window.perfChartInstance) window.perfChartInstance.destroy();
 
-    // Populate Expenses
-    expenses.forEach(e => {
-        const idx = getTaxMonthIndex(e.date);
-        if (idx !== undefined) expenseData[idx] += Number(e.amount || 0);
+    const months = ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"];
+    const revData = new Array(12).fill(0);
+    const expData = new Array(12).fill(0);
+
+    sales.forEach(s => {
+        const m = new Date(s.sale_date).getMonth();
+        const index = (m >= 3) ? m - 3 : m + 9;
+        revData[index] += Number(s.amount);
     });
 
-    window.revenueChartInstance = new Chart(ctx.getContext('2d'), {
-        type: 'line',
+    expenses.forEach(e => {
+        const m = new Date(e.date).getMonth();
+        const index = (m >= 3) ? m - 3 : m + 9;
+        expData[index] += Number(e.amount);
+    });
+
+    window.perfChartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
         data: {
-            labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+            labels: months,
             datasets: [
-                { 
-                    label: 'Income', 
-                    data: incomeData, 
-                    borderColor: '#f472b6', // Pink
-                    backgroundColor: 'rgba(244, 114, 182, 0.1)',
-                    fill: true,
-                    tension: 0.4 
-                },
-                { 
-                    label: 'Expenses', 
-                    data: expenseData, 
-                    borderColor: '#94a3b8', // Gray
-                    borderDash: [5, 5],
-                    tension: 0.4 
-                }
+                { label: 'Revenue', data: revData, backgroundColor: '#f472b6', borderRadius: 6 },
+                { label: 'Expenses', data: expData, backgroundColor: '#e2e8f0', borderRadius: 6 }
             ]
         },
         options: { 
-            responsive: true, 
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: true, position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } }
-            },
-            scales: {
+            maintainAspectRatio: false, 
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { 
                 y: { beginAtZero: true, grid: { display: false } },
                 x: { grid: { display: false } }
             }
         }
     });
 }
-
+       
 // --- 4. INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('expenseForm');
