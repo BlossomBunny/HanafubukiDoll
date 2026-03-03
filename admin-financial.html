@@ -439,7 +439,7 @@ async function renderfinancials() {
     initRevenueChart(commissions, filteredExpenses);
     
     renderRevenueSourceChart(filteredSales);
-}
+    
    function renderRevenueSourceChart(salesData) {
     // 1. Group totals by category (Commission, SumUp, etc)
     const totals = salesData.reduce((acc, s) => {
