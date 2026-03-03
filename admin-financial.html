@@ -449,6 +449,43 @@ async function renderfinancials() {
                 : '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No sales recorded</td></tr>';
         }
 
+        // --- 7. POPULATE SIDEBAR BREAKDOWN (PILLS) ---
+const pillsContainer = document.getElementById('expense-pills');
+if (pillsContainer) {
+    // Group totals by category
+    const catTotals = filteredExpenses.reduce((acc, curr) => {
+        acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
+        return acc;
+    }, {});
+
+    pillsContainer.innerHTML = Object.entries(catTotals)
+        .sort((a, b) => b[1] - a[1]) // Highest expense first
+        .map(([cat, amt]) => `
+            <div class="flex justify-between items-center bg-gray-50/50 p-2 rounded-xl border border-pink-50/50">
+                <span class="text-[9px] font-black uppercase text-gray-500">${cat}</span>
+                <span class="text-xs font-black text-pink-500">£${amt.toFixed(0)}</span>
+            </div>
+        `).join('') || '<p class="text-[10px] italic text-gray-400">No expenses recorded.</p>';
+}
+
+// --- 8. DYNAMIC STUDIO TIPS ---
+const tipText = document.querySelector('.glass-card.bg-lime-50\/50 p.italic');
+if (tipText) {
+    const tips = [
+        "Claim your home studio utilities (heat/light) as a % of floor space!",
+        "Don't forget to log software subscriptions like Adobe or Clip Studio.",
+        "Snap a photo and upload your receipts to avoid piles of paper!.",
+        "Did you travel for a gallery or con? Log those mileage or travel costs!",
+        "Your website hosting and domain are 100% tax deductible."
+    ];
+    
+    if (profit > 12570) {
+        tipText.textContent = "You're over the personal allowance! Consider a pension contribution to lower your tax bill.";
+    } else {
+        tipText.textContent = tips[Math.floor(Math.random() * tips.length)];
+    }
+}
+
     } catch (err) {
         console.error("Critical Error:", err);
     }
