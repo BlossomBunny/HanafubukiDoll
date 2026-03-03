@@ -121,14 +121,21 @@ async function renderinventory() {
     ];
 
     container.innerHTML = `
-        <div class="max-w-6xl mx-auto space-y-10 pb-20 animate-fadeIn p-4 md:p-10">
-            <div class="flex justify-between items-end mb-4">
-                <div>
-                    <h2 class="text-3xl font-black italic tracking-tighter text-pink-500">Studio Inventory ♡</h2>
-                    <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Stock Management System</p>
-                </div>
+    <div class="max-w-6xl mx-auto space-y-10 pb-20 animate-fadeIn p-4 md:p-10">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
+            <div>
+                <h2 class="text-3xl font-black italic tracking-tighter text-pink-500">Studio Inventory ♡</h2>
+                <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Stock Management System</p>
             </div>
-            
+            <div class="relative w-full md:w-64">
+                <input type="text" placeholder="Search sculpts or tones..." 
+                       onkeyup="filterItems(this.value, 'inventory-table')"
+                       class="w-full p-3 pl-10 bg-white border border-pink-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-pink-200 transition-all">
+                <span class="absolute left-4 top-3.5 opacity-30">🔍</span>
+            </div>
+        </div>
+        
+        <div id="inventory-table" class="space-y-10">
            ${categories.map(cat => {
                 const filtered = items.filter(i => i.category === cat.key);
                 const isEyes = cat.key === "Eye Bases";
@@ -202,14 +209,21 @@ async function rendersupplies() {
     const categories = ["Brushes", "Paints", "Pencils", "Pastels", "Misc Supplies"];
 
     container.innerHTML = `
-        <div class="space-y-10 animate-fadeIn p-4 md:p-10">
-            <div class="flex justify-between items-end mb-6">
-                <div>
-                    <h2 class="text-3xl font-black italic tracking-tighter text-pink-500">Art Supplies ♡</h2>
-                    <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Pigments & Tools Management</p>
-                </div>
-                </div>
-            
+    <div class="space-y-10 animate-fadeIn p-4 md:p-10">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
+            <div>
+                <h2 class="text-3xl font-black italic tracking-tighter text-pink-500">Art Supplies ♡</h2>
+                <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Pigments & Tools Management</p>
+            </div>
+            <div class="relative w-full md:w-64">
+                <input type="text" placeholder="Search brands or colors..." 
+                       onkeyup="filterItems(this.value, 'supplies-table')"
+                       class="w-full p-3 pl-10 bg-white border border-pink-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-pink-200 transition-all">
+                <span class="absolute left-4 top-3.5 opacity-30">🔍</span>
+            </div>
+        </div>
+        
+        <div id="supplies-table" class="space-y-10">
             ${categories.map(cat => {
                 const filtered = supplies.filter(s => s.category === cat);
                 return `
@@ -409,6 +423,30 @@ async function deleteStockItem(id, category) {
         const { error } = await _supabase.from(table).delete().eq('id', id);
         isSupply ? rendersupplies() : renderinventory();
     }
+}
+
+    // --- SEARCH STOCK ---
+
+    function filterItems(query, containerId) {
+    const term = query.toLowerCase();
+    const sections = document.querySelectorAll(`#${containerId} > div`);
+
+    sections.forEach(section => {
+        const rows = section.querySelectorAll('tbody tr');
+        let hasVisibleRows = false;
+
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            if (text.includes(term)) {
+                row.style.display = "";
+                hasVisibleRows = true;
+            } else {
+                row.style.display = "none";
+            }
+        });
+        
+        section.style.display = hasVisibleRows ? "block" : "none";
+    });
 }
 
 // --- AUDIT SYSTEM ---
