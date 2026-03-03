@@ -122,18 +122,27 @@ async function renderinventory() {
 
     container.innerHTML = `
     <div class="max-w-6xl mx-auto space-y-10 pb-20 animate-fadeIn p-4 md:p-10">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
-            <div>
-                <h2 class="text-3xl font-black italic tracking-tighter text-pink-500">Studio Inventory ♡</h2>
-                <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Stock Management System</p>
-            </div>
-            <div class="relative w-full md:w-64">
-                <input type="text" placeholder="Search sculpts or tones..." 
-                       onkeyup="filterItems(this.value, 'inventory-table')"
-                       class="w-full p-3 pl-10 bg-white border border-pink-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-pink-200 transition-all">
-                <span class="absolute left-4 top-3.5 opacity-30">🔍</span>
-            </div>
+     <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
+    <div>
+        <h2 class="text-3xl font-black italic tracking-tighter text-pink-500">Studio Inventory ♡</h2>
+        <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Stock Management System</p>
+    </div>
+    <div class="flex items-center gap-3 w-full md:w-auto">
+        <label class="flex items-center gap-2 cursor-pointer group whitespace-nowrap bg-white border border-pink-100 px-3 py-2.5 rounded-2xl">
+            <input type="checkbox" id="lowStockToggle" 
+                   onchange="filterItems(document.querySelector('input[type=text]').value, '${containerId}')" 
+                   class="w-4 h-4 accent-pink-500">
+            <span class="text-[10px] font-black uppercase text-gray-400 group-hover:text-pink-500 transition-colors">Low Stock</span>
+        </label>
+
+        <div class="relative w-full md:w-64">
+            <input type="text" placeholder="Search..." 
+                   onkeyup="filterItems(this.value, '${containerId}')"
+                   class="w-full p-3 pl-10 bg-white border border-pink-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-pink-200 transition-all">
+            <span class="absolute left-4 top-3.5 opacity-30">🔍</span>
         </div>
+    </div>
+</div>
         
         <div id="inventory-table" class="space-y-10">
            ${categories.map(cat => {
@@ -210,18 +219,27 @@ async function rendersupplies() {
 
     container.innerHTML = `
     <div class="space-y-10 animate-fadeIn p-4 md:p-10">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
-            <div>
-                <h2 class="text-3xl font-black italic tracking-tighter text-pink-500">Art Supplies ♡</h2>
-                <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Pigments & Tools Management</p>
-            </div>
-            <div class="relative w-full md:w-64">
-                <input type="text" placeholder="Search brands or colors..." 
-                       onkeyup="filterItems(this.value, 'supplies-table')"
-                       class="w-full p-3 pl-10 bg-white border border-pink-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-pink-200 transition-all">
-                <span class="absolute left-4 top-3.5 opacity-30">🔍</span>
-            </div>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
+    <div>
+        <h2 class="text-3xl font-black italic tracking-tighter text-pink-500">Studio Inventory ♡</h2>
+        <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">Stock Management System</p>
+    </div>
+    <div class="flex items-center gap-3 w-full md:w-auto">
+        <label class="flex items-center gap-2 cursor-pointer group whitespace-nowrap bg-white border border-pink-100 px-3 py-2.5 rounded-2xl">
+            <input type="checkbox" id="lowStockToggle" 
+                   onchange="filterItems(document.querySelector('input[type=text]').value, '${containerId}')" 
+                   class="w-4 h-4 accent-pink-500">
+            <span class="text-[10px] font-black uppercase text-gray-400 group-hover:text-pink-500 transition-colors">Low Stock</span>
+        </label>
+
+        <div class="relative w-full md:w-64">
+            <input type="text" placeholder="Search..." 
+                   onkeyup="filterItems(this.value, '${containerId}')"
+                   class="w-full p-3 pl-10 bg-white border border-pink-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-pink-200 transition-all">
+            <span class="absolute left-4 top-3.5 opacity-30">🔍</span>
         </div>
+    </div>
+</div>
         
         <div id="supplies-table" class="space-y-10">
             ${categories.map(cat => {
@@ -427,8 +445,9 @@ async function deleteStockItem(id, category) {
 
     // --- SEARCH STOCK ---
 
-    function filterItems(query, containerId) {
+   function filterItems(query, containerId) {
     const term = query.toLowerCase();
+    const showLowStockOnly = document.getElementById('lowStockToggle').checked;
     const sections = document.querySelectorAll(`#${containerId} > div`);
 
     sections.forEach(section => {
@@ -437,14 +456,21 @@ async function deleteStockItem(id, category) {
 
         rows.forEach(row => {
             const text = row.innerText.toLowerCase();
-            if (text.includes(term)) {
+   
+            const qty = parseInt(row.querySelector('td:nth-child(3)').innerText) || 0;
+            
+            const matchesSearch = text.includes(term);
+            const matchesLowStock = !showLowStockOnly || qty <= 1;
+
+            if (matchesSearch && matchesLowStock) {
                 row.style.display = "";
                 hasVisibleRows = true;
             } else {
                 row.style.display = "none";
             }
         });
-        
+
+        // Hide the whole category section if no items match both criteria
         section.style.display = hasVisibleRows ? "block" : "none";
     });
 }
