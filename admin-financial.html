@@ -662,12 +662,10 @@ if (tipText) {
     }
 }
 
-// Moved outside of renderfinancials() — should be a top-level helper function
 function renderRevenueSourceChart(salesData) {
     const ctx = document.getElementById('chartSources');
     if (!ctx) return;
 
-    // Clean up previous chart instance to prevent memory leaks / canvas errors
     if (window.sourceChartInstance) {
         window.sourceChartInstance.destroy();
     }
@@ -717,7 +715,6 @@ function initRevenueChart(sales, expenses) {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) return;
     
-    // Safety: Destroy old chart to prevent flickering
     if (window.perfChartInstance) window.perfChartInstance.destroy();
 
     const months = ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"];
@@ -764,7 +761,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     document.getElementById('export-csv-btn')?.addEventListener('click', exportToCSV);
-    // Note: Make sure your button has this ID or just use the onclick in HTML
     document.getElementById('log-expense-btn')?.addEventListener('click', () => openExpenseModal());
     
     renderfinancials();
