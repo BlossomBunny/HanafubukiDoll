@@ -963,8 +963,9 @@ async function handleLogout() {
     
     <div id="expenseModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
     <div class="bg-white rounded-[2.5rem] max-w-md w-full p-8 shadow-2xl border border-pink-100">
-        <h3 class="text-xl font-black italic text-gray-800 mb-6">Log New Expense 🌸</h3>
+        <h3 id="expenseModalTitle" class="text-xl font-black italic text-gray-800 mb-6">Log New Expense 🌸</h3>
         <form id="expenseForm" class="space-y-4">
+            <input type="hidden" id="expenseId" name="id">
             <div>
                 <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Amount (£)</label>
                 <input type="number" step="0.01" name="amount" required class="w-full px-5 py-3 rounded-2xl border-2 border-pink-50 focus:border-pink-200 outline-none font-bold">
@@ -987,16 +988,60 @@ async function handleLogout() {
                 <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Date</label>
                 <input type="date" name="date" required class="w-full px-5 py-3 rounded-2xl border-2 border-pink-50 focus:border-pink-200 outline-none font-bold">
             </div>
-            
-               <div class="flex gap-3 pt-4">
-    <button type="button" onclick="closeExpenseModal()" class="flex-1 py-4 bg-gray-100 text-gray-500 font-black uppercase tracking-widest rounded-2xl hover:bg-gray-200 transition-all">Cancel</button>
-    <button type="submit" class="flex-1 py-4 bg-pink-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-pink-600 transition-all shadow-lg shadow-pink-200">Save</button>
-</div>    
+            <div class="flex gap-3 pt-4">
+                <button type="button" onclick="closeExpenseModal()" class="flex-1 py-4 bg-gray-100 text-gray-500 font-black uppercase tracking-widest rounded-2xl hover:bg-gray-200 transition-all">Cancel</button>
+                <button type="submit" class="flex-1 py-4 bg-pink-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-pink-600 transition-all shadow-lg shadow-pink-200">Save</button>
+            </div>    
         </form>
     </div>
 </div>
+
+<div id="salesModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+    <div class="bg-white rounded-[2.5rem] max-w-md w-full p-8 shadow-2xl border border-pink-100">
+        <h3 id="saleModalTitle" class="text-xl font-black italic text-gray-800 mb-6">Log New Sale ♡</h3>
+        <form id="salesForm" onsubmit="event.preventDefault(); saveSale();" class="space-y-4">
+            <input type="hidden" id="saleId" name="id">
+            <div>
+                <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Amount (£)</label>
+                <input type="number" id="saleAmount" step="0.01" required class="w-full px-5 py-3 rounded-2xl border-2 border-pink-50 focus:border-pink-200 outline-none font-bold">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Category</label>
+                    <select id="saleCategory" class="w-full px-5 py-3 rounded-2xl border-2 border-pink-50 focus:border-pink-200 outline-none font-bold">
+                        <option value="Commission">Commission</option>
+                        <option value="Premade">Premade Doll</option>
+                        <option value="Tip">Tip/Donation</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Source</label>
+                    <select id="saleSource" class="w-full px-5 py-3 rounded-2xl border-2 border-pink-50 focus:border-pink-200 outline-none font-bold">
+                        <option value="Manual">Manual</option>
+                        <option value="PayPal">PayPal</option>
+                        <option value="SumUp">SumUp</option>
+                        <option value="Cash">Cash</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Description</label>
+                <input type="text" id="saleDesc" placeholder="e.g. Custom Bunny Commission" class="w-full px-5 py-3 rounded-2xl border-2 border-pink-50 focus:border-pink-200 outline-none font-bold">
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Date</label>
+                <input type="date" id="saleDate" required class="w-full px-5 py-3 rounded-2xl border-2 border-pink-50 focus:border-pink-200 outline-none font-bold">
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button type="button" onclick="closeSalesModal()" class="flex-1 py-4 bg-gray-100 text-gray-500 font-black uppercase tracking-widest rounded-2xl">Cancel</button>
+                <button type="submit" class="flex-1 py-4 bg-emerald-500 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-100">Save Sale</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="global-scripts.js"></script>
     
-    <script src="global-scripts.js"></script>
     </main>
     
     <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-4">
