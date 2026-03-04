@@ -363,42 +363,7 @@ async function removeReceipt(expenseId) {
         renderfinancials();
     } catch (err) { console.error(err); }
 }
-        async function exportReceiptsZip() {
-    const zip = new JSZip();
-    const folder = zip.folder("Receipts_Export");
-    
-    // We'll use the current filtered data from the table
-    // (Ensure filteredExpenses is accessible or re-fetch based on current filters)
-    showMagicAlert("Processing", "Gathering receipts... 🌸", "info");
-
-    const receiptPromises = filteredExpenses
-        .filter(e => e.receipt_url)
-        .map(async (e) => {
-            try {
-                const response = await fetch(e.receipt_url);
-                const blob = await response.blob();
-                const fileName = `${e.date}_${e.category}_${e.id.slice(0,5)}.${e.receipt_url.split('.').pop()}`;
-                folder.file(fileName, blob);
-            } catch (err) {
-                console.error("Failed to fetch receipt:", e.receipt_url);
-            }
-        });
-
-    if (receiptPromises.length === 0) {
-        return showMagicAlert("Empty", "No receipts found to export! 🎀", "warning");
-    }
-
-    await Promise.all(receiptPromises);
-    
-    const content = await zip.generateAsync({ type: "blob" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(content);
-    link.download = `Studio_Receipts_${new Date().toISOString().split('T')[0]}.zip`;
-    link.click();
-    
-    showMagicAlert("Success", "ZIP file created! 📂", "success");
-}
-
+      
 // --- 5. CORE RENDERING ENGINE ---
 
 async function renderfinancials() {
@@ -674,7 +639,6 @@ function exportToCSV() {
 }
 <div class="flex gap-3">
     <button id="export-csv-btn" class="nav-btn nav-btn-pink text-[10px] px-4 py-2">Export CSV</button>
-    <button onclick="exportReceiptsZip()" class="nav-btn border border-pink-200 text-pink-500 hover:bg-pink-50 text-[10px] px-4 py-2">📦 Export Receipts (ZIP)</button>
     <button onclick="openExpenseModal()" class="nav-btn nav-btn-mint text-[10px] px-4 py-2">+ Log Expense</button>
 </div>
         
