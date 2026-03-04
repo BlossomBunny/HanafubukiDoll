@@ -8,6 +8,7 @@
     <script src="global-utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="stylesheet" href="global-style.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="data:,">
@@ -362,6 +363,41 @@ async function removeReceipt(expenseId) {
         renderfinancials();
     } catch (err) { console.error(err); }
 }
+        async function exportReceiptsZip() {
+    const zip = new JSZip();
+    const folder = zip.folder("Receipts_Export");
+    
+    // We'll use the current filtered data from the table
+    // (Ensure filteredExpenses is accessible or re-fetch based on current filters)
+    showMagicAlert("Processing", "Gathering receipts... 🌸", "info");
+
+    const receiptPromises = filteredExpenses
+        .filter(e => e.receipt_url)
+        .map(async (e) => {
+            try {
+                const response = await fetch(e.receipt_url);
+                const blob = await response.blob();
+                const fileName = `${e.date}_${e.category}_${e.id.slice(0,5)}.${e.receipt_url.split('.').pop()}`;
+                folder.file(fileName, blob);
+            } catch (err) {
+                console.error("Failed to fetch receipt:", e.receipt_url);
+            }
+        });
+
+    if (receiptPromises.length === 0) {
+        return showMagicAlert("Empty", "No receipts found to export! 🎀", "warning");
+    }
+
+    await Promise.all(receiptPromises);
+    
+    const content = await zip.generateAsync({ type: "blob" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(content);
+    link.download = `Studio_Receipts_${new Date().toISOString().split('T')[0]}.zip`;
+    link.click();
+    
+    showMagicAlert("Success", "ZIP file created! 📂", "success");
+}
 
 // --- 5. CORE RENDERING ENGINE ---
 
@@ -470,34 +506,51 @@ if (statsContainer) {
 
         // 5. TABLES
         const expBody = document.getElementById('expense-tbody');
-        if (expBody) {
-            expBody.innerHTML = filteredExpenses.map(e => `
-                <tr class="border-b border-pink-50/50 hover:bg-white/50 text-xs">
-                    <td class="py-4 pl-2 font-bold text-gray-600">${new Date(e.date).toLocaleDateString('en-GB')}</td>
-                    <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-500 border border-gray-200">${e.category}</span></td>
-                    <td class="py-4">${e.description || '---'}</td>
-                    <td class="py-4 text-right font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
-                    <td class="py-4 text-center">
-                        <button onclick="editExpense('${e.id}')" class="mr-2">✏️</button>
-                        <button onclick="deleteExpense('${e.id}')">🗑️</button>
-                    </td>
-                </tr>`).join('') || '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records</td></tr>';
-        }
+if (expBody) {
+    expBody.innerHTML = filteredExpenses.map(e => {
+        // Logic to decide which receipt button to show
+        const receiptBtn = e.receipt_url 
+            ? `<div class="flex gap-1">
+                 <a href="${e.receipt_url}" target="_blank" title="View Receipt" class="hover:scale-110 transition-transform">📄</a>
+                 <button onclick="removeReceipt('${e.id}')" title="Delete Receipt" class="hover:scale-110 transition-transform text-[10px]">❌</button>
+               </div>`
+            : `<button onclick="uploadReceipt('${e.id}')" title="Upload Receipt" class="opacity-30 hover:opacity-100 transition-opacity">📎</button>`;
 
-        const salesBody = document.getElementById('sales-tbody');
-        if (salesBody) {
-            salesBody.innerHTML = filteredSales.map(s => `
-                <tr class="border-b border-pink-50/50 hover:bg-white/50 text-xs">
-                    <td class="py-4 pl-2 font-bold text-gray-600">${new Date(s.sale_date).toLocaleDateString('en-GB')}</td>
-                    <td class="py-4"><span class="px-2 py-1 rounded-md bg-pink-50 text-[9px] font-black uppercase text-pink-500">${s.category}</span></td>
-                    <td class="py-4 text-[9px] text-gray-400 uppercase font-black">${s.source || 'Manual'}</td>
-                    <td class="py-4 text-right font-black text-emerald-500">£${Number(s.amount).toFixed(2)}</td>
-                    <td class="py-4 text-center">
-                        <button onclick="editSale('${s.id}')" class="mr-2">✏️</button>
-                        <button onclick="deleteSale('${s.id}')">🗑️</button>
-                    </td>
-                </tr>`).join('') || '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No sales</td></tr>';
-        }
+        return `
+            <tr class="border-b border-pink-50/50 hover:bg-white/50 text-xs">
+                <td class="py-4 pl-2 font-bold text-gray-600">${new Date(e.date).toLocaleDateString('en-GB')}</td>
+                <td class="py-4"><span class="px-2 py-1 rounded-md bg-gray-100 text-[9px] font-black uppercase text-gray-500 border border-gray-200">${e.category}</span></td>
+                <td class="py-4">${e.description || '---'}</td>
+                <td class="py-4 text-right font-black text-rose-500">£${Number(e.amount).toFixed(2)}</td>
+                <td class="py-4">
+                    <div class="flex items-center justify-center gap-4 w-24 mx-auto">
+                        <div class="flex items-center justify-center w-8">${receiptBtn}</div>
+                        <div class="flex gap-2 border-l border-gray-100 pl-3">
+                            <button onclick="editExpense('${e.id}')" class="hover:scale-110 transition-transform">✏️</button>
+                            <button onclick="deleteExpense('${e.id}')" class="hover:scale-110 transition-transform">🗑️</button>
+                        </div>
+                    </div>
+                </td>
+            </tr>`;
+    }).join('') || '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No records</td></tr>';
+}
+
+const salesBody = document.getElementById('sales-tbody');
+if (salesBody) {
+    salesBody.innerHTML = filteredSales.map(s => `
+        <tr class="border-b border-pink-50/50 hover:bg-white/50 text-xs">
+            <td class="py-4 pl-2 font-bold text-gray-600">${new Date(s.sale_date).toLocaleDateString('en-GB')}</td>
+            <td class="py-4"><span class="px-2 py-1 rounded-md bg-pink-50 text-[9px] font-black uppercase text-pink-500">${s.category}</span></td>
+            <td class="py-4 text-[9px] text-gray-400 uppercase font-black">${s.source || 'Manual'}</td>
+            <td class="py-4 text-right font-black text-emerald-500">£${Number(s.amount).toFixed(2)}</td>
+            <td class="py-4 text-center">
+                <div class="flex items-center justify-center gap-2">
+                    <button onclick="editSale('${s.id}')" class="hover:scale-110 transition-transform">✏️</button>
+                    <button onclick="deleteSale('${s.id}')" class="hover:scale-110 transition-transform">🗑️</button>
+                </div>
+            </td>
+        </tr>`).join('') || '<tr><td colspan="5" class="py-10 text-center text-gray-300 italic">No sales</td></tr>';
+}
 
         // 6. CHARTS
         initRevenueChart(filteredSales, filteredExpenses);
@@ -619,7 +672,12 @@ function exportToCSV() {
     link.download = `Studio_Expenses.csv`;
     link.click();
 }
-
+<div class="flex gap-3">
+    <button id="export-csv-btn" class="nav-btn nav-btn-pink text-[10px] px-4 py-2">Export CSV</button>
+    <button onclick="exportReceiptsZip()" class="nav-btn border border-pink-200 text-pink-500 hover:bg-pink-50 text-[10px] px-4 py-2">📦 Export Receipts (ZIP)</button>
+    <button onclick="openExpenseModal()" class="nav-btn nav-btn-mint text-[10px] px-4 py-2">+ Log Expense</button>
+</div>
+        
         function updateTaxCountdown() {
     const countdownText = document.getElementById('daysRemainingText');
     if (!countdownText) return;
